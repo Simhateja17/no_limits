@@ -1,17 +1,21 @@
 'use client';
 
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 export default function LoginPage() {
+  const router = useRouter();
   const [user, setUser] = useState('');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle login logic here
-    console.log({ user, password, rememberMe });
+    // For now, redirect to dashboard with any credentials
+    if (user && password) {
+      router.push('/dashboard');
+    }
   };
 
   return (
