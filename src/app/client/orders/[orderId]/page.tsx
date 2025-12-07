@@ -143,7 +143,7 @@ export default function ClientOrderDetailPage() {
   return (
     <DashboardLayout>
       <div className="w-full min-h-screen bg-[#F9FAFB]">
-        <div className="px-[52px] py-[84px]">
+        <div className="px-[clamp(24px,4vw,52px)] py-6">
           {/* Back Button */}
           <button
             onClick={handleBack}
@@ -179,16 +179,16 @@ export default function ClientOrderDetailPage() {
           </button>
 
           {/* Main Content */}
-          <div className="mt-[81px] flex gap-[34px]">
+          <div className="mt-8 flex flex-col lg:flex-row gap-[clamp(20px,2.5vw,34px)]">
             {/* Left Column - Order Info Cards */}
-            <div className="flex flex-col gap-6" style={{ width: '270px' }}>
+            <div className="flex flex-col gap-4 w-full lg:w-[20%] lg:min-w-[240px] lg:max-w-[280px]">
               {/* Order ID Box */}
               <div
                 style={{
-                  width: '270px',
+                  width: '100%',
                   minHeight: '104px',
                   gap: '4px',
-                  padding: '20px 16px',
+                  padding: 'clamp(16px, 1.5vw, 20px) clamp(12px, 1.2vw, 16px)',
                   borderRadius: '8px',
                   backgroundColor: '#FFFFFF',
                   boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.06), 0px 1px 3px 0px rgba(0, 0, 0, 0.1)',
@@ -199,7 +199,7 @@ export default function ClientOrderDetailPage() {
                     style={{
                       fontFamily: 'Inter, sans-serif',
                       fontWeight: 500,
-                      fontSize: '18px',
+                      fontSize: 'clamp(16px, 1.3vw, 18px)',
                       lineHeight: '24px',
                       color: '#111827',
                     }}
@@ -258,10 +258,10 @@ export default function ClientOrderDetailPage() {
               {/* Delivery Method Box */}
               <div
                 style={{
-                  width: '270px',
+                  width: '100%',
                   minHeight: '212px',
                   gap: '4px',
-                  padding: '20px 16px',
+                  padding: 'clamp(16px, 1.5vw, 20px) clamp(12px, 1.2vw, 16px)',
                   borderRadius: '8px',
                   backgroundColor: '#FFFFFF',
                   boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.06), 0px 1px 3px 0px rgba(0, 0, 0, 0.1)',
@@ -272,38 +272,44 @@ export default function ClientOrderDetailPage() {
                     style={{
                       fontFamily: 'Inter, sans-serif',
                       fontWeight: 500,
-                      fontSize: '18px',
+                      fontSize: 'clamp(16px, 1.3vw, 18px)',
                       lineHeight: '24px',
                       color: '#111827',
                     }}
                   >
                     Delivery method
                   </span>
-                  {/* Edit Pill */}
-                  <button
-                    onClick={handleEditClick}
-                    style={{
-                      height: '20px',
-                      padding: '2px 10px',
-                      borderRadius: '10px',
-                      backgroundColor: '#F3F4F6',
-                      border: 'none',
-                      cursor: 'pointer',
-                    }}
-                  >
-                    <span
+                  {/* Edit Pill - Only show when edit mode is enabled */}
+                  {editOrderEnabled && (
+                    <button
+                      onClick={handleEditClick}
                       style={{
-                        fontFamily: 'Inter, sans-serif',
-                        fontWeight: 500,
-                        fontSize: '12px',
-                        lineHeight: '16px',
-                        color: '#003450',
-                        textAlign: 'center',
+                        width: 'clamp(38px, 3.2vw, 43px)',
+                        height: 'clamp(18px, 1.5vw, 20px)',
+                        padding: 'clamp(1px, 0.15vw, 2px) clamp(8px, 0.74vw, 10px)',
+                        borderRadius: '10px',
+                        backgroundColor: '#F3F4F6',
+                        border: 'none',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
                       }}
                     >
-                      Edit
-                    </span>
-                  </button>
+                      <span
+                        style={{
+                          fontFamily: 'Inter, sans-serif',
+                          fontWeight: 500,
+                          fontSize: 'clamp(10px, 0.88vw, 12px)',
+                          lineHeight: '16px',
+                          color: '#003450',
+                          textAlign: 'center',
+                        }}
+                      >
+                        Edit
+                      </span>
+                    </button>
+                  )}
                 </div>
                 <div
                   style={{
@@ -325,10 +331,10 @@ export default function ClientOrderDetailPage() {
               {/* Shipping Method Box */}
               <div
                 style={{
-                  width: '270px',
+                  width: '100%',
                   minHeight: '104px',
                   gap: '4px',
-                  padding: '20px 16px',
+                  padding: 'clamp(16px, 1.5vw, 20px) clamp(12px, 1.2vw, 16px)',
                   borderRadius: '8px',
                   backgroundColor: '#FFFFFF',
                   boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.06), 0px 1px 3px 0px rgba(0, 0, 0, 0.1)',
@@ -338,7 +344,7 @@ export default function ClientOrderDetailPage() {
                   style={{
                     fontFamily: 'Inter, sans-serif',
                     fontWeight: 500,
-                    fontSize: '18px',
+                    fontSize: 'clamp(16px, 1.3vw, 18px)',
                     lineHeight: '24px',
                     color: '#111827',
                   }}
@@ -370,10 +376,10 @@ export default function ClientOrderDetailPage() {
               {/* Shipment Weight Box */}
               <div
                 style={{
-                  width: '270px',
+                  width: '100%',
                   minHeight: '187px',
                   gap: '4px',
-                  padding: '20px 16px',
+                  padding: 'clamp(16px, 1.5vw, 20px) clamp(12px, 1.2vw, 16px)',
                   borderRadius: '8px',
                   backgroundColor: '#FFFFFF',
                   boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.06), 0px 1px 3px 0px rgba(0, 0, 0, 0.1)',
@@ -383,7 +389,7 @@ export default function ClientOrderDetailPage() {
                   style={{
                     fontFamily: 'Inter, sans-serif',
                     fontWeight: 500,
-                    fontSize: '18px',
+                    fontSize: 'clamp(16px, 1.3vw, 18px)',
                     lineHeight: '24px',
                     color: '#111827',
                   }}
@@ -418,7 +424,7 @@ export default function ClientOrderDetailPage() {
             </div>
 
             {/* Right Column - Products Table */}
-            <div className="flex flex-col gap-6" style={{ flex: 1, maxWidth: '927px' }}>
+            <div className="flex flex-col gap-4" style={{ flex: 1 }}>
               {/* Products Table */}
               <div
                 style={{
