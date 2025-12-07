@@ -1,0 +1,682 @@
+'use client';
+
+import { useState, useMemo } from 'react';
+import { useRouter } from 'next/navigation';
+
+// Tab type
+type TabType = 'all' | 'outOfStock' | 'missingData';
+
+// Product interface
+interface Product {
+  id: string;
+  productId: string;
+  productName: string;
+  available: number;
+  reserved: number;
+  announced: number;
+  client: string;
+}
+
+// Mock data
+const mockProducts: Product[] = [
+  { id: '1', productId: '23423', productName: 'Riesenrad', available: 312, reserved: 12, announced: 200, client: 'Papercrush' },
+  { id: '2', productId: '43642', productName: 'Skifahrer', available: 5, reserved: 3, announced: 0, client: 'Papercrush' },
+  { id: '3', productId: '34532', productName: 'Rohkakao', available: 252, reserved: 53, announced: 50, client: 'Caobali' },
+  { id: '4', productId: '43462', productName: 'Mellow 50%', available: 0, reserved: -10, announced: 250, client: 'Terppens' },
+  { id: '5', productId: '34983', productName: 'Energy 50%', available: 0, reserved: 0, announced: 250, client: 'Terppens' },
+  { id: '6', productId: '43895', productName: 'Verbandskasten', available: 16, reserved: 1, announced: 100, client: 'Protabo' },
+  { id: '7', productId: '12345', productName: 'Sample Product', available: 0, reserved: 5, announced: 10, client: 'TestClient' },
+  { id: '8', productId: '67890', productName: 'Test Item', available: 50, reserved: 2, announced: 0, client: 'Papercrush' },
+  { id: '9', productId: '11111', productName: '', available: 100, reserved: 10, announced: 20, client: 'Caobali' },
+  { id: '10', productId: '22222', productName: 'Complete Product', available: 200, reserved: 15, announced: 30, client: '' },
+];
+
+// Customers for filter
+const customers = ['Alle', 'Papercrush', 'Caobali', 'Terppens', 'Protabo', 'TestClient'];
+
+interface ProductsTableProps {
+  showClientColumn: boolean; // Show client column only for superadmin and warehouse labor view
+  baseUrl: string; // Base URL for product details navigation (e.g., '/admin/products' or '/employee/products')
+}
+
+export function ProductsTable({ showClientColumn, baseUrl }: ProductsTableProps) {
+  const router = useRouter();
+  const [activeTab, setActiveTab] = useState<TabType>('all');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [customerFilter, setCustomerFilter] = useState('Alle');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+
+  const handleProductClick = (productId: string) => {
+    router.push(`${baseUrl}/${productId}`);
+  };
+
+  // Filter products based on tab and search
+  const filteredProducts = useMemo(() => {
+    let products = [...mockProducts];
+
+    // Filter by tab
+    if (activeTab === 'outOfStock') {
+      products = products.filter(p => p.available === 0);
+    } else if (activeTab === 'missingData') {
+      products = products.filter(p => !p.productName || !p.client);
+    }
+
+    // Filter by customer
+    if (customerFilter !== 'Alle') {
+      products = products.filter(p => p.client === customerFilter);
+    }
+
+    // Filter by search query
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      products = products.filter(p =>
+        p.productId.toLowerCase().includes(query) ||
+        p.productName.toLowerCase().includes(query) ||
+        p.client.toLowerCase().includes(query)
+      );
+    }
+
+    return products;
+  }, [activeTab, searchQuery, customerFilter]);
+
+  // Pagination
+  const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
+  const paginatedProducts = filteredProducts.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
+  // Count for tabs
+  const allCount = mockProducts.length;
+  const outOfStockCount = mockProducts.filter(p => p.available === 0).length;
+  const missingDataCount = mockProducts.filter(p => !p.productName || !p.client).length;
+
+  const handlePrevious = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
+  const handleNext = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
+  return (
+    <div className="w-full flex flex-col gap-6">
+      {/* Header with Tabs and Create Button */}
+      <div className="flex items-center justify-between w-full">
+        {/* Tabs */}
+        <div
+          className="flex items-center"
+          style={{
+            height: '38px',
+            gap: '0',
+          }}
+        >
+          {/* All Products Tab */}
+          <button
+            onClick={() => { setActiveTab('all'); setCurrentPage(1); }}
+            className="flex items-center"
+            style={{
+              height: '36px',
+              gap: '8px',
+              paddingLeft: '4px',
+              paddingRight: '4px',
+              paddingBottom: '16px',
+              borderBottom: activeTab === 'all' ? '2px solid #003450' : '2px solid transparent',
+            }}
+          >
+            <span
+              style={{
+                fontFamily: 'Inter, sans-serif',
+                fontWeight: 500,
+                fontSize: '14px',
+                lineHeight: '20px',
+                color: activeTab === 'all' ? '#003450' : '#6B7280',
+              }}
+            >
+              All Products
+            </span>
+            <span
+              style={{
+                fontFamily: 'Inter, sans-serif',
+                fontWeight: 500,
+                fontSize: '12px',
+                lineHeight: '16px',
+                color: activeTab === 'all' ? '#003450' : '#6B7280',
+                backgroundColor: activeTab === 'all' ? '#E5E7EB' : 'transparent',
+                padding: '2px 8px',
+                borderRadius: '10px',
+              }}
+            >
+              {allCount}
+            </span>
+          </button>
+
+          {/* Out of Stock Tab */}
+          <button
+            onClick={() => { setActiveTab('outOfStock'); setCurrentPage(1); }}
+            className="flex items-center"
+            style={{
+              height: '36px',
+              gap: '8px',
+              paddingLeft: '4px',
+              paddingRight: '4px',
+              paddingBottom: '16px',
+              marginLeft: '24px',
+              borderBottom: activeTab === 'outOfStock' ? '2px solid #003450' : '2px solid transparent',
+            }}
+          >
+            <span
+              style={{
+                fontFamily: 'Inter, sans-serif',
+                fontWeight: 500,
+                fontSize: '14px',
+                lineHeight: '20px',
+                color: activeTab === 'outOfStock' ? '#003450' : '#6B7280',
+              }}
+            >
+              Out of Stock
+            </span>
+            <span
+              style={{
+                fontFamily: 'Inter, sans-serif',
+                fontWeight: 500,
+                fontSize: '12px',
+                lineHeight: '16px',
+                color: activeTab === 'outOfStock' ? '#003450' : '#6B7280',
+                backgroundColor: activeTab === 'outOfStock' ? '#E5E7EB' : 'transparent',
+                padding: '2px 8px',
+                borderRadius: '10px',
+              }}
+            >
+              {outOfStockCount}
+            </span>
+          </button>
+
+          {/* Missing Data Tab */}
+          <button
+            onClick={() => { setActiveTab('missingData'); setCurrentPage(1); }}
+            className="flex items-center"
+            style={{
+              height: '36px',
+              gap: '8px',
+              paddingLeft: '4px',
+              paddingRight: '4px',
+              paddingBottom: '16px',
+              marginLeft: '24px',
+              borderBottom: activeTab === 'missingData' ? '2px solid #003450' : '2px solid transparent',
+            }}
+          >
+            <span
+              style={{
+                fontFamily: 'Inter, sans-serif',
+                fontWeight: 500,
+                fontSize: '14px',
+                lineHeight: '20px',
+                color: activeTab === 'missingData' ? '#003450' : '#6B7280',
+              }}
+            >
+              Missing Data
+            </span>
+            <span
+              style={{
+                fontFamily: 'Inter, sans-serif',
+                fontWeight: 500,
+                fontSize: '12px',
+                lineHeight: '16px',
+                color: activeTab === 'missingData' ? '#003450' : '#6B7280',
+                backgroundColor: activeTab === 'missingData' ? '#E5E7EB' : 'transparent',
+                padding: '2px 8px',
+                borderRadius: '10px',
+              }}
+            >
+              {missingDataCount}
+            </span>
+          </button>
+        </div>
+
+        {/* Create Product Button */}
+        <button
+          style={{
+            width: '136px',
+            height: '38px',
+            borderRadius: '6px',
+            padding: '9px 17px',
+            backgroundColor: '#003450',
+            boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.05)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <span
+            style={{
+              fontFamily: 'Inter, sans-serif',
+              fontWeight: 500,
+              fontSize: '14px',
+              lineHeight: '20px',
+              color: '#FFFFFF',
+            }}
+          >
+            Create product
+          </span>
+        </button>
+      </div>
+
+      {/* Filter and Search Row */}
+      <div className="flex items-end gap-6 flex-wrap">
+        {/* Filter by Customer */}
+        <div className="flex flex-col gap-2">
+          <label
+            style={{
+              fontFamily: 'Inter, sans-serif',
+              fontWeight: 500,
+              fontSize: '14px',
+              lineHeight: '20px',
+              color: '#374151',
+            }}
+          >
+            Filter by Customer
+          </label>
+          <div className="relative">
+            <select
+              value={customerFilter}
+              onChange={(e) => { setCustomerFilter(e.target.value); setCurrentPage(1); }}
+              style={{
+                width: '320px',
+                maxWidth: '100%',
+                height: '38px',
+                borderRadius: '6px',
+                border: '1px solid #D1D5DB',
+                padding: '9px 13px',
+                paddingRight: '32px',
+                backgroundColor: '#FFFFFF',
+                boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.05)',
+                fontFamily: 'Inter, sans-serif',
+                fontWeight: 500,
+                fontSize: '14px',
+                lineHeight: '20px',
+                color: '#374151',
+                appearance: 'none',
+                cursor: 'pointer',
+              }}
+            >
+              {customers.map((customer) => (
+                <option key={customer} value={customer}>
+                  {customer}
+                </option>
+              ))}
+            </select>
+            {/* Dropdown Arrow */}
+            <div
+              style={{
+                position: 'absolute',
+                right: '13px',
+                top: '50%',
+                transform: 'translateY(-50%)',
+                pointerEvents: 'none',
+              }}
+            >
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M3 4.5L6 7.5L9 4.5" stroke="#6B7280" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        {/* Search */}
+        <div className="flex flex-col gap-2">
+          <label
+            style={{
+              fontFamily: 'Inter, sans-serif',
+              fontWeight: 500,
+              fontSize: '14px',
+              lineHeight: '20px',
+              color: '#374151',
+            }}
+          >
+            Search
+          </label>
+          <input
+            type="text"
+            placeholder="Search"
+            value={searchQuery}
+            onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
+            style={{
+              width: '320px',
+              maxWidth: '100%',
+              height: '38px',
+              borderRadius: '6px',
+              border: '1px solid #D1D5DB',
+              padding: '9px 13px',
+              backgroundColor: '#FFFFFF',
+              boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.05)',
+              fontFamily: 'Inter, sans-serif',
+              fontWeight: 500,
+              fontSize: '14px',
+              lineHeight: '20px',
+              color: '#374151',
+            }}
+          />
+        </div>
+
+        {/* Info text for client column visibility */}
+        {showClientColumn && (
+          <div
+            className="ml-auto"
+            style={{
+              fontFamily: 'Inter, sans-serif',
+              fontWeight: 400,
+              fontSize: '14px',
+              lineHeight: '20px',
+              color: '#6B7280',
+            }}
+          >
+            display client only in superadmin and warehouse labor view
+          </div>
+        )}
+      </div>
+
+      {/* Products Table */}
+      <div
+        style={{
+          width: '100%',
+          borderRadius: '8px',
+          border: '1px solid #E5E7EB',
+          backgroundColor: '#FFFFFF',
+          boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.06), 0px 1px 3px 0px rgba(0, 0, 0, 0.1)',
+          overflow: 'hidden',
+        }}
+      >
+        {/* Table Header */}
+        <div
+          className="grid"
+          style={{
+            gridTemplateColumns: showClientColumn
+              ? 'minmax(80px, 1fr) minmax(120px, 2fr) minmax(80px, 1fr) minmax(80px, 1fr) minmax(80px, 1fr) minmax(100px, 1.5fr)'
+              : 'minmax(80px, 1fr) minmax(120px, 2fr) minmax(80px, 1fr) minmax(80px, 1fr) minmax(80px, 1fr)',
+            padding: '12px 24px',
+            borderBottom: '1px solid #E5E7EB',
+            backgroundColor: '#F9FAFB',
+          }}
+        >
+          <span
+            style={{
+              fontFamily: 'Inter, sans-serif',
+              fontWeight: 500,
+              fontSize: '12px',
+              lineHeight: '16px',
+              letterSpacing: '0.05em',
+              textTransform: 'uppercase',
+              color: '#6B7280',
+            }}
+          >
+            Product ID
+          </span>
+          <span
+            style={{
+              fontFamily: 'Inter, sans-serif',
+              fontWeight: 500,
+              fontSize: '12px',
+              lineHeight: '16px',
+              letterSpacing: '0.05em',
+              textTransform: 'uppercase',
+              color: '#6B7280',
+            }}
+          >
+            Product Name
+          </span>
+          <span
+            style={{
+              fontFamily: 'Inter, sans-serif',
+              fontWeight: 500,
+              fontSize: '12px',
+              lineHeight: '16px',
+              letterSpacing: '0.05em',
+              textTransform: 'uppercase',
+              color: '#6B7280',
+            }}
+          >
+            Available
+          </span>
+          <span
+            style={{
+              fontFamily: 'Inter, sans-serif',
+              fontWeight: 500,
+              fontSize: '12px',
+              lineHeight: '16px',
+              letterSpacing: '0.05em',
+              textTransform: 'uppercase',
+              color: '#6B7280',
+            }}
+          >
+            Reserved
+          </span>
+          <span
+            style={{
+              fontFamily: 'Inter, sans-serif',
+              fontWeight: 500,
+              fontSize: '12px',
+              lineHeight: '16px',
+              letterSpacing: '0.05em',
+              textTransform: 'uppercase',
+              color: '#6B7280',
+            }}
+          >
+            Announced
+          </span>
+          {showClientColumn && (
+            <span
+              style={{
+                fontFamily: 'Inter, sans-serif',
+                fontWeight: 500,
+                fontSize: '12px',
+                lineHeight: '16px',
+                letterSpacing: '0.05em',
+                textTransform: 'uppercase',
+                color: '#6B7280',
+              }}
+            >
+              Client
+            </span>
+          )}
+        </div>
+
+        {/* Table Body */}
+        {paginatedProducts.map((product, index) => (
+          <div
+            key={product.id}
+            className="grid"
+            onClick={() => handleProductClick(product.productId)}
+            style={{
+              gridTemplateColumns: showClientColumn
+                ? 'minmax(80px, 1fr) minmax(120px, 2fr) minmax(80px, 1fr) minmax(80px, 1fr) minmax(80px, 1fr) minmax(100px, 1.5fr)'
+                : 'minmax(80px, 1fr) minmax(120px, 2fr) minmax(80px, 1fr) minmax(80px, 1fr) minmax(80px, 1fr)',
+              padding: '16px 24px',
+              borderBottom: index < paginatedProducts.length - 1 ? '1px solid #E5E7EB' : 'none',
+              backgroundColor: '#FFFFFF',
+              cursor: 'pointer',
+              transition: 'background-color 0.15s ease',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = '#F9FAFB';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = '#FFFFFF';
+            }}
+          >
+            <span
+              style={{
+                fontFamily: 'Inter, sans-serif',
+                fontWeight: 500,
+                fontSize: '14px',
+                lineHeight: '20px',
+                color: '#111827',
+              }}
+            >
+              {product.productId}
+            </span>
+            <span
+              style={{
+                fontFamily: 'Inter, sans-serif',
+                fontWeight: 500,
+                fontSize: '14px',
+                lineHeight: '20px',
+                color: '#111827',
+              }}
+            >
+              {product.productName || <span style={{ color: '#EF4444', fontStyle: 'italic' }}>Missing</span>}
+            </span>
+            <span
+              style={{
+                fontFamily: 'Inter, sans-serif',
+                fontWeight: 400,
+                fontSize: '14px',
+                lineHeight: '20px',
+                color: '#6B7280',
+              }}
+            >
+              {product.available}
+            </span>
+            <span
+              style={{
+                fontFamily: 'Inter, sans-serif',
+                fontWeight: 400,
+                fontSize: '14px',
+                lineHeight: '20px',
+                color: '#6B7280',
+              }}
+            >
+              {product.reserved}
+            </span>
+            <span
+              style={{
+                fontFamily: 'Inter, sans-serif',
+                fontWeight: 400,
+                fontSize: '14px',
+                lineHeight: '20px',
+                color: '#6B7280',
+              }}
+            >
+              {product.announced}
+            </span>
+            {showClientColumn && (
+              <span
+                style={{
+                  fontFamily: 'Inter, sans-serif',
+                  fontWeight: 400,
+                  fontSize: '14px',
+                  lineHeight: '20px',
+                  color: '#6B7280',
+                }}
+              >
+                {product.client || <span style={{ color: '#EF4444', fontStyle: 'italic' }}>Missing</span>}
+              </span>
+            )}
+          </div>
+        ))}
+
+        {/* Empty State */}
+        {paginatedProducts.length === 0 && (
+          <div
+            style={{
+              padding: '48px 24px',
+              textAlign: 'center',
+              color: '#6B7280',
+              fontFamily: 'Inter, sans-serif',
+              fontSize: '14px',
+            }}
+          >
+            No products found
+          </div>
+        )}
+      </div>
+
+      {/* Pagination */}
+      <div
+        className="flex items-center justify-between"
+        style={{
+          height: '63px',
+          paddingTop: '12px',
+        }}
+      >
+        <span
+          style={{
+            fontFamily: 'Inter, sans-serif',
+            fontSize: '14px',
+            lineHeight: '20px',
+            color: '#374151',
+          }}
+        >
+          Showing <span style={{ fontWeight: 500 }}>{filteredProducts.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0}</span> to{' '}
+          <span style={{ fontWeight: 500 }}>{Math.min(currentPage * itemsPerPage, filteredProducts.length)}</span> of{' '}
+          <span style={{ fontWeight: 500 }}>{filteredProducts.length}</span> results
+        </span>
+
+        <div className="flex items-center gap-3">
+          {/* Previous Button */}
+          <button
+            onClick={handlePrevious}
+            disabled={currentPage === 1}
+            style={{
+              minWidth: '92px',
+              height: '38px',
+              borderRadius: '6px',
+              border: '1px solid #D1D5DB',
+              padding: '9px 17px',
+              backgroundColor: '#FFFFFF',
+              boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.05)',
+              cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+              opacity: currentPage === 1 ? 0.5 : 1,
+            }}
+          >
+            <span
+              style={{
+                fontFamily: 'Inter, sans-serif',
+                fontWeight: 500,
+                fontSize: '14px',
+                lineHeight: '20px',
+                color: '#374151',
+              }}
+            >
+              Previous
+            </span>
+          </button>
+
+          {/* Next Button */}
+          <button
+            onClick={handleNext}
+            disabled={currentPage >= totalPages}
+            style={{
+              minWidth: '66px',
+              height: '38px',
+              borderRadius: '6px',
+              border: '1px solid #D1D5DB',
+              padding: '9px 17px',
+              backgroundColor: '#FFFFFF',
+              boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.05)',
+              cursor: currentPage >= totalPages ? 'not-allowed' : 'pointer',
+              opacity: currentPage >= totalPages ? 0.5 : 1,
+            }}
+          >
+            <span
+              style={{
+                fontFamily: 'Inter, sans-serif',
+                fontWeight: 500,
+                fontSize: '14px',
+                lineHeight: '20px',
+                color: '#374151',
+              }}
+            >
+              Next
+            </span>
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}

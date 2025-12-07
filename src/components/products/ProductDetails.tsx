@@ -1,0 +1,1245 @@
+'use client';
+
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+
+// Tab type for product details
+type ProductTab = 'productData' | 'stockMovements' | 'orders' | 'bundle';
+
+// Product details interface
+interface ProductDetailsData {
+  id: string;
+  productId: string;
+  productName: string;
+  manufacturer: string;
+  imageUrl: string;
+  totalStock: number;
+  available: number;
+  reserved: number;
+  announced: number;
+  // Geodaten
+  heightInCm: string;
+  widthInCm: string;
+  lengthInCm: string;
+  weightInKg: string;
+  // Identifizierung
+  sku: string;
+  gtin: string;
+  amazonAsin: string;
+  amazonSku: string;
+  isbn: string;
+  han: string;
+  // Eigenschaften
+  mhd: string;
+  charge: string;
+  zolltarifnummer: string;
+  ursprung: string;
+  nettoVerkaufspreis: string;
+  manufacture: string;
+  // Orders count
+  ordersCount: number;
+}
+
+// Mock product data
+const mockProductDetails: ProductDetailsData = {
+  id: '1',
+  productId: '23423',
+  productName: 'Duschtuch 70×100cm',
+  manufacturer: 'Herzbach Home',
+  imageUrl: '/product-image.jpg',
+  totalStock: 345,
+  available: 340,
+  reserved: 5,
+  announced: 0,
+  heightInCm: '10',
+  widthInCm: '12,5',
+  lengthInCm: '21,5',
+  weightInKg: '0,85',
+  sku: 'DT-70-100',
+  gtin: '2394823842342',
+  amazonAsin: '23YAC1328A',
+  amazonSku: '-',
+  isbn: '-',
+  han: '-',
+  mhd: 'Nein',
+  charge: 'Nein',
+  zolltarifnummer: '238539232',
+  ursprung: '-',
+  nettoVerkaufspreis: '12,5',
+  manufacture: 'Herzbach Home',
+  ordersCount: 6,
+};
+
+interface ProductDetailsProps {
+  productId: string;
+  backUrl: string;
+}
+
+// Reusable field component that switches between view and edit mode
+interface FieldProps {
+  label: string;
+  value: string;
+  editMode: boolean;
+  onChange: (value: string) => void;
+}
+
+function Field({ label, value, editMode, onChange }: FieldProps) {
+  return (
+    <div className="flex flex-col gap-2">
+      <label
+        style={{
+          fontFamily: 'Inter, sans-serif',
+          fontWeight: 500,
+          fontSize: '14px',
+          lineHeight: '20px',
+          color: '#374151',
+        }}
+      >
+        {label}
+      </label>
+      {editMode ? (
+        <input
+          type="text"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          style={{
+            padding: '8px 12px',
+            backgroundColor: '#FFFFFF',
+            borderRadius: '6px',
+            border: '1px solid #D1D5DB',
+            fontFamily: 'Inter, sans-serif',
+            fontWeight: 400,
+            fontSize: '14px',
+            lineHeight: '20px',
+            color: '#374151',
+            outline: 'none',
+          }}
+        />
+      ) : (
+        <div
+          style={{
+            padding: '8px 12px',
+            backgroundColor: '#F9FAFB',
+            borderRadius: '4px',
+          }}
+        >
+          <span
+            style={{
+              fontFamily: 'Inter, sans-serif',
+              fontWeight: 400,
+              fontSize: '14px',
+              lineHeight: '20px',
+              color: '#6B7280',
+            }}
+          >
+            {value}
+          </span>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export function ProductDetails({ productId, backUrl }: ProductDetailsProps) {
+  const router = useRouter();
+  const [activeTab, setActiveTab] = useState<ProductTab>('productData');
+  const [editMode, setEditMode] = useState(false);
+  const [barcodeType, setBarcodeType] = useState('GTIN');
+  const [barcodeQuantity, setBarcodeQuantity] = useState('1');
+
+  // Editable product state
+  const [formData, setFormData] = useState({
+    productName: mockProductDetails.productName,
+    manufacturer: mockProductDetails.manufacturer,
+    // Geodaten
+    heightInCm: mockProductDetails.heightInCm,
+    widthInCm: mockProductDetails.widthInCm,
+    lengthInCm: mockProductDetails.lengthInCm,
+    weightInKg: mockProductDetails.weightInKg,
+    // Identifizierung
+    sku: mockProductDetails.sku,
+    gtin: mockProductDetails.gtin,
+    amazonAsin: mockProductDetails.amazonAsin,
+    amazonSku: mockProductDetails.amazonSku,
+    isbn: mockProductDetails.isbn,
+    han: mockProductDetails.han,
+    // Eigenschaften
+    mhd: mockProductDetails.mhd,
+    charge: mockProductDetails.charge,
+    zolltarifnummer: mockProductDetails.zolltarifnummer,
+    ursprung: mockProductDetails.ursprung,
+    nettoVerkaufspreis: mockProductDetails.nettoVerkaufspreis,
+    manufacture: mockProductDetails.manufacture,
+  });
+
+  // In a real app, fetch product by productId from the API
+  console.log('Loading product:', productId);
+  const product = mockProductDetails;
+
+  const handleBack = () => {
+    router.push(backUrl);
+  };
+
+  const updateField = (field: keyof typeof formData) => (value: string) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleSave = () => {
+    // In a real app, save the product data to the API
+    console.log('Saving product:', formData);
+    setEditMode(false);
+  };
+
+  return (
+    <div className="w-full flex flex-col gap-6">
+      {/* Back Button */}
+      <div>
+        <button
+          onClick={handleBack}
+          style={{
+            minWidth: '65px',
+            height: '38px',
+            borderRadius: '6px',
+            border: '1px solid #D1D5DB',
+            padding: '9px 17px 9px 15px',
+            backgroundColor: '#FFFFFF',
+            boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.05)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            cursor: 'pointer',
+          }}
+        >
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M10 12L6 8L10 4" stroke="#374151" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+          <span
+            style={{
+              fontFamily: 'Inter, sans-serif',
+              fontWeight: 500,
+              fontSize: '14px',
+              lineHeight: '20px',
+              color: '#374151',
+            }}
+          >
+            Back
+          </span>
+        </button>
+      </div>
+
+      {/* Tabs - Only show Product Data tab in edit mode */}
+      <div
+        className="flex items-center"
+        style={{
+          borderBottom: '1px solid #E5E7EB',
+        }}
+      >
+        {/* Product Data Tab */}
+        <button
+          onClick={() => setActiveTab('productData')}
+          style={{
+            height: '38px',
+            paddingLeft: '4px',
+            paddingRight: '4px',
+            paddingBottom: '16px',
+            borderBottom: activeTab === 'productData' ? '2px solid #003450' : '2px solid transparent',
+            marginBottom: '-1px',
+          }}
+        >
+          <span
+            style={{
+              fontFamily: 'Inter, sans-serif',
+              fontWeight: 500,
+              fontSize: '14px',
+              lineHeight: '20px',
+              color: activeTab === 'productData' ? '#003450' : '#6B7280',
+            }}
+          >
+            Product Data
+          </span>
+        </button>
+
+        {!editMode && (
+          <>
+            {/* Stock Movements Tab */}
+            <button
+              onClick={() => setActiveTab('stockMovements')}
+              style={{
+                height: '38px',
+                paddingLeft: '4px',
+                paddingRight: '4px',
+                paddingBottom: '16px',
+                marginLeft: '24px',
+                borderBottom: activeTab === 'stockMovements' ? '2px solid #003450' : '2px solid transparent',
+                marginBottom: '-1px',
+              }}
+            >
+              <span
+                style={{
+                  fontFamily: 'Inter, sans-serif',
+                  fontWeight: 500,
+                  fontSize: '14px',
+                  lineHeight: '20px',
+                  color: activeTab === 'stockMovements' ? '#003450' : '#6B7280',
+                }}
+              >
+                Stock movements
+              </span>
+            </button>
+
+            {/* Orders Tab */}
+            <button
+              onClick={() => setActiveTab('orders')}
+              className="flex items-center gap-2"
+              style={{
+                height: '38px',
+                paddingLeft: '4px',
+                paddingRight: '4px',
+                paddingBottom: '16px',
+                marginLeft: '24px',
+                borderBottom: activeTab === 'orders' ? '2px solid #003450' : '2px solid transparent',
+                marginBottom: '-1px',
+              }}
+            >
+              <span
+                style={{
+                  fontFamily: 'Inter, sans-serif',
+                  fontWeight: 500,
+                  fontSize: '14px',
+                  lineHeight: '20px',
+                  color: activeTab === 'orders' ? '#003450' : '#6B7280',
+                }}
+              >
+                Orders
+              </span>
+              <span
+                style={{
+                  minWidth: '28px',
+                  height: '20px',
+                  borderRadius: '10px',
+                  padding: '2px 10px',
+                  backgroundColor: '#F3F4F6',
+                  fontFamily: 'Inter, sans-serif',
+                  fontWeight: 500,
+                  fontSize: '12px',
+                  lineHeight: '16px',
+                  textAlign: 'center',
+                  color: '#1F2937',
+                }}
+              >
+                {product.ordersCount}
+              </span>
+            </button>
+
+            {/* Bundle Tab */}
+            <button
+              onClick={() => setActiveTab('bundle')}
+              style={{
+                height: '38px',
+                paddingLeft: '4px',
+                paddingRight: '4px',
+                paddingBottom: '16px',
+                marginLeft: '24px',
+                borderBottom: activeTab === 'bundle' ? '2px solid #003450' : '2px solid transparent',
+                marginBottom: '-1px',
+              }}
+            >
+              <span
+                style={{
+                  fontFamily: 'Inter, sans-serif',
+                  fontWeight: 500,
+                  fontSize: '14px',
+                  lineHeight: '20px',
+                  color: activeTab === 'bundle' ? '#003450' : '#6B7280',
+                }}
+              >
+                Bundle
+              </span>
+            </button>
+          </>
+        )}
+      </div>
+
+      {/* Product Data Content */}
+      {activeTab === 'productData' && (
+        <div className="flex flex-col gap-6">
+          {/* Edit Mode Layout */}
+          {editMode ? (
+            <>
+              {/* Product Header Section - Edit Mode */}
+              <div className="flex gap-6 flex-wrap lg:flex-nowrap">
+                {/* Product Image Upload */}
+                <div
+                  style={{
+                    width: '192px',
+                    minWidth: '192px',
+                    height: '192px',
+                    borderRadius: '8px',
+                    border: '2px dashed #D1D5DB',
+                    backgroundColor: '#FFFFFF',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '8px',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="3" y="3" width="18" height="18" rx="2" stroke="#9CA3AF" strokeWidth="1.5"/>
+                    <path d="M12 8V16M8 12H16" stroke="#9CA3AF" strokeWidth="1.5" strokeLinecap="round"/>
+                  </svg>
+                  <span
+                    style={{
+                      fontFamily: 'Inter, sans-serif',
+                      fontSize: '12px',
+                      color: '#003450',
+                      textAlign: 'center',
+                    }}
+                  >
+                    <span style={{ textDecoration: 'underline' }}>Upload a file</span> or drag and drop
+                  </span>
+                  <span
+                    style={{
+                      fontFamily: 'Inter, sans-serif',
+                      fontSize: '11px',
+                      color: '#9CA3AF',
+                    }}
+                  >
+                    PNG, JPG, GIF up to 10MB
+                  </span>
+                </div>
+
+                {/* Product Details Box - Edit Mode */}
+                <div
+                  className="flex-1"
+                  style={{
+                    borderRadius: '8px',
+                    padding: '24px',
+                    backgroundColor: '#FFFFFF',
+                    boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.06), 0px 1px 3px 0px rgba(0, 0, 0, 0.1)',
+                  }}
+                >
+                  <h2
+                    style={{
+                      fontFamily: 'Inter, sans-serif',
+                      fontWeight: 600,
+                      fontSize: '16px',
+                      lineHeight: '24px',
+                      color: '#111827',
+                      marginBottom: '16px',
+                    }}
+                  >
+                    Product Details
+                  </h2>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <Field
+                      label="Product Name"
+                      value={formData.productName}
+                      editMode={true}
+                      onChange={updateField('productName')}
+                    />
+                    <Field
+                      label="Manufacture"
+                      value={formData.manufacturer}
+                      editMode={true}
+                      onChange={updateField('manufacturer')}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Information Box - Edit Mode */}
+              <div
+                style={{
+                  borderRadius: '8px',
+                  padding: '24px',
+                  backgroundColor: '#FFFFFF',
+                  boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.06), 0px 1px 3px 0px rgba(0, 0, 0, 0.1)',
+                }}
+              >
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                  {/* Geodata Column */}
+                  <div className="flex flex-col gap-4">
+                    <h3
+                      style={{
+                        fontFamily: 'Inter, sans-serif',
+                        fontWeight: 600,
+                        fontSize: '16px',
+                        lineHeight: '24px',
+                        color: '#111827',
+                        marginBottom: '8px',
+                      }}
+                    >
+                      Geodata
+                    </h3>
+                    <Field label="Höhe in cm" value={formData.heightInCm} editMode={true} onChange={updateField('heightInCm')} />
+                    <Field label="Länge in cm" value={formData.lengthInCm} editMode={true} onChange={updateField('lengthInCm')} />
+                    <Field label="Breite in cm" value={formData.widthInCm} editMode={true} onChange={updateField('widthInCm')} />
+                    <Field label="Gewicht in kg" value={formData.weightInKg} editMode={true} onChange={updateField('weightInKg')} />
+                  </div>
+
+                  {/* Identifier Column */}
+                  <div className="flex flex-col gap-4">
+                    <h3
+                      style={{
+                        fontFamily: 'Inter, sans-serif',
+                        fontWeight: 600,
+                        fontSize: '16px',
+                        lineHeight: '24px',
+                        color: '#111827',
+                        marginBottom: '8px',
+                      }}
+                    >
+                      Identifier
+                    </h3>
+                    <Field label="SKU" value={formData.sku} editMode={true} onChange={updateField('sku')} />
+                    <Field label="GTIN" value={formData.gtin} editMode={true} onChange={updateField('gtin')} />
+                    <Field label="Amazon ASIN" value={formData.amazonAsin} editMode={true} onChange={updateField('amazonAsin')} />
+                    <Field label="Amazon SKU" value={formData.amazonSku} editMode={true} onChange={updateField('amazonSku')} />
+                    <Field label="ISBN" value={formData.isbn} editMode={true} onChange={updateField('isbn')} />
+                    <Field label="HAN" value={formData.han} editMode={true} onChange={updateField('han')} />
+                  </div>
+
+                  {/* Attributes Column */}
+                  <div className="flex flex-col gap-4">
+                    <h3
+                      style={{
+                        fontFamily: 'Inter, sans-serif',
+                        fontWeight: 600,
+                        fontSize: '16px',
+                        lineHeight: '24px',
+                        color: '#111827',
+                        marginBottom: '8px',
+                      }}
+                    >
+                      Attributes
+                    </h3>
+                    <Field label="MHD" value={formData.mhd} editMode={true} onChange={updateField('mhd')} />
+                    <Field label="Charge" value={formData.charge} editMode={true} onChange={updateField('charge')} />
+                    <Field label="Zolltarifnummer" value={formData.zolltarifnummer} editMode={true} onChange={updateField('zolltarifnummer')} />
+                    <Field label="Ursprung" value={formData.ursprung} editMode={true} onChange={updateField('ursprung')} />
+                    <Field label="Netto-Verkaufspreis" value={formData.nettoVerkaufspreis} editMode={true} onChange={updateField('nettoVerkaufspreis')} />
+                  </div>
+                </div>
+              </div>
+
+              {/* Save Product Box */}
+              <div
+                style={{
+                  borderRadius: '8px',
+                  padding: '24px',
+                  backgroundColor: '#FFFFFF',
+                  boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.06), 0px 1px 3px 0px rgba(0, 0, 0, 0.1)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                }}
+              >
+                <span
+                  style={{
+                    fontFamily: 'Inter, sans-serif',
+                    fontWeight: 500,
+                    fontSize: '16px',
+                    lineHeight: '24px',
+                    color: '#111827',
+                  }}
+                >
+                  Save product
+                </span>
+                <button
+                  onClick={handleSave}
+                  style={{
+                    width: 'clamp(90px, 7.5vw, 102px)',
+                    height: 'clamp(34px, 2.8vw, 38px)',
+                    borderRadius: '6px',
+                    padding: 'clamp(7px, 0.66vw, 9px) clamp(13px, 1.25vw, 17px)',
+                    backgroundColor: '#003450',
+                    boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.05)',
+                    border: 'none',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <span
+                    style={{
+                      fontFamily: 'Inter, sans-serif',
+                      fontWeight: 500,
+                      fontSize: 'clamp(12px, 1.03vw, 14px)',
+                      lineHeight: '20px',
+                      color: '#FFFFFF',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    Speichern
+                  </span>
+                </button>
+              </div>
+            </>
+          ) : (
+            <>
+              {/* View Mode Layout */}
+              {/* Product Header Section - Image + (Product Name Box + Stock Stats) */}
+              <div 
+                className="flex flex-wrap lg:flex-nowrap"
+                style={{
+                  gap: 'clamp(18px, 1.77vw, 24px)',
+                }}
+              >
+                {/* Product Image */}
+                <div
+                  style={{
+                    width: 'clamp(160px, 14.1vw, 192px)',
+                    minWidth: 'clamp(160px, 14.1vw, 192px)',
+                    height: 'clamp(160px, 14.1vw, 192px)',
+                    borderRadius: '8px',
+                    backgroundColor: '#F3F4F6',
+                    boxShadow: '0px 0px 0px 4px #FFFFFF',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    overflow: 'hidden',
+                    flexShrink: 0,
+                  }}
+                >
+                  {/* Placeholder product image */}
+                  <div
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      backgroundColor: '#E5E7EB',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <rect x="3" y="3" width="18" height="18" rx="2" stroke="#9CA3AF" strokeWidth="1.5"/>
+                      <circle cx="8.5" cy="8.5" r="1.5" fill="#9CA3AF"/>
+                      <path d="M21 15L16 10L8 18" stroke="#9CA3AF" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  </div>
+                </div>
+
+                {/* Right Column - Product Name Box + Stock Stats (combined height = image height) */}
+                <div
+                  className="flex flex-col"
+                  style={{
+                    width: 'clamp(800px, 72.5vw, 985px)',
+                    maxWidth: 'clamp(800px, 72.5vw, 985px)',
+                    height: 'clamp(160px, 14.1vw, 192px)',
+                    gap: 'clamp(9px, 0.88vw, 12px)',
+                  }}
+                >
+                  {/* Product Name Box */}
+                  <div
+                    style={{
+                      width: '100%',
+                      borderRadius: '8px',
+                      padding: 'clamp(12px, 1.1vw, 15px) clamp(18px, 1.77vw, 24px)',
+                      backgroundColor: '#FFFFFF',
+                      boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.06), 0px 1px 3px 0px rgba(0, 0, 0, 0.1)',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      justifyContent: 'center',
+                      gap: 'clamp(4px, 0.44vw, 6px)',
+                    }}
+                  >
+                    <h1
+                      style={{
+                        fontFamily: 'Inter, sans-serif',
+                        fontWeight: 500,
+                        fontSize: 'clamp(16px, 1.33vw, 18px)',
+                        lineHeight: '1.2',
+                        color: '#111827',
+                        margin: 0,
+                      }}
+                    >
+                      {formData.productName}
+                    </h1>
+                    <p
+                      style={{
+                        fontFamily: 'Inter, sans-serif',
+                        fontWeight: 400,
+                        fontSize: 'clamp(12px, 1.03vw, 14px)',
+                        lineHeight: '1.4',
+                        color: '#6B7280',
+                        margin: 0,
+                      }}
+                    >
+                      Manufacture: {formData.manufacturer} &nbsp;&nbsp;&nbsp;&nbsp; Product ID: {product.productId}
+                    </p>
+                  </div>
+
+                  {/* Stock Stats Row */}
+                  <div 
+                    className="flex"
+                    style={{
+                      flex: 1,
+                      gap: 'clamp(12px, 1.1vw, 16px)',
+                    }}
+                  >
+                    {/* Total Stock */}
+                    <div
+                      style={{
+                        flex: 1,
+                        borderRadius: '8px',
+                        border: '1px solid #D1D5DB',
+                        padding: 'clamp(12px, 1.1vw, 16px) clamp(16px, 1.47vw, 20px)',
+                        backgroundColor: '#FFFFFF',
+                        boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.05)',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        justifyContent: 'center',
+                        gap: '4px',
+                      }}
+                    >
+                      <span
+                        style={{
+                          fontFamily: 'Inter, sans-serif',
+                          fontWeight: 500,
+                          fontSize: 'clamp(12px, 1.03vw, 14px)',
+                          lineHeight: '1.4',
+                          color: '#6B7280',
+                        }}
+                      >
+                        Total Stock
+                      </span>
+                      <span
+                        style={{
+                          fontFamily: 'Inter, sans-serif',
+                          fontWeight: 600,
+                          fontSize: 'clamp(16px, 1.33vw, 18px)',
+                          lineHeight: '1.3',
+                          color: '#111827',
+                        }}
+                      >
+                        {product.totalStock}
+                      </span>
+                    </div>
+
+                    {/* Available */}
+                    <div
+                      style={{
+                        flex: 1,
+                        borderRadius: '8px',
+                        border: '1px solid #D1D5DB',
+                        padding: 'clamp(12px, 1.1vw, 16px) clamp(16px, 1.47vw, 20px)',
+                        backgroundColor: '#FFFFFF',
+                        boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.05)',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        justifyContent: 'center',
+                        gap: '4px',
+                      }}
+                    >
+                      <span
+                        style={{
+                          fontFamily: 'Inter, sans-serif',
+                          fontWeight: 500,
+                          fontSize: 'clamp(12px, 1.03vw, 14px)',
+                          lineHeight: '1.4',
+                          color: '#6B7280',
+                        }}
+                      >
+                        Available
+                      </span>
+                      <span
+                        style={{
+                          fontFamily: 'Inter, sans-serif',
+                          fontWeight: 600,
+                          fontSize: 'clamp(16px, 1.33vw, 18px)',
+                          lineHeight: '1.3',
+                          color: '#111827',
+                        }}
+                      >
+                        {product.available}
+                      </span>
+                    </div>
+
+                    {/* Reserved */}
+                    <div
+                      style={{
+                        flex: 1,
+                        borderRadius: '8px',
+                        border: '1px solid #D1D5DB',
+                        padding: 'clamp(12px, 1.1vw, 16px) clamp(16px, 1.47vw, 20px)',
+                        backgroundColor: '#FFFFFF',
+                        boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.05)',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        justifyContent: 'center',
+                        gap: '4px',
+                      }}
+                    >
+                      <span
+                        style={{
+                          fontFamily: 'Inter, sans-serif',
+                          fontWeight: 500,
+                          fontSize: 'clamp(12px, 1.03vw, 14px)',
+                          lineHeight: '1.4',
+                          color: '#6B7280',
+                        }}
+                      >
+                        Reserved
+                      </span>
+                      <span
+                        style={{
+                          fontFamily: 'Inter, sans-serif',
+                          fontWeight: 600,
+                          fontSize: 'clamp(16px, 1.33vw, 18px)',
+                          lineHeight: '1.3',
+                          color: '#111827',
+                        }}
+                      >
+                        {product.reserved}
+                      </span>
+                    </div>
+
+                    {/* Announced */}
+                    <div
+                      style={{
+                        flex: 1,
+                        borderRadius: '8px',
+                        border: '1px solid #D1D5DB',
+                        padding: 'clamp(12px, 1.1vw, 16px) clamp(16px, 1.47vw, 20px)',
+                        backgroundColor: '#FFFFFF',
+                        boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.05)',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        justifyContent: 'center',
+                        gap: '4px',
+                      }}
+                    >
+                      <span
+                        style={{
+                          fontFamily: 'Inter, sans-serif',
+                          fontWeight: 500,
+                          fontSize: 'clamp(12px, 1.03vw, 14px)',
+                          lineHeight: '1.4',
+                          color: '#6B7280',
+                        }}
+                      >
+                        Anounced
+                      </span>
+                      <span
+                        style={{
+                          fontFamily: 'Inter, sans-serif',
+                          fontWeight: 600,
+                          fontSize: 'clamp(16px, 1.33vw, 18px)',
+                          lineHeight: '1.3',
+                          color: '#111827',
+                        }}
+                      >
+                        {product.announced}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Information Box - width: 985px, height: 640px at 1358px screen */}
+              <div
+                style={{
+                  width: 'clamp(800px, 72.5vw, 985px)',
+                  maxWidth: 'clamp(800px, 72.5vw, 985px)',
+                  minHeight: 'clamp(520px, 47.13vw, 640px)',
+                  borderRadius: '8px',
+                  padding: 'clamp(18px, 1.77vw, 24px)',
+                  backgroundColor: '#FFFFFF',
+                  boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.06), 0px 1px 3px 0px rgba(0, 0, 0, 0.1)',
+                  marginLeft: 'clamp(184px, 16vw, 216px)',
+                  gap: 'clamp(9px, 0.88vw, 12px)',
+                }}
+              >
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                  {/* Geodaten Column */}
+                  <div className="flex flex-col gap-4">
+                    <h3
+                      style={{
+                        fontFamily: 'Inter, sans-serif',
+                        fontWeight: 600,
+                        fontSize: '16px',
+                        lineHeight: '24px',
+                        color: '#111827',
+                        marginBottom: '8px',
+                      }}
+                    >
+                      Geodaten
+                    </h3>
+                    <Field label="Height in cm" value={formData.heightInCm} editMode={false} onChange={() => {}} />
+                    <Field label="Width in cm" value={formData.widthInCm} editMode={false} onChange={() => {}} />
+                    <Field label="Length in cm" value={formData.lengthInCm} editMode={false} onChange={() => {}} />
+                    <Field label="Weight in kg" value={formData.weightInKg} editMode={false} onChange={() => {}} />
+                  </div>
+
+                  {/* Identifizierung Column */}
+                  <div className="flex flex-col gap-4">
+                    <h3
+                      style={{
+                        fontFamily: 'Inter, sans-serif',
+                        fontWeight: 600,
+                        fontSize: '16px',
+                        lineHeight: '24px',
+                        color: '#111827',
+                        marginBottom: '8px',
+                      }}
+                    >
+                      Identifizierung
+                    </h3>
+                    <Field label="SKU" value={formData.sku} editMode={false} onChange={() => {}} />
+                    <Field label="GTIN" value={formData.gtin} editMode={false} onChange={() => {}} />
+                    <Field label="Amazon ASIN" value={formData.amazonAsin} editMode={false} onChange={() => {}} />
+                    <Field label="Amazon SKU" value={formData.amazonSku} editMode={false} onChange={() => {}} />
+                    <Field label="ISBN" value={formData.isbn} editMode={false} onChange={() => {}} />
+                    <Field label="HAN" value={formData.han} editMode={false} onChange={() => {}} />
+                  </div>
+
+                  {/* Eigenschaften Column */}
+                  <div className="flex flex-col gap-4">
+                    <h3
+                      style={{
+                        fontFamily: 'Inter, sans-serif',
+                        fontWeight: 600,
+                        fontSize: '16px',
+                        lineHeight: '24px',
+                        color: '#111827',
+                        marginBottom: '8px',
+                      }}
+                    >
+                      Eigenschaften
+                    </h3>
+                    <Field label="MHD" value={formData.mhd} editMode={false} onChange={() => {}} />
+                    <Field label="Charge" value={formData.charge} editMode={false} onChange={() => {}} />
+                    <Field label="Zolltarifnummer" value={formData.zolltarifnummer} editMode={false} onChange={() => {}} />
+                    <Field label="Ursprung" value={formData.ursprung} editMode={false} onChange={() => {}} />
+                    <Field label="Netto-Verkaufspreis" value={formData.nettoVerkaufspreis} editMode={false} onChange={() => {}} />
+                    <Field label="Manufacture" value={formData.manufacture} editMode={false} onChange={() => {}} />
+                  </div>
+                </div>
+              </div>
+
+              {/* Edit Product Box - Right aligned with Product Name Box */}
+              <div
+                style={{
+                  width: 'clamp(800px, 72.5vw, 985px)',
+                  maxWidth: 'clamp(800px, 72.5vw, 985px)',
+                  borderRadius: '8px',
+                  padding: 'clamp(18px, 1.77vw, 24px)',
+                  backgroundColor: '#FFFFFF',
+                  boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.06), 0px 1px 3px 0px rgba(0, 0, 0, 0.1)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  marginLeft: 'clamp(184px, 16vw, 216px)',
+                }}
+              >
+                <span
+                  style={{
+                    fontFamily: 'Inter, sans-serif',
+                    fontWeight: 500,
+                    fontSize: '16px',
+                    lineHeight: '24px',
+                    color: '#111827',
+                  }}
+                >
+                  Edit product
+                </span>
+                {/* Toggle Button */}
+                <button
+                  onClick={() => setEditMode(!editMode)}
+                  style={{
+                    width: '44px',
+                    height: '24px',
+                    borderRadius: '12px',
+                    padding: '2px',
+                    backgroundColor: editMode ? '#003450' : '#E5E7EB',
+                    position: 'relative',
+                    cursor: 'pointer',
+                    border: 'none',
+                    transition: 'background-color 0.2s',
+                  }}
+                >
+                  <div
+                    style={{
+                      width: '20px',
+                      height: '20px',
+                      borderRadius: '50%',
+                      backgroundColor: '#FFFFFF',
+                      position: 'absolute',
+                      top: '2px',
+                      left: editMode ? '22px' : '2px',
+                      transition: 'left 0.2s',
+                      boxShadow: '0px 1px 2px rgba(0, 0, 0, 0.1)',
+                    }}
+                  />
+                </button>
+              </div>
+
+              {/* Generate Barcode Label Box */}
+              <div
+                style={{
+                  width: 'clamp(800px, 72.5vw, 985px)',
+                  maxWidth: 'clamp(800px, 72.5vw, 985px)',
+                  borderRadius: '8px',
+                  padding: 'clamp(18px, 1.77vw, 24px)',
+                  backgroundColor: '#FFFFFF',
+                  boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.06), 0px 1px 3px 0px rgba(0, 0, 0, 0.1)',
+                  marginLeft: 'clamp(184px, 16vw, 216px)',
+                }}
+              >
+                <h3
+                  style={{
+                    fontFamily: 'Inter, sans-serif',
+                    fontWeight: 600,
+                    fontSize: '16px',
+                    lineHeight: '24px',
+                    color: '#111827',
+                    marginBottom: '8px',
+                  }}
+                >
+                  Generate barcode label
+                </h3>
+                <p
+                  style={{
+                    fontFamily: 'Inter, sans-serif',
+                    fontWeight: 400,
+                    fontSize: '14px',
+                    lineHeight: '20px',
+                    color: '#6B7280',
+                    marginBottom: '16px',
+                  }}
+                >
+                  Wähle zuerst das benötigte Etikett, hinterlege die gewünschte Menge und anschließend den zu verwendenden Drucker
+                </p>
+                <div className="flex items-center gap-4 flex-wrap">
+                  {/* Barcode Type Select */}
+                  <div className="relative">
+                    <select
+                      value={barcodeType}
+                      onChange={(e) => setBarcodeType(e.target.value)}
+                      style={{
+                        width: '200px',
+                        height: '38px',
+                        borderRadius: '6px',
+                        border: '1px solid #D1D5DB',
+                        padding: '9px 13px',
+                        paddingRight: '32px',
+                        backgroundColor: '#FFFFFF',
+                        boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.05)',
+                        fontFamily: 'Inter, sans-serif',
+                        fontWeight: 500,
+                        fontSize: '14px',
+                        lineHeight: '20px',
+                        color: '#374151',
+                        appearance: 'none',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      <option value="GTIN">GTIN</option>
+                      <option value="SKU">SKU</option>
+                      <option value="EAN">EAN</option>
+                    </select>
+                    <div
+                      style={{
+                        position: 'absolute',
+                        right: '13px',
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        pointerEvents: 'none',
+                      }}
+                    >
+                      <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M3 4.5L6 7.5L9 4.5" stroke="#6B7280" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                    </div>
+                  </div>
+
+                  {/* Quantity Select */}
+                  <div className="relative">
+                    <select
+                      value={barcodeQuantity}
+                      onChange={(e) => setBarcodeQuantity(e.target.value)}
+                      style={{
+                        width: '80px',
+                        height: '38px',
+                        borderRadius: '6px',
+                        border: '1px solid #D1D5DB',
+                        padding: '9px 13px',
+                        paddingRight: '32px',
+                        backgroundColor: '#FFFFFF',
+                        boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.05)',
+                        fontFamily: 'Inter, sans-serif',
+                        fontWeight: 500,
+                        fontSize: '14px',
+                        lineHeight: '20px',
+                        color: '#374151',
+                        appearance: 'none',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      {[1, 2, 3, 4, 5, 10, 20, 50, 100].map((num) => (
+                        <option key={num} value={num.toString()}>{num}</option>
+                      ))}
+                    </select>
+                    <div
+                      style={{
+                        position: 'absolute',
+                        right: '13px',
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        pointerEvents: 'none',
+                      }}
+                    >
+                      <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M3 4.5L6 7.5L9 4.5" stroke="#6B7280" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                    </div>
+                  </div>
+
+                  {/* Create Button */}
+                  <button
+                    style={{
+                      minWidth: '79px',
+                      height: '38px',
+                      borderRadius: '6px',
+                      padding: '9px 17px',
+                      backgroundColor: '#003450',
+                      boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.05)',
+                      border: 'none',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    <span
+                      style={{
+                        fontFamily: 'Inter, sans-serif',
+                        fontWeight: 500,
+                        fontSize: '14px',
+                        lineHeight: '20px',
+                        color: '#FFFFFF',
+                      }}
+                    >
+                      Create
+                    </span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Delete Product Box */}
+              <div
+                style={{
+                  width: 'clamp(800px, 72.5vw, 985px)',
+                  maxWidth: 'clamp(800px, 72.5vw, 985px)',
+                  borderRadius: '8px',
+                  padding: 'clamp(18px, 1.77vw, 24px)',
+                  backgroundColor: '#FFFFFF',
+                  boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.06), 0px 1px 3px 0px rgba(0, 0, 0, 0.1)',
+                  marginLeft: 'clamp(184px, 16vw, 216px)',
+                }}
+              >
+                <h3
+                  style={{
+                    fontFamily: 'Inter, sans-serif',
+                    fontWeight: 600,
+                    fontSize: '16px',
+                    lineHeight: '24px',
+                    color: '#111827',
+                    marginBottom: '8px',
+                  }}
+                >
+                  Delete product
+                </h3>
+                <p
+                  style={{
+                    fontFamily: 'Inter, sans-serif',
+                    fontWeight: 400,
+                    fontSize: '14px',
+                    lineHeight: '20px',
+                    color: '#6B7280',
+                    marginBottom: '16px',
+                  }}
+                >
+                  Achtung, das Löschen des Artikels führt dazu, dass alle Warenbewegungen verloren gehen. Artikel können nur gelöscht werden wenn kein Bestand vorhanden ist und keine Reservierungen oder Anlieferungen anliegen.
+                </p>
+                <button
+                  style={{
+                    minWidth: '134px',
+                    height: '38px',
+                    borderRadius: '6px',
+                    padding: '9px 17px',
+                    backgroundColor: '#FEE2E2',
+                    border: 'none',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <span
+                    style={{
+                      fontFamily: 'Inter, sans-serif',
+                      fontWeight: 500,
+                      fontSize: '14px',
+                      lineHeight: '20px',
+                      color: '#DC2626',
+                    }}
+                  >
+                    Delete product
+                  </span>
+                </button>
+              </div>
+            </>
+          )}
+        </div>
+      )}
+
+      {/* Other Tabs Content Placeholders */}
+      {activeTab === 'stockMovements' && (
+        <div
+          style={{
+            borderRadius: '8px',
+            padding: '48px',
+            backgroundColor: '#FFFFFF',
+            boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.06), 0px 1px 3px 0px rgba(0, 0, 0, 0.1)',
+            textAlign: 'center',
+          }}
+        >
+          <p style={{ color: '#6B7280', fontFamily: 'Inter, sans-serif' }}>
+            Stock movements content coming soon...
+          </p>
+        </div>
+      )}
+
+      {activeTab === 'orders' && (
+        <div
+          style={{
+            borderRadius: '8px',
+            padding: '48px',
+            backgroundColor: '#FFFFFF',
+            boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.06), 0px 1px 3px 0px rgba(0, 0, 0, 0.1)',
+            textAlign: 'center',
+          }}
+        >
+          <p style={{ color: '#6B7280', fontFamily: 'Inter, sans-serif' }}>
+            Orders content coming soon...
+          </p>
+        </div>
+      )}
+
+      {activeTab === 'bundle' && (
+        <div
+          style={{
+            borderRadius: '8px',
+            padding: '48px',
+            backgroundColor: '#FFFFFF',
+            boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.06), 0px 1px 3px 0px rgba(0, 0, 0, 0.1)',
+            textAlign: 'center',
+          }}
+        >
+          <p style={{ color: '#6B7280', fontFamily: 'Inter, sans-serif' }}>
+            Bundle content coming soon...
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}

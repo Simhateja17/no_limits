@@ -1,7 +1,25 @@
+'use client';
+
 import { DashboardLayout } from '@/components/layout';
 import { StatCard } from '@/components/dashboard';
+import { useAuthStore } from '@/lib/store';
+import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
 
-export default function DashboardPage() {
+export default function EmployeeDashboardPage() {
+  const { user, isAuthenticated } = useAuthStore();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!isAuthenticated || user?.role !== 'EMPLOYEE') {
+      router.push('/');
+    }
+  }, [isAuthenticated, user, router]);
+
+  if (!isAuthenticated || user?.role !== 'EMPLOYEE') {
+    return null;
+  }
+
   return (
     <DashboardLayout>
       <div
