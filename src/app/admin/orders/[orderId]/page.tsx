@@ -1638,21 +1638,26 @@ export default function OrderDetailPage() {
                 <button
                   onClick={handleSaveAddress}
                   style={{
-                    height: '38px',
-                    padding: '9px 17px',
+                    minWidth: 'clamp(60px, 5.5vw, 75px)',
+                    height: 'clamp(34px, 2.8vw, 38px)',
+                    padding: 'clamp(7px, 0.66vw, 9px) clamp(13px, 1.25vw, 17px)',
                     borderRadius: '6px',
                     backgroundColor: '#003450',
                     border: 'none',
                     cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
                   }}
                 >
                   <span
                     style={{
                       fontFamily: 'Inter, sans-serif',
                       fontWeight: 500,
-                      fontSize: '14px',
+                      fontSize: 'clamp(12px, 1.03vw, 14px)',
                       lineHeight: '20px',
                       color: '#FFFFFF',
+                      textAlign: 'center',
                     }}
                   >
                     Save
