@@ -85,9 +85,9 @@ export function Navbar() {
   const getRoleLabel = (role: UserRole) => {
     switch (role) {
       case 'CLIENT':
-        return 'Store Owner';
+        return 'Fulfillment Client';
       case 'EMPLOYEE':
-        return 'Employee';
+        return 'Warehouse';
       case 'ADMIN':
         return 'Admin';
       case 'SUPER_ADMIN':

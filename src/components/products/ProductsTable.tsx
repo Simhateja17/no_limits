@@ -376,7 +376,7 @@ export function ProductsTable({ showClientColumn, baseUrl }: ProductsTableProps)
               color: '#6B7280',
             }}
           >
-            display client only in superadmin and warehouse labor view
+            
           </div>
         )}
       </div>
@@ -632,6 +632,9 @@ export function ProductsTable({ showClientColumn, baseUrl }: ProductsTableProps)
               boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.05)',
               cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
               opacity: currentPage === 1 ? 0.5 : 1,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
             }}
           >
             <span
@@ -652,7 +655,7 @@ export function ProductsTable({ showClientColumn, baseUrl }: ProductsTableProps)
             onClick={handleNext}
             disabled={currentPage >= totalPages}
             style={{
-              minWidth: '66px',
+              minWidth: '92px',
               height: '38px',
               borderRadius: '6px',
               border: '1px solid #D1D5DB',
@@ -661,6 +664,9 @@ export function ProductsTable({ showClientColumn, baseUrl }: ProductsTableProps)
               boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.05)',
               cursor: currentPage >= totalPages ? 'not-allowed' : 'pointer',
               opacity: currentPage >= totalPages ? 0.5 : 1,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
             }}
           >
             <span

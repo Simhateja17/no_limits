@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 
 // Tab type for orders
@@ -75,56 +74,75 @@ const formatOrderDate = (date: Date): string => {
   }
 };
 
-// Status icon component
-const StatusIcon = ({ status }: { status: OrderStatus }) => {
-  const iconSize = 27; // Base size
-  
-  if (status === 'success') {
-    return (
-      <div 
-        className="flex items-center justify-center"
-        style={{ width: `${iconSize}px`, height: `${iconSize}px` }}
-      >
-        <Image
-          src="/sent+read.png"
-          alt="Success"
-          width={iconSize}
-          height={iconSize}
-          style={{ objectFit: 'contain' }}
-        />
-      </div>
-    );
-  } else if (status === 'error') {
-    return (
-      <div 
-        className="flex items-center justify-center"
-        style={{ width: `${iconSize}px`, height: `${iconSize}px` }}
-      >
-        <Image
-          src="/error.png"
-          alt="Error"
-          width={iconSize}
-          height={iconSize}
-          style={{ objectFit: 'contain' }}
-        />
-      </div>
-    );
-  } else {
-    return (
-      <div 
-        className="flex items-center justify-center"
-        style={{ width: `${iconSize}px`, height: `${iconSize}px` }}
-      >
-        <Image
-          src="/mild_error.png"
-          alt="Mild Error"
-          width={iconSize}
-          height={iconSize}
-          style={{ objectFit: 'contain' }}
-        />
-      </div>
-    );
-  }
+// Status tag component
+const StatusTag = ({ status }: { status: OrderStatus }) => {
+  const getStatusConfig = () => {
+    switch (status) {
+      case 'success':
+        return {
+          label: 'Processing',
+          bgColor: '#F0FDF4',
+          textColor: '#166534',
+          borderColor: '#BBF7D0',
+          dotColor: '#22C55E',
+        };
+      case 'error':
+        return {
+          label: 'Cancelled',
+          bgColor: '#FEF2F2',
+          textColor: '#991B1B',
+          borderColor: '#FECACA',
+          dotColor: '#EF4444',
+        };
+      case 'mildError':
+        return {
+          label: 'Issue',
+          bgColor: '#FFFBEB',
+          textColor: '#92400E',
+          borderColor: '#FDE68A',
+          dotColor: '#F59E0B',
+        };
+      default:
+        return {
+          label: 'Unknown',
+          bgColor: '#F3F4F6',
+          textColor: '#374151',
+          borderColor: '#D1D5DB',
+          dotColor: '#6B7280',
+        };
+    }
+  };
+
+  const config = getStatusConfig();
+
+  return (
+    <span
+      style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: '6px',
+        padding: '4px 12px',
+        borderRadius: '9999px',
+        backgroundColor: config.bgColor,
+        border: `1px solid ${config.borderColor}`,
+        fontFamily: 'Inter, sans-serif',
+        fontSize: '12px',
+        fontWeight: 500,
+        color: config.textColor,
+        whiteSpace: 'nowrap',
+      }}
+    >
+      <span
+        style={{
+          width: '6px',
+          height: '6px',
+          borderRadius: '50%',
+          backgroundColor: config.dotColor,
+        }}
+      />
+      {config.label}
+    </span>
+  );
 };
 
 export function OrdersTable({ showClientColumn, basePath = '/admin/orders' }: OrdersTableProps) {
@@ -468,7 +486,7 @@ export function OrdersTable({ showClientColumn, basePath = '/admin/orders' }: Or
 
       {/* Filter and Search Row */}
       <div className="flex items-end gap-6 flex-wrap">
-        {/* Filter by Customer */}
+        {/* Filter by Customer (for admin/employee) or Channels (for client) */}
         <div className="flex flex-col gap-2">
           <label
             style={{
@@ -479,7 +497,7 @@ export function OrdersTable({ showClientColumn, basePath = '/admin/orders' }: Or
               color: '#374151',
             }}
           >
-            Filter by Customer
+            {showClientColumn ? 'Filter by Customer' : 'Channels'}
           </label>
           <div className="relative">
             <select
@@ -774,7 +792,7 @@ export function OrdersTable({ showClientColumn, basePath = '/admin/orders' }: Or
               {order.method}
             </span>
             <div className="flex items-center justify-start">
-              <StatusIcon status={order.status} />
+              <StatusTag status={order.status} />
             </div>
           </div>
         ))}
@@ -831,6 +849,9 @@ export function OrdersTable({ showClientColumn, basePath = '/admin/orders' }: Or
               boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.05)',
               cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
               opacity: currentPage === 1 ? 0.5 : 1,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
             }}
           >
             <span
@@ -851,7 +872,7 @@ export function OrdersTable({ showClientColumn, basePath = '/admin/orders' }: Or
             onClick={handleNext}
             disabled={currentPage >= totalPages}
             style={{
-              minWidth: '66px',
+              minWidth: '92px',
               height: '38px',
               borderRadius: '6px',
               border: '1px solid #D1D5DB',
@@ -860,6 +881,9 @@ export function OrdersTable({ showClientColumn, basePath = '/admin/orders' }: Or
               boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.05)',
               cursor: currentPage >= totalPages ? 'not-allowed' : 'pointer',
               opacity: currentPage >= totalPages ? 0.5 : 1,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
             }}
           >
             <span
