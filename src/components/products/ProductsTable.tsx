@@ -241,6 +241,7 @@ export function ProductsTable({ showClientColumn, baseUrl }: ProductsTableProps)
 
         {/* Create Product Button */}
         <button
+          onClick={() => router.push(`${baseUrl}/create`)}
           style={{
             width: '136px',
             height: '38px',
@@ -251,6 +252,8 @@ export function ProductsTable({ showClientColumn, baseUrl }: ProductsTableProps)
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
+            cursor: 'pointer',
+            border: 'none',
           }}
         >
           <span

@@ -36,6 +36,18 @@ const mockAvailableProducts = [
   { id: '7', name: 'Testproduct 7', sku: '#24234', gtin: '342345235324', qty: 1, merchant: 'Merchant 5' },
 ];
 
+// Available shipping methods
+const shippingMethods = [
+  { id: 'dhl', name: 'DHL Paket National', logo: '/dhl.png' },
+  { id: 'dhl-express', name: 'DHL Express', logo: '/dhl.png' },
+  { id: 'ups', name: 'UPS Standard', logo: '/ups.png' },
+  { id: 'ups-express', name: 'UPS Express', logo: '/ups.png' },
+  { id: 'fedex', name: 'FedEx Ground', logo: '/fedex.png' },
+  { id: 'fedex-express', name: 'FedEx Express', logo: '/fedex.png' },
+  { id: 'dpd', name: 'DPD Classic', logo: '/DPD_logo(red)2015.png' },
+  { id: 'hermes', name: 'Hermes Paket', logo: '/hermes.png' },
+];
+
 // Status color mapping
 const getStatusColor = (status: string) => {
   switch (status) {
@@ -68,6 +80,8 @@ export default function OrderDetailPage() {
   const [productSearchQuery, setProductSearchQuery] = useState('');
   const [productQuantities, setProductQuantities] = useState<Record<string, number>>({});
   const [showProductList, setShowProductList] = useState(false);
+  const [selectedShippingMethod, setSelectedShippingMethod] = useState(shippingMethods[0]);
+  const [showShippingDropdown, setShowShippingDropdown] = useState(false);
 
   // Form state for edit modal
   const [formData, setFormData] = useState({
@@ -384,6 +398,7 @@ export default function OrderDetailPage() {
                   borderRadius: '8px',
                   backgroundColor: '#FFFFFF',
                   boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.06), 0px 1px 3px 0px rgba(0, 0, 0, 0.1)',
+                  position: 'relative',
                 }}
               >
                 <span
@@ -397,26 +412,153 @@ export default function OrderDetailPage() {
                 >
                   Shipping method
                 </span>
-                <div className="flex items-center gap-2 mt-3">
-                  <Image
-                    src="/dhl.png"
-                    alt="DHL"
-                    width={24}
-                    height={24}
-                    style={{ borderRadius: '12px' }}
-                  />
-                  <span
-                    style={{
-                      fontFamily: 'Inter, sans-serif',
-                      fontWeight: 400,
-                      fontSize: '14px',
-                      lineHeight: '20px',
-                      color: '#111827',
-                    }}
-                  >
-                    {mockOrderDetails.shippingMethod}
-                  </span>
-                </div>
+                {editOrderEnabled ? (
+                  <div style={{ position: 'relative', marginTop: '12px' }}>
+                    <button
+                      onClick={() => setShowShippingDropdown(!showShippingDropdown)}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        width: '100%',
+                        padding: '8px 12px',
+                        backgroundColor: '#F9FAFB',
+                        border: '1px solid #E5E7EB',
+                        borderRadius: '8px',
+                        cursor: 'pointer',
+                        fontFamily: 'Inter, sans-serif',
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <Image
+                          src={selectedShippingMethod.logo}
+                          alt={selectedShippingMethod.name}
+                          width={24}
+                          height={24}
+                          style={{ borderRadius: '12px' }}
+                        />
+                        <span
+                          style={{
+                            fontWeight: 400,
+                            fontSize: '14px',
+                            lineHeight: '20px',
+                            color: '#111827',
+                          }}
+                        >
+                          {selectedShippingMethod.name}
+                        </span>
+                      </div>
+                      <svg
+                        width="16"
+                        height="16"
+                        viewBox="0 0 16 16"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                        style={{
+                          transform: showShippingDropdown ? 'rotate(180deg)' : 'rotate(0deg)',
+                          transition: 'transform 0.2s ease',
+                        }}
+                      >
+                        <path
+                          d="M4 6L8 10L12 6"
+                          stroke="#6B7280"
+                          strokeWidth="1.5"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                    </button>
+                    {showShippingDropdown && (
+                      <div
+                        style={{
+                          position: 'absolute',
+                          top: '100%',
+                          left: 0,
+                          right: 0,
+                          marginTop: '4px',
+                          backgroundColor: '#FFFFFF',
+                          border: '1px solid #E5E7EB',
+                          borderRadius: '8px',
+                          boxShadow: '0px 4px 6px -1px rgba(0, 0, 0, 0.1), 0px 2px 4px -1px rgba(0, 0, 0, 0.06)',
+                          zIndex: 50,
+                          maxHeight: '200px',
+                          overflowY: 'auto',
+                        }}
+                      >
+                        {shippingMethods.map((method) => (
+                          <button
+                            key={method.id}
+                            onClick={() => {
+                              setSelectedShippingMethod(method);
+                              setShowShippingDropdown(false);
+                            }}
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '8px',
+                              width: '100%',
+                              padding: '10px 12px',
+                              backgroundColor: selectedShippingMethod.id === method.id ? '#F3F4F6' : 'transparent',
+                              border: 'none',
+                              cursor: 'pointer',
+                              fontFamily: 'Inter, sans-serif',
+                              textAlign: 'left',
+                            }}
+                            onMouseEnter={(e) => {
+                              if (selectedShippingMethod.id !== method.id) {
+                                e.currentTarget.style.backgroundColor = '#F9FAFB';
+                              }
+                            }}
+                            onMouseLeave={(e) => {
+                              if (selectedShippingMethod.id !== method.id) {
+                                e.currentTarget.style.backgroundColor = 'transparent';
+                              }
+                            }}
+                          >
+                            <Image
+                              src={method.logo}
+                              alt={method.name}
+                              width={24}
+                              height={24}
+                              style={{ borderRadius: '12px' }}
+                            />
+                            <span
+                              style={{
+                                fontWeight: 400,
+                                fontSize: '14px',
+                                lineHeight: '20px',
+                                color: '#111827',
+                              }}
+                            >
+                              {method.name}
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2 mt-3">
+                    <Image
+                      src={selectedShippingMethod.logo}
+                      alt={selectedShippingMethod.name}
+                      width={24}
+                      height={24}
+                      style={{ borderRadius: '12px' }}
+                    />
+                    <span
+                      style={{
+                        fontFamily: 'Inter, sans-serif',
+                        fontWeight: 400,
+                        fontSize: '14px',
+                        lineHeight: '20px',
+                        color: '#111827',
+                      }}
+                    >
+                      {selectedShippingMethod.name}
+                    </span>
+                  </div>
+                )}
               </div>
 
               {/* Shipment Weight Box */}

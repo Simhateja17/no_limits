@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 
 // Tab type for product details
@@ -172,6 +172,38 @@ export function ProductDetails({ productId, backUrl }: ProductDetailsProps) {
     manufacture: mockProductDetails.manufacture,
   });
 
+  // Product image state
+  const [productImage, setProductImage] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        alert('Please select an image file');
+        return;
+      }
+      // Validate file size (max 10MB)
+      if (file.size > 10 * 1024 * 1024) {
+        alert('File size must be less than 10MB');
+        return;
+      }
+      // Create preview URL
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setProductImage(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleImageClick = () => {
+    if (editMode && fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  };
+
   // In a real app, fetch product by productId from the API
   console.log('Loading product:', productId);
   const product = mockProductDetails;
@@ -259,308 +291,272 @@ export function ProductDetails({ productId, backUrl }: ProductDetailsProps) {
           </span>
         </button>
 
-        {!editMode && (
-          <>
-            {/* Stock Movements Tab */}
-            <button
-              onClick={() => setActiveTab('stockMovements')}
-              style={{
-                height: '38px',
-                paddingLeft: '4px',
-                paddingRight: '4px',
-                paddingBottom: '16px',
-                marginLeft: '24px',
-                borderBottom: activeTab === 'stockMovements' ? '2px solid #003450' : '2px solid transparent',
-                marginBottom: '-1px',
-              }}
-            >
-              <span
-                style={{
-                  fontFamily: 'Inter, sans-serif',
-                  fontWeight: 500,
-                  fontSize: '14px',
-                  lineHeight: '20px',
-                  color: activeTab === 'stockMovements' ? '#003450' : '#6B7280',
-                }}
-              >
-                Stock movements
-              </span>
-            </button>
+        {/* Stock Movements Tab */}
+        <button
+          onClick={() => setActiveTab('stockMovements')}
+          style={{
+            height: '38px',
+            paddingLeft: '4px',
+            paddingRight: '4px',
+            paddingBottom: '16px',
+            marginLeft: '24px',
+            borderBottom: activeTab === 'stockMovements' ? '2px solid #003450' : '2px solid transparent',
+            marginBottom: '-1px',
+          }}
+        >
+          <span
+            style={{
+              fontFamily: 'Inter, sans-serif',
+              fontWeight: 500,
+              fontSize: '14px',
+              lineHeight: '20px',
+              color: activeTab === 'stockMovements' ? '#003450' : '#6B7280',
+            }}
+          >
+            Stock movements
+          </span>
+        </button>
 
-            {/* Orders Tab */}
-            <button
-              onClick={() => setActiveTab('orders')}
-              className="flex items-center gap-2"
-              style={{
-                height: '38px',
-                paddingLeft: '4px',
-                paddingRight: '4px',
-                paddingBottom: '16px',
-                marginLeft: '24px',
-                borderBottom: activeTab === 'orders' ? '2px solid #003450' : '2px solid transparent',
-                marginBottom: '-1px',
-              }}
-            >
-              <span
-                style={{
-                  fontFamily: 'Inter, sans-serif',
-                  fontWeight: 500,
-                  fontSize: '14px',
-                  lineHeight: '20px',
-                  color: activeTab === 'orders' ? '#003450' : '#6B7280',
-                }}
-              >
-                Orders
-              </span>
-              <span
-                style={{
-                  minWidth: '28px',
-                  height: '20px',
-                  borderRadius: '10px',
-                  padding: '2px 10px',
-                  backgroundColor: '#F3F4F6',
-                  fontFamily: 'Inter, sans-serif',
-                  fontWeight: 500,
-                  fontSize: '12px',
-                  lineHeight: '16px',
-                  textAlign: 'center',
-                  color: '#1F2937',
-                }}
-              >
-                {product.ordersCount}
-              </span>
-            </button>
+        {/* Orders Tab */}
+        <button
+          onClick={() => setActiveTab('orders')}
+          className="flex items-center gap-2"
+          style={{
+            height: '38px',
+            paddingLeft: '4px',
+            paddingRight: '4px',
+            paddingBottom: '16px',
+            marginLeft: '24px',
+            borderBottom: activeTab === 'orders' ? '2px solid #003450' : '2px solid transparent',
+            marginBottom: '-1px',
+          }}
+        >
+          <span
+            style={{
+              fontFamily: 'Inter, sans-serif',
+              fontWeight: 500,
+              fontSize: '14px',
+              lineHeight: '20px',
+              color: activeTab === 'orders' ? '#003450' : '#6B7280',
+            }}
+          >
+            Orders
+          </span>
+          <span
+            style={{
+              minWidth: '28px',
+              height: '20px',
+              borderRadius: '10px',
+              padding: '2px 10px',
+              backgroundColor: '#F3F4F6',
+              fontFamily: 'Inter, sans-serif',
+              fontWeight: 500,
+              fontSize: '12px',
+              lineHeight: '16px',
+              textAlign: 'center',
+              color: '#1F2937',
+            }}
+          >
+            {product.ordersCount}
+          </span>
+        </button>
 
-            {/* Bundle Tab */}
-            <button
-              onClick={() => setActiveTab('bundle')}
-              style={{
-                height: '38px',
-                paddingLeft: '4px',
-                paddingRight: '4px',
-                paddingBottom: '16px',
-                marginLeft: '24px',
-                borderBottom: activeTab === 'bundle' ? '2px solid #003450' : '2px solid transparent',
-                marginBottom: '-1px',
-              }}
-            >
-              <span
-                style={{
-                  fontFamily: 'Inter, sans-serif',
-                  fontWeight: 500,
-                  fontSize: '14px',
-                  lineHeight: '20px',
-                  color: activeTab === 'bundle' ? '#003450' : '#6B7280',
-                }}
-              >
-                Bundle
-              </span>
-            </button>
-          </>
-        )}
+        {/* Bundle Tab */}
+        <button
+          onClick={() => setActiveTab('bundle')}
+          style={{
+            height: '38px',
+            paddingLeft: '4px',
+            paddingRight: '4px',
+            paddingBottom: '16px',
+            marginLeft: '24px',
+            borderBottom: activeTab === 'bundle' ? '2px solid #003450' : '2px solid transparent',
+            marginBottom: '-1px',
+          }}
+        >
+          <span
+            style={{
+              fontFamily: 'Inter, sans-serif',
+              fontWeight: 500,
+              fontSize: '14px',
+              lineHeight: '20px',
+              color: activeTab === 'bundle' ? '#003450' : '#6B7280',
+            }}
+          >
+            Bundle
+          </span>
+        </button>
       </div>
 
       {/* Product Data Content */}
       {activeTab === 'productData' && (
         <div className="flex flex-col gap-6">
-          {/* Edit Mode Layout */}
-          {editMode ? (
-            <>
-              {/* Product Header Section - Edit Mode */}
-              <div className="flex gap-6 flex-wrap lg:flex-nowrap">
-                {/* Product Image Upload */}
+          {/* Product Header Section - Image + (Product Name Box + Stock Stats) */}
+          <div 
+            className="flex flex-wrap lg:flex-nowrap"
+            style={{
+              gap: 'clamp(18px, 1.77vw, 24px)',
+            }}
+          >
+            {/* Product Image */}
+            <div
+              onClick={handleImageClick}
+              style={{
+                width: 'clamp(160px, 14.1vw, 192px)',
+                minWidth: 'clamp(160px, 14.1vw, 192px)',
+                height: 'clamp(160px, 14.1vw, 192px)',
+                borderRadius: '8px',
+                backgroundColor: '#F3F4F6',
+                boxShadow: '0px 0px 0px 4px #FFFFFF',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                overflow: 'hidden',
+                flexShrink: 0,
+                position: 'relative',
+                cursor: editMode ? 'pointer' : 'default',
+              }}
+            >
+              {/* Hidden file input */}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleImageUpload}
+                style={{ display: 'none' }}
+              />
+              {/* Product image or placeholder */}
+              {productImage ? (
+                <img
+                  src={productImage}
+                  alt="Product"
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'cover',
+                  }}
+                />
+              ) : (
                 <div
                   style={{
-                    width: '192px',
-                    minWidth: '192px',
-                    height: '192px',
-                    borderRadius: '8px',
-                    border: '2px dashed #D1D5DB',
-                    backgroundColor: '#FFFFFF',
+                    width: '100%',
+                    height: '100%',
+                    backgroundColor: '#E5E7EB',
                     display: 'flex',
-                    flexDirection: 'column',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    gap: '8px',
-                    cursor: 'pointer',
                   }}
                 >
-                  <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <svg width="64" height="64" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <rect x="3" y="3" width="18" height="18" rx="2" stroke="#9CA3AF" strokeWidth="1.5"/>
-                    <path d="M12 8V16M8 12H16" stroke="#9CA3AF" strokeWidth="1.5" strokeLinecap="round"/>
+                    <circle cx="8.5" cy="8.5" r="1.5" fill="#9CA3AF"/>
+                    <path d="M21 15L16 10L8 18" stroke="#9CA3AF" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                   </svg>
-                  <span
-                    style={{
-                      fontFamily: 'Inter, sans-serif',
-                      fontSize: '12px',
-                      color: '#003450',
-                      textAlign: 'center',
-                    }}
-                  >
-                    <span style={{ textDecoration: 'underline' }}>Upload a file</span> or drag and drop
-                  </span>
-                  <span
-                    style={{
-                      fontFamily: 'Inter, sans-serif',
-                      fontSize: '11px',
-                      color: '#9CA3AF',
-                    }}
-                  >
-                    PNG, JPG, GIF up to 10MB
-                  </span>
                 </div>
-
-                {/* Product Details Box - Edit Mode */}
+              )}
+              {/* Edit overlay */}
+              {editMode && (
                 <div
-                  className="flex-1"
                   style={{
+                    position: 'absolute',
+                    inset: 0,
+                    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
                     borderRadius: '8px',
-                    padding: '24px',
-                    backgroundColor: '#FFFFFF',
-                    boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.06), 0px 1px 3px 0px rgba(0, 0, 0, 0.1)',
                   }}
                 >
-                  <h2
+                  <div
                     style={{
-                      fontFamily: 'Inter, sans-serif',
-                      fontWeight: 600,
-                      fontSize: '16px',
-                      lineHeight: '24px',
-                      color: '#111827',
-                      marginBottom: '16px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      gap: '4px',
                     }}
                   >
-                    Product Details
-                  </h2>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <Field
-                      label="Product Name"
-                      value={formData.productName}
-                      editMode={true}
-                      onChange={updateField('productName')}
-                    />
-                    <Field
-                      label="Manufacture"
-                      value={formData.manufacturer}
-                      editMode={true}
-                      onChange={updateField('manufacturer')}
-                    />
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M21 15V19C21 19.5304 20.7893 20.0391 20.4142 20.4142C20.0391 20.7893 19.5304 21 19 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V15" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      <polyline points="17,8 12,3 7,8" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      <line x1="12" y1="3" x2="12" y2="15" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                    <span style={{ color: 'white', fontSize: '12px', fontWeight: 500 }}>Upload</span>
                   </div>
                 </div>
-              </div>
+              )}
+            </div>
 
-              {/* Information Box - Edit Mode */}
+            {/* Right Column - Product Name Box + Stock Stats (combined height = image height) */}
+            <div
+              className="flex flex-col"
+              style={{
+                width: 'clamp(800px, 72.5vw, 985px)',
+                maxWidth: 'clamp(800px, 72.5vw, 985px)',
+                height: 'clamp(160px, 14.1vw, 192px)',
+                gap: 'clamp(9px, 0.88vw, 12px)',
+              }}
+            >
+              {/* Product Name Box */}
               <div
                 style={{
+                  width: '100%',
                   borderRadius: '8px',
-                  padding: '24px',
-                  backgroundColor: '#FFFFFF',
-                  boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.06), 0px 1px 3px 0px rgba(0, 0, 0, 0.1)',
-                }}
-              >
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                  {/* Geodata Column */}
-                  <div className="flex flex-col gap-4">
-                    <h3
-                      style={{
-                        fontFamily: 'Inter, sans-serif',
-                        fontWeight: 600,
-                        fontSize: '16px',
-                        lineHeight: '24px',
-                        color: '#111827',
-                        marginBottom: '8px',
-                      }}
-                    >
-                      Geodata
-                    </h3>
-                    <Field label="Höhe in cm" value={formData.heightInCm} editMode={true} onChange={updateField('heightInCm')} />
-                    <Field label="Länge in cm" value={formData.lengthInCm} editMode={true} onChange={updateField('lengthInCm')} />
-                    <Field label="Breite in cm" value={formData.widthInCm} editMode={true} onChange={updateField('widthInCm')} />
-                    <Field label="Gewicht in kg" value={formData.weightInKg} editMode={true} onChange={updateField('weightInKg')} />
-                  </div>
-
-                  {/* Identifier Column */}
-                  <div className="flex flex-col gap-4">
-                    <h3
-                      style={{
-                        fontFamily: 'Inter, sans-serif',
-                        fontWeight: 600,
-                        fontSize: '16px',
-                        lineHeight: '24px',
-                        color: '#111827',
-                        marginBottom: '8px',
-                      }}
-                    >
-                      Identifier
-                    </h3>
-                    <Field label="SKU" value={formData.sku} editMode={true} onChange={updateField('sku')} />
-                    <Field label="GTIN" value={formData.gtin} editMode={true} onChange={updateField('gtin')} />
-                    <Field label="Amazon ASIN" value={formData.amazonAsin} editMode={true} onChange={updateField('amazonAsin')} />
-                    <Field label="Amazon SKU" value={formData.amazonSku} editMode={true} onChange={updateField('amazonSku')} />
-                    <Field label="ISBN" value={formData.isbn} editMode={true} onChange={updateField('isbn')} />
-                    <Field label="HAN" value={formData.han} editMode={true} onChange={updateField('han')} />
-                  </div>
-
-                  {/* Attributes Column */}
-                  <div className="flex flex-col gap-4">
-                    <h3
-                      style={{
-                        fontFamily: 'Inter, sans-serif',
-                        fontWeight: 600,
-                        fontSize: '16px',
-                        lineHeight: '24px',
-                        color: '#111827',
-                        marginBottom: '8px',
-                      }}
-                    >
-                      Attributes
-                    </h3>
-                    <Field label="MHD" value={formData.mhd} editMode={true} onChange={updateField('mhd')} />
-                    <Field label="Charge" value={formData.charge} editMode={true} onChange={updateField('charge')} />
-                    <Field label="Zolltarifnummer" value={formData.zolltarifnummer} editMode={true} onChange={updateField('zolltarifnummer')} />
-                    <Field label="Ursprung" value={formData.ursprung} editMode={true} onChange={updateField('ursprung')} />
-                    <Field label="Netto-Verkaufspreis" value={formData.nettoVerkaufspreis} editMode={true} onChange={updateField('nettoVerkaufspreis')} />
-                  </div>
-                </div>
-              </div>
-
-              {/* Save Product Box */}
-              <div
-                style={{
-                  borderRadius: '8px',
-                  padding: '24px',
+                  padding: 'clamp(12px, 1.1vw, 15px) clamp(18px, 1.77vw, 24px)',
                   backgroundColor: '#FFFFFF',
                   boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.06), 0px 1px 3px 0px rgba(0, 0, 0, 0.1)',
                   display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
+                  flexDirection: 'column',
+                  justifyContent: 'center',
+                  gap: 'clamp(4px, 0.44vw, 6px)',
                 }}
               >
-                <span
+                <h1
                   style={{
                     fontFamily: 'Inter, sans-serif',
                     fontWeight: 500,
-                    fontSize: '16px',
-                    lineHeight: '24px',
+                    fontSize: 'clamp(16px, 1.33vw, 18px)',
+                    lineHeight: '1.2',
                     color: '#111827',
+                    margin: 0,
                   }}
                 >
-                  Save product
-                </span>
-                <button
-                  onClick={handleSave}
+                  {formData.productName}
+                </h1>
+                <p
                   style={{
-                    width: 'clamp(90px, 7.5vw, 102px)',
-                    height: 'clamp(34px, 2.8vw, 38px)',
-                    borderRadius: '6px',
-                    padding: 'clamp(7px, 0.66vw, 9px) clamp(13px, 1.25vw, 17px)',
-                    backgroundColor: '#003450',
+                    fontFamily: 'Inter, sans-serif',
+                    fontWeight: 400,
+                    fontSize: 'clamp(12px, 1.03vw, 14px)',
+                    lineHeight: '1.4',
+                    color: '#6B7280',
+                    margin: 0,
+                  }}
+                >
+                  Manufacture: {formData.manufacturer} &nbsp;&nbsp;&nbsp;&nbsp; Product ID: {product.productId}
+                </p>
+              </div>
+
+              {/* Stock Stats Row */}
+              <div 
+                className="flex"
+                style={{
+                  flex: 1,
+                  gap: 'clamp(12px, 1.1vw, 16px)',
+                }}
+              >
+                {/* Total Stock */}
+                <div
+                  style={{
+                    flex: 1,
+                    borderRadius: '8px',
+                    border: editMode ? '1px solid #003450' : '1px solid #D1D5DB',
+                    padding: 'clamp(12px, 1.1vw, 16px) clamp(16px, 1.47vw, 20px)',
+                    backgroundColor: '#FFFFFF',
                     boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.05)',
-                    border: 'none',
-                    cursor: 'pointer',
                     display: 'flex',
-                    alignItems: 'center',
+                    flexDirection: 'column',
                     justifyContent: 'center',
+                    gap: '4px',
                   }}
                 >
                   <span
@@ -568,277 +564,224 @@ export function ProductDetails({ productId, backUrl }: ProductDetailsProps) {
                       fontFamily: 'Inter, sans-serif',
                       fontWeight: 500,
                       fontSize: 'clamp(12px, 1.03vw, 14px)',
-                      lineHeight: '20px',
-                      color: '#FFFFFF',
-                      whiteSpace: 'nowrap',
+                      lineHeight: '1.4',
+                      color: '#6B7280',
                     }}
                   >
-                    Speichern
+                    Total Stock
                   </span>
-                </button>
-              </div>
-            </>
-          ) : (
-            <>
-              {/* View Mode Layout */}
-              {/* Product Header Section - Image + (Product Name Box + Stock Stats) */}
-              <div 
-                className="flex flex-wrap lg:flex-nowrap"
-                style={{
-                  gap: 'clamp(18px, 1.77vw, 24px)',
-                }}
-              >
-                {/* Product Image */}
-                <div
-                  style={{
-                    width: 'clamp(160px, 14.1vw, 192px)',
-                    minWidth: 'clamp(160px, 14.1vw, 192px)',
-                    height: 'clamp(160px, 14.1vw, 192px)',
-                    borderRadius: '8px',
-                    backgroundColor: '#F3F4F6',
-                    boxShadow: '0px 0px 0px 4px #FFFFFF',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    overflow: 'hidden',
-                    flexShrink: 0,
-                  }}
-                >
-                  {/* Placeholder product image */}
-                  <div
-                    style={{
-                      width: '100%',
-                      height: '100%',
-                      backgroundColor: '#E5E7EB',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                    }}
-                  >
-                    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <rect x="3" y="3" width="18" height="18" rx="2" stroke="#9CA3AF" strokeWidth="1.5"/>
-                      <circle cx="8.5" cy="8.5" r="1.5" fill="#9CA3AF"/>
-                      <path d="M21 15L16 10L8 18" stroke="#9CA3AF" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
-                  </div>
-                </div>
-
-                {/* Right Column - Product Name Box + Stock Stats (combined height = image height) */}
-                <div
-                  className="flex flex-col"
-                  style={{
-                    width: 'clamp(800px, 72.5vw, 985px)',
-                    maxWidth: 'clamp(800px, 72.5vw, 985px)',
-                    height: 'clamp(160px, 14.1vw, 192px)',
-                    gap: 'clamp(9px, 0.88vw, 12px)',
-                  }}
-                >
-                  {/* Product Name Box */}
-                  <div
-                    style={{
-                      width: '100%',
-                      borderRadius: '8px',
-                      padding: 'clamp(12px, 1.1vw, 15px) clamp(18px, 1.77vw, 24px)',
-                      backgroundColor: '#FFFFFF',
-                      boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.06), 0px 1px 3px 0px rgba(0, 0, 0, 0.1)',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      justifyContent: 'center',
-                      gap: 'clamp(4px, 0.44vw, 6px)',
-                    }}
-                  >
-                    <h1
+                  {editMode ? (
+                    <input
+                      type="number"
+                      value={product.totalStock}
+                      onChange={() => {}}
                       style={{
                         fontFamily: 'Inter, sans-serif',
-                        fontWeight: 500,
+                        fontWeight: 600,
                         fontSize: 'clamp(16px, 1.33vw, 18px)',
-                        lineHeight: '1.2',
+                        lineHeight: '1.3',
                         color: '#111827',
-                        margin: 0,
+                        border: 'none',
+                        outline: 'none',
+                        background: 'transparent',
+                        width: '100%',
+                        padding: 0,
                       }}
-                    >
-                      {formData.productName}
-                    </h1>
-                    <p
+                    />
+                  ) : (
+                    <span
                       style={{
                         fontFamily: 'Inter, sans-serif',
-                        fontWeight: 400,
-                        fontSize: 'clamp(12px, 1.03vw, 14px)',
-                        lineHeight: '1.4',
-                        color: '#6B7280',
-                        margin: 0,
+                        fontWeight: 600,
+                        fontSize: 'clamp(16px, 1.33vw, 18px)',
+                        lineHeight: '1.3',
+                        color: '#111827',
                       }}
                     >
-                      Manufacture: {formData.manufacturer} &nbsp;&nbsp;&nbsp;&nbsp; Product ID: {product.productId}
-                    </p>
-                  </div>
+                      {product.totalStock}
+                    </span>
+                  )}
+                </div>
 
-                  {/* Stock Stats Row */}
-                  <div 
-                    className="flex"
+                {/* Available */}
+                <div
+                  style={{
+                    flex: 1,
+                    borderRadius: '8px',
+                    border: editMode ? '1px solid #003450' : '1px solid #D1D5DB',
+                    padding: 'clamp(12px, 1.1vw, 16px) clamp(16px, 1.47vw, 20px)',
+                    backgroundColor: '#FFFFFF',
+                    boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.05)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'center',
+                    gap: '4px',
+                  }}
+                >
+                  <span
                     style={{
-                      flex: 1,
-                      gap: 'clamp(12px, 1.1vw, 16px)',
+                      fontFamily: 'Inter, sans-serif',
+                      fontWeight: 500,
+                      fontSize: 'clamp(12px, 1.03vw, 14px)',
+                      lineHeight: '1.4',
+                      color: '#6B7280',
                     }}
                   >
-                    {/* Total Stock */}
-                    <div
+                    Available
+                  </span>
+                  {editMode ? (
+                    <input
+                      type="number"
+                      value={product.available}
+                      onChange={() => {}}
                       style={{
-                        flex: 1,
-                        borderRadius: '8px',
-                        border: '1px solid #D1D5DB',
-                        padding: 'clamp(12px, 1.1vw, 16px) clamp(16px, 1.47vw, 20px)',
-                        backgroundColor: '#FFFFFF',
-                        boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.05)',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        justifyContent: 'center',
-                        gap: '4px',
+                        fontFamily: 'Inter, sans-serif',
+                        fontWeight: 600,
+                        fontSize: 'clamp(16px, 1.33vw, 18px)',
+                        lineHeight: '1.3',
+                        color: '#111827',
+                        border: 'none',
+                        outline: 'none',
+                        background: 'transparent',
+                        width: '100%',
+                        padding: 0,
+                      }}
+                    />
+                  ) : (
+                    <span
+                      style={{
+                        fontFamily: 'Inter, sans-serif',
+                        fontWeight: 600,
+                        fontSize: 'clamp(16px, 1.33vw, 18px)',
+                        lineHeight: '1.3',
+                        color: '#111827',
                       }}
                     >
-                      <span
-                        style={{
-                          fontFamily: 'Inter, sans-serif',
-                          fontWeight: 500,
-                          fontSize: 'clamp(12px, 1.03vw, 14px)',
-                          lineHeight: '1.4',
-                          color: '#6B7280',
-                        }}
-                      >
-                        Total Stock
-                      </span>
-                      <span
-                        style={{
-                          fontFamily: 'Inter, sans-serif',
-                          fontWeight: 600,
-                          fontSize: 'clamp(16px, 1.33vw, 18px)',
-                          lineHeight: '1.3',
-                          color: '#111827',
-                        }}
-                      >
-                        {product.totalStock}
-                      </span>
-                    </div>
+                      {product.available}
+                    </span>
+                  )}
+                </div>
 
-                    {/* Available */}
-                    <div
+                {/* Reserved */}
+                <div
+                  style={{
+                    flex: 1,
+                    borderRadius: '8px',
+                    border: editMode ? '1px solid #003450' : '1px solid #D1D5DB',
+                    padding: 'clamp(12px, 1.1vw, 16px) clamp(16px, 1.47vw, 20px)',
+                    backgroundColor: '#FFFFFF',
+                    boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.05)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'center',
+                    gap: '4px',
+                  }}
+                >
+                  <span
+                    style={{
+                      fontFamily: 'Inter, sans-serif',
+                      fontWeight: 500,
+                      fontSize: 'clamp(12px, 1.03vw, 14px)',
+                      lineHeight: '1.4',
+                      color: '#6B7280',
+                    }}
+                  >
+                    Reserved
+                  </span>
+                  {editMode ? (
+                    <input
+                      type="number"
+                      value={product.reserved}
+                      onChange={() => {}}
                       style={{
-                        flex: 1,
-                        borderRadius: '8px',
-                        border: '1px solid #D1D5DB',
-                        padding: 'clamp(12px, 1.1vw, 16px) clamp(16px, 1.47vw, 20px)',
-                        backgroundColor: '#FFFFFF',
-                        boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.05)',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        justifyContent: 'center',
-                        gap: '4px',
+                        fontFamily: 'Inter, sans-serif',
+                        fontWeight: 600,
+                        fontSize: 'clamp(16px, 1.33vw, 18px)',
+                        lineHeight: '1.3',
+                        color: '#111827',
+                        border: 'none',
+                        outline: 'none',
+                        background: 'transparent',
+                        width: '100%',
+                        padding: 0,
+                      }}
+                    />
+                  ) : (
+                    <span
+                      style={{
+                        fontFamily: 'Inter, sans-serif',
+                        fontWeight: 600,
+                        fontSize: 'clamp(16px, 1.33vw, 18px)',
+                        lineHeight: '1.3',
+                        color: '#111827',
                       }}
                     >
-                      <span
-                        style={{
-                          fontFamily: 'Inter, sans-serif',
-                          fontWeight: 500,
-                          fontSize: 'clamp(12px, 1.03vw, 14px)',
-                          lineHeight: '1.4',
-                          color: '#6B7280',
-                        }}
-                      >
-                        Available
-                      </span>
-                      <span
-                        style={{
-                          fontFamily: 'Inter, sans-serif',
-                          fontWeight: 600,
-                          fontSize: 'clamp(16px, 1.33vw, 18px)',
-                          lineHeight: '1.3',
-                          color: '#111827',
-                        }}
-                      >
-                        {product.available}
-                      </span>
-                    </div>
+                      {product.reserved}
+                    </span>
+                  )}
+                </div>
 
-                    {/* Reserved */}
-                    <div
+                {/* Announced */}
+                <div
+                  style={{
+                    flex: 1,
+                    borderRadius: '8px',
+                    border: editMode ? '1px solid #003450' : '1px solid #D1D5DB',
+                    padding: 'clamp(12px, 1.1vw, 16px) clamp(16px, 1.47vw, 20px)',
+                    backgroundColor: '#FFFFFF',
+                    boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.05)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'center',
+                    gap: '4px',
+                  }}
+                >
+                  <span
+                    style={{
+                      fontFamily: 'Inter, sans-serif',
+                      fontWeight: 500,
+                      fontSize: 'clamp(12px, 1.03vw, 14px)',
+                      lineHeight: '1.4',
+                      color: '#6B7280',
+                    }}
+                  >
+                    Announced
+                  </span>
+                  {editMode ? (
+                    <input
+                      type="number"
+                      value={product.announced}
+                      onChange={() => {}}
                       style={{
-                        flex: 1,
-                        borderRadius: '8px',
-                        border: '1px solid #D1D5DB',
-                        padding: 'clamp(12px, 1.1vw, 16px) clamp(16px, 1.47vw, 20px)',
-                        backgroundColor: '#FFFFFF',
-                        boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.05)',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        justifyContent: 'center',
-                        gap: '4px',
+                        fontFamily: 'Inter, sans-serif',
+                        fontWeight: 600,
+                        fontSize: 'clamp(16px, 1.33vw, 18px)',
+                        lineHeight: '1.3',
+                        color: '#111827',
+                        border: 'none',
+                        outline: 'none',
+                        background: 'transparent',
+                        width: '100%',
+                        padding: 0,
+                      }}
+                    />
+                  ) : (
+                    <span
+                      style={{
+                        fontFamily: 'Inter, sans-serif',
+                        fontWeight: 600,
+                        fontSize: 'clamp(16px, 1.33vw, 18px)',
+                        lineHeight: '1.3',
+                        color: '#111827',
                       }}
                     >
-                      <span
-                        style={{
-                          fontFamily: 'Inter, sans-serif',
-                          fontWeight: 500,
-                          fontSize: 'clamp(12px, 1.03vw, 14px)',
-                          lineHeight: '1.4',
-                          color: '#6B7280',
-                        }}
-                      >
-                        Reserved
-                      </span>
-                      <span
-                        style={{
-                          fontFamily: 'Inter, sans-serif',
-                          fontWeight: 600,
-                          fontSize: 'clamp(16px, 1.33vw, 18px)',
-                          lineHeight: '1.3',
-                          color: '#111827',
-                        }}
-                      >
-                        {product.reserved}
-                      </span>
-                    </div>
-
-                    {/* Announced */}
-                    <div
-                      style={{
-                        flex: 1,
-                        borderRadius: '8px',
-                        border: '1px solid #D1D5DB',
-                        padding: 'clamp(12px, 1.1vw, 16px) clamp(16px, 1.47vw, 20px)',
-                        backgroundColor: '#FFFFFF',
-                        boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.05)',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        justifyContent: 'center',
-                        gap: '4px',
-                      }}
-                    >
-                      <span
-                        style={{
-                          fontFamily: 'Inter, sans-serif',
-                          fontWeight: 500,
-                          fontSize: 'clamp(12px, 1.03vw, 14px)',
-                          lineHeight: '1.4',
-                          color: '#6B7280',
-                        }}
-                      >
-                        Anounced
-                      </span>
-                      <span
-                        style={{
-                          fontFamily: 'Inter, sans-serif',
-                          fontWeight: 600,
-                          fontSize: 'clamp(16px, 1.33vw, 18px)',
-                          lineHeight: '1.3',
-                          color: '#111827',
-                        }}
-                      >
-                        {product.announced}
-                      </span>
-                    </div>
-                  </div>
+                      {product.announced}
+                    </span>
+                  )}
                 </div>
               </div>
+            </div>
+          </div>
 
               {/* Information Box - width: 985px, height: 640px at 1358px screen */}
               <div
@@ -869,10 +812,10 @@ export function ProductDetails({ productId, backUrl }: ProductDetailsProps) {
                     >
                       Geodaten
                     </h3>
-                    <Field label="Height in cm" value={formData.heightInCm} editMode={false} onChange={() => {}} />
-                    <Field label="Width in cm" value={formData.widthInCm} editMode={false} onChange={() => {}} />
-                    <Field label="Length in cm" value={formData.lengthInCm} editMode={false} onChange={() => {}} />
-                    <Field label="Weight in kg" value={formData.weightInKg} editMode={false} onChange={() => {}} />
+                    <Field label="Height in cm" value={formData.heightInCm} editMode={editMode} onChange={updateField('heightInCm')} />
+                    <Field label="Width in cm" value={formData.widthInCm} editMode={editMode} onChange={updateField('widthInCm')} />
+                    <Field label="Length in cm" value={formData.lengthInCm} editMode={editMode} onChange={updateField('lengthInCm')} />
+                    <Field label="Weight in kg" value={formData.weightInKg} editMode={editMode} onChange={updateField('weightInKg')} />
                   </div>
 
                   {/* Identifizierung Column */}
@@ -889,12 +832,12 @@ export function ProductDetails({ productId, backUrl }: ProductDetailsProps) {
                     >
                       Identifizierung
                     </h3>
-                    <Field label="SKU" value={formData.sku} editMode={false} onChange={() => {}} />
-                    <Field label="GTIN" value={formData.gtin} editMode={false} onChange={() => {}} />
-                    <Field label="Amazon ASIN" value={formData.amazonAsin} editMode={false} onChange={() => {}} />
-                    <Field label="Amazon SKU" value={formData.amazonSku} editMode={false} onChange={() => {}} />
-                    <Field label="ISBN" value={formData.isbn} editMode={false} onChange={() => {}} />
-                    <Field label="HAN" value={formData.han} editMode={false} onChange={() => {}} />
+                    <Field label="SKU" value={formData.sku} editMode={editMode} onChange={updateField('sku')} />
+                    <Field label="GTIN" value={formData.gtin} editMode={editMode} onChange={updateField('gtin')} />
+                    <Field label="Amazon ASIN" value={formData.amazonAsin} editMode={editMode} onChange={updateField('amazonAsin')} />
+                    <Field label="Amazon SKU" value={formData.amazonSku} editMode={editMode} onChange={updateField('amazonSku')} />
+                    <Field label="ISBN" value={formData.isbn} editMode={editMode} onChange={updateField('isbn')} />
+                    <Field label="HAN" value={formData.han} editMode={editMode} onChange={updateField('han')} />
                   </div>
 
                   {/* Eigenschaften Column */}
@@ -911,12 +854,12 @@ export function ProductDetails({ productId, backUrl }: ProductDetailsProps) {
                     >
                       Eigenschaften
                     </h3>
-                    <Field label="MHD" value={formData.mhd} editMode={false} onChange={() => {}} />
-                    <Field label="Charge" value={formData.charge} editMode={false} onChange={() => {}} />
-                    <Field label="Zolltarifnummer" value={formData.zolltarifnummer} editMode={false} onChange={() => {}} />
-                    <Field label="Ursprung" value={formData.ursprung} editMode={false} onChange={() => {}} />
-                    <Field label="Netto-Verkaufspreis" value={formData.nettoVerkaufspreis} editMode={false} onChange={() => {}} />
-                    <Field label="Manufacture" value={formData.manufacture} editMode={false} onChange={() => {}} />
+                    <Field label="MHD" value={formData.mhd} editMode={editMode} onChange={updateField('mhd')} />
+                    <Field label="Charge" value={formData.charge} editMode={editMode} onChange={updateField('charge')} />
+                    <Field label="Zolltarifnummer" value={formData.zolltarifnummer} editMode={editMode} onChange={updateField('zolltarifnummer')} />
+                    <Field label="Ursprung" value={formData.ursprung} editMode={editMode} onChange={updateField('ursprung')} />
+                    <Field label="Netto-Verkaufspreis" value={formData.nettoVerkaufspreis} editMode={editMode} onChange={updateField('nettoVerkaufspreis')} />
+                    <Field label="Manufacture" value={formData.manufacture} editMode={editMode} onChange={updateField('manufacture')} />
                   </div>
                 </div>
               </div>
@@ -1187,8 +1130,6 @@ export function ProductDetails({ productId, backUrl }: ProductDetailsProps) {
                   </span>
                 </button>
               </div>
-            </>
-          )}
         </div>
       )}
 
