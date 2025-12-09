@@ -35,23 +35,33 @@ export function ContactsList({ contacts, selectedContactId, onSelectContact }: C
     switch (status) {
       case 'read':
         return (
-          <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M5 9L8 12L13 6" stroke="#10B981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
+          <Image
+            src="/sent+read.png"
+            alt="Read"
+            width={18}
+            height={18}
+            style={{ width: '18px', height: '18px' }}
+          />
         );
       case 'delivered':
         return (
-          <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M5 9L8 12L13 6" stroke="#90A0B7" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
+          <Image
+            src="/sent.png"
+            alt="Sent"
+            width={18}
+            height={18}
+            style={{ width: '18px', height: '18px' }}
+          />
         );
       case 'error':
         return (
-          <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <circle cx="9" cy="9" r="7" stroke="#EF4444" strokeWidth="2"/>
-            <path d="M9 5V10" stroke="#EF4444" strokeWidth="2" strokeLinecap="round"/>
-            <circle cx="9" cy="13" r="1" fill="#EF4444"/>
-          </svg>
+          <Image
+            src="/error.png"
+            alt="Error"
+            width={18}
+            height={18}
+            style={{ width: '18px', height: '18px' }}
+          />
         );
       default:
         return null;

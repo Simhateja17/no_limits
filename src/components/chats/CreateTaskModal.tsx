@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 
 interface CreateTaskModalProps {
   isOpen: boolean;
@@ -100,39 +101,13 @@ export function CreateTaskModal({
               background: '#D1FAE5',
             }}
           >
-            <svg
-              width="22"
-              height="22"
-              viewBox="0 0 22 22"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                d="M15.5 2H6.5C5.39543 2 4.5 2.89543 4.5 4V19C4.5 20.1046 5.39543 21 6.5 21H15.5C16.6046 21 17.5 20.1046 17.5 19V4C17.5 2.89543 16.6046 2 15.5 2Z"
-                stroke="#059669"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-              <path
-                d="M8 6H14"
-                stroke="#059669"
-                strokeWidth="2"
-                strokeLinecap="round"
-              />
-              <path
-                d="M8 10H14"
-                stroke="#059669"
-                strokeWidth="2"
-                strokeLinecap="round"
-              />
-              <path
-                d="M8 14H11"
-                stroke="#059669"
-                strokeWidth="2"
-                strokeLinecap="round"
-              />
-            </svg>
+            <Image
+              src="/Icon.png"
+              alt="Task icon"
+              width={22}
+              height={22}
+              style={{ width: '22px', height: '22px' }}
+            />
           </div>
         </div>
 
@@ -424,7 +399,7 @@ export function CreateTaskModal({
           {/* Back Button */}
           <button
             onClick={onClose}
-            className="flex-1 hover:opacity-80 transition-opacity"
+            className="flex-1 flex items-center justify-center hover:opacity-80 transition-opacity"
             style={{
               height: '38px',
               border: '1px solid #D1D5DB',
@@ -451,7 +426,7 @@ export function CreateTaskModal({
           {/* Create Button */}
           <button
             onClick={handleSubmit}
-            className="flex-1 hover:opacity-90 transition-opacity"
+            className="flex-1 flex items-center justify-center hover:opacity-90 transition-opacity"
             style={{
               height: '38px',
               border: 'none',

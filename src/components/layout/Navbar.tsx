@@ -152,17 +152,16 @@ export function Navbar() {
         {/* Role Badge */}
         {user?.role && (
           <span
-            className="px-2 py-1 hidden md:block"
+            className="hidden md:block"
             style={{
-              background: user.role === 'SUPER_ADMIN' ? '#FEF3C7' : 
-                         user.role === 'ADMIN' ? '#DBEAFE' :
-                         user.role === 'EMPLOYEE' ? '#D1FAE5' : '#E0E7FF',
-              color: user.role === 'SUPER_ADMIN' ? '#92400E' :
-                     user.role === 'ADMIN' ? '#1E40AF' :
-                     user.role === 'EMPLOYEE' ? '#065F46' : '#3730A3',
+              padding: '6px 14px',
+              background: '#FFFFFF',
+              border: '1px solid #E5E7EB',
+              color: '#111827',
               borderRadius: '9999px',
-              fontSize: '11px',
-              fontWeight: 500,
+              fontSize: '14px',
+              fontWeight: 400,
+              fontFamily: 'Inter, sans-serif',
             }}
           >
             {getRoleLabel(user.role)}

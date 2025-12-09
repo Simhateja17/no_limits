@@ -81,33 +81,21 @@ const StatusTag = ({ status }: { status: OrderStatus }) => {
       case 'success':
         return {
           label: 'Processing',
-          bgColor: '#F0FDF4',
-          textColor: '#166534',
-          borderColor: '#BBF7D0',
           dotColor: '#22C55E',
         };
       case 'error':
         return {
           label: 'Cancelled',
-          bgColor: '#FEF2F2',
-          textColor: '#991B1B',
-          borderColor: '#FECACA',
           dotColor: '#EF4444',
         };
       case 'mildError':
         return {
           label: 'Issue',
-          bgColor: '#FFFBEB',
-          textColor: '#92400E',
-          borderColor: '#FDE68A',
           dotColor: '#F59E0B',
         };
       default:
         return {
           label: 'Unknown',
-          bgColor: '#F3F4F6',
-          textColor: '#374151',
-          borderColor: '#D1D5DB',
           dotColor: '#6B7280',
         };
     }
@@ -120,22 +108,22 @@ const StatusTag = ({ status }: { status: OrderStatus }) => {
       style={{
         display: 'inline-flex',
         alignItems: 'center',
-        gap: '6px',
-        padding: '4px 12px',
+        gap: '8px',
+        padding: '6px 14px',
         borderRadius: '9999px',
-        backgroundColor: config.bgColor,
-        border: `1px solid ${config.borderColor}`,
+        backgroundColor: '#FFFFFF',
+        border: '1px solid #E5E7EB',
         fontFamily: 'Inter, sans-serif',
-        fontSize: '12px',
-        fontWeight: 500,
-        color: config.textColor,
+        fontSize: '14px',
+        fontWeight: 400,
+        color: '#111827',
         whiteSpace: 'nowrap',
       }}
     >
       <span
         style={{
-          width: '6px',
-          height: '6px',
+          width: '8px',
+          height: '8px',
           borderRadius: '50%',
           backgroundColor: config.dotColor,
         }}
