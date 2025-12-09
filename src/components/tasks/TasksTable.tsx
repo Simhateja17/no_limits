@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 
 // Tab type
 type TabType = 'all' | 'open' | 'closed';
@@ -14,6 +15,428 @@ interface Task {
   created: string;
   priority: 'Low' | 'High';
   status: 'Open' | 'Closed';
+}
+
+// Task data for creation
+interface TaskData {
+  client: string;
+  taskType: string;
+  prioLevel: string;
+  description: string;
+}
+
+// Task types and priority levels
+const taskTypes = [
+  'Internal / Warehouse',
+  'Client Communication',
+  'Order Processing',
+  'Returns',
+  'Inventory Check',
+];
+
+const prioLevels = ['Low', 'Medium', 'High', 'Urgent'];
+
+// Create Task Modal Component (without Adopt Client Message button)
+function CreateTaskModal({
+  isOpen,
+  onClose,
+  onSubmit,
+  clients,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  onSubmit: (task: TaskData) => void;
+  clients: string[];
+}) {
+  const [selectedClient, setSelectedClient] = useState(clients[1] || '');
+  const [taskType, setTaskType] = useState('Internal / Warehouse');
+  const [prioLevel, setPrioLevel] = useState('Low');
+  const [description, setDescription] = useState('');
+
+  const handleSubmit = () => {
+    onSubmit({
+      client: selectedClient,
+      taskType,
+      prioLevel,
+      description,
+    });
+    // Reset form
+    setSelectedClient(clients[1] || '');
+    setTaskType('Internal / Warehouse');
+    setPrioLevel('Low');
+    setDescription('');
+    onClose();
+  };
+
+  if (!isOpen) return null;
+
+  // Filter out 'Alle' from client options
+  const clientOptions = clients.filter(c => c !== 'Alle');
+
+  return (
+    <>
+      {/* Backdrop */}
+      <div
+        className="fixed inset-0 z-40"
+        style={{
+          background: 'rgba(0, 0, 0, 0.3)',
+        }}
+        onClick={onClose}
+      />
+
+      {/* Modal */}
+      <div
+        className="fixed z-50 flex flex-col"
+        style={{
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          width: 'clamp(360px, 37.7vw, 512px)',
+          maxHeight: '90vh',
+          borderRadius: '8px',
+          padding: 'clamp(16px, 1.77vw, 24px)',
+          gap: 'clamp(16px, 1.84vw, 25px)',
+          background: '#FFFFFF',
+          boxShadow: '0px 10px 10px -5px rgba(0, 0, 0, 0.04), 0px 20px 25px -5px rgba(0, 0, 0, 0.1)',
+          overflowY: 'auto',
+        }}
+      >
+        {/* Icon */}
+        <div className="flex justify-center">
+          <div
+            className="flex items-center justify-center"
+            style={{
+              width: '48px',
+              height: '48px',
+              borderRadius: '24px',
+              background: '#D1FAE5',
+            }}
+          >
+            <Image
+              src="/Icon.png"
+              alt="Task icon"
+              width={22}
+              height={22}
+              style={{ width: '22px', height: '22px' }}
+            />
+          </div>
+        </div>
+
+        {/* Title */}
+        <h2
+          style={{
+            fontFamily: 'Inter, sans-serif',
+            fontWeight: 500,
+            fontSize: 'clamp(14px, 1.33vw, 18px)',
+            lineHeight: '24px',
+            textAlign: 'center',
+            color: '#111827',
+            margin: 0,
+          }}
+        >
+          Create Task
+        </h2>
+
+        {/* Client Field */}
+        <div className="flex flex-col gap-2">
+          <label
+            style={{
+              fontFamily: 'Inter, sans-serif',
+              fontWeight: 500,
+              fontSize: '14px',
+              lineHeight: '20px',
+              color: '#374151',
+            }}
+          >
+            Client
+          </label>
+          <div
+            className="relative"
+            style={{
+              height: '38px',
+            }}
+          >
+            <select
+              value={selectedClient}
+              onChange={(e) => setSelectedClient(e.target.value)}
+              className="w-full h-full appearance-none cursor-pointer"
+              style={{
+                border: '1px solid #D1D5DB',
+                borderRadius: '6px',
+                padding: '9px 13px',
+                paddingRight: '40px',
+                background: '#FFFFFF',
+                boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.05)',
+                fontFamily: 'Inter, sans-serif',
+                fontWeight: 400,
+                fontSize: '14px',
+                lineHeight: '20px',
+                color: '#111827',
+                outline: 'none',
+              }}
+            >
+              {clientOptions.map((client) => (
+                <option key={client} value={client}>
+                  {client}
+                </option>
+              ))}
+            </select>
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 20 20"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+              style={{
+                position: 'absolute',
+                right: '13px',
+                top: '50%',
+                transform: 'translateY(-50%)',
+                pointerEvents: 'none',
+              }}
+            >
+              <path
+                d="M6 8L10 12L14 8"
+                stroke="#9CA3AF"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </div>
+        </div>
+
+        {/* Task Type Field */}
+        <div className="flex flex-col gap-2">
+          <label
+            style={{
+              fontFamily: 'Inter, sans-serif',
+              fontWeight: 500,
+              fontSize: '14px',
+              lineHeight: '20px',
+              color: '#374151',
+            }}
+          >
+            Task type
+          </label>
+          <div
+            className="relative"
+            style={{
+              height: '38px',
+            }}
+          >
+            <select
+              value={taskType}
+              onChange={(e) => setTaskType(e.target.value)}
+              className="w-full h-full appearance-none cursor-pointer"
+              style={{
+                border: '1px solid #D1D5DB',
+                borderRadius: '6px',
+                padding: '9px 13px',
+                paddingRight: '40px',
+                background: '#FFFFFF',
+                boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.05)',
+                fontFamily: 'Inter, sans-serif',
+                fontWeight: 400,
+                fontSize: '14px',
+                lineHeight: '20px',
+                color: '#111827',
+                outline: 'none',
+              }}
+            >
+              {taskTypes.map((type) => (
+                <option key={type} value={type}>
+                  {type}
+                </option>
+              ))}
+            </select>
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 20 20"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+              style={{
+                position: 'absolute',
+                right: '13px',
+                top: '50%',
+                transform: 'translateY(-50%)',
+                pointerEvents: 'none',
+              }}
+            >
+              <path
+                d="M6 8L10 12L14 8"
+                stroke="#9CA3AF"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </div>
+        </div>
+
+        {/* Prio Level Field */}
+        <div className="flex flex-col gap-2">
+          <label
+            style={{
+              fontFamily: 'Inter, sans-serif',
+              fontWeight: 500,
+              fontSize: '14px',
+              lineHeight: '20px',
+              color: '#374151',
+            }}
+          >
+            Prio level
+          </label>
+          <div
+            className="relative"
+            style={{
+              height: '38px',
+            }}
+          >
+            <select
+              value={prioLevel}
+              onChange={(e) => setPrioLevel(e.target.value)}
+              className="w-full h-full appearance-none cursor-pointer"
+              style={{
+                border: '1px solid #D1D5DB',
+                borderRadius: '6px',
+                padding: '9px 13px',
+                paddingRight: '40px',
+                background: '#FFFFFF',
+                boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.05)',
+                fontFamily: 'Inter, sans-serif',
+                fontWeight: 400,
+                fontSize: '14px',
+                lineHeight: '20px',
+                color: '#111827',
+                outline: 'none',
+              }}
+            >
+              {prioLevels.map((level) => (
+                <option key={level} value={level}>
+                  {level}
+                </option>
+              ))}
+            </select>
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 20 20"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+              style={{
+                position: 'absolute',
+                right: '13px',
+                top: '50%',
+                transform: 'translateY(-50%)',
+                pointerEvents: 'none',
+              }}
+            >
+              <path
+                d="M6 8L10 12L14 8"
+                stroke="#9CA3AF"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </div>
+        </div>
+
+        {/* Task Description Field */}
+        <div className="flex flex-col gap-2">
+          <label
+            style={{
+              fontFamily: 'Inter, sans-serif',
+              fontWeight: 500,
+              fontSize: '14px',
+              lineHeight: '20px',
+              color: '#374151',
+            }}
+          >
+            Task desc.
+          </label>
+          <textarea
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            rows={4}
+            className="w-full resize-none outline-none"
+            style={{
+              border: '1px solid #D1D5DB',
+              borderRadius: '6px',
+              padding: '12px 13px',
+              background: '#FFFFFF',
+              boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.05)',
+              fontFamily: 'Inter, sans-serif',
+              fontWeight: 400,
+              fontSize: '14px',
+              lineHeight: '20px',
+              color: '#111827',
+            }}
+            placeholder="Enter task description..."
+          />
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex gap-3">
+          {/* Back Button */}
+          <button
+            onClick={onClose}
+            className="flex-1 flex items-center justify-center hover:opacity-80 transition-opacity"
+            style={{
+              height: '38px',
+              border: '1px solid #D1D5DB',
+              borderRadius: '6px',
+              padding: '9px 17px',
+              background: '#FFFFFF',
+              boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.05)',
+              cursor: 'pointer',
+            }}
+          >
+            <span
+              style={{
+                fontFamily: 'Inter, sans-serif',
+                fontWeight: 500,
+                fontSize: '14px',
+                lineHeight: '20px',
+                color: '#374151',
+              }}
+            >
+              Back
+            </span>
+          </button>
+
+          {/* Create Button */}
+          <button
+            onClick={handleSubmit}
+            className="flex-1 flex items-center justify-center hover:opacity-90 transition-opacity"
+            style={{
+              height: '38px',
+              border: 'none',
+              borderRadius: '6px',
+              padding: '9px 17px',
+              background: '#003450',
+              boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.05)',
+              cursor: 'pointer',
+            }}
+          >
+            <span
+              style={{
+                fontFamily: 'Inter, sans-serif',
+                fontWeight: 500,
+                fontSize: '14px',
+                lineHeight: '20px',
+                color: '#FFFFFF',
+              }}
+            >
+              Create
+            </span>
+          </button>
+        </div>
+      </div>
+    </>
+  );
 }
 
 // Mock data matching the image
@@ -44,6 +467,7 @@ export function TasksTable({ showClientColumn, baseUrl }: TasksTableProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [clientFilter, setClientFilter] = useState('Alle');
   const [currentPage, setCurrentPage] = useState(1);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const itemsPerPage = 10;
 
   // Suppress unused variable warning
@@ -51,6 +475,13 @@ export function TasksTable({ showClientColumn, baseUrl }: TasksTableProps) {
 
   const handleTaskClick = (taskId: string) => {
     router.push(`${baseUrl}/${taskId}`);
+  };
+
+  const handleCreateTask = (taskData: TaskData) => {
+    // TODO: Integrate with API to create task
+    console.log('Creating task:', taskData);
+    // For now, just close the modal
+    setIsCreateModalOpen(false);
   };
 
   // Filter tasks based on tab and search
@@ -270,7 +701,7 @@ export function TasksTable({ showClientColumn, baseUrl }: TasksTableProps) {
 
         {/* Create Task Button */}
         <button
-          onClick={() => router.push(`${baseUrl}/create`)}
+          onClick={() => setIsCreateModalOpen(true)}
           style={{
             width: '120px',
             height: '38px',
@@ -735,6 +1166,14 @@ export function TasksTable({ showClientColumn, baseUrl }: TasksTableProps) {
           </button>
         </div>
       </div>
+
+      {/* Create Task Modal */}
+      <CreateTaskModal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        onSubmit={handleCreateTask}
+        clients={clients}
+      />
     </div>
   );
 }
