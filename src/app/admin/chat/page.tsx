@@ -8,12 +8,12 @@ import { useEffect, useState } from 'react';
 import type { Contact } from '@/components/chats/ContactsList';
 import type { ChatMessage } from '@/components/chats/ChatSection';
 
-// Mock data for contacts - using randomuser.me for avatars
+// Mock data for contacts - using local avatar icon
 const mockContacts: Contact[] = [
   {
     id: '1',
     name: 'Max Schmidt',
-    avatar: 'https://randomuser.me/api/portraits/women/44.jpg',
+    avatar: '/imageofchat.png',
     lastMessage: 'Lorem ipsum dolor sit amet, consectetur...',
     lastMessageDate: '2022-12-30T12:34:00',
     unreadCount: 1,
@@ -22,7 +22,7 @@ const mockContacts: Contact[] = [
   {
     id: '2',
     name: 'Nicci Troiani',
-    avatar: 'https://randomuser.me/api/portraits/women/68.jpg',
+    avatar: '/imageofchat.png',
     lastMessage: 'Nicci schreibt eine Nachricht...',
     lastMessageDate: '2022-12-30T11:12:00',
     unreadCount: 2,
@@ -31,7 +31,7 @@ const mockContacts: Contact[] = [
   {
     id: '3',
     name: 'Jasmin Gold',
-    avatar: 'https://randomuser.me/api/portraits/women/65.jpg',
+    avatar: '/imageofchat.png',
     lastMessage: 'Du: Klar!',
     lastMessageDate: '2022-12-29T18:05:00',
     status: 'read',
@@ -40,7 +40,7 @@ const mockContacts: Contact[] = [
   {
     id: '4',
     name: 'Rebecca Moore',
-    avatar: 'https://randomuser.me/api/portraits/women/33.jpg',
+    avatar: '/imageofchat.png',
     lastMessage: 'Du: Die Retoure wurde beschädigt',
     lastMessageDate: '2022-12-29T18:05:00',
     status: 'error',
@@ -49,7 +49,7 @@ const mockContacts: Contact[] = [
   {
     id: '5',
     name: 'Jane Doe',
-    avatar: 'https://randomuser.me/api/portraits/women/90.jpg',
+    avatar: '/imageofchat.png',
     lastMessage: 'Du: Das Paket wurde heute morgen verschickt',
     lastMessageDate: '2022-12-29T16:45:00',
     status: 'delivered',
@@ -58,7 +58,7 @@ const mockContacts: Contact[] = [
   {
     id: '6',
     name: 'Jones Dermot',
-    avatar: 'https://randomuser.me/api/portraits/men/32.jpg',
+    avatar: '/imageofchat.png',
     lastMessage: 'Ich möchte gerne Preise für UPS erfahren',
     lastMessageDate: '2022-12-29T13:37:00',
     isOnline: true,
@@ -66,7 +66,7 @@ const mockContacts: Contact[] = [
   {
     id: '7',
     name: 'Martin Merces',
-    avatar: 'https://randomuser.me/api/portraits/men/45.jpg',
+    avatar: '/imageofchat.png',
     lastMessage: 'Martin schreibt eine Nachricht...',
     lastMessageDate: '2022-12-29T12:48:00',
     isOnline: false,
@@ -74,7 +74,7 @@ const mockContacts: Contact[] = [
   {
     id: '8',
     name: 'Franz Ferdinand',
-    avatar: 'https://randomuser.me/api/portraits/men/67.jpg',
+    avatar: '/imageofchat.png',
     lastMessage: 'Können wir am Freitag um 15 Uhr telefonieren?',
     lastMessageDate: '2022-12-28T15:27:00',
     isOnline: false,
@@ -82,7 +82,7 @@ const mockContacts: Contact[] = [
   {
     id: '9',
     name: 'Judith Williams',
-    avatar: 'https://randomuser.me/api/portraits/women/12.jpg',
+    avatar: '/imageofchat.png',
     lastMessage: 'Dankeschön, bis später',
     lastMessageDate: '2022-12-28T13:19:00',
     isOnline: true,
@@ -90,7 +90,7 @@ const mockContacts: Contact[] = [
   {
     id: '10',
     name: 'John Smith',
-    avatar: 'https://randomuser.me/api/portraits/men/22.jpg',
+    avatar: '/imageofchat.png',
     lastMessage: 'Am 30. Dezember passt es sehr gut',
     lastMessageDate: '2022-12-27T21:22:00',
     isOnline: false,
@@ -98,7 +98,7 @@ const mockContacts: Contact[] = [
   {
     id: '11',
     name: 'John Smith',
-    avatar: 'https://randomuser.me/api/portraits/men/55.jpg',
+    avatar: '/imageofchat.png',
     lastMessage: 'Passt, alles top! Die Sendung wurde zugestellt.',
     lastMessageDate: '2022-12-27T21:22:00',
     isOnline: false,
@@ -113,7 +113,7 @@ const getMockMessages = (contactId: string): ChatMessage[] => {
         id: '1',
         senderId: '1',
         senderName: 'Max Schmidt',
-        senderAvatar: 'https://randomuser.me/api/portraits/women/44.jpg',
+        senderAvatar: '/imageofchat.png',
         content: 'posuere lorem ipsum dolor sit amet consecteturg.',
         timestamp: '2022-12-30T11:10:00',
         isFromUser: false,
@@ -122,7 +122,7 @@ const getMockMessages = (contactId: string): ChatMessage[] => {
         id: '2',
         senderId: '1',
         senderName: 'Max Schmidt',
-        senderAvatar: 'https://randomuser.me/api/portraits/women/44.jpg',
+        senderAvatar: '/imageofchat.png',
         content: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Nibh mauris cursus mattis molestie. Ligula ullamcorper malesuada proin libero nunc consequat interdum. A lacus vestibulum sed arcu non odio euismod lacinia.',
         timestamp: '2022-12-30T11:12:00',
         isFromUser: false,
@@ -131,7 +131,7 @@ const getMockMessages = (contactId: string): ChatMessage[] => {
         id: '3',
         senderId: 'admin',
         senderName: 'Admin',
-        senderAvatar: 'https://randomuser.me/api/portraits/men/75.jpg',
+        senderAvatar: '/imageofchat.png',
         content: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Id aliquet lectus proin nibh nisl. Suspendisse faucibus interdum posuere lorem ipsum dolor sit amet consecteturg.',
         timestamp: '2022-12-30T11:20:00',
         isFromUser: true,
@@ -140,7 +140,7 @@ const getMockMessages = (contactId: string): ChatMessage[] => {
         id: '4',
         senderId: '1',
         senderName: 'Max Schmidt',
-        senderAvatar: 'https://randomuser.me/api/portraits/women/44.jpg',
+        senderAvatar: '/imageofchat.png',
         content: 'Hey can you check 110-DA. How many pieces are in stocks? It might be wrong',
         timestamp: '2022-12-30T11:25:00',
         isFromUser: false,
@@ -187,7 +187,7 @@ export default function AdminChatPage() {
       id: Date.now().toString(),
       senderId: 'admin',
       senderName: 'Admin',
-      senderAvatar: 'https://randomuser.me/api/portraits/men/75.jpg',
+      senderAvatar: '/imageofchat.png',
       content,
       timestamp: new Date().toISOString(),
       isFromUser: true,
@@ -221,7 +221,7 @@ export default function AdminChatPage() {
           messages={messages}
           currentUserId="admin"
           currentUserName="Admin"
-          currentUserAvatar="https://randomuser.me/api/portraits/men/75.jpg"
+          currentUserAvatar="/imageofchat.png"
           onSendMessage={handleSendMessage}
           isTyping={isTyping}
           typingUser={
