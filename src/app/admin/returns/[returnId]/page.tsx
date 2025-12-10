@@ -22,12 +22,9 @@ export default function AdminReturnDetailsPage() {
     return null;
   }
 
-  // Show client column for SUPER_ADMIN and ADMIN (superadmin and warehouse labor view)
-  const showClientColumn = user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN';
-
   return (
     <DashboardLayout>
-      <ReturnDetails returnId={returnId} showClientColumn={showClientColumn} />
+      <ReturnDetails returnId={returnId} />
     </DashboardLayout>
   );
 }

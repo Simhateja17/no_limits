@@ -22,12 +22,9 @@ export default function EmployeeReturnDetailsPage() {
     return null;
   }
 
-  // Show client column for employees (warehouse labor view)
-  const showClientColumn = true;
-
   return (
     <DashboardLayout>
-      <ReturnDetails returnId={returnId} showClientColumn={showClientColumn} />
+      <ReturnDetails returnId={returnId} />
     </DashboardLayout>
   );
 }

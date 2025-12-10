@@ -6,26 +6,32 @@ import Image from 'next/image';
 // Condition type
 type ConditionType = 'Damaged' | 'Well condition' | 'Acceptable';
 
+// Info type for products
+type InfoType = 'disposed' | 'booked in again';
+
 // Product interface for returns
 interface ReturnProduct {
   id: string;
   name: string;
   sku: string;
-  client: string;
+  gtin: string;
+  qty: number;
   condition: ConditionType;
+  info: InfoType;
 }
 
 // Mock return data
 const mockReturnData = {
   externalOrderId: '#24421',
-  internalOrderId: '#24421',
-  returnDate: '16. Mai 2024',
-  client: 'Merchant 3',
-  returnReason: 'Damaged in transit',
+  internalReturnId: '#2324',
+  clientName: 'Kamal Gupta',
+  dateArrived: '12.12.2025',
+  information: 'Fugiat ipsum ipsum deserunt culpa aute sint do nostrud anim incididunt cillum culpa consequat. Excepteur qui ipsum aliquip consequat sint. Sit id mollit nulla mollit nostrud in ea officia proident. Irure nostrud pariatur mollit ad adipisicing reprehenderit deserunt qui eu.',
+  status: 'Done' as const,
   products: [
-    { id: '1', name: 'Testproduct 1', sku: '#24234', client: 'Merchant 3', condition: 'Damaged' as ConditionType },
-    { id: '2', name: 'Testproduct 2', sku: '#24235', client: 'Merchant 3', condition: 'Well condition' as ConditionType },
-    { id: '3', name: 'Testproduct 3', sku: '#24236', client: 'Merchant 3', condition: 'Acceptable' as ConditionType },
+    { id: '1', name: 'Testproduct 1', sku: '#24234', gtin: 'Merchant 3', qty: 3, condition: 'Damaged' as ConditionType, info: 'disposed' as InfoType },
+    { id: '2', name: 'Testproduct 2', sku: '#24076', gtin: 'Merchant 5', qty: 3, condition: 'Well condition' as ConditionType, info: 'booked in again' as InfoType },
+    { id: '3', name: 'Testproduct 3', sku: '#24089', gtin: 'Merchant 3', qty: 2, condition: 'Acceptable' as ConditionType, info: 'booked in again' as InfoType },
   ],
   images: [
     '/women_in_return.jpg',
@@ -90,10 +96,9 @@ function ConditionBadge({ condition }: { condition: ConditionType }) {
 
 interface ReturnDetailsProps {
   returnId: string;
-  showClientColumn?: boolean;
 }
 
-export function ReturnDetails({ returnId, showClientColumn = true }: ReturnDetailsProps) {
+export function ReturnDetails({ returnId }: ReturnDetailsProps) {
   const router = useRouter();
 
   // Suppress unused variable warning
@@ -175,31 +180,75 @@ export function ReturnDetails({ returnId, showClientColumn = true }: ReturnDetai
           marginBottom: 'clamp(24px, 2.36vw, 32px)',
         }}
       >
-        {/* Section Header */}
-        <h2
+        {/* Section Header with Done Badge */}
+        <div
           style={{
-            fontFamily: 'Inter, sans-serif',
-            fontWeight: 500,
-            fontSize: 'clamp(14px, 1.33vw, 18px)',
-            lineHeight: 'clamp(18px, 1.77vw, 24px)',
-            color: '#111827',
-            margin: 0,
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'flex-start',
           }}
         >
-          Return Information
-        </h2>
-        <p
-          style={{
-            fontFamily: 'Inter, sans-serif',
-            fontWeight: 400,
-            fontSize: 'clamp(11px, 1.03vw, 14px)',
-            lineHeight: 'clamp(15px, 1.47vw, 20px)',
-            color: '#6B7280',
-            margin: 0,
-          }}
-        >
-          Details of return
-        </p>
+          <div>
+            <h2
+              style={{
+                fontFamily: 'Inter, sans-serif',
+                fontWeight: 500,
+                fontSize: 'clamp(14px, 1.33vw, 18px)',
+                lineHeight: 'clamp(18px, 1.77vw, 24px)',
+                color: '#111827',
+                margin: 0,
+              }}
+            >
+              Return Information
+            </h2>
+            <p
+              style={{
+                fontFamily: 'Inter, sans-serif',
+                fontWeight: 400,
+                fontSize: 'clamp(11px, 1.03vw, 14px)',
+                lineHeight: 'clamp(15px, 1.47vw, 20px)',
+                color: '#6B7280',
+                margin: 0,
+                marginTop: 'clamp(4px, 0.39vw, 6px)',
+              }}
+            >
+              Details of return
+            </p>
+          </div>
+          
+          {/* Done Badge */}
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 'clamp(6px, 0.59vw, 8px)',
+              padding: 'clamp(6px, 0.59vw, 8px) clamp(10px, 0.98vw, 14px)',
+              borderRadius: '9999px',
+              border: '1px solid #E5E7EB',
+              backgroundColor: 'transparent',
+            }}
+          >
+            <span
+              style={{
+                width: 'clamp(6px, 0.59vw, 8px)',
+                height: 'clamp(6px, 0.59vw, 8px)',
+                borderRadius: '50%',
+                backgroundColor: '#10B981',
+              }}
+            />
+            <span
+              style={{
+                fontFamily: 'Inter, sans-serif',
+                fontWeight: 500,
+                fontSize: 'clamp(11px, 1.03vw, 14px)',
+                lineHeight: '1',
+                color: '#374151',
+              }}
+            >
+              {mockReturnData.status}
+            </span>
+          </div>
+        </div>
 
         {/* Information Rows */}
         <div
@@ -244,7 +293,7 @@ export function ReturnDetails({ returnId, showClientColumn = true }: ReturnDetai
             </span>
           </div>
 
-          {/* Internal Order ID */}
+          {/* Internal Return ID */}
           <div
             style={{
               display: 'flex',
@@ -263,7 +312,7 @@ export function ReturnDetails({ returnId, showClientColumn = true }: ReturnDetai
                 color: '#6B7280',
               }}
             >
-              Internal Order ID
+              Internal Return ID
             </span>
             <span
               style={{
@@ -275,11 +324,11 @@ export function ReturnDetails({ returnId, showClientColumn = true }: ReturnDetai
                 color: '#111827',
               }}
             >
-              {mockReturnData.internalOrderId}
+              {mockReturnData.internalReturnId}
             </span>
           </div>
 
-          {/* Return Date */}
+          {/* Client name */}
           <div
             style={{
               display: 'flex',
@@ -298,7 +347,7 @@ export function ReturnDetails({ returnId, showClientColumn = true }: ReturnDetai
                 color: '#6B7280',
               }}
             >
-              Return Date
+              Client name
             </span>
             <span
               style={{
@@ -310,52 +359,50 @@ export function ReturnDetails({ returnId, showClientColumn = true }: ReturnDetai
                 color: '#111827',
               }}
             >
-              {mockReturnData.returnDate}
+              {mockReturnData.clientName}
             </span>
           </div>
 
-          {/* Client - Only show if showClientColumn is true */}
-          {showClientColumn && (
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                padding: 'clamp(15px, 1.47vw, 20px) 0',
-                borderBottom: '1px solid #E5E7EB',
-              }}
-            >
-              <span
-                style={{
-                  width: 'clamp(225px, 22.09vw, 300px)',
-                  fontFamily: 'Inter, sans-serif',
-                  fontWeight: 500,
-                  fontSize: 'clamp(11px, 1.03vw, 14px)',
-                  lineHeight: 'clamp(15px, 1.47vw, 20px)',
-                  color: '#6B7280',
-                }}
-              >
-                Client
-              </span>
-              <span
-                style={{
-                  flex: 1,
-                  fontFamily: 'Inter, sans-serif',
-                  fontWeight: 400,
-                  fontSize: 'clamp(11px, 1.03vw, 14px)',
-                  lineHeight: 'clamp(15px, 1.47vw, 20px)',
-                  color: '#111827',
-                }}
-              >
-                {mockReturnData.client}
-              </span>
-            </div>
-          )}
-
-          {/* Return Reason */}
+          {/* Date arrived */}
           <div
             style={{
               display: 'flex',
               alignItems: 'center',
+              padding: 'clamp(15px, 1.47vw, 20px) 0',
+              borderBottom: '1px solid #E5E7EB',
+            }}
+          >
+            <span
+              style={{
+                width: 'clamp(225px, 22.09vw, 300px)',
+                fontFamily: 'Inter, sans-serif',
+                fontWeight: 500,
+                fontSize: 'clamp(11px, 1.03vw, 14px)',
+                lineHeight: 'clamp(15px, 1.47vw, 20px)',
+                color: '#6B7280',
+              }}
+            >
+              Date arrived
+            </span>
+            <span
+              style={{
+                flex: 1,
+                fontFamily: 'Inter, sans-serif',
+                fontWeight: 400,
+                fontSize: 'clamp(11px, 1.03vw, 14px)',
+                lineHeight: 'clamp(15px, 1.47vw, 20px)',
+                color: '#111827',
+              }}
+            >
+              {mockReturnData.dateArrived}
+            </span>
+          </div>
+
+          {/* Information */}
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'flex-start',
               padding: 'clamp(15px, 1.47vw, 20px) 0',
             }}
           >
@@ -369,7 +416,7 @@ export function ReturnDetails({ returnId, showClientColumn = true }: ReturnDetai
                 color: '#6B7280',
               }}
             >
-              Return Reason
+              Information
             </span>
             <span
               style={{
@@ -381,138 +428,185 @@ export function ReturnDetails({ returnId, showClientColumn = true }: ReturnDetai
                 color: '#111827',
               }}
             >
-              {mockReturnData.returnReason}
+              {mockReturnData.information}
             </span>
           </div>
         </div>
+      </div>
 
-        {/* Products Table */}
+      {/* Products Section - Separate Card */}
+      <div
+        style={{
+          width: '100%',
+          borderRadius: '8px',
+          backgroundColor: '#FFFFFF',
+          boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.06), 0px 1px 3px 0px rgba(0, 0, 0, 0.1)',
+          overflow: 'hidden',
+          marginBottom: 'clamp(24px, 2.36vw, 32px)',
+        }}
+      >
+        {/* Products Table Header with background */}
         <div
+          className="grid"
           style={{
-            marginTop: 'clamp(16px, 1.57vw, 24px)',
+            gridTemplateColumns: 'minmax(100px, 1.5fr) minmax(80px, 1fr) minmax(80px, 1fr) minmax(50px, 0.5fr) minmax(90px, 1fr) minmax(100px, 1.2fr)',
+            padding: 'clamp(12px, 1.18vw, 16px) clamp(18px, 1.77vw, 24px)',
+            backgroundColor: '#F9FAFB',
+            borderBottom: '1px solid #E5E7EB',
           }}
         >
-          {/* Products Table Header */}
-          <div
-            className="grid"
+          <span
             style={{
-              gridTemplateColumns: showClientColumn
-                ? 'minmax(120px, 2fr) minmax(80px, 1fr) minmax(100px, 1.5fr) minmax(100px, 1.2fr)'
-                : 'minmax(150px, 2.5fr) minmax(100px, 1.5fr) minmax(120px, 1.5fr)',
-              padding: 'clamp(8px, 0.78vw, 12px) 0',
-              borderBottom: '1px solid #E5E7EB',
+              fontFamily: 'Inter, sans-serif',
+              fontWeight: 500,
+              fontSize: 'clamp(10px, 0.88vw, 12px)',
+              lineHeight: 'clamp(12px, 1.18vw, 16px)',
+              letterSpacing: '0.05em',
+              textTransform: 'uppercase',
+              color: '#6B7280',
+            }}
+          >
+            Product name
+          </span>
+          <span
+            style={{
+              fontFamily: 'Inter, sans-serif',
+              fontWeight: 500,
+              fontSize: 'clamp(10px, 0.88vw, 12px)',
+              lineHeight: 'clamp(12px, 1.18vw, 16px)',
+              letterSpacing: '0.05em',
+              textTransform: 'uppercase',
+              color: '#6B7280',
+            }}
+          >
+            SKU
+          </span>
+          <span
+            style={{
+              fontFamily: 'Inter, sans-serif',
+              fontWeight: 500,
+              fontSize: 'clamp(10px, 0.88vw, 12px)',
+              lineHeight: 'clamp(12px, 1.18vw, 16px)',
+              letterSpacing: '0.05em',
+              textTransform: 'uppercase',
+              color: '#6B7280',
+            }}
+          >
+            GTIN
+          </span>
+          <span
+            style={{
+              fontFamily: 'Inter, sans-serif',
+              fontWeight: 500,
+              fontSize: 'clamp(10px, 0.88vw, 12px)',
+              lineHeight: 'clamp(12px, 1.18vw, 16px)',
+              letterSpacing: '0.05em',
+              textTransform: 'uppercase',
+              color: '#6B7280',
+            }}
+          >
+            QTY
+          </span>
+          <span
+            style={{
+              fontFamily: 'Inter, sans-serif',
+              fontWeight: 500,
+              fontSize: 'clamp(10px, 0.88vw, 12px)',
+              lineHeight: 'clamp(12px, 1.18vw, 16px)',
+              letterSpacing: '0.05em',
+              textTransform: 'uppercase',
+              color: '#6B7280',
+            }}
+          >
+            Condition
+          </span>
+          <span
+            style={{
+              fontFamily: 'Inter, sans-serif',
+              fontWeight: 500,
+              fontSize: 'clamp(10px, 0.88vw, 12px)',
+              lineHeight: 'clamp(12px, 1.18vw, 16px)',
+              letterSpacing: '0.05em',
+              textTransform: 'uppercase',
+              color: '#6B7280',
+            }}
+          >
+            Info
+          </span>
+        </div>
+
+        {/* Products Table Body */}
+        {mockReturnData.products.map((product, index) => (
+          <div
+            key={product.id}
+            className="grid items-center"
+            style={{
+              gridTemplateColumns: 'minmax(100px, 1.5fr) minmax(80px, 1fr) minmax(80px, 1fr) minmax(50px, 0.5fr) minmax(90px, 1fr) minmax(100px, 1.2fr)',
+              padding: 'clamp(12px, 1.18vw, 16px) clamp(18px, 1.77vw, 24px)',
+              borderBottom: index < mockReturnData.products.length - 1 ? '1px solid #E5E7EB' : 'none',
+              backgroundColor: '#FFFFFF',
             }}
           >
             <span
               style={{
                 fontFamily: 'Inter, sans-serif',
                 fontWeight: 500,
-                fontSize: 'clamp(10px, 0.88vw, 12px)',
-                lineHeight: 'clamp(12px, 1.18vw, 16px)',
-                letterSpacing: '0.05em',
-                textTransform: 'uppercase',
-                color: '#6B7280',
+                fontSize: 'clamp(11px, 1.03vw, 14px)',
+                lineHeight: 'clamp(15px, 1.47vw, 20px)',
+                color: '#111827',
               }}
             >
-              Product name
+              {product.name}
             </span>
             <span
               style={{
                 fontFamily: 'Inter, sans-serif',
-                fontWeight: 500,
-                fontSize: 'clamp(10px, 0.88vw, 12px)',
-                lineHeight: 'clamp(12px, 1.18vw, 16px)',
-                letterSpacing: '0.05em',
-                textTransform: 'uppercase',
+                fontWeight: 400,
+                fontSize: 'clamp(11px, 1.03vw, 14px)',
+                lineHeight: 'clamp(15px, 1.47vw, 20px)',
                 color: '#6B7280',
               }}
             >
-              SKU
+              {product.sku}
             </span>
-            {showClientColumn && (
-              <span
-                style={{
-                  fontFamily: 'Inter, sans-serif',
-                  fontWeight: 500,
-                  fontSize: 'clamp(10px, 0.88vw, 12px)',
-                  lineHeight: 'clamp(12px, 1.18vw, 16px)',
-                  letterSpacing: '0.05em',
-                  textTransform: 'uppercase',
-                  color: '#6B7280',
-                }}
-              >
-                Client
-              </span>
-            )}
             <span
               style={{
                 fontFamily: 'Inter, sans-serif',
-                fontWeight: 500,
-                fontSize: 'clamp(10px, 0.88vw, 12px)',
-                lineHeight: 'clamp(12px, 1.18vw, 16px)',
-                letterSpacing: '0.05em',
-                textTransform: 'uppercase',
+                fontWeight: 400,
+                fontSize: 'clamp(11px, 1.03vw, 14px)',
+                lineHeight: 'clamp(15px, 1.47vw, 20px)',
                 color: '#6B7280',
               }}
             >
-              Condition
+              {product.gtin}
+            </span>
+            <span
+              style={{
+                fontFamily: 'Inter, sans-serif',
+                fontWeight: 400,
+                fontSize: 'clamp(11px, 1.03vw, 14px)',
+                lineHeight: 'clamp(15px, 1.47vw, 20px)',
+                color: '#6B7280',
+              }}
+            >
+              {product.qty}
+            </span>
+            <div>
+              <ConditionBadge condition={product.condition} />
+            </div>
+            <span
+              style={{
+                fontFamily: 'Inter, sans-serif',
+                fontWeight: 400,
+                fontSize: 'clamp(11px, 1.03vw, 14px)',
+                lineHeight: 'clamp(15px, 1.47vw, 20px)',
+                color: '#6B7280',
+              }}
+            >
+              {product.info}
             </span>
           </div>
-
-          {/* Products Table Body */}
-          {mockReturnData.products.map((product, index) => (
-            <div
-              key={product.id}
-              className="grid items-center"
-              style={{
-                gridTemplateColumns: showClientColumn
-                  ? 'minmax(120px, 2fr) minmax(80px, 1fr) minmax(100px, 1.5fr) minmax(100px, 1.2fr)'
-                  : 'minmax(150px, 2.5fr) minmax(100px, 1.5fr) minmax(120px, 1.5fr)',
-                padding: 'clamp(12px, 1.18vw, 16px) 0',
-                borderBottom: index < mockReturnData.products.length - 1 ? '1px solid #E5E7EB' : 'none',
-              }}
-            >
-              <span
-                style={{
-                  fontFamily: 'Inter, sans-serif',
-                  fontWeight: 500,
-                  fontSize: 'clamp(11px, 1.03vw, 14px)',
-                  lineHeight: 'clamp(15px, 1.47vw, 20px)',
-                  color: '#111827',
-                }}
-              >
-                {product.name}
-              </span>
-              <span
-                style={{
-                  fontFamily: 'Inter, sans-serif',
-                  fontWeight: 500,
-                  fontSize: 'clamp(11px, 1.03vw, 14px)',
-                  lineHeight: 'clamp(15px, 1.47vw, 20px)',
-                  color: '#111827',
-                }}
-              >
-                {product.sku}
-              </span>
-              {showClientColumn && (
-                <span
-                  style={{
-                    fontFamily: 'Inter, sans-serif',
-                    fontWeight: 400,
-                    fontSize: 'clamp(11px, 1.03vw, 14px)',
-                    lineHeight: 'clamp(15px, 1.47vw, 20px)',
-                    color: '#6B7280',
-                  }}
-                >
-                  {product.client}
-                </span>
-              )}
-              <div>
-                <ConditionBadge condition={product.condition} />
-              </div>
-            </div>
-          ))}
-        </div>
+        ))}
       </div>
 
       {/* Images Section */}

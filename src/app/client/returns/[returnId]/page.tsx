@@ -22,12 +22,9 @@ export default function ClientReturnDetailsPage() {
     return null;
   }
 
-  // Don't show client column for client view (they only see their own returns)
-  const showClientColumn = false;
-
   return (
     <DashboardLayout>
-      <ReturnDetails returnId={returnId} showClientColumn={showClientColumn} />
+      <ReturnDetails returnId={returnId} />
     </DashboardLayout>
   );
 }
