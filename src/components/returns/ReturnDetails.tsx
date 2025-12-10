@@ -1,6 +1,7 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
+import { useState } from 'react';
+import { useRouter, usePathname } from 'next/navigation';
 import Image from 'next/image';
 
 // Condition type
@@ -100,17 +101,48 @@ interface ReturnDetailsProps {
 
 export function ReturnDetails({ returnId }: ReturnDetailsProps) {
   const router = useRouter();
+  const pathname = usePathname();
+  const [showReplacementModal, setShowReplacementModal] = useState(false);
+  const [replacementCount, setReplacementCount] = useState(0);
 
-  // Suppress unused variable warning
-  void returnId;
+  // Determine base path based on current route
+  const getOrdersBasePath = () => {
+    if (pathname.startsWith('/client/')) return '/client/orders';
+    if (pathname.startsWith('/employee/')) return '/employee/orders';
+    return '/admin/orders';
+  };
+
+  // Helper to get base order ID (without replacement suffix)
+  const getBaseOrderId = (id: string) => {
+    return id.replace(/-\d+$/, '');
+  };
+
+  // Helper to get current replacement number
+  const getCurrentReplacementNumber = (id: string) => {
+    const match = id.match(/-(\d+)$/);
+    return match ? parseInt(match[1], 10) : 0;
+  };
 
   const handleBack = () => {
     router.back();
   };
 
   const handleCreateReplacementOrder = () => {
-    // TODO: Create replacement order logic
-    console.log('Creating replacement order...');
+    const baseId = getBaseOrderId(returnId);
+    const currentNum = getCurrentReplacementNumber(returnId);
+    const newReplacementNum = currentNum > 0 ? currentNum + 1 : replacementCount + 1;
+    const newOrderId = `${baseId}-${newReplacementNum}`;
+    
+    // In a real app, this would call an API to create the replacement order
+    // For now, we'll just show the success modal and navigate
+    setReplacementCount(newReplacementNum);
+    setShowReplacementModal(true);
+    
+    setTimeout(() => {
+      setShowReplacementModal(false);
+      // Navigate to the new replacement order in orders
+      router.push(`${getOrdersBasePath()}/${newOrderId}`);
+    }, 2000);
   };
 
   return (
@@ -687,55 +719,47 @@ export function ReturnDetails({ returnId }: ReturnDetailsProps) {
       <div
         style={{
           width: '100%',
+          minHeight: '178px',
           borderRadius: '8px',
           backgroundColor: '#FFFFFF',
           boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.06), 0px 1px 3px 0px rgba(0, 0, 0, 0.1)',
-          padding: 'clamp(18px, 1.77vw, 24px)',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 'clamp(15px, 1.47vw, 20px)',
+          padding: 'clamp(16px, 1.8vw, 24px)',
         }}
       >
-        {/* Section Header */}
-        <div>
-          <h2
-            style={{
-              fontFamily: 'Inter, sans-serif',
-              fontWeight: 500,
-              fontSize: 'clamp(14px, 1.33vw, 18px)',
-              lineHeight: 'clamp(18px, 1.77vw, 24px)',
-              color: '#111827',
-              margin: 0,
-            }}
-          >
-            Create Replacement Order
-          </h2>
-          <p
-            style={{
-              fontFamily: 'Inter, sans-serif',
-              fontWeight: 400,
-              fontSize: 'clamp(11px, 1.03vw, 14px)',
-              lineHeight: 'clamp(15px, 1.47vw, 20px)',
-              color: '#6B7280',
-              margin: 0,
-              marginTop: 'clamp(4px, 0.39vw, 6px)',
-            }}
-          >
-            Create a replacement order for this return
-          </p>
-        </div>
-
-        {/* Create Button */}
+        <span
+          style={{
+            fontFamily: 'Inter, sans-serif',
+            fontWeight: 500,
+            fontSize: 'clamp(16px, 1.3vw, 18px)',
+            lineHeight: '24px',
+            color: '#111827',
+            display: 'block',
+          }}
+        >
+          Create replacement order
+        </span>
+        <p
+          style={{
+            marginTop: '12px',
+            fontFamily: 'Inter, sans-serif',
+            fontWeight: 400,
+            fontSize: '14px',
+            lineHeight: '20px',
+            color: '#6B7280',
+          }}
+        >
+          Achtung, das Löschen des Artikels führt dazu, dass alle Warenbewegungen verloren gehen. Artikel können nur gelöscht werden wenn kein Bestand vorhanden ist und keine Reservierungen oder Anlieferungen anliegen.
+        </p>
         <button
           onClick={handleCreateReplacementOrder}
           style={{
-            width: 'fit-content',
-            height: 'clamp(32px, 3.14vw, 42px)',
+            marginTop: '20px',
+            width: 'clamp(170px, 15.2vw, 206px)',
+            height: 'clamp(34px, 2.8vw, 38px)',
+            padding: 'clamp(7px, 0.66vw, 9px) clamp(13px, 1.25vw, 17px)',
             borderRadius: '6px',
-            border: 'none',
-            padding: 'clamp(8px, 0.78vw, 11px) clamp(14px, 1.37vw, 18px)',
             backgroundColor: '#003450',
-            boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.05)',
+            border: 'none',
             cursor: 'pointer',
             display: 'flex',
             alignItems: 'center',
@@ -746,16 +770,82 @@ export function ReturnDetails({ returnId }: ReturnDetailsProps) {
             style={{
               fontFamily: 'Inter, sans-serif',
               fontWeight: 500,
-              fontSize: 'clamp(11px, 1.03vw, 14px)',
-              lineHeight: '1',
+              fontSize: 'clamp(12px, 1.03vw, 14px)',
+              lineHeight: '20px',
               color: '#FFFFFF',
+              whiteSpace: 'nowrap',
+              textAlign: 'center',
             }}
           >
-            Create Replacement Order
+            Create replacement order
           </span>
         </button>
       </div>
       </div>
+
+      {/* Replacement Order Created Modal */}
+      {showReplacementModal && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+          }}
+        >
+          <div
+            style={{
+              width: '512px',
+              height: '140px',
+              maxWidth: '90vw',
+              gap: '24px',
+              borderRadius: '8px',
+              padding: '24px',
+              backgroundColor: '#FFFFFF',
+              boxShadow: '0px 10px 10px -5px rgba(0, 0, 0, 0.04), 0px 20px 25px -5px rgba(0, 0, 0, 0.1)',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            {/* Green Checkmark Circle */}
+            <div
+              style={{
+                width: '48px',
+                height: '48px',
+                borderRadius: '24px',
+                backgroundColor: '#D1FAE5',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M5 13L9 17L19 7" stroke="#059669" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </div>
+            <span
+              style={{
+                fontFamily: 'Inter, sans-serif',
+                fontWeight: 500,
+                fontSize: '18px',
+                lineHeight: '24px',
+                textAlign: 'center',
+                color: '#111827',
+              }}
+            >
+              Replacement order created
+            </span>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
