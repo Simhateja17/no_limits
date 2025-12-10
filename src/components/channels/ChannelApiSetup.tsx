@@ -204,53 +204,55 @@ export function ChannelApiSetup({ channelId, channelType, baseUrl }: ChannelApiS
             </p>
           </div>
 
-          {/* Warning Box */}
-          <div
-            style={{
-              width: '100%',
-              borderRadius: '8px',
-              backgroundColor: '#FFFBEB',
-              border: '1px solid #FEF3C7',
-              padding: 'clamp(12px, 1.18vw, 16px)',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 'clamp(6px, 0.59vw, 8px)',
-            }}
-          >
+          {/* Warning Box - Only show for Woocommerce */}
+          {channelType === 'Woocommerce' && (
             <div
               style={{
+                width: '100%',
+                borderRadius: '8px',
+                backgroundColor: '#FFFBEB',
+                border: '1px solid #FEF3C7',
+                padding: 'clamp(12px, 1.18vw, 16px)',
                 display: 'flex',
-                alignItems: 'center',
+                flexDirection: 'column',
                 gap: 'clamp(6px, 0.59vw, 8px)',
               }}
             >
-              <WarningIcon />
-              <span
+              <div
                 style={{
-                  fontFamily: 'Inter, sans-serif',
-                  fontWeight: 500,
-                  fontSize: 'clamp(11px, 1.03vw, 14px)',
-                  lineHeight: 'clamp(15px, 1.47vw, 20px)',
-                  color: '#D97706',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 'clamp(6px, 0.59vw, 8px)',
                 }}
               >
-                Attention needed
-              </span>
+                <WarningIcon />
+                <span
+                  style={{
+                    fontFamily: 'Inter, sans-serif',
+                    fontWeight: 500,
+                    fontSize: 'clamp(11px, 1.03vw, 14px)',
+                    lineHeight: 'clamp(15px, 1.47vw, 20px)',
+                    color: '#D97706',
+                  }}
+                >
+                  Attention needed
+                </span>
+              </div>
+              <p
+                style={{
+                  fontFamily: 'Inter, sans-serif',
+                  fontWeight: 400,
+                  fontSize: 'clamp(11px, 1.03vw, 14px)',
+                  lineHeight: 'clamp(15px, 1.47vw, 20px)',
+                  color: '#92400E',
+                  margin: 0,
+                  paddingLeft: 'clamp(22px, 2.16vw, 28px)',
+                }}
+              >
+                Its nessessary to have an active SSL Certificate.
+              </p>
             </div>
-            <p
-              style={{
-                fontFamily: 'Inter, sans-serif',
-                fontWeight: 400,
-                fontSize: 'clamp(11px, 1.03vw, 14px)',
-                lineHeight: 'clamp(15px, 1.47vw, 20px)',
-                color: '#92400E',
-                margin: 0,
-                paddingLeft: 'clamp(22px, 2.16vw, 28px)',
-              }}
-            >
-              Its nessessary to have an active SSL Certificate.
-            </p>
-          </div>
+          )}
         </div>
 
         {/* Right Side - Form Card */}

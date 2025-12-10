@@ -230,6 +230,7 @@ export function ChannelLocationSetup({ channelId, channelType, baseUrl }: Channe
                   fontSize: 'clamp(11px, 1.03vw, 14px)',
                   lineHeight: 'clamp(15px, 1.47vw, 20px)',
                   color: '#374151',
+                  textAlign: 'center',
                 }}
               >
                 Warehouse
@@ -277,6 +278,7 @@ export function ChannelLocationSetup({ channelId, channelType, baseUrl }: Channe
                   fontSize: 'clamp(11px, 1.03vw, 14px)',
                   lineHeight: 'clamp(15px, 1.47vw, 20px)',
                   color: '#374151',
+                  textAlign: 'center',
                 }}
               >
                 {getChannelLabel()}

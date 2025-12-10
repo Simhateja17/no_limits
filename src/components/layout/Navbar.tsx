@@ -12,6 +12,7 @@ const navItemsByRole: Record<UserRole, { name: string; href: string }[]> = {
     { name: 'Dashboard', href: '/client/dashboard' },
     { name: 'Orders', href: '/client/orders' },
     { name: 'Inbounds', href: '/client/inbounds' },
+    { name: 'Returns', href: '/client/returns' },
     { name: 'Chat', href: '/client/chat' },
     { name: 'Channels', href: '/client/channels' },
   ],

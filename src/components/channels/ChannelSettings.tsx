@@ -9,12 +9,14 @@ const channelTypes = ['Woocommerce', 'Shopify', 'Amazon'];
 interface ChannelSettingsProps {
   channelId: string;
   baseUrl: string;
+  initialChannelType?: string;
+  isNewChannel?: boolean;
 }
 
-export function ChannelSettings({ channelId, baseUrl }: ChannelSettingsProps) {
+export function ChannelSettings({ channelId, baseUrl, initialChannelType = 'Woocommerce', isNewChannel = false }: ChannelSettingsProps) {
   const router = useRouter();
   const [channelName, setChannelName] = useState('');
-  const [selectedChannel, setSelectedChannel] = useState('Woocommerce');
+  const [selectedChannel, setSelectedChannel] = useState(initialChannelType);
   const [isChannelOn, setIsChannelOn] = useState(true);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
@@ -24,7 +26,7 @@ export function ChannelSettings({ channelId, baseUrl }: ChannelSettingsProps) {
 
   const handleNext = () => {
     // Navigate to API setup page with channel type
-    router.push(`${baseUrl}/${channelId}/api-setup?type=${encodeURIComponent(selectedChannel)}`);
+    router.push(`${baseUrl}/${channelId}/api-setup?type=${encodeURIComponent(selectedChannel)}${isNewChannel ? '&isNew=true' : ''}`);
   };
 
   const handleToggleChannel = () => {

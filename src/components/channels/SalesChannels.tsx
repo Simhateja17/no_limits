@@ -1,11 +1,13 @@
 'use client';
 
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 // Channel interface
 interface Channel {
   id: string;
   name: string;
+  type: 'Woocommerce' | 'Shopify' | 'Amazon';
   url: string;
   status: 'Active' | 'Inactive';
 }
@@ -15,12 +17,14 @@ const mockChannels: Channel[] = [
   {
     id: '1',
     name: 'Woocommerce',
+    type: 'Woocommerce',
     url: 'www.teststore.de',
     status: 'Active',
   },
   {
     id: '2',
     name: 'Shopify',
+    type: 'Shopify',
     url: 'www.testshopifystore.de',
     status: 'Inactive',
   },
@@ -238,8 +242,172 @@ interface SalesChannelsProps {
   baseUrl: string;
 }
 
+// Channel Type Selection Modal
+function ChannelTypeModal({ 
+  isOpen, 
+  onClose, 
+  onSelect 
+}: { 
+  isOpen: boolean; 
+  onClose: () => void; 
+  onSelect: (type: 'Woocommerce' | 'Shopify' | 'Amazon') => void;
+}) {
+  if (!isOpen) return null;
+
+  const channelTypes: { type: 'Woocommerce' | 'Shopify' | 'Amazon'; label: string; description: string }[] = [
+    { type: 'Woocommerce', label: 'Woocommerce', description: 'Connect your WooCommerce store' },
+    { type: 'Shopify', label: 'Shopify', description: 'Connect your Shopify store' },
+    { type: 'Amazon', label: 'Amazon', description: 'Connect your Amazon marketplace' },
+  ];
+
+  return (
+    <div
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 1000,
+      }}
+      onClick={onClose}
+    >
+      <div
+        style={{
+          width: 'clamp(320px, 31.42vw, 440px)',
+          backgroundColor: '#FFFFFF',
+          borderRadius: 'clamp(8px, 0.78vw, 12px)',
+          padding: 'clamp(24px, 2.36vw, 32px)',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 'clamp(20px, 1.96vw, 28px)',
+          boxShadow: '0px 20px 25px -5px rgba(0, 0, 0, 0.1), 0px 10px 10px -5px rgba(0, 0, 0, 0.04)',
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Modal Header */}
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+          }}
+        >
+          <h2
+            style={{
+              fontFamily: 'Inter, sans-serif',
+              fontWeight: 600,
+              fontSize: 'clamp(16px, 1.57vw, 22px)',
+              lineHeight: 'clamp(20px, 1.96vw, 28px)',
+              color: '#111827',
+              margin: 0,
+            }}
+          >
+            Select Channel Type
+          </h2>
+          <button
+            onClick={onClose}
+            style={{
+              width: 'clamp(24px, 2.36vw, 32px)',
+              height: 'clamp(24px, 2.36vw, 32px)',
+              borderRadius: '6px',
+              border: 'none',
+              backgroundColor: 'transparent',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+            }}
+          >
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 20 20"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M15 5L5 15M5 5L15 15"
+                stroke="#6B7280"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </button>
+        </div>
+
+        {/* Channel Type Options */}
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 'clamp(12px, 1.18vw, 16px)',
+          }}
+        >
+          {channelTypes.map((channel) => (
+            <button
+              key={channel.type}
+              onClick={() => onSelect(channel.type)}
+              style={{
+                width: '100%',
+                padding: 'clamp(14px, 1.37vw, 20px) clamp(16px, 1.57vw, 22px)',
+                borderRadius: '8px',
+                border: '1px solid #E5E7EB',
+                backgroundColor: '#FFFFFF',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'flex-start',
+                gap: 'clamp(4px, 0.39vw, 6px)',
+                cursor: 'pointer',
+                transition: 'all 0.15s ease',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = '#F9FAFB';
+                e.currentTarget.style.borderColor = '#003450';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = '#FFFFFF';
+                e.currentTarget.style.borderColor = '#E5E7EB';
+              }}
+            >
+              <span
+                style={{
+                  fontFamily: 'Inter, sans-serif',
+                  fontWeight: 500,
+                  fontSize: 'clamp(13px, 1.18vw, 16px)',
+                  lineHeight: 'clamp(16px, 1.47vw, 20px)',
+                  color: '#111827',
+                }}
+              >
+                {channel.label}
+              </span>
+              <span
+                style={{
+                  fontFamily: 'Inter, sans-serif',
+                  fontWeight: 400,
+                  fontSize: 'clamp(11px, 1.03vw, 14px)',
+                  lineHeight: 'clamp(14px, 1.37vw, 18px)',
+                  color: '#6B7280',
+                }}
+              >
+                {channel.description}
+              </span>
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function SalesChannels({ baseUrl }: SalesChannelsProps) {
   const router = useRouter();
+  const [showChannelTypeModal, setShowChannelTypeModal] = useState(false);
 
   // For demo purposes, you can toggle this to see empty state
   const channels = mockChannels;
@@ -250,16 +418,28 @@ export function SalesChannels({ baseUrl }: SalesChannelsProps) {
   };
 
   const handleSettingsClick = (channelId: string) => {
-    router.push(`${baseUrl}/${channelId}/settings`);
+    const channel = channels.find(c => c.id === channelId);
+    if (channel) {
+      router.push(`${baseUrl}/${channelId}/settings?type=${encodeURIComponent(channel.type)}`);
+    }
   };
 
   const handleNameClick = (channelId: string) => {
-    router.push(`${baseUrl}/${channelId}/settings`);
+    const channel = channels.find(c => c.id === channelId);
+    if (channel) {
+      router.push(`${baseUrl}/${channelId}/settings?type=${encodeURIComponent(channel.type)}`);
+    }
   };
 
   const handleNewChannel = () => {
-    // TODO: Open new channel modal or navigate to create page
-    console.log('New Channel clicked');
+    setShowChannelTypeModal(true);
+  };
+
+  const handleChannelTypeSelect = (type: 'Woocommerce' | 'Shopify' | 'Amazon') => {
+    setShowChannelTypeModal(false);
+    // Generate a new channel ID (in real app, this would come from backend)
+    const newChannelId = 'new';
+    router.push(`${baseUrl}/${newChannelId}/settings?type=${encodeURIComponent(type)}&isNew=true`);
   };
 
   return (
@@ -454,6 +634,13 @@ export function SalesChannels({ baseUrl }: SalesChannelsProps) {
           </button>
         </div>
       )}
+
+      {/* Channel Type Selection Modal */}
+      <ChannelTypeModal
+        isOpen={showChannelTypeModal}
+        onClose={() => setShowChannelTypeModal(false)}
+        onSelect={handleChannelTypeSelect}
+      />
     </div>
   );
 }
