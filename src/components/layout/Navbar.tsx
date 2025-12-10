@@ -11,12 +11,14 @@ const navItemsByRole: Record<UserRole, { name: string; href: string }[]> = {
   CLIENT: [
     { name: 'Dashboard', href: '/client/dashboard' },
     { name: 'Orders', href: '/client/orders' },
+    { name: 'Chat', href: '/client/chat' },
   ],
   EMPLOYEE: [
     { name: 'Dashboard', href: '/employee/dashboard' },
     { name: 'Orders', href: '/employee/orders' },
     { name: 'Products', href: '/employee/products' },
     { name: 'Returns', href: '/employee/returns' },
+    { name: 'Chat', href: '/employee/chat' },
     { name: 'Tasks', href: '/employee/tasks' },
   ],
   ADMIN: [

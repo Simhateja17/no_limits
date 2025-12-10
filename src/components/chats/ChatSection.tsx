@@ -24,6 +24,7 @@ interface ChatSectionProps {
   onSendMessage: (message: string) => void;
   isTyping?: boolean;
   typingUser?: { name: string; avatar: string };
+  showCreateTask?: boolean;
 }
 
 export function ChatSection({
@@ -35,6 +36,7 @@ export function ChatSection({
   onSendMessage,
   isTyping,
   typingUser,
+  showCreateTask = true,
 }: ChatSectionProps) {
   const [inputValue, setInputValue] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -256,8 +258,8 @@ export function ChatSection({
                   </p>
                 </div>
 
-                {/* Create task button - only for non-user messages */}
-                {!isCurrentUser && (
+                {/* Create task button - only for non-user messages and when showCreateTask is true */}
+                {!isCurrentUser && showCreateTask && (
                   <button
                     onClick={() => {
                       setSelectedMessageContent(message.content);
@@ -306,53 +308,58 @@ export function ChatSection({
           );
         })}
 
-        {/* Typing indicator */}
-        {isTyping && typingUser && (
-          <div className="flex items-center mb-4">
-            <div
-              className="relative flex-shrink-0"
-              style={{
-                width: '16px',
-                height: '16px',
-                marginRight: '8px',
-              }}
-            >
-              <Image
-                src={typingUser.avatar}
-                alt={typingUser.name}
-                width={16}
-                height={16}
-                className="rounded-full object-cover"
-                style={{ width: '16px', height: '16px' }}
-              />
-            </div>
-            <span
-              style={{
-                fontFamily: 'Poppins, sans-serif',
-                fontWeight: 500,
-                fontSize: '12px',
-                color: '#192A3E',
-              }}
-            >
-              {typingUser.name}
-            </span>
-            <span
-              style={{
-                fontFamily: 'Poppins, sans-serif',
-                fontWeight: 400,
-                fontSize: '10px',
-                color: '#90A0B7',
-                marginLeft: '8px',
-                fontStyle: 'italic',
-              }}
-            >
-              Typing a message...
-            </span>
-          </div>
-        )}
-
         <div ref={messagesEndRef} />
       </div>
+
+      {/* Typing indicator - positioned just above input area */}
+      {isTyping && typingUser && (
+        <div
+          className="flex items-center px-4 py-3"
+          style={{
+            background: '#FAFBFC',
+          }}
+        >
+          <div
+            className="relative flex-shrink-0"
+            style={{
+              width: '16px',
+              height: '16px',
+              marginRight: '8px',
+            }}
+          >
+            <Image
+              src={typingUser.avatar}
+              alt={typingUser.name}
+              width={16}
+              height={16}
+              className="rounded-full object-cover"
+              style={{ width: '16px', height: '16px' }}
+            />
+          </div>
+          <span
+            style={{
+              fontFamily: 'Poppins, sans-serif',
+              fontWeight: 500,
+              fontSize: '12px',
+              color: '#192A3E',
+            }}
+          >
+            {typingUser.name}
+          </span>
+          <span
+            style={{
+              fontFamily: 'Poppins, sans-serif',
+              fontWeight: 400,
+              fontSize: '10px',
+              color: '#90A0B7',
+              marginLeft: '8px',
+              fontStyle: 'italic',
+            }}
+          >
+            Typing a message...
+          </span>
+        </div>
+      )}
 
       {/* Input Area */}
       <div
