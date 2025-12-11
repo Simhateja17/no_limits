@@ -146,6 +146,7 @@ function Field({ label, value, editMode, onChange }: FieldProps) {
 export function ProductDetails({ productId, backUrl }: ProductDetailsProps) {
   const router = useRouter();
   const tCommon = useTranslations('common');
+  const t = useTranslations('products');
   const [activeTab, setActiveTab] = useState<ProductTab>('productData');
   const [editMode, setEditMode] = useState(false);
   const [barcodeType, setBarcodeType] = useState('GTIN');
@@ -255,7 +256,7 @@ export function ProductDetails({ productId, backUrl }: ProductDetailsProps) {
               color: '#374151',
             }}
           >
-            Back
+            {tCommon('back')}
           </span>
         </button>
       </div>
@@ -288,7 +289,7 @@ export function ProductDetails({ productId, backUrl }: ProductDetailsProps) {
               color: activeTab === 'productData' ? '#003450' : '#6B7280',
             }}
           >
-            Product Data
+            {t('productData')}
           </span>
         </button>
 
@@ -314,7 +315,7 @@ export function ProductDetails({ productId, backUrl }: ProductDetailsProps) {
               color: activeTab === 'stockMovements' ? '#003450' : '#6B7280',
             }}
           >
-            Stock movements
+            {t('stockMovements')}
           </span>
         </button>
 
@@ -341,7 +342,7 @@ export function ProductDetails({ productId, backUrl }: ProductDetailsProps) {
               color: activeTab === 'orders' ? '#003450' : '#6B7280',
             }}
           >
-            Orders
+            {tCommon('orders')}
           </span>
           <span
             style={{
@@ -384,7 +385,7 @@ export function ProductDetails({ productId, backUrl }: ProductDetailsProps) {
               color: activeTab === 'bundle' ? '#003450' : '#6B7280',
             }}
           >
-            Bundle
+            {t('bundle')}
           </span>
         </button>
       </div>
@@ -569,7 +570,7 @@ export function ProductDetails({ productId, backUrl }: ProductDetailsProps) {
                       color: '#6B7280',
                     }}
                   >
-                    Total Stock
+                    {t('totalStock')}
                   </span>
                   <span
                     style={{
@@ -608,7 +609,7 @@ export function ProductDetails({ productId, backUrl }: ProductDetailsProps) {
                       color: '#6B7280',
                     }}
                   >
-                    Available
+                    {t('available')}
                   </span>
                   <span
                     style={{
@@ -647,7 +648,7 @@ export function ProductDetails({ productId, backUrl }: ProductDetailsProps) {
                       color: '#6B7280',
                     }}
                   >
-                    Reserved
+                    {t('reserved')}
                   </span>
                   <span
                     style={{
@@ -686,7 +687,7 @@ export function ProductDetails({ productId, backUrl }: ProductDetailsProps) {
                       color: '#6B7280',
                     }}
                   >
-                    Announced
+                    {t('announced')}
                   </span>
                   <span
                     style={{
@@ -731,12 +732,12 @@ export function ProductDetails({ productId, backUrl }: ProductDetailsProps) {
                         marginBottom: '8px',
                       }}
                     >
-                      Geodaten
+                      {t('geodata')}
                     </h3>
-                    <Field label="Height in cm" value={formData.heightInCm} editMode={editMode} onChange={updateField('heightInCm')} />
-                    <Field label="Width in cm" value={formData.widthInCm} editMode={editMode} onChange={updateField('widthInCm')} />
-                    <Field label="Length in cm" value={formData.lengthInCm} editMode={editMode} onChange={updateField('lengthInCm')} />
-                    <Field label="Weight in kg" value={formData.weightInKg} editMode={editMode} onChange={updateField('weightInKg')} />
+                    <Field label={t('heightInCm')} value={formData.heightInCm} editMode={editMode} onChange={updateField('heightInCm')} />
+                    <Field label={t('widthInCm')} value={formData.widthInCm} editMode={editMode} onChange={updateField('widthInCm')} />
+                    <Field label={t('lengthInCm')} value={formData.lengthInCm} editMode={editMode} onChange={updateField('lengthInCm')} />
+                    <Field label={t('weightInKg')} value={formData.weightInKg} editMode={editMode} onChange={updateField('weightInKg')} />
                   </div>
 
                   {/* Identifizierung Column */}
@@ -751,14 +752,14 @@ export function ProductDetails({ productId, backUrl }: ProductDetailsProps) {
                         marginBottom: '8px',
                       }}
                     >
-                      Identifizierung
+                      {t('identification')}
                     </h3>
-                    <Field label="SKU" value={formData.sku} editMode={editMode} onChange={updateField('sku')} />
-                    <Field label="GTIN" value={formData.gtin} editMode={editMode} onChange={updateField('gtin')} />
-                    <Field label="Amazon ASIN" value={formData.amazonAsin} editMode={editMode} onChange={updateField('amazonAsin')} />
-                    <Field label="Amazon SKU" value={formData.amazonSku} editMode={editMode} onChange={updateField('amazonSku')} />
-                    <Field label="ISBN" value={formData.isbn} editMode={editMode} onChange={updateField('isbn')} />
-                    <Field label="HAN" value={formData.han} editMode={editMode} onChange={updateField('han')} />
+                    <Field label={t('sku')} value={formData.sku} editMode={editMode} onChange={updateField('sku')} />
+                    <Field label={t('gtin')} value={formData.gtin} editMode={editMode} onChange={updateField('gtin')} />
+                    <Field label={t('amazonAsin')} value={formData.amazonAsin} editMode={editMode} onChange={updateField('amazonAsin')} />
+                    <Field label={t('amazonSku')} value={formData.amazonSku} editMode={editMode} onChange={updateField('amazonSku')} />
+                    <Field label={t('isbn')} value={formData.isbn} editMode={editMode} onChange={updateField('isbn')} />
+                    <Field label={t('han')} value={formData.han} editMode={editMode} onChange={updateField('han')} />
                   </div>
 
                   {/* Eigenschaften Column */}
@@ -773,15 +774,15 @@ export function ProductDetails({ productId, backUrl }: ProductDetailsProps) {
                         marginBottom: '8px',
                       }}
                     >
-                      Eigenschaften
+                      {t('properties')}
                     </h3>
-                    <Field label="MHD" value={formData.mhd} editMode={editMode} onChange={updateField('mhd')} />
-                    <Field label="Charge" value={formData.charge} editMode={editMode} onChange={updateField('charge')} />
-                    <Field label="Zolltarifnummer" value={formData.zolltarifnummer} editMode={editMode} onChange={updateField('zolltarifnummer')} />
-                    <Field label="Ursprung" value={formData.ursprung} editMode={editMode} onChange={updateField('ursprung')} />
-                    <Field label="Netto-Verkaufspreis" value={formData.nettoVerkaufspreis} editMode={editMode} onChange={updateField('nettoVerkaufspreis')} />
-                    <Field label="Manufacture" value={formData.manufacture} editMode={editMode} onChange={updateField('manufacture')} />
-                    <Field label="QTY Mastercarton" value={formData.qtyMastercarton} editMode={editMode} onChange={updateField('qtyMastercarton')} />
+                    <Field label={t('mhd')} value={formData.mhd} editMode={editMode} onChange={updateField('mhd')} />
+                    <Field label={t('charge')} value={formData.charge} editMode={editMode} onChange={updateField('charge')} />
+                    <Field label={t('zolltarifnummer')} value={formData.zolltarifnummer} editMode={editMode} onChange={updateField('zolltarifnummer')} />
+                    <Field label={t('ursprung')} value={formData.ursprung} editMode={editMode} onChange={updateField('ursprung')} />
+                    <Field label={t('nettoVerkaufspreis')} value={formData.nettoVerkaufspreis} editMode={editMode} onChange={updateField('nettoVerkaufspreis')} />
+                    <Field label={t('manufacture')} value={formData.manufacture} editMode={editMode} onChange={updateField('manufacture')} />
+                    <Field label={t('qtyMastercarton')} value={formData.qtyMastercarton} editMode={editMode} onChange={updateField('qtyMastercarton')} />
                   </div>
                 </div>
               </div>
@@ -810,7 +811,7 @@ export function ProductDetails({ productId, backUrl }: ProductDetailsProps) {
                     color: '#111827',
                   }}
                 >
-                  Edit product
+                  {t('editProduct')}
                 </span>
                 {/* Toggle Button */}
                 <button
@@ -865,7 +866,7 @@ export function ProductDetails({ productId, backUrl }: ProductDetailsProps) {
                     marginBottom: '8px',
                   }}
                 >
-                  Generate barcode label
+                  {t('generateBarcodeLabel')}
                 </h3>
                 <p
                   style={{
@@ -877,7 +878,7 @@ export function ProductDetails({ productId, backUrl }: ProductDetailsProps) {
                     marginBottom: '16px',
                   }}
                 >
-                  Wähle zuerst das benötigte Etikett, hinterlege die gewünschte Menge und anschließend den zu verwendenden Drucker
+                  {t('barcodeLabelDescription')}
                 </p>
                 <div className="flex items-center gap-4 flex-wrap">
                   {/* Barcode Type Select */}
@@ -989,7 +990,7 @@ export function ProductDetails({ productId, backUrl }: ProductDetailsProps) {
                         color: '#FFFFFF',
                       }}
                     >
-                      Create
+                      {tCommon('create')}
                     </span>
                   </button>
                 </div>

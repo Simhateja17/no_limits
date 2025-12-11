@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useTranslations, useLocale } from 'next-intl';
 
 // Tab type for returns
-type ReturnTabType = 'all' | 'pending' | 'approved' | 'rejected' | 'processing' | 'completed';
+type ReturnTabType = 'all' | 'pending' | 'finished';
 
 // Return status type
 type ReturnStatus = 'pending' | 'approved' | 'rejected' | 'processing' | 'completed';
@@ -159,14 +159,8 @@ export function ReturnsTable({ showClientColumn, basePath = '/admin/returns' }: 
     // Filter by tab
     if (activeTab === 'pending') {
       returns = returns.filter(r => r.status === 'pending');
-    } else if (activeTab === 'approved') {
-      returns = returns.filter(r => r.status === 'approved');
-    } else if (activeTab === 'rejected') {
-      returns = returns.filter(r => r.status === 'rejected');
-    } else if (activeTab === 'processing') {
-      returns = returns.filter(r => r.status === 'processing');
-    } else if (activeTab === 'completed') {
-      returns = returns.filter(r => r.status === 'completed');
+    } else if (activeTab === 'finished') {
+      returns = returns.filter(r => r.status === 'approved' || r.status === 'rejected' || r.status === 'processing' || r.status === 'completed');
     }
 
     // Filter by customer
@@ -201,10 +195,7 @@ export function ReturnsTable({ showClientColumn, basePath = '/admin/returns' }: 
   // Count for tabs
   const allCount = mockReturns.length;
   const pendingCount = mockReturns.filter(r => r.status === 'pending').length;
-  const approvedCount = mockReturns.filter(r => r.status === 'approved').length;
-  const rejectedCount = mockReturns.filter(r => r.status === 'rejected').length;
-  const processingCount = mockReturns.filter(r => r.status === 'processing').length;
-  const completedCount = mockReturns.filter(r => r.status === 'completed').length;
+  const finishedCount = mockReturns.filter(r => r.status === 'approved' || r.status === 'rejected' || r.status === 'processing' || r.status === 'completed').length;
 
   const handlePrevious = () => {
     if (currentPage > 1) {
@@ -306,14 +297,14 @@ export function ReturnsTable({ showClientColumn, basePath = '/admin/returns' }: 
             </span>
           </button>
 
-          {/* Approved Tab */}
+          {/* Finished Tab */}
           <button
-            onClick={() => { setActiveTab('approved'); setCurrentPage(1); }}
+            onClick={() => { setActiveTab('finished'); setCurrentPage(1); }}
             className="flex items-center"
             style={{
               gap: 'clamp(4px, 0.59vw, 8px)',
               paddingBottom: 'clamp(8px, 0.88vw, 12px)',
-              borderBottom: activeTab === 'approved' ? '2px solid #003450' : '2px solid transparent',
+              borderBottom: activeTab === 'finished' ? '2px solid #003450' : '2px solid transparent',
               marginBottom: '-1px',
             }}
           >
@@ -323,10 +314,10 @@ export function ReturnsTable({ showClientColumn, basePath = '/admin/returns' }: 
                 fontWeight: 500,
                 fontSize: 'clamp(12px, 1.03vw, 14px)',
                 lineHeight: '20px',
-                color: activeTab === 'approved' ? '#003450' : '#6B7280',
+                color: activeTab === 'finished' ? '#003450' : '#6B7280',
               }}
             >
-              Approved
+              {t('finished')}
             </span>
             <span
               style={{
@@ -334,127 +325,13 @@ export function ReturnsTable({ showClientColumn, basePath = '/admin/returns' }: 
                 fontWeight: 500,
                 fontSize: 'clamp(10px, 0.88vw, 12px)',
                 lineHeight: '16px',
-                color: activeTab === 'approved' ? '#003450' : '#6B7280',
-                backgroundColor: activeTab === 'approved' ? '#E5E7EB' : 'transparent',
+                color: activeTab === 'finished' ? '#003450' : '#6B7280',
+                backgroundColor: activeTab === 'finished' ? '#E5E7EB' : 'transparent',
                 padding: '2px 8px',
                 borderRadius: '10px',
               }}
             >
-              {approvedCount}
-            </span>
-          </button>
-
-          {/* Rejected Tab */}
-          <button
-            onClick={() => { setActiveTab('rejected'); setCurrentPage(1); }}
-            className="flex items-center"
-            style={{
-              gap: 'clamp(4px, 0.59vw, 8px)',
-              paddingBottom: 'clamp(8px, 0.88vw, 12px)',
-              borderBottom: activeTab === 'rejected' ? '2px solid #003450' : '2px solid transparent',
-              marginBottom: '-1px',
-            }}
-          >
-            <span
-              style={{
-                fontFamily: 'Inter, sans-serif',
-                fontWeight: 500,
-                fontSize: 'clamp(12px, 1.03vw, 14px)',
-                lineHeight: '20px',
-                color: activeTab === 'rejected' ? '#003450' : '#6B7280',
-              }}
-            >
-              {t('rejected')}
-            </span>
-            <span
-              style={{
-                fontFamily: 'Inter, sans-serif',
-                fontWeight: 500,
-                fontSize: 'clamp(10px, 0.88vw, 12px)',
-                lineHeight: '16px',
-                color: activeTab === 'rejected' ? '#003450' : '#6B7280',
-                backgroundColor: activeTab === 'rejected' ? '#E5E7EB' : 'transparent',
-                padding: '2px 8px',
-                borderRadius: '10px',
-              }}
-            >
-              {rejectedCount}
-            </span>
-          </button>
-
-          {/* Processing Tab */}
-          <button
-            onClick={() => { setActiveTab('processing'); setCurrentPage(1); }}
-            className="flex items-center"
-            style={{
-              gap: 'clamp(4px, 0.59vw, 8px)',
-              paddingBottom: 'clamp(8px, 0.88vw, 12px)',
-              borderBottom: activeTab === 'processing' ? '2px solid #003450' : '2px solid transparent',
-              marginBottom: '-1px',
-            }}
-          >
-            <span
-              style={{
-                fontFamily: 'Inter, sans-serif',
-                fontWeight: 500,
-                fontSize: 'clamp(12px, 1.03vw, 14px)',
-                lineHeight: '20px',
-                color: activeTab === 'processing' ? '#003450' : '#6B7280',
-              }}
-            >
-              {t('processing')}
-            </span>
-            <span
-              style={{
-                fontFamily: 'Inter, sans-serif',
-                fontWeight: 500,
-                fontSize: 'clamp(10px, 0.88vw, 12px)',
-                lineHeight: '16px',
-                color: activeTab === 'processing' ? '#003450' : '#6B7280',
-                backgroundColor: activeTab === 'processing' ? '#E5E7EB' : 'transparent',
-                padding: '2px 8px',
-                borderRadius: '10px',
-              }}
-            >
-              {processingCount}
-            </span>
-          </button>
-
-          {/* Completed Tab */}
-          <button
-            onClick={() => { setActiveTab('completed'); setCurrentPage(1); }}
-            className="flex items-center"
-            style={{
-              gap: 'clamp(4px, 0.59vw, 8px)',
-              paddingBottom: 'clamp(8px, 0.88vw, 12px)',
-              borderBottom: activeTab === 'completed' ? '2px solid #003450' : '2px solid transparent',
-              marginBottom: '-1px',
-            }}
-          >
-            <span
-              style={{
-                fontFamily: 'Inter, sans-serif',
-                fontWeight: 500,
-                fontSize: 'clamp(12px, 1.03vw, 14px)',
-                lineHeight: '20px',
-                color: activeTab === 'completed' ? '#003450' : '#6B7280',
-              }}
-            >
-              {t('completed')}
-            </span>
-            <span
-              style={{
-                fontFamily: 'Inter, sans-serif',
-                fontWeight: 500,
-                fontSize: 'clamp(10px, 0.88vw, 12px)',
-                lineHeight: '16px',
-                color: activeTab === 'completed' ? '#003450' : '#6B7280',
-                backgroundColor: activeTab === 'completed' ? '#E5E7EB' : 'transparent',
-                padding: '2px 8px',
-                borderRadius: '10px',
-              }}
-            >
-              {completedCount}
+              {finishedCount}
             </span>
           </button>
         </div>

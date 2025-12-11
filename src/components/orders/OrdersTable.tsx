@@ -58,31 +58,34 @@ interface OrdersTableProps {
 
 // Status tag component
 const StatusTag = ({ status }: { status: OrderStatus }) => {
+  const tStatus = useTranslations('status');
+  const t = useTranslations('orders');
+  
   const getStatusConfig = () => {
     switch (status) {
       case 'success':
         return {
-          label: 'Processing',
+          label: tStatus('processing'),
           dotColor: '#22C55E',
         };
       case 'error':
         return {
-          label: 'Cancelled',
+          label: tStatus('cancelled'),
           dotColor: '#EF4444',
         };
       case 'mildError':
         return {
-          label: 'Issue',
+          label: t('issue'),
           dotColor: '#F59E0B',
         };
       case 'partiallyFulfilled':
         return {
-          label: 'Partially Fulfilled',
+          label: t('partiallyFulfilled'),
           dotColor: '#3B82F6', // Blue
         };
       default:
         return {
-          label: 'Unknown',
+          label: t('unknown'),
           dotColor: '#6B7280',
         };
     }
@@ -129,6 +132,7 @@ export function OrdersTable({ showClientColumn, basePath = '/admin/orders' }: Or
   const itemsPerPage = 10;
   const t = useTranslations('orders');
   const tCommon = useTranslations('common');
+  const tStatus = useTranslations('status');
   const locale = useLocale();
 
   // Format date for display with locale support
@@ -410,7 +414,7 @@ export function OrdersTable({ showClientColumn, basePath = '/admin/orders' }: Or
                 color: activeTab === 'partiallyFulfilled' ? '#003450' : '#6B7280',
               }}
             >
-              Partially Fulfilled
+              {t('partiallyFulfilled')}
             </span>
             <span
               style={{
@@ -448,7 +452,7 @@ export function OrdersTable({ showClientColumn, basePath = '/admin/orders' }: Or
                 color: activeTab === 'cancelled' ? '#003450' : '#6B7280',
               }}
             >
-              Cancelled
+              {t('cancelled')}
             </span>
           </button>
 
@@ -507,7 +511,7 @@ export function OrdersTable({ showClientColumn, basePath = '/admin/orders' }: Or
               whiteSpace: 'nowrap',
             }}
           >
-            {tCommon('create')} {t('title').toLowerCase()}
+            {t('createOrder')}
           </span>
         </button>
       </div>
@@ -536,7 +540,7 @@ export function OrdersTable({ showClientColumn, basePath = '/admin/orders' }: Or
               color: '#374151',
             }}
           >
-            {showClientColumn ? t('filterByCustomer') : 'Channels'}
+            {showClientColumn ? t('filterByCustomer') : tCommon('channels')}
           </label>
           <div className="relative">
             <select
@@ -602,7 +606,7 @@ export function OrdersTable({ showClientColumn, basePath = '/admin/orders' }: Or
           </label>
           <input
             type="text"
-            placeholder="Search"
+            placeholder={tCommon('search')}
             value={searchQuery}
             onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
             style={{
@@ -658,7 +662,7 @@ export function OrdersTable({ showClientColumn, basePath = '/admin/orders' }: Or
               color: '#6B7280',
             }}
           >
-            Order Date
+            {t('orderDate')}
           </span>
           <span
             style={{
@@ -850,7 +854,7 @@ export function OrdersTable({ showClientColumn, basePath = '/admin/orders' }: Or
               fontSize: 'clamp(12px, 1vw, 14px)',
             }}
           >
-            No orders found
+            {t('noOrdersFound')}
           </div>
         )}
       </div>
@@ -871,9 +875,9 @@ export function OrdersTable({ showClientColumn, basePath = '/admin/orders' }: Or
             color: '#374151',
           }}
         >
-          Showing <span style={{ fontWeight: 500 }}>{filteredOrders.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0}</span> to{' '}
-          <span style={{ fontWeight: 500 }}>{Math.min(currentPage * itemsPerPage, filteredOrders.length)}</span> of{' '}
-          <span style={{ fontWeight: 500 }}>{filteredOrders.length}</span> results
+          {tCommon('showing')} <span style={{ fontWeight: 500 }}>{filteredOrders.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0}</span> {tCommon('to')}{' '}
+          <span style={{ fontWeight: 500 }}>{Math.min(currentPage * itemsPerPage, filteredOrders.length)}</span> {tCommon('of')}{' '}
+          <span style={{ fontWeight: 500 }}>{filteredOrders.length}</span> {tCommon('results')}
         </span>
 
         <div className="flex items-center gap-3">

@@ -72,6 +72,7 @@ export default function OrderDetailPage() {
   const tCommon = useTranslations('common');
   const tOrders = useTranslations('orders');
   const tCountries = useTranslations('countries');
+  const tStatus = useTranslations('status');
   const [editOrderEnabled, setEditOrderEnabled] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);

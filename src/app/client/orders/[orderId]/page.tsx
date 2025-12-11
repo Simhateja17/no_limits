@@ -322,7 +322,7 @@ export default function ClientOrderDetailPage() {
                           textAlign: 'center',
                         }}
                       >
-                        Edit
+                        {tCommon('edit')}
                       </span>
                     </button>
                   )}

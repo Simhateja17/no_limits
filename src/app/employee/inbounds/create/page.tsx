@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { DashboardLayout } from '@/components/layout';
 import { useAuthStore } from '@/lib/store';
 import { useEffect } from 'react';
+import { useTranslations } from 'next-intl';
 
 // Mock available products to add
 const mockAvailableProducts = [
@@ -20,6 +21,10 @@ const mockAvailableProducts = [
 export default function CreateInboundPage() {
   const router = useRouter();
   const { user, isAuthenticated } = useAuthStore();
+  const tCommon = useTranslations('common');
+  const tInbounds = useTranslations('inbounds');
+  const tOrders = useTranslations('orders');
+  const tMessages = useTranslations('messages');
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [inboundProducts, setInboundProducts] = useState<typeof mockAvailableProducts>([]);
   const [productSearchQuery, setProductSearchQuery] = useState('');
@@ -176,7 +181,7 @@ export default function CreateInboundPage() {
                   color: '#374151',
                 }}
               >
-                Back
+                {tCommon('back')}
               </span>
             </button>
 
@@ -205,7 +210,7 @@ export default function CreateInboundPage() {
                   whiteSpace: 'nowrap',
                 }}
               >
-                Save inbound
+                {tInbounds('createInbound')}
               </span>
             </button>
           </div>
@@ -235,22 +240,22 @@ export default function CreateInboundPage() {
                 }}
               >
                 <span></span>
-                <span style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '12px', lineHeight: '16px', letterSpacing: '0.05em', textTransform: 'uppercase', color: '#6B7280' }}>Product Name</span>
-                <span style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '12px', lineHeight: '16px', letterSpacing: '0.05em', textTransform: 'uppercase', color: '#6B7280' }}>SKU</span>
-                <span style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '12px', lineHeight: '16px', letterSpacing: '0.05em', textTransform: 'uppercase', color: '#6B7280' }}>GTIN</span>
-                <span style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '12px', lineHeight: '16px', letterSpacing: '0.05em', textTransform: 'uppercase', color: '#6B7280' }}>QTY</span>
+                <span style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '12px', lineHeight: '16px', letterSpacing: '0.05em', textTransform: 'uppercase', color: '#6B7280' }}>{tOrders('productName')}</span>
+                <span style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '12px', lineHeight: '16px', letterSpacing: '0.05em', textTransform: 'uppercase', color: '#6B7280' }}>{tOrders('sku')}</span>
+                <span style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '12px', lineHeight: '16px', letterSpacing: '0.05em', textTransform: 'uppercase', color: '#6B7280' }}>{tOrders('gtin')}</span>
+                <span style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '12px', lineHeight: '16px', letterSpacing: '0.05em', textTransform: 'uppercase', color: '#6B7280' }}>{tOrders('qty')}</span>
               </div>
 
               {/* Table Body */}
               {inboundProducts.length === 0 ? (
                 <div style={{ padding: '48px 24px', textAlign: 'center', color: '#6B7280', fontFamily: 'Inter, sans-serif', fontSize: '14px' }}>
-                  No products added yet. Use the search below to add products.
+                  {tMessages('noProductsAdded')}
                 </div>
               ) : (
                 inboundProducts.map((product, index) => (
                   <div key={product.id} className="grid items-center" style={{ gridTemplateColumns: '0.6fr 2fr 1fr 1.5fr 0.8fr', padding: '16px 24px', borderBottom: index < inboundProducts.length - 1 ? '1px solid #E5E7EB' : 'none' }}>
                     <button onClick={() => handleRemoveProduct(product.id)} style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', padding: '2px 10px', borderRadius: '10px', backgroundColor: '#FEE2E2', border: 'none', cursor: 'pointer', width: 'fit-content' }}>
-                      <span style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '12px', lineHeight: '16px', color: '#DC2626' }}>Remove</span>
+                      <span style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '12px', lineHeight: '16px', color: '#DC2626' }}>{tOrders('remove')}</span>
                     </button>
                     <span style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '14px', lineHeight: '20px', color: '#111827' }}>{product.name}</span>
                     <span style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '14px', lineHeight: '20px', color: '#111827' }}>{product.sku}</span>
@@ -271,12 +276,12 @@ export default function CreateInboundPage() {
             {/* Add Products Search Box */}
             <div style={{ width: '100%', maxWidth: '927px', display: 'flex', justifyContent: 'flex-start' }}>
               <div style={{ width: '271px', minHeight: '54px', padding: '10px 12px', borderRadius: '8px', border: '1px solid #E5E7EB', backgroundColor: '#FFFFFF', boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.06), 0px 1px 3px 0px rgba(0, 0, 0, 0.1)', position: 'relative' }}>
-                <label style={{ display: 'block', fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '12px', lineHeight: '16px', color: '#374151', marginBottom: '4px' }}>Add Products</label>
+                <label style={{ display: 'block', fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '12px', lineHeight: '16px', color: '#374151', marginBottom: '4px' }}>{tOrders('addProducts')}</label>
                 <input
                   type="text"
                   value={productSearchQuery}
                   onChange={(e) => { setProductSearchQuery(e.target.value); if (e.target.value) { setShowProductList(true); } }}
-                  placeholder="Search products..."
+                  placeholder={tOrders('searchProducts')}
                   style={{ width: 'calc(100% - 24px)', border: 'none', outline: 'none', fontFamily: 'Inter, sans-serif', fontWeight: 400, fontSize: '14px', lineHeight: '20px', color: '#6B7280', backgroundColor: 'transparent' }}
                 />
                 {productSearchQuery && (
@@ -292,10 +297,10 @@ export default function CreateInboundPage() {
               <div style={{ width: '100%', maxWidth: '927px', borderRadius: '8px', border: '1px solid #E5E7EB', backgroundColor: '#FFFFFF', boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.06), 0px 1px 3px 0px rgba(0, 0, 0, 0.1)', overflow: 'hidden' }}>
                 <div className="grid" style={{ gridTemplateColumns: '0.6fr 2fr 1fr 1.5fr 0.8fr', padding: '12px 24px', borderBottom: '1px solid #E5E7EB', backgroundColor: '#F9FAFB' }}>
                   <span></span>
-                  <span style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '12px', lineHeight: '16px', letterSpacing: '0.05em', textTransform: 'uppercase', color: '#6B7280' }}>Product Name</span>
-                  <span style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '12px', lineHeight: '16px', letterSpacing: '0.05em', textTransform: 'uppercase', color: '#6B7280' }}>SKU</span>
-                  <span style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '12px', lineHeight: '16px', letterSpacing: '0.05em', textTransform: 'uppercase', color: '#6B7280' }}>GTIN</span>
-                  <span style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '12px', lineHeight: '16px', letterSpacing: '0.05em', textTransform: 'uppercase', color: '#6B7280' }}>QTY</span>
+                  <span style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '12px', lineHeight: '16px', letterSpacing: '0.05em', textTransform: 'uppercase', color: '#6B7280' }}>{tOrders('productName')}</span>
+                  <span style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '12px', lineHeight: '16px', letterSpacing: '0.05em', textTransform: 'uppercase', color: '#6B7280' }}>{tOrders('sku')}</span>
+                  <span style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '12px', lineHeight: '16px', letterSpacing: '0.05em', textTransform: 'uppercase', color: '#6B7280' }}>{tOrders('gtin')}</span>
+                  <span style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '12px', lineHeight: '16px', letterSpacing: '0.05em', textTransform: 'uppercase', color: '#6B7280' }}>{tOrders('qty')}</span>
                 </div>
                 {filteredAvailableProducts.map((product, index) => (
                   <div key={product.id} className="grid items-center" style={{ gridTemplateColumns: '0.6fr 2fr 1fr 1.5fr 0.8fr', padding: '16px 24px', borderBottom: index < filteredAvailableProducts.length - 1 ? '1px solid #E5E7EB' : 'none' }}>

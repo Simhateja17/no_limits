@@ -546,7 +546,7 @@ export function ProductsTable({ showClientColumn, baseUrl }: ProductsTableProps)
                 color: '#111827',
               }}
             >
-              {product.productName || <span style={{ color: '#EF4444', fontStyle: 'italic' }}>Missing</span>}
+              {product.productName || <span style={{ color: '#EF4444', fontStyle: 'italic' }}>{tCommon('missing')}</span>}
             </span>
             <span
               style={{
@@ -591,7 +591,7 @@ export function ProductsTable({ showClientColumn, baseUrl }: ProductsTableProps)
                   color: '#6B7280',
                 }}
               >
-                {product.client || <span style={{ color: '#EF4444', fontStyle: 'italic' }}>Missing</span>}
+                {product.client || <span style={{ color: '#EF4444', fontStyle: 'italic' }}>{tCommon('missing')}</span>}
               </span>
             )}
           </div>
@@ -608,7 +608,7 @@ export function ProductsTable({ showClientColumn, baseUrl }: ProductsTableProps)
               fontSize: '14px',
             }}
           >
-            No products found
+            {t('noProductsFound')}
           </div>
         )}
       </div>
@@ -629,9 +629,9 @@ export function ProductsTable({ showClientColumn, baseUrl }: ProductsTableProps)
             color: '#374151',
           }}
         >
-          Showing <span style={{ fontWeight: 500 }}>{filteredProducts.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0}</span> to{' '}
-          <span style={{ fontWeight: 500 }}>{Math.min(currentPage * itemsPerPage, filteredProducts.length)}</span> of{' '}
-          <span style={{ fontWeight: 500 }}>{filteredProducts.length}</span> results
+          {tCommon('showing')} <span style={{ fontWeight: 500 }}>{filteredProducts.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0}</span> {tCommon('to')}{' '}
+          <span style={{ fontWeight: 500 }}>{Math.min(currentPage * itemsPerPage, filteredProducts.length)}</span> {tCommon('of')}{' '}
+          <span style={{ fontWeight: 500 }}>{filteredProducts.length}</span> {tCommon('results')}
         </span>
 
         <div className="flex items-center gap-3">
