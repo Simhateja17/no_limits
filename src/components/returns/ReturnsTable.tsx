@@ -214,16 +214,15 @@ export function ReturnsTable({ showClientColumn, basePath = '/admin/returns' }: 
   };
 
   return (
-    <div className="w-full flex flex-col gap-6">
+    <div className="w-full flex flex-col" style={{ gap: 'clamp(16px, 1.76vw, 24px)' }}>
       {/* Header with Tabs */}
-      <div className="flex items-center justify-between w-full flex-wrap gap-4">
+      <div className="flex flex-col w-full">
+        <div className="flex items-end justify-between w-full">
         {/* Tabs */}
         <div
-          className="flex items-center flex-wrap"
+          className="flex items-end"
           style={{
-            height: 'auto',
-            minHeight: '38px',
-            gap: '0',
+            gap: 'clamp(16px, 1.76vw, 24px)',
           }}
         >
           {/* All Returns Tab */}
@@ -231,19 +230,17 @@ export function ReturnsTable({ showClientColumn, basePath = '/admin/returns' }: 
             onClick={() => { setActiveTab('all'); setCurrentPage(1); }}
             className="flex items-center"
             style={{
-              height: '36px',
-              gap: '8px',
-              paddingLeft: '4px',
-              paddingRight: '4px',
-              paddingBottom: '16px',
+              gap: 'clamp(4px, 0.59vw, 8px)',
+              paddingBottom: 'clamp(8px, 0.88vw, 12px)',
               borderBottom: activeTab === 'all' ? '2px solid #003450' : '2px solid transparent',
+              marginBottom: '-1px',
             }}
           >
             <span
               style={{
                 fontFamily: 'Inter, sans-serif',
                 fontWeight: 500,
-                fontSize: 'clamp(12px, 1vw, 14px)',
+                fontSize: 'clamp(12px, 1.03vw, 14px)',
                 lineHeight: '20px',
                 color: activeTab === 'all' ? '#003450' : '#6B7280',
               }}
@@ -254,7 +251,7 @@ export function ReturnsTable({ showClientColumn, basePath = '/admin/returns' }: 
               style={{
                 fontFamily: 'Inter, sans-serif',
                 fontWeight: 500,
-                fontSize: 'clamp(10px, 0.9vw, 12px)',
+                fontSize: 'clamp(10px, 0.88vw, 12px)',
                 lineHeight: '16px',
                 color: activeTab === 'all' ? '#003450' : '#6B7280',
                 backgroundColor: activeTab === 'all' ? '#E5E7EB' : 'transparent',
@@ -271,20 +268,17 @@ export function ReturnsTable({ showClientColumn, basePath = '/admin/returns' }: 
             onClick={() => { setActiveTab('pending'); setCurrentPage(1); }}
             className="flex items-center"
             style={{
-              height: '36px',
-              gap: '8px',
-              paddingLeft: '4px',
-              paddingRight: '4px',
-              paddingBottom: '16px',
-              marginLeft: 'clamp(12px, 1.8vw, 24px)',
+              gap: 'clamp(4px, 0.59vw, 8px)',
+              paddingBottom: 'clamp(8px, 0.88vw, 12px)',
               borderBottom: activeTab === 'pending' ? '2px solid #003450' : '2px solid transparent',
+              marginBottom: '-1px',
             }}
           >
             <span
               style={{
                 fontFamily: 'Inter, sans-serif',
                 fontWeight: 500,
-                fontSize: 'clamp(12px, 1vw, 14px)',
+                fontSize: 'clamp(12px, 1.03vw, 14px)',
                 lineHeight: '20px',
                 color: activeTab === 'pending' ? '#003450' : '#6B7280',
               }}
@@ -295,7 +289,7 @@ export function ReturnsTable({ showClientColumn, basePath = '/admin/returns' }: 
               style={{
                 fontFamily: 'Inter, sans-serif',
                 fontWeight: 500,
-                fontSize: 'clamp(10px, 0.9vw, 12px)',
+                fontSize: 'clamp(10px, 0.88vw, 12px)',
                 lineHeight: '16px',
                 color: activeTab === 'pending' ? '#003450' : '#6B7280',
                 backgroundColor: activeTab === 'pending' ? '#E5E7EB' : 'transparent',
@@ -312,20 +306,17 @@ export function ReturnsTable({ showClientColumn, basePath = '/admin/returns' }: 
             onClick={() => { setActiveTab('approved'); setCurrentPage(1); }}
             className="flex items-center"
             style={{
-              height: '36px',
-              gap: '8px',
-              paddingLeft: '4px',
-              paddingRight: '4px',
-              paddingBottom: '16px',
-              marginLeft: 'clamp(12px, 1.8vw, 24px)',
+              gap: 'clamp(4px, 0.59vw, 8px)',
+              paddingBottom: 'clamp(8px, 0.88vw, 12px)',
               borderBottom: activeTab === 'approved' ? '2px solid #003450' : '2px solid transparent',
+              marginBottom: '-1px',
             }}
           >
             <span
               style={{
                 fontFamily: 'Inter, sans-serif',
                 fontWeight: 500,
-                fontSize: 'clamp(12px, 1vw, 14px)',
+                fontSize: 'clamp(12px, 1.03vw, 14px)',
                 lineHeight: '20px',
                 color: activeTab === 'approved' ? '#003450' : '#6B7280',
               }}
@@ -336,7 +327,7 @@ export function ReturnsTable({ showClientColumn, basePath = '/admin/returns' }: 
               style={{
                 fontFamily: 'Inter, sans-serif',
                 fontWeight: 500,
-                fontSize: 'clamp(10px, 0.9vw, 12px)',
+                fontSize: 'clamp(10px, 0.88vw, 12px)',
                 lineHeight: '16px',
                 color: activeTab === 'approved' ? '#003450' : '#6B7280',
                 backgroundColor: activeTab === 'approved' ? '#E5E7EB' : 'transparent',
@@ -353,20 +344,17 @@ export function ReturnsTable({ showClientColumn, basePath = '/admin/returns' }: 
             onClick={() => { setActiveTab('rejected'); setCurrentPage(1); }}
             className="flex items-center"
             style={{
-              height: '36px',
-              gap: '8px',
-              paddingLeft: '4px',
-              paddingRight: '4px',
-              paddingBottom: '16px',
-              marginLeft: 'clamp(12px, 1.8vw, 24px)',
+              gap: 'clamp(4px, 0.59vw, 8px)',
+              paddingBottom: 'clamp(8px, 0.88vw, 12px)',
               borderBottom: activeTab === 'rejected' ? '2px solid #003450' : '2px solid transparent',
+              marginBottom: '-1px',
             }}
           >
             <span
               style={{
                 fontFamily: 'Inter, sans-serif',
                 fontWeight: 500,
-                fontSize: 'clamp(12px, 1vw, 14px)',
+                fontSize: 'clamp(12px, 1.03vw, 14px)',
                 lineHeight: '20px',
                 color: activeTab === 'rejected' ? '#003450' : '#6B7280',
               }}
@@ -377,7 +365,7 @@ export function ReturnsTable({ showClientColumn, basePath = '/admin/returns' }: 
               style={{
                 fontFamily: 'Inter, sans-serif',
                 fontWeight: 500,
-                fontSize: 'clamp(10px, 0.9vw, 12px)',
+                fontSize: 'clamp(10px, 0.88vw, 12px)',
                 lineHeight: '16px',
                 color: activeTab === 'rejected' ? '#003450' : '#6B7280',
                 backgroundColor: activeTab === 'rejected' ? '#E5E7EB' : 'transparent',
@@ -394,20 +382,17 @@ export function ReturnsTable({ showClientColumn, basePath = '/admin/returns' }: 
             onClick={() => { setActiveTab('processing'); setCurrentPage(1); }}
             className="flex items-center"
             style={{
-              height: '36px',
-              gap: '8px',
-              paddingLeft: '4px',
-              paddingRight: '4px',
-              paddingBottom: '16px',
-              marginLeft: 'clamp(12px, 1.8vw, 24px)',
+              gap: 'clamp(4px, 0.59vw, 8px)',
+              paddingBottom: 'clamp(8px, 0.88vw, 12px)',
               borderBottom: activeTab === 'processing' ? '2px solid #003450' : '2px solid transparent',
+              marginBottom: '-1px',
             }}
           >
             <span
               style={{
                 fontFamily: 'Inter, sans-serif',
                 fontWeight: 500,
-                fontSize: 'clamp(12px, 1vw, 14px)',
+                fontSize: 'clamp(12px, 1.03vw, 14px)',
                 lineHeight: '20px',
                 color: activeTab === 'processing' ? '#003450' : '#6B7280',
               }}
@@ -418,7 +403,7 @@ export function ReturnsTable({ showClientColumn, basePath = '/admin/returns' }: 
               style={{
                 fontFamily: 'Inter, sans-serif',
                 fontWeight: 500,
-                fontSize: 'clamp(10px, 0.9vw, 12px)',
+                fontSize: 'clamp(10px, 0.88vw, 12px)',
                 lineHeight: '16px',
                 color: activeTab === 'processing' ? '#003450' : '#6B7280',
                 backgroundColor: activeTab === 'processing' ? '#E5E7EB' : 'transparent',
@@ -435,20 +420,17 @@ export function ReturnsTable({ showClientColumn, basePath = '/admin/returns' }: 
             onClick={() => { setActiveTab('completed'); setCurrentPage(1); }}
             className="flex items-center"
             style={{
-              height: '36px',
-              gap: '8px',
-              paddingLeft: '4px',
-              paddingRight: '4px',
-              paddingBottom: '16px',
-              marginLeft: 'clamp(12px, 1.8vw, 24px)',
+              gap: 'clamp(4px, 0.59vw, 8px)',
+              paddingBottom: 'clamp(8px, 0.88vw, 12px)',
               borderBottom: activeTab === 'completed' ? '2px solid #003450' : '2px solid transparent',
+              marginBottom: '-1px',
             }}
           >
             <span
               style={{
                 fontFamily: 'Inter, sans-serif',
                 fontWeight: 500,
-                fontSize: 'clamp(12px, 1vw, 14px)',
+                fontSize: 'clamp(12px, 1.03vw, 14px)',
                 lineHeight: '20px',
                 color: activeTab === 'completed' ? '#003450' : '#6B7280',
               }}
@@ -459,7 +441,7 @@ export function ReturnsTable({ showClientColumn, basePath = '/admin/returns' }: 
               style={{
                 fontFamily: 'Inter, sans-serif',
                 fontWeight: 500,
-                fontSize: 'clamp(10px, 0.9vw, 12px)',
+                fontSize: 'clamp(10px, 0.88vw, 12px)',
                 lineHeight: '16px',
                 color: activeTab === 'completed' ? '#003450' : '#6B7280',
                 backgroundColor: activeTab === 'completed' ? '#E5E7EB' : 'transparent',
@@ -471,6 +453,17 @@ export function ReturnsTable({ showClientColumn, basePath = '/admin/returns' }: 
             </span>
           </button>
         </div>
+      </div>
+
+      {/* Full-width horizontal line below tabs */}
+      <div
+        style={{
+          width: '100%',
+          height: '1px',
+          backgroundColor: '#E5E7EB',
+          marginTop: '-1px', // Overlap with tab border
+        }}
+      />
       </div>
 
       {/* Filter and Search Row */}

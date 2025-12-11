@@ -565,15 +565,15 @@ export function TasksTable({ showClientColumn, baseUrl }: TasksTableProps) {
   };
 
   return (
-    <div className="w-full flex flex-col gap-6">
+    <div className="w-full flex flex-col" style={{ gap: 'clamp(16px, 1.76vw, 24px)' }}>
       {/* Header with Tabs and Create Button */}
-      <div className="flex items-center justify-between w-full">
+      <div className="flex flex-col w-full">
+        <div className="flex items-end justify-between w-full">
         {/* Tabs */}
         <div
-          className="flex items-center"
+          className="flex items-end"
           style={{
-            height: '38px',
-            gap: '0',
+            gap: 'clamp(16px, 1.76vw, 24px)',
           }}
         >
           {/* All Tasks Tab */}
@@ -581,19 +581,17 @@ export function TasksTable({ showClientColumn, baseUrl }: TasksTableProps) {
             onClick={() => { setActiveTab('all'); setCurrentPage(1); }}
             className="flex items-center"
             style={{
-              height: '36px',
-              gap: '8px',
-              paddingLeft: '4px',
-              paddingRight: '4px',
-              paddingBottom: '16px',
+              gap: 'clamp(4px, 0.59vw, 8px)',
+              paddingBottom: 'clamp(8px, 0.88vw, 12px)',
               borderBottom: activeTab === 'all' ? '2px solid #003450' : '2px solid transparent',
+              marginBottom: '-1px',
             }}
           >
             <span
               style={{
                 fontFamily: 'Inter, sans-serif',
                 fontWeight: 500,
-                fontSize: '14px',
+                fontSize: 'clamp(12px, 1.03vw, 14px)',
                 lineHeight: '20px',
                 color: activeTab === 'all' ? '#003450' : '#6B7280',
               }}
@@ -604,7 +602,7 @@ export function TasksTable({ showClientColumn, baseUrl }: TasksTableProps) {
               style={{
                 fontFamily: 'Inter, sans-serif',
                 fontWeight: 500,
-                fontSize: '12px',
+                fontSize: 'clamp(10px, 0.88vw, 12px)',
                 lineHeight: '16px',
                 color: activeTab === 'all' ? '#003450' : '#6B7280',
                 backgroundColor: activeTab === 'all' ? '#E5E7EB' : 'transparent',
@@ -621,20 +619,17 @@ export function TasksTable({ showClientColumn, baseUrl }: TasksTableProps) {
             onClick={() => { setActiveTab('open'); setCurrentPage(1); }}
             className="flex items-center"
             style={{
-              height: '36px',
-              gap: '8px',
-              paddingLeft: '4px',
-              paddingRight: '4px',
-              paddingBottom: '16px',
-              marginLeft: '24px',
+              gap: 'clamp(4px, 0.59vw, 8px)',
+              paddingBottom: 'clamp(8px, 0.88vw, 12px)',
               borderBottom: activeTab === 'open' ? '2px solid #003450' : '2px solid transparent',
+              marginBottom: '-1px',
             }}
           >
             <span
               style={{
                 fontFamily: 'Inter, sans-serif',
                 fontWeight: 500,
-                fontSize: '14px',
+                fontSize: 'clamp(12px, 1.03vw, 14px)',
                 lineHeight: '20px',
                 color: activeTab === 'open' ? '#003450' : '#6B7280',
               }}
@@ -645,7 +640,7 @@ export function TasksTable({ showClientColumn, baseUrl }: TasksTableProps) {
               style={{
                 fontFamily: 'Inter, sans-serif',
                 fontWeight: 500,
-                fontSize: '12px',
+                fontSize: 'clamp(10px, 0.88vw, 12px)',
                 lineHeight: '16px',
                 color: activeTab === 'open' ? '#003450' : '#6B7280',
                 backgroundColor: activeTab === 'open' ? '#E5E7EB' : 'transparent',
@@ -662,20 +657,17 @@ export function TasksTable({ showClientColumn, baseUrl }: TasksTableProps) {
             onClick={() => { setActiveTab('closed'); setCurrentPage(1); }}
             className="flex items-center"
             style={{
-              height: '36px',
-              gap: '8px',
-              paddingLeft: '4px',
-              paddingRight: '4px',
-              paddingBottom: '16px',
-              marginLeft: '24px',
+              gap: 'clamp(4px, 0.59vw, 8px)',
+              paddingBottom: 'clamp(8px, 0.88vw, 12px)',
               borderBottom: activeTab === 'closed' ? '2px solid #003450' : '2px solid transparent',
+              marginBottom: '-1px',
             }}
           >
             <span
               style={{
                 fontFamily: 'Inter, sans-serif',
                 fontWeight: 500,
-                fontSize: '14px',
+                fontSize: 'clamp(12px, 1.03vw, 14px)',
                 lineHeight: '20px',
                 color: activeTab === 'closed' ? '#003450' : '#6B7280',
               }}
@@ -686,7 +678,7 @@ export function TasksTable({ showClientColumn, baseUrl }: TasksTableProps) {
               style={{
                 fontFamily: 'Inter, sans-serif',
                 fontWeight: 500,
-                fontSize: '12px',
+                fontSize: 'clamp(10px, 0.88vw, 12px)',
                 lineHeight: '16px',
                 color: activeTab === 'closed' ? '#003450' : '#6B7280',
                 backgroundColor: activeTab === 'closed' ? '#E5E7EB' : 'transparent',
@@ -703,10 +695,12 @@ export function TasksTable({ showClientColumn, baseUrl }: TasksTableProps) {
         <button
           onClick={() => setIsCreateModalOpen(true)}
           style={{
-            width: '120px',
-            height: '38px',
+            height: 'clamp(32px, 2.8vw, 38px)',
             borderRadius: '6px',
-            padding: '9px 17px',
+            paddingTop: 'clamp(7px, 0.66vw, 9px)',
+            paddingRight: 'clamp(13px, 1.25vw, 17px)',
+            paddingBottom: 'clamp(7px, 0.66vw, 9px)',
+            paddingLeft: 'clamp(13px, 1.25vw, 17px)',
             backgroundColor: '#003450',
             boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.05)',
             display: 'flex',
@@ -714,20 +708,34 @@ export function TasksTable({ showClientColumn, baseUrl }: TasksTableProps) {
             justifyContent: 'center',
             cursor: 'pointer',
             border: 'none',
+            whiteSpace: 'nowrap',
+            marginBottom: 'clamp(8px, 0.88vw, 12px)',
           }}
         >
           <span
             style={{
               fontFamily: 'Inter, sans-serif',
               fontWeight: 500,
-              fontSize: '14px',
+              fontSize: 'clamp(12px, 1.03vw, 14px)',
               lineHeight: '20px',
               color: '#FFFFFF',
+              whiteSpace: 'nowrap',
             }}
           >
             Create task
           </span>
         </button>
+      </div>
+
+      {/* Full-width horizontal line below tabs */}
+      <div
+        style={{
+          width: '100%',
+          height: '1px',
+          backgroundColor: '#E5E7EB',
+          marginTop: '-1px', // Overlap with tab border
+        }}
+      />
       </div>
 
       {/* Filter and Search Row */}
