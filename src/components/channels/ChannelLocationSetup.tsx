@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 
 interface ChannelLocationSetupProps {
   channelId: string;
@@ -44,6 +45,8 @@ function DownloadIcon() {
 
 export function ChannelLocationSetup({ channelId, channelType, baseUrl }: ChannelLocationSetupProps) {
   const router = useRouter();
+  const tCommon = useTranslations('common');
+  const tChannels = useTranslations('channels');
   const [selectedLocation, setSelectedLocation] = useState('');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
@@ -118,7 +121,7 @@ export function ChannelLocationSetup({ channelId, channelType, baseUrl }: Channe
             color: '#374151',
           }}
         >
-          Back
+          {tCommon('back')}
         </span>
       </button>
 
@@ -134,7 +137,7 @@ export function ChannelLocationSetup({ channelId, channelType, baseUrl }: Channe
           margin: '0 0 clamp(15px, 1.47vw, 20px) 0',
         }}
       >
-        Sales-Channels
+        {tChannels('title')}
       </h1>
 
       {/* Horizontal Line */}
@@ -177,7 +180,7 @@ export function ChannelLocationSetup({ channelId, channelType, baseUrl }: Channe
               margin: 0,
             }}
           >
-            Choose Location/Warehouse
+            {tChannels('chooseLocation')}
           </h2>
           <p
             style={{
@@ -189,7 +192,7 @@ export function ChannelLocationSetup({ channelId, channelType, baseUrl }: Channe
               margin: 0,
             }}
           >
-            To set {channelType.toLowerCase()} location choose one of your locations
+            {tChannels('chooseLocationDescription', { channel: channelType.toLowerCase() })}
           </p>
         </div>
 
@@ -233,7 +236,7 @@ export function ChannelLocationSetup({ channelId, channelType, baseUrl }: Channe
                   textAlign: 'center',
                 }}
               >
-                Warehouse
+                {tChannels('warehouse')}
               </label>
               <div
                 style={{
@@ -442,7 +445,7 @@ export function ChannelLocationSetup({ channelId, channelType, baseUrl }: Channe
                   color: '#003450',
                 }}
               >
-                Reload locations
+                {tChannels('reloadLocations')}
               </span>
             </button>
 
@@ -471,7 +474,7 @@ export function ChannelLocationSetup({ channelId, channelType, baseUrl }: Channe
                   color: '#FFFFFF',
                 }}
               >
-                Next
+                {tCommon('next')}
               </span>
             </button>
           </div>

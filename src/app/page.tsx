@@ -14,6 +14,9 @@ export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
+  const [showAdminTab, setShowAdminTab] = useState(false);
+  const [clickCount, setClickCount] = useState(0);
+  const [clickTimer, setClickTimer] = useState<NodeJS.Timeout | null>(null);
   const t = useTranslations('login');
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -63,6 +66,27 @@ export default function LoginPage() {
     }
   };
 
+  const handleLogoClick = () => {
+    if (clickTimer) {
+      clearTimeout(clickTimer);
+    }
+
+    const newCount = clickCount + 1;
+    setClickCount(newCount);
+
+    if (newCount === 3) {
+      setShowAdminTab(true);
+      setClickCount(0);
+      setClickTimer(null);
+    } else {
+      const timer = setTimeout(() => {
+        setClickCount(0);
+        setClickTimer(null);
+      }, 500); // Reset after 500ms
+      setClickTimer(timer);
+    }
+  };
+
   return (
     <div 
       className="flex min-h-screen w-full items-center justify-center relative"
@@ -85,7 +109,10 @@ export default function LoginPage() {
         }}
       >
         {/* Logo */}
-        <div className="flex justify-center">
+        <div 
+          className="flex justify-center cursor-pointer select-none"
+          onClick={handleLogoClick}
+        >
           <Image
             src="/no_limits.png"
             alt="NoLimits Logo"
@@ -148,26 +175,28 @@ export default function LoginPage() {
               {t('employee')}
             </button>
 
-            {/* Admin Tab */}
-            <button
-              type="button"
-              onClick={() => setLoginType('admin')}
-              className="flex-1 flex items-center justify-center transition-all"
-              style={{
-                height: '36px',
-                borderRadius: '6px',
-                background: loginType === 'admin' ? '#FFFFFF' : 'transparent',
-                boxShadow: loginType === 'admin' ? '0px 1px 2px rgba(0, 0, 0, 0.05)' : 'none',
-                fontFamily: 'Inter, sans-serif',
-                fontWeight: 500,
-                fontSize: '14px',
-                color: loginType === 'admin' ? '#111827' : '#6B7280',
-                border: 'none',
-                cursor: 'pointer',
-              }}
-            >
-              {t('admin')}
-            </button>
+            {/* Admin Tab - Only shown after triple-clicking logo */}
+            {showAdminTab && (
+              <button
+                type="button"
+                onClick={() => setLoginType('admin')}
+                className="flex-1 flex items-center justify-center transition-all"
+                style={{
+                  height: '36px',
+                  borderRadius: '6px',
+                  background: loginType === 'admin' ? '#FFFFFF' : 'transparent',
+                  boxShadow: loginType === 'admin' ? '0px 1px 2px rgba(0, 0, 0, 0.05)' : 'none',
+                  fontFamily: 'Inter, sans-serif',
+                  fontWeight: 500,
+                  fontSize: '14px',
+                  color: loginType === 'admin' ? '#111827' : '#6B7280',
+                  border: 'none',
+                  cursor: 'pointer',
+                }}
+              >
+                {t('admin')}
+              </button>
+            )}
           </div>
 
           {/* Login Type Description */}

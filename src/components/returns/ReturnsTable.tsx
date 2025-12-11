@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useTranslations, useLocale } from 'next-intl';
 
 // Tab type for returns
-type ReturnTabType = 'all' | 'pending' | 'finished';
+type ReturnTabType = 'all' | 'pending' | 'approved' | 'rejected' | 'processing' | 'completed';
 
 // Return status type
 type ReturnStatus = 'pending' | 'approved' | 'rejected' | 'processing' | 'completed';
@@ -159,8 +159,8 @@ export function ReturnsTable({ showClientColumn, basePath = '/admin/returns' }: 
     // Filter by tab
     if (activeTab === 'pending') {
       returns = returns.filter(r => r.status === 'pending');
-    } else if (activeTab === 'finished') {
-      returns = returns.filter(r => r.status === 'approved' || r.status === 'rejected' || r.status === 'processing' || r.status === 'completed');
+    } else if (activeTab === 'completed') {
+      returns = returns.filter(r => r.status === 'completed');
     }
 
     // Filter by customer
@@ -195,7 +195,7 @@ export function ReturnsTable({ showClientColumn, basePath = '/admin/returns' }: 
   // Count for tabs
   const allCount = mockReturns.length;
   const pendingCount = mockReturns.filter(r => r.status === 'pending').length;
-  const finishedCount = mockReturns.filter(r => r.status === 'approved' || r.status === 'rejected' || r.status === 'processing' || r.status === 'completed').length;
+  const completedCount = mockReturns.filter(r => r.status === 'completed').length;
 
   const handlePrevious = () => {
     if (currentPage > 1) {
@@ -297,14 +297,18 @@ export function ReturnsTable({ showClientColumn, basePath = '/admin/returns' }: 
             </span>
           </button>
 
-          {/* Finished Tab */}
+          {/* Approved Tab - Removed */}
+          {/* Rejected Tab - Removed */}
+          {/* Processing Tab - Removed */}
+
+          {/* Completed Tab */}
           <button
-            onClick={() => { setActiveTab('finished'); setCurrentPage(1); }}
+            onClick={() => { setActiveTab('completed'); setCurrentPage(1); }}
             className="flex items-center"
             style={{
               gap: 'clamp(4px, 0.59vw, 8px)',
               paddingBottom: 'clamp(8px, 0.88vw, 12px)',
-              borderBottom: activeTab === 'finished' ? '2px solid #003450' : '2px solid transparent',
+              borderBottom: activeTab === 'completed' ? '2px solid #003450' : '2px solid transparent',
               marginBottom: '-1px',
             }}
           >
@@ -314,10 +318,10 @@ export function ReturnsTable({ showClientColumn, basePath = '/admin/returns' }: 
                 fontWeight: 500,
                 fontSize: 'clamp(12px, 1.03vw, 14px)',
                 lineHeight: '20px',
-                color: activeTab === 'finished' ? '#003450' : '#6B7280',
+                color: activeTab === 'completed' ? '#003450' : '#6B7280',
               }}
             >
-              {t('finished')}
+              {t('completed')}
             </span>
             <span
               style={{
@@ -325,13 +329,13 @@ export function ReturnsTable({ showClientColumn, basePath = '/admin/returns' }: 
                 fontWeight: 500,
                 fontSize: 'clamp(10px, 0.88vw, 12px)',
                 lineHeight: '16px',
-                color: activeTab === 'finished' ? '#003450' : '#6B7280',
-                backgroundColor: activeTab === 'finished' ? '#E5E7EB' : 'transparent',
+                color: activeTab === 'completed' ? '#003450' : '#6B7280',
+                backgroundColor: activeTab === 'completed' ? '#E5E7EB' : 'transparent',
                 padding: '2px 8px',
                 borderRadius: '10px',
               }}
             >
-              {finishedCount}
+              {completedCount}
             </span>
           </button>
         </div>

@@ -4,12 +4,15 @@ import { DashboardLayout } from '@/components/layout';
 import { useAuthStore } from '@/lib/store';
 import { useRouter, useParams } from 'next/navigation';
 import { useEffect } from 'react';
+import { useTranslations } from 'next-intl';
 
 export default function EmployeeTaskDetailPage() {
   const { user, isAuthenticated } = useAuthStore();
   const router = useRouter();
   const params = useParams();
   const taskId = params.taskId as string;
+  const tCommon = useTranslations('common');
+  const tTasks = useTranslations('tasks');
 
   useEffect(() => {
     if (!isAuthenticated || user?.role !== 'EMPLOYEE') {
@@ -55,7 +58,7 @@ export default function EmployeeTaskDetailPage() {
                   color: '#374151',
                 }}
               >
-                Back
+                {tCommon('back')}
               </span>
             </button>
           </div>
@@ -82,7 +85,7 @@ export default function EmployeeTaskDetailPage() {
               Task #{taskId}
             </h1>
             <p style={{ color: '#6B7280', fontFamily: 'Inter, sans-serif' }}>
-              Task details page coming soon...
+              {tTasks('taskDetailsComingSoon')}
             </p>
           </div>
         </div>

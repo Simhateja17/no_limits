@@ -11,7 +11,7 @@ import { useTranslations } from 'next-intl';
 // Mock order data - in real app this would come from API
 const mockOrderDetails = {
   orderId: '934242',
-  status: 'processing' as 'processing' | 'onHold' | 'shipped' | 'cancelled',
+  status: 'Processing' as 'Processing' | 'On Hold' | 'Shipped' | 'Cancelled',
   deliveryMethod: {
     name: 'Max Mustermann',
     street: 'Musterstr. 10',
@@ -52,13 +52,13 @@ const shippingMethods = [
 // Status color mapping
 const getStatusColor = (status: string) => {
   switch (status) {
-    case 'processing':
+    case 'Processing':
       return '#6BAC4D';
-    case 'onHold':
+    case 'On Hold':
       return '#F59E0B';
-    case 'shipped':
+    case 'Shipped':
       return '#10B981';
-    case 'cancelled':
+    case 'Cancelled':
       return '#EF4444';
     default:
       return '#6BAC4D';
@@ -72,7 +72,6 @@ export default function OrderDetailPage() {
   const tCommon = useTranslations('common');
   const tOrders = useTranslations('orders');
   const tCountries = useTranslations('countries');
-  const tStatus = useTranslations('status');
   const [editOrderEnabled, setEditOrderEnabled] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
@@ -97,7 +96,7 @@ export default function OrderDetailPage() {
     streetAddress: '',
     city: '',
     zipPostal: '',
-    country: 'unitedStates',
+    country: 'United States',
   });
 
   useEffect(() => {
@@ -1366,6 +1365,72 @@ export default function OrderDetailPage() {
                 </button>
               </div>
 
+              {/* Cancel Order Box */}
+              <div
+                style={{
+                  width: '100%',
+                  minHeight: '178px',
+                  gap: '20px',
+                  borderRadius: '8px',
+                  padding: 'clamp(16px, 1.8vw, 24px)',
+                  backgroundColor: '#FFFFFF',
+                  boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.06), 0px 1px 3px 0px rgba(0, 0, 0, 0.1)',
+                }}
+              >
+                <span
+                  style={{
+                    fontFamily: 'Inter, sans-serif',
+                    fontWeight: 500,
+                    fontSize: 'clamp(16px, 1.3vw, 18px)',
+                    lineHeight: '24px',
+                    color: '#111827',
+                    display: 'block',
+                  }}
+                >
+                  {tOrders('cancelOrder')}
+                </span>
+                <p
+                  style={{
+                    marginTop: '12px',
+                    fontFamily: 'Inter, sans-serif',
+                    fontWeight: 400,
+                    fontSize: '14px',
+                    lineHeight: '20px',
+                    color: '#6B7280',
+                  }}
+                >
+                  {tOrders('cancelOrderWarning')}
+                </p>
+                <button
+                  style={{
+                    marginTop: '20px',
+                    width: 'clamp(100px, 8.8vw, 120px)',
+                    height: 'clamp(34px, 2.8vw, 38px)',
+                    padding: 'clamp(7px, 0.66vw, 9px) clamp(13px, 1.25vw, 17px)',
+                    borderRadius: '6px',
+                    backgroundColor: '#FEE2E2',
+                    border: 'none',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <span
+                    style={{
+                      fontFamily: 'Inter, sans-serif',
+                      fontWeight: 500,
+                      fontSize: 'clamp(12px, 1.03vw, 14px)',
+                      lineHeight: '20px',
+                      color: '#DC2626',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    {tOrders('cancelOrder')}
+                  </span>
+                </button>
+              </div>
+
               {/* Create Replacement Order Box */}
               <div
                 style={{
@@ -1787,7 +1852,7 @@ export default function OrderDetailPage() {
                       textAlign: 'center',
                     }}
                   >
-                    {tCommon('save')}
+                    Save
                   </span>
                 </button>
               </div>
@@ -1851,7 +1916,7 @@ export default function OrderDetailPage() {
                   color: '#111827',
                 }}
               >
-                {tOrders('shippingAddressChanged')}
+                Shipping address changed
               </span>
             </div>
           </div>
@@ -1915,7 +1980,7 @@ export default function OrderDetailPage() {
                   color: '#111827',
                 }}
               >
-                {tOrders('replacementOrderCreated')}
+                Replacement order created
               </span>
             </div>
           </div>

@@ -45,27 +45,32 @@ const mockReturnData = {
 
 // Condition Badge Component
 function ConditionBadge({ condition }: { condition: ConditionType }) {
+  const tReturns = useTranslations('returns');
   const getConditionStyles = () => {
     switch (condition) {
       case 'Damaged':
         return {
           backgroundColor: '#FEE2E2',
           color: '#991B1B',
+          label: 'damaged',
         };
       case 'Well condition':
         return {
           backgroundColor: '#D1FAE5',
           color: '#059669',
+          label: 'wellCondition',
         };
       case 'Acceptable':
         return {
           backgroundColor: '#FFF1CD',
           color: '#B45309',
+          label: 'acceptable',
         };
       default:
         return {
           backgroundColor: '#F3F4F6',
           color: '#6B7280',
+          label: 'unknown',
         };
     }
   };
@@ -91,7 +96,7 @@ function ConditionBadge({ condition }: { condition: ConditionType }) {
         whiteSpace: 'nowrap',
       }}
     >
-      {condition}
+      {tReturns(styles.label as any)}
     </span>
   );
 }
@@ -104,6 +109,8 @@ export function ReturnDetails({ returnId }: ReturnDetailsProps) {
   const router = useRouter();
   const pathname = usePathname();
   const tCommon = useTranslations('common');
+  const tReturns = useTranslations('returns');
+  const tOrders = useTranslations('orders');
   const [showReplacementModal, setShowReplacementModal] = useState(false);
   const [replacementCount, setReplacementCount] = useState(0);
 
@@ -176,7 +183,7 @@ export function ReturnDetails({ returnId }: ReturnDetailsProps) {
               color: '#374151',
             }}
           >
-            Back
+            {tCommon('back')}
           </span>
         </button>
 
@@ -224,7 +231,7 @@ export function ReturnDetails({ returnId }: ReturnDetailsProps) {
                 margin: 0,
               }}
             >
-              Return Information
+              {tReturns('returnDetails')}
             </h2>
             <p
               style={{
@@ -237,7 +244,7 @@ export function ReturnDetails({ returnId }: ReturnDetailsProps) {
                 marginTop: 'clamp(4px, 0.39vw, 6px)',
               }}
             >
-              Details of return
+              {tReturns('returnDetails')}
             </p>
           </div>
           
@@ -302,7 +309,7 @@ export function ReturnDetails({ returnId }: ReturnDetailsProps) {
                 color: '#6B7280',
               }}
             >
-              External Order ID
+              {tReturns('externalOrderId')}
             </span>
             <span
               style={{
@@ -337,7 +344,7 @@ export function ReturnDetails({ returnId }: ReturnDetailsProps) {
                 color: '#6B7280',
               }}
             >
-              Internal Return ID
+              {tReturns('internalReturnId')}
             </span>
             <span
               style={{
@@ -372,7 +379,7 @@ export function ReturnDetails({ returnId }: ReturnDetailsProps) {
                 color: '#6B7280',
               }}
             >
-              Client name
+              {tReturns('clientName')}
             </span>
             <span
               style={{
@@ -407,7 +414,7 @@ export function ReturnDetails({ returnId }: ReturnDetailsProps) {
                 color: '#6B7280',
               }}
             >
-              Date arrived
+              {tReturns('dateArrived')}
             </span>
             <span
               style={{
@@ -441,7 +448,7 @@ export function ReturnDetails({ returnId }: ReturnDetailsProps) {
                 color: '#6B7280',
               }}
             >
-              Information
+              {tReturns('information')}
             </span>
             <span
               style={{
@@ -491,7 +498,7 @@ export function ReturnDetails({ returnId }: ReturnDetailsProps) {
               color: '#6B7280',
             }}
           >
-            Product name
+            {tOrders('productName')}
           </span>
           <span
             style={{
@@ -504,7 +511,7 @@ export function ReturnDetails({ returnId }: ReturnDetailsProps) {
               color: '#6B7280',
             }}
           >
-            SKU
+            {tOrders('sku')}
           </span>
           <span
             style={{
@@ -517,7 +524,7 @@ export function ReturnDetails({ returnId }: ReturnDetailsProps) {
               color: '#6B7280',
             }}
           >
-            GTIN
+            {tOrders('gtin')}
           </span>
           <span
             style={{
@@ -530,7 +537,7 @@ export function ReturnDetails({ returnId }: ReturnDetailsProps) {
               color: '#6B7280',
             }}
           >
-            QTY
+            {tOrders('qty')}
           </span>
           <span
             style={{
@@ -543,7 +550,7 @@ export function ReturnDetails({ returnId }: ReturnDetailsProps) {
               color: '#6B7280',
             }}
           >
-            Condition
+            {tReturns('condition')}
           </span>
           <span
             style={{
@@ -556,7 +563,7 @@ export function ReturnDetails({ returnId }: ReturnDetailsProps) {
               color: '#6B7280',
             }}
           >
-            Info
+            {tReturns('info')}
           </span>
         </div>
 
@@ -628,7 +635,7 @@ export function ReturnDetails({ returnId }: ReturnDetailsProps) {
                 color: '#6B7280',
               }}
             >
-              {product.info}
+              {product.info === 'disposed' ? tReturns('disposed') : tReturns('bookedInAgain')}
             </span>
           </div>
         ))}
@@ -659,7 +666,7 @@ export function ReturnDetails({ returnId }: ReturnDetailsProps) {
             margin: 0,
           }}
         >
-          Return Images
+          {tReturns('returnImages')}
         </h2>
         <p
           style={{
@@ -671,7 +678,7 @@ export function ReturnDetails({ returnId }: ReturnDetailsProps) {
             margin: 0,
           }}
         >
-          Images of returned items
+          {tReturns('returnImages')}
         </p>
 
         {/* Images Grid */}
@@ -729,7 +736,7 @@ export function ReturnDetails({ returnId }: ReturnDetailsProps) {
             display: 'block',
           }}
         >
-          Create replacement order
+          {tOrders('createReplacementOrder')}
         </span>
         <p
           style={{
@@ -770,7 +777,7 @@ export function ReturnDetails({ returnId }: ReturnDetailsProps) {
               textAlign: 'center',
             }}
           >
-            Create replacement order
+            {tOrders('createReplacementOrder')}
           </span>
         </button>
       </div>
@@ -834,7 +841,7 @@ export function ReturnDetails({ returnId }: ReturnDetailsProps) {
                 color: '#111827',
               }}
             >
-              Replacement order created
+              {tOrders('replacementOrderCreated')}
             </span>
           </div>
         </div>

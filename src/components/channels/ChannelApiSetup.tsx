@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 
 interface ChannelApiSetupProps {
   channelId: string;
@@ -46,6 +47,8 @@ function WarningIcon() {
 
 export function ChannelApiSetup({ channelId, channelType, baseUrl }: ChannelApiSetupProps) {
   const router = useRouter();
+  const tCommon = useTranslations('common');
+  const tChannels = useTranslations('channels');
   const [clientId, setClientId] = useState('');
   const [clientSecret, setClientSecret] = useState('');
   const [storeUrl, setStoreUrl] = useState('');
@@ -67,22 +70,22 @@ export function ChannelApiSetup({ channelId, channelType, baseUrl }: ChannelApiS
   const getUrlLabel = () => {
     switch (channelType) {
       case 'Shopify':
-        return 'Shopify Store URL';
+        return tChannels('shopifyStoreUrl');
       case 'Amazon':
-        return 'Amazon Marketplace URL';
+        return tChannels('amazonMarketplaceUrl');
       default:
-        return 'Woocommerce URL';
+        return tChannels('woocommerceUrl');
     }
   };
 
   const getApiTitle = () => {
     switch (channelType) {
       case 'Shopify':
-        return 'Shopify API';
+        return tChannels('shopifyApi');
       case 'Amazon':
-        return 'Amazon API';
+        return tChannels('amazonApi');
       default:
-        return 'Woocommerce API';
+        return tChannels('woocommerceApi');
     }
   };
 
@@ -121,7 +124,7 @@ export function ChannelApiSetup({ channelId, channelType, baseUrl }: ChannelApiS
             color: '#374151',
           }}
         >
-          Back
+          {tCommon('back')}
         </span>
       </button>
 
@@ -137,7 +140,7 @@ export function ChannelApiSetup({ channelId, channelType, baseUrl }: ChannelApiS
           margin: '0 0 clamp(15px, 1.47vw, 20px) 0',
         }}
       >
-        Sales-Channels
+        {tChannels('title')}
       </h1>
 
       {/* Horizontal Line */}
@@ -200,7 +203,7 @@ export function ChannelApiSetup({ channelId, channelType, baseUrl }: ChannelApiS
                 margin: 0,
               }}
             >
-              Add your API details. You&apos;ll need ID and Secret.
+              {tChannels('enterCredentials')}
             </p>
           </div>
 
@@ -235,7 +238,7 @@ export function ChannelApiSetup({ channelId, channelType, baseUrl }: ChannelApiS
                     color: '#D97706',
                   }}
                 >
-                  Attention needed
+                  {tCommon('warning')}
                 </span>
               </div>
               <p
@@ -249,7 +252,7 @@ export function ChannelApiSetup({ channelId, channelType, baseUrl }: ChannelApiS
                   paddingLeft: 'clamp(22px, 2.16vw, 28px)',
                 }}
               >
-                Its nessessary to have an active SSL Certificate.
+                {tChannels('sslWarning')}
               </p>
             </div>
           )}
@@ -286,7 +289,7 @@ export function ChannelApiSetup({ channelId, channelType, baseUrl }: ChannelApiS
                 color: '#374151',
               }}
             >
-              Client ID
+              {tChannels('clientId')}
             </label>
             <input
               type="text"
@@ -329,7 +332,7 @@ export function ChannelApiSetup({ channelId, channelType, baseUrl }: ChannelApiS
                 color: '#374151',
               }}
             >
-              Client Secret
+              {tChannels('clientSecret')}
             </label>
             <input
               type="password"
@@ -430,7 +433,7 @@ export function ChannelApiSetup({ channelId, channelType, baseUrl }: ChannelApiS
                   color: '#FFFFFF',
                 }}
               >
-                Next
+                {tCommon('next')}
               </span>
             </button>
           </div>

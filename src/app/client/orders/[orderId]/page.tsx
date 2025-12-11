@@ -11,7 +11,7 @@ import { useTranslations } from 'next-intl';
 // Mock order data - in real app this would come from API
 const mockOrderDetails = {
   orderId: '934242',
-  status: 'processing' as 'processing' | 'onHold' | 'shipped' | 'cancelled',
+  status: 'Processing' as 'Processing' | 'On Hold' | 'Shipped' | 'Cancelled',
   deliveryMethod: {
     name: 'Max Mustermann',
     street: 'Musterstr. 10',
@@ -52,13 +52,13 @@ const shippingMethods = [
 // Status color mapping
 const getStatusColor = (status: string) => {
   switch (status) {
-    case 'processing':
+    case 'Processing':
       return '#6BAC4D';
-    case 'onHold':
+    case 'On Hold':
       return '#F59E0B';
-    case 'shipped':
+    case 'Shipped':
       return '#10B981';
-    case 'cancelled':
+    case 'Cancelled':
       return '#EF4444';
     default:
       return '#6BAC4D';
@@ -71,9 +71,8 @@ export default function ClientOrderDetailPage() {
   const { user, isAuthenticated } = useAuthStore();
   const tCommon = useTranslations('common');
   const tOrders = useTranslations('orders');
-  const tStatus = useTranslations('status');
   const tCountries = useTranslations('countries');
-  const tMessages = useTranslations('messages');
+  const tStatus = useTranslations('status');
   const [showEditModal, setShowEditModal] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [editOrderEnabled, setEditOrderEnabled] = useState(false);
@@ -94,7 +93,7 @@ export default function ClientOrderDetailPage() {
     streetAddress: '',
     city: '',
     zipPostal: '',
-    country: 'United States',
+    country: 'unitedStates',
   });
 
   useEffect(() => {
@@ -252,7 +251,7 @@ export default function ClientOrderDetailPage() {
                         color: '#000000',
                       }}
                     >
-                      {mockOrderDetails.status}
+                      {onHoldStatus ? tOrders('onHold') : tOrders(mockOrderDetails.status.toLowerCase())}
                     </span>
                   </div>
                 </div>
@@ -366,7 +365,7 @@ export default function ClientOrderDetailPage() {
                     color: '#111827',
                   }}
                 >
-                  Shipping method
+                  {tOrders('shippingMethod')}
                 </span>
                 {editOrderEnabled ? (
                   <div style={{ position: 'relative', marginTop: '12px' }}>
@@ -592,7 +591,7 @@ export default function ClientOrderDetailPage() {
                     color: '#111827',
                   }}
                 >
-                  Shipment Weight
+                  {tOrders('shipmentWeight')}
                 </span>
                 <div
                   style={{
@@ -616,7 +615,7 @@ export default function ClientOrderDetailPage() {
                     color: '#9CA3AF',
                   }}
                 >
-                  Shipment weight is total weight of all products in this order, to change weight of the order you have to edit the single product weight
+                  {tOrders('shipmentWeightDescription')}
                 </div>
               </div>
             </div>
@@ -734,7 +733,7 @@ export default function ClientOrderDetailPage() {
                             color: '#DC2626',
                           }}
                         >
-                          Remove
+                          {tOrders('remove')}
                         </span>
                       </button>
                     )}
@@ -861,7 +860,7 @@ export default function ClientOrderDetailPage() {
                           setShowProductList(true);
                         }
                       }}
-                      placeholder="Search products..."
+                      placeholder={tOrders('searchProducts')}
                       style={{
                         width: 'calc(100% - 24px)',
                         border: 'none',
@@ -934,7 +933,7 @@ export default function ClientOrderDetailPage() {
                             color: '#6B7280',
                           }}
                         >
-                          Product Name
+                          {tOrders('productName')}
                         </span>
                         <span
                           style={{
@@ -947,7 +946,7 @@ export default function ClientOrderDetailPage() {
                             color: '#6B7280',
                           }}
                         >
-                          SKU
+                          {tOrders('sku')}
                         </span>
                         <span
                           style={{
@@ -960,7 +959,7 @@ export default function ClientOrderDetailPage() {
                             color: '#6B7280',
                           }}
                         >
-                          GTIN
+                          {tOrders('gtin')}
                         </span>
                         <span
                           style={{
@@ -973,7 +972,7 @@ export default function ClientOrderDetailPage() {
                             color: '#6B7280',
                           }}
                         >
-                          QTY
+                          {tOrders('qty')}
                         </span>
                       </div>
 
@@ -1011,7 +1010,7 @@ export default function ClientOrderDetailPage() {
                                 color: '#FFFFFF',
                               }}
                             >
-                              Add
+                              {tOrders('add')}
                             </span>
                           </button>
                           <span
@@ -1256,7 +1255,7 @@ export default function ClientOrderDetailPage() {
                       color: '#374151',
                     }}
                   >
-                    First name
+                    {tOrders('firstName')}
                   </label>
                   <input
                     type="text"
@@ -1288,7 +1287,7 @@ export default function ClientOrderDetailPage() {
                       color: '#374151',
                     }}
                   >
-                    Last name
+                    {tOrders('lastName')}
                   </label>
                   <input
                     type="text"
@@ -1320,7 +1319,7 @@ export default function ClientOrderDetailPage() {
                       color: '#374151',
                     }}
                   >
-                    Company
+                    {tOrders('company')}
                   </label>
                   <input
                     type="text"
@@ -1352,7 +1351,7 @@ export default function ClientOrderDetailPage() {
                       color: '#374151',
                     }}
                   >
-                    Address Line 2
+                    {tOrders('addressLine2')}
                   </label>
                   <input
                     type="text"
@@ -1384,7 +1383,7 @@ export default function ClientOrderDetailPage() {
                       color: '#374151',
                     }}
                   >
-                    Street address
+                    {tOrders('streetAddress')}
                   </label>
                   <input
                     type="text"
@@ -1416,7 +1415,7 @@ export default function ClientOrderDetailPage() {
                       color: '#374151',
                     }}
                   >
-                    City
+                    {tOrders('city')}
                   </label>
                   <input
                     type="text"
@@ -1448,7 +1447,7 @@ export default function ClientOrderDetailPage() {
                       color: '#374151',
                     }}
                   >
-                    ZIP / Postal
+                    {tOrders('zipPostal')}
                   </label>
                   <input
                     type="text"
@@ -1480,7 +1479,7 @@ export default function ClientOrderDetailPage() {
                       color: '#374151',
                     }}
                   >
-                    Country
+                    {tOrders('country')}
                   </label>
                   <div className="relative">
                     <select
@@ -1551,7 +1550,7 @@ export default function ClientOrderDetailPage() {
                       textAlign: 'center',
                     }}
                   >
-                    Save
+                    {tCommon('save')}
                   </span>
                 </button>
               </div>

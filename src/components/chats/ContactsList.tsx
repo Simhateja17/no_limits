@@ -1,6 +1,7 @@
 'use client';
 
 import Image from 'next/image';
+import { useLocale } from 'next-intl';
 
 export interface Contact {
   id: string;
@@ -20,11 +21,13 @@ interface ContactsListProps {
 }
 
 export function ContactsList({ contacts, selectedContactId, onSelectContact }: ContactsListProps) {
+  const locale = useLocale();
+  
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
+    const localeCode = locale === 'de' ? 'de-DE' : 'en-US';
     const day = date.getDate();
-    const months = ['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'];
-    const month = months[date.getMonth()];
+    const month = date.toLocaleDateString(localeCode, { month: 'short' });
     const year = date.getFullYear();
     const hours = date.getHours().toString().padStart(2, '0');
     const minutes = date.getMinutes().toString().padStart(2, '0');

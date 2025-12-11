@@ -45,6 +45,7 @@ export function ChatSection({
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const t = useTranslations('chat');
+  const tCommon = useTranslations('common');
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -300,7 +301,7 @@ export function ChatSection({
                         color: '#111827',
                       }}
                     >
-                      Create task
+                      {t('createTask')}
                     </span>
                   </button>
                 )}
@@ -357,7 +358,7 @@ export function ChatSection({
               fontStyle: 'italic',
             }}
           >
-            Typing a message...
+            {tCommon('isTyping')}
           </span>
         </div>
       )}
@@ -373,7 +374,7 @@ export function ChatSection({
       >
         <input
           type="text"
-          placeholder="Schreibe eine Nachricht..."
+          placeholder={t('typeMessage')}
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
           onKeyPress={handleKeyPress}

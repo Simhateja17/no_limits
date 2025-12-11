@@ -56,21 +56,18 @@ interface OrdersTableProps {
   basePath?: string; // Base path for navigation (e.g., '/admin/orders' or '/employee/orders')
 }
 
-// Status tag component
-const StatusTag = ({ status }: { status: OrderStatus }) => {
-  const tStatus = useTranslations('status');
-  const t = useTranslations('orders');
-  
+// Status tag component - needs translation function
+const StatusTag = ({ status, t }: { status: OrderStatus; t: (key: string) => string }) => {
   const getStatusConfig = () => {
     switch (status) {
       case 'success':
         return {
-          label: tStatus('processing'),
+          label: t('processing'),
           dotColor: '#22C55E',
         };
       case 'error':
         return {
-          label: tStatus('cancelled'),
+          label: t('cancelled'),
           dotColor: '#EF4444',
         };
       case 'mildError':
@@ -132,7 +129,6 @@ export function OrdersTable({ showClientColumn, basePath = '/admin/orders' }: Or
   const itemsPerPage = 10;
   const t = useTranslations('orders');
   const tCommon = useTranslations('common');
-  const tStatus = useTranslations('status');
   const locale = useLocale();
 
   // Format date for display with locale support
@@ -540,7 +536,7 @@ export function OrdersTable({ showClientColumn, basePath = '/admin/orders' }: Or
               color: '#374151',
             }}
           >
-            {showClientColumn ? t('filterByCustomer') : tCommon('channels')}
+            {showClientColumn ? t('filterByCustomer') : 'Channels'}
           </label>
           <div className="relative">
             <select
@@ -662,7 +658,7 @@ export function OrdersTable({ showClientColumn, basePath = '/admin/orders' }: Or
               color: '#6B7280',
             }}
           >
-            {t('orderDate')}
+            Order Date
           </span>
           <span
             style={{
@@ -838,7 +834,7 @@ export function OrdersTable({ showClientColumn, basePath = '/admin/orders' }: Or
               {order.method}
             </span>
             <div className="flex items-center justify-start">
-              <StatusTag status={order.status} />
+              <StatusTag status={order.status} t={t} />
             </div>
           </div>
         ))}
@@ -854,7 +850,7 @@ export function OrdersTable({ showClientColumn, basePath = '/admin/orders' }: Or
               fontSize: 'clamp(12px, 1vw, 14px)',
             }}
           >
-            {t('noOrdersFound')}
+            No orders found
           </div>
         )}
       </div>
@@ -875,9 +871,9 @@ export function OrdersTable({ showClientColumn, basePath = '/admin/orders' }: Or
             color: '#374151',
           }}
         >
-          {tCommon('showing')} <span style={{ fontWeight: 500 }}>{filteredOrders.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0}</span> {tCommon('to')}{' '}
-          <span style={{ fontWeight: 500 }}>{Math.min(currentPage * itemsPerPage, filteredOrders.length)}</span> {tCommon('of')}{' '}
-          <span style={{ fontWeight: 500 }}>{filteredOrders.length}</span> {tCommon('results')}
+          Showing <span style={{ fontWeight: 500 }}>{filteredOrders.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0}</span> to{' '}
+          <span style={{ fontWeight: 500 }}>{Math.min(currentPage * itemsPerPage, filteredOrders.length)}</span> of{' '}
+          <span style={{ fontWeight: 500 }}>{filteredOrders.length}</span> results
         </span>
 
         <div className="flex items-center gap-3">

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 
 interface ChannelShippingSetupProps {
   channelId: string;
@@ -135,6 +136,8 @@ function SuccessModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => voi
 
 export function ChannelShippingSetup({ channelId, channelType, baseUrl }: ChannelShippingSetupProps) {
   const router = useRouter();
+  const tCommon = useTranslations('common');
+  const tChannels = useTranslations('channels');
   const [selectedMethods, setSelectedMethods] = useState<{ [key: string]: string }>({
     '1': 'DHL Parcel',
     '2': 'DHL Parcel',
@@ -224,7 +227,7 @@ export function ChannelShippingSetup({ channelId, channelType, baseUrl }: Channe
             color: '#374151',
           }}
         >
-          Back
+          {tCommon('back')}
         </span>
       </button>
 
@@ -240,7 +243,7 @@ export function ChannelShippingSetup({ channelId, channelType, baseUrl }: Channe
           margin: '0 0 clamp(15px, 1.47vw, 20px) 0',
         }}
       >
-        Sales-Channels
+        {tChannels('title')}
       </h1>
 
       {/* Horizontal Line */}

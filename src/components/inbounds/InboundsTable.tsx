@@ -686,9 +686,9 @@ export function InboundsTable({ showClientColumn, baseUrl, userRole }: InboundsT
             color: '#374151',
           }}
         >
-          Showing <span style={{ fontWeight: 500 }}>{filteredInbounds.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0}</span> to{' '}
-          <span style={{ fontWeight: 500 }}>{Math.min(currentPage * itemsPerPage, filteredInbounds.length)}</span> of{' '}
-          <span style={{ fontWeight: 500 }}>{filteredInbounds.length}</span> results
+          {tCommon('showing')} <span style={{ fontWeight: 500 }}>{filteredInbounds.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0}</span> {tCommon('to')}{' '}
+          <span style={{ fontWeight: 500 }}>{Math.min(currentPage * itemsPerPage, filteredInbounds.length)}</span> {tCommon('of')}{' '}
+          <span style={{ fontWeight: 500 }}>{filteredInbounds.length}</span> {tCommon('results')}
         </span>
 
         <div className="flex items-center" style={{ gap: 'clamp(8px, 0.88vw, 12px)' }}>

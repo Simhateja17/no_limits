@@ -11,7 +11,7 @@ import { useTranslations } from 'next-intl';
 // Mock order data - in real app this would come from API
 const mockOrderDetails = {
   orderId: '934242',
-  status: 'processing' as 'processing' | 'onHold' | 'shipped' | 'cancelled',
+  status: 'Processing' as 'Processing' | 'On Hold' | 'Shipped' | 'Cancelled',
   deliveryMethod: {
     name: 'Max Mustermann',
     street: 'Musterstr. 10',
@@ -52,13 +52,13 @@ const shippingMethods = [
 // Status color mapping
 const getStatusColor = (status: string) => {
   switch (status) {
-    case 'processing':
+    case 'Processing':
       return '#6BAC4D';
-    case 'onHold':
+    case 'On Hold':
       return '#F59E0B';
-    case 'shipped':
+    case 'Shipped':
       return '#10B981';
-    case 'cancelled':
+    case 'Cancelled':
       return '#EF4444';
     default:
       return '#6BAC4D';
@@ -72,6 +72,7 @@ export default function EmployeeOrderDetailPage() {
   const tCommon = useTranslations('common');
   const tOrders = useTranslations('orders');
   const tCountries = useTranslations('countries');
+  const tStatus = useTranslations('status');
   const [editOrderEnabled, setEditOrderEnabled] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
@@ -96,7 +97,7 @@ export default function EmployeeOrderDetailPage() {
     streetAddress: '',
     city: '',
     zipPostal: '',
-    country: 'unitedStates',
+    country: 'United States',
   });
 
   useEffect(() => {
@@ -234,7 +235,7 @@ export default function EmployeeOrderDetailPage() {
                 color: '#374151',
               }}
             >
-              {tCommon('back')}
+              Back
             </span>
           </button>
 
@@ -296,7 +297,7 @@ export default function EmployeeOrderDetailPage() {
                         color: '#000000',
                       }}
                     >
-                      {onHoldStatus ? 'On Hold' : mockOrderDetails.status}
+                      {onHoldStatus ? tOrders('onHold') : tOrders(mockOrderDetails.status.toLowerCase())}
                     </span>
                   </div>
                 </div>
@@ -366,7 +367,7 @@ export default function EmployeeOrderDetailPage() {
                           textAlign: 'center',
                         }}
                       >
-                        {tCommon('edit')}
+                        Edit
                       </span>
                     </button>
                   )}
@@ -410,7 +411,7 @@ export default function EmployeeOrderDetailPage() {
                     color: '#111827',
                   }}
                 >
-                  {tOrders('shippingMethod')}
+                  Shipping method
                 </span>
                 {editOrderEnabled ? (
                   <div style={{ position: 'relative', marginTop: '12px' }}>
@@ -637,7 +638,7 @@ export default function EmployeeOrderDetailPage() {
                     color: '#111827',
                   }}
                 >
-                  {tOrders('shipmentWeight')}
+                  Shipment Weight
                 </span>
                 <div
                   style={{
@@ -661,7 +662,7 @@ export default function EmployeeOrderDetailPage() {
                     color: '#9CA3AF',
                   }}
                 >
-                  {tOrders('shipmentWeightDescription')}
+                  Shipment weight is total weight of all products in this order, to change weight of the order you have to edit the single product weight
                 </div>
               </div>
 
@@ -687,7 +688,7 @@ export default function EmployeeOrderDetailPage() {
                     color: '#111827',
                   }}
                 >
-                  {tOrders('tags')}
+                  Tags
                 </span>
                 <div className="flex flex-wrap gap-2 mt-3">
                   {tags.map((tag) => (
@@ -749,7 +750,7 @@ export default function EmployeeOrderDetailPage() {
                           handleAddTag();
                         }
                       }}
-                      placeholder="Add tag"
+                      placeholder={tOrders('addTag')}
                       style={{
                         width: '100%',
                         height: '42px',
@@ -824,7 +825,7 @@ export default function EmployeeOrderDetailPage() {
                       color: '#6B7280',
                     }}
                   >
-                    {tOrders('productName')}
+                    Product Name
                   </span>
                   <span
                     style={{
@@ -837,7 +838,7 @@ export default function EmployeeOrderDetailPage() {
                       color: '#6B7280',
                     }}
                   >
-                    {tOrders('sku')}
+                    SKU
                   </span>
                   <span
                     style={{
@@ -850,7 +851,7 @@ export default function EmployeeOrderDetailPage() {
                       color: '#6B7280',
                     }}
                   >
-                    {tOrders('gtin')}
+                    GTIN
                   </span>
                   <span
                     style={{
@@ -863,7 +864,7 @@ export default function EmployeeOrderDetailPage() {
                       color: '#6B7280',
                     }}
                   >
-                    {tOrders('qty')}
+                    QTY
                   </span>
                 </div>
 
@@ -1029,7 +1030,7 @@ export default function EmployeeOrderDetailPage() {
                           setShowProductList(true);
                         }
                       }}
-                      placeholder="Search products..."
+                      placeholder={tOrders('searchProducts')}
                       style={{
                         width: 'calc(100% - 24px)',
                         border: 'none',
@@ -1273,7 +1274,7 @@ export default function EmployeeOrderDetailPage() {
                     color: '#111827',
                   }}
                 >
-                  {tOrders('editOrder')}
+                  Edit order
                 </span>
                 {/* Toggle */}
                 <button
@@ -1324,7 +1325,7 @@ export default function EmployeeOrderDetailPage() {
                     marginBottom: '8px',
                   }}
                 >
-                  {tOrders('deleteOrder')}
+                  Delete order
                 </h3>
                 <p
                   style={{
@@ -1336,7 +1337,7 @@ export default function EmployeeOrderDetailPage() {
                     marginBottom: '16px',
                   }}
                 >
-                  {tOrders('deleteOrderWarning')}
+                  Attention, deleting the order leads to permanent loss of data. Orders can only be deleted if they are not yet shipped.
                 </p>
                 <button
                   style={{
@@ -1361,7 +1362,73 @@ export default function EmployeeOrderDetailPage() {
                       color: '#DC2626',
                     }}
                   >
-                    {tOrders('deleteOrder')}
+                    Delete order
+                  </span>
+                </button>
+              </div>
+
+              {/* Cancel Order Box */}
+              <div
+                style={{
+                  width: '100%',
+                  minHeight: '178px',
+                  gap: '20px',
+                  borderRadius: '8px',
+                  padding: 'clamp(16px, 1.8vw, 24px)',
+                  backgroundColor: '#FFFFFF',
+                  boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.06), 0px 1px 3px 0px rgba(0, 0, 0, 0.1)',
+                }}
+              >
+                <span
+                  style={{
+                    fontFamily: 'Inter, sans-serif',
+                    fontWeight: 500,
+                    fontSize: 'clamp(16px, 1.3vw, 18px)',
+                    lineHeight: '24px',
+                    color: '#111827',
+                    display: 'block',
+                  }}
+                >
+                  Cancel order
+                </span>
+                <p
+                  style={{
+                    marginTop: '12px',
+                    fontFamily: 'Inter, sans-serif',
+                    fontWeight: 400,
+                    fontSize: '14px',
+                    lineHeight: '20px',
+                    color: '#6B7280',
+                  }}
+                >
+                  {tCommon('deleteWarning')}
+                </p>
+                <button
+                  style={{
+                    marginTop: '20px',
+                    width: 'clamp(100px, 8.8vw, 120px)',
+                    height: 'clamp(34px, 2.8vw, 38px)',
+                    padding: 'clamp(7px, 0.66vw, 9px) clamp(13px, 1.25vw, 17px)',
+                    borderRadius: '6px',
+                    backgroundColor: '#FEE2E2',
+                    border: 'none',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <span
+                    style={{
+                      fontFamily: 'Inter, sans-serif',
+                      fontWeight: 500,
+                      fontSize: 'clamp(12px, 1.03vw, 14px)',
+                      lineHeight: '20px',
+                      color: '#DC2626',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    Cancel order
                   </span>
                 </button>
               </div>
@@ -1477,7 +1544,7 @@ export default function EmployeeOrderDetailPage() {
                   marginBottom: '24px',
                 }}
               >
-                Edit order
+                {tOrders('editOrder')}
               </h2>
 
               <div className="grid grid-cols-2 gap-6">
@@ -1492,7 +1559,7 @@ export default function EmployeeOrderDetailPage() {
                       color: '#374151',
                     }}
                   >
-                    First name
+                    {tOrders('firstName')}
                   </label>
                   <input
                     type="text"
@@ -1524,7 +1591,7 @@ export default function EmployeeOrderDetailPage() {
                       color: '#374151',
                     }}
                   >
-                    Last name
+                    {tOrders('lastName')}
                   </label>
                   <input
                     type="text"
@@ -1556,7 +1623,7 @@ export default function EmployeeOrderDetailPage() {
                       color: '#374151',
                     }}
                   >
-                    Company
+                    {tOrders('company')}
                   </label>
                   <input
                     type="text"
@@ -1588,7 +1655,7 @@ export default function EmployeeOrderDetailPage() {
                       color: '#374151',
                     }}
                   >
-                    Address Line 2
+                    {tOrders('addressLine2')}
                   </label>
                   <input
                     type="text"
@@ -1620,7 +1687,7 @@ export default function EmployeeOrderDetailPage() {
                       color: '#374151',
                     }}
                   >
-                    Street address
+                    {tOrders('streetAddress')}
                   </label>
                   <input
                     type="text"
@@ -1652,7 +1719,7 @@ export default function EmployeeOrderDetailPage() {
                       color: '#374151',
                     }}
                   >
-                    City
+                    {tOrders('city')}
                   </label>
                   <input
                     type="text"
@@ -1684,7 +1751,7 @@ export default function EmployeeOrderDetailPage() {
                       color: '#374151',
                     }}
                   >
-                    ZIP / Postal
+                    {tOrders('zipPostal')}
                   </label>
                   <input
                     type="text"
@@ -1716,7 +1783,7 @@ export default function EmployeeOrderDetailPage() {
                       color: '#374151',
                     }}
                   >
-                    Country
+                    {tOrders('country')}
                   </label>
                   <div className="relative">
                     <select
@@ -1787,7 +1854,7 @@ export default function EmployeeOrderDetailPage() {
                       textAlign: 'center',
                     }}
                   >
-                    Save
+                    {tCommon('save')}
                   </span>
                 </button>
               </div>
@@ -1851,7 +1918,7 @@ export default function EmployeeOrderDetailPage() {
                   color: '#111827',
                 }}
               >
-                Shipping address changed
+                {tOrders('shippingAddressChanged')}
               </span>
             </div>
           </div>
@@ -1915,7 +1982,7 @@ export default function EmployeeOrderDetailPage() {
                   color: '#111827',
                 }}
               >
-                Replacement order created
+                {tOrders('replacementOrderCreated')}
               </span>
             </div>
           </div>

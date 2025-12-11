@@ -36,7 +36,9 @@ export default function AdminInboundDetailPage() {
   const router = useRouter();
   const params = useParams();
   const tCommon = useTranslations('common');
+  const tOrders = useTranslations('orders');
   const tMessages = useTranslations('messages');
+  const tInbounds = useTranslations('inbounds');
   const inboundId = params.id as string;
 
   const [editMode, setEditMode] = useState(false);
@@ -105,7 +107,7 @@ export default function AdminInboundDetailPage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
                 </div>
-                <span className="font-medium text-base">{tMessages('inboundSavedSuccessfully')}</span>
+                <span className="font-medium text-base">Inbound saved successfully!</span>
               </div>
             </div>
           </div>
@@ -137,7 +139,7 @@ export default function AdminInboundDetailPage() {
                 color: '#374151',
               }}
             >
-              {tCommon('back')}
+              Back
             </span>
           </button>
 
@@ -227,7 +229,7 @@ export default function AdminInboundDetailPage() {
                       color: '#111827',
                     }}
                   >
-                    External ID
+                    {tInbounds('extInboundId')}
                   </span>
                   <span
                     style={{
@@ -265,7 +267,7 @@ export default function AdminInboundDetailPage() {
                     color: '#111827',
                   }}
                 >
-                  Activate presale
+                  {tMessages('activatePresale')}
                 </span>
                 <p
                   style={{
@@ -278,7 +280,7 @@ export default function AdminInboundDetailPage() {
                     marginBottom: '16px',
                   }}
                 >
-                  By activating this function you can push all stocks of this inbound to your sales channels, this will allow you to sell before we set the stocks. After we set the stock it will reset this function.
+                  {tMessages('activatePresaleDescription')}
                 </p>
               
                 {/* Toggle */}
@@ -323,10 +325,10 @@ export default function AdminInboundDetailPage() {
                 <thead>
                   <tr style={{ backgroundColor: '#F9FAFB' }}>
                     {editMode && <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '12px', fontWeight: 500, color: '#6B7280', textTransform: 'uppercase' }}></th>}
-                    <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '12px', fontWeight: 500, color: '#6B7280', textTransform: 'uppercase' }}>Product Name</th>
-                    <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '12px', fontWeight: 500, color: '#6B7280', textTransform: 'uppercase' }}>SKU</th>
-                    <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '12px', fontWeight: 500, color: '#6B7280', textTransform: 'uppercase' }}>GTIN</th>
-                    <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '12px', fontWeight: 500, color: '#6B7280', textTransform: 'uppercase' }}>QTY</th>
+                    <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '12px', fontWeight: 500, color: '#6B7280', textTransform: 'uppercase' }}>{tOrders('productName')}</th>
+                    <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '12px', fontWeight: 500, color: '#6B7280', textTransform: 'uppercase' }}>{tOrders('sku')}</th>
+                    <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '12px', fontWeight: 500, color: '#6B7280', textTransform: 'uppercase' }}>{tOrders('gtin')}</th>
+                    <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '12px', fontWeight: 500, color: '#6B7280', textTransform: 'uppercase' }}>{tOrders('qty')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -347,7 +349,7 @@ export default function AdminInboundDetailPage() {
                               cursor: 'pointer'
                             }}
                           >
-                            Remove
+                            {tCommon('remove')}
                           </button>
                         </td>
                       )}
@@ -388,13 +390,13 @@ export default function AdminInboundDetailPage() {
                 padding: 'clamp(16px, 1.5vw, 20px) clamp(12px, 1.2vw, 16px)'
               }}>
                 <div style={{ marginBottom: searchQuery ? '16px' : 0 }}>
-                  <label style={{ fontSize: '12px', color: '#6B7280', display: 'block', marginBottom: '4px' }}>Add Products</label>
+                  <label style={{ fontSize: '12px', color: '#6B7280', display: 'block', marginBottom: '4px' }}>{tOrders('addProducts')}</label>
                   <div style={{ position: 'relative', width: '320px', maxWidth: '100%' }}>
                     <input
                       type="text"
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      placeholder="Search products..."
+                      placeholder={tOrders('searchProducts')}
                       style={{
                         width: '100%',
                         padding: '9px 12px',
@@ -439,7 +441,7 @@ export default function AdminInboundDetailPage() {
                     <thead>
                       <tr style={{ backgroundColor: '#F9FAFB' }}>
                         <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '12px', fontWeight: 500, color: '#6B7280', textTransform: 'uppercase' }}></th>
-                        <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '12px', fontWeight: 500, color: '#6B7280', textTransform: 'uppercase' }}>Product Name</th>
+                        <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '12px', fontWeight: 500, color: '#6B7280', textTransform: 'uppercase' }}>{tOrders('productName')}</th>
                         <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '12px', fontWeight: 500, color: '#6B7280', textTransform: 'uppercase' }}>SKU</th>
                         <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '12px', fontWeight: 500, color: '#6B7280', textTransform: 'uppercase' }}>GTIN</th>
                         <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '12px', fontWeight: 500, color: '#6B7280', textTransform: 'uppercase' }}>QTY</th>
@@ -506,7 +508,7 @@ export default function AdminInboundDetailPage() {
                 lineHeight: '24px',
                 color: '#111827', 
                 marginBottom: '4px' 
-              }}>Delivery</h3>
+              }}>{tMessages('delivery')}</h3>
               <p style={{ 
                 fontFamily: 'Inter, sans-serif',
                 fontSize: 'clamp(13px, 1.1vw, 15px)', 
@@ -523,7 +525,7 @@ export default function AdminInboundDetailPage() {
                     color: '#374151', 
                     display: 'block', 
                     marginBottom: '8px' 
-                  }}>{tMessages('eta')}</label>
+                  }}>ETA</label>
                   <input
                     type="text"
                     value={eta}
@@ -673,7 +675,7 @@ export default function AdminInboundDetailPage() {
                     color: '#374151', 
                     display: 'block', 
                     marginBottom: '8px' 
-                  }}>Ext. Inorder ID</label>
+                  }}>{tInbounds('extInboundId')}</label>
                   <input
                     type="text"
                     value={extInorderId}
@@ -709,7 +711,7 @@ export default function AdminInboundDetailPage() {
                 fontSize: 'clamp(16px, 1.3vw, 18px)',
                 lineHeight: '24px',
                 color: '#111827' 
-              }}>Edit inorder</span>
+              }}>{tInbounds('editInbound')}</span>
               <button
                 onClick={() => setEditMode(!editMode)}
                 style={{
@@ -751,7 +753,7 @@ export default function AdminInboundDetailPage() {
                 lineHeight: '24px',
                 color: '#111827', 
                 marginBottom: '8px' 
-              }}>Cancel inbound</h3>
+              }}>{tInbounds('cancelInbound')}</h3>
               <p style={{ 
                 fontFamily: 'Inter, sans-serif',
                 fontSize: 'clamp(13px, 1.1vw, 15px)', 
@@ -773,7 +775,7 @@ export default function AdminInboundDetailPage() {
                   cursor: 'pointer'
                 }}
               >
-                Cancel order
+                {tInbounds('cancelInbound')}
               </button>
             </div>
           </div>

@@ -305,7 +305,7 @@ export default function CreateInboundPage() {
                 {filteredAvailableProducts.map((product, index) => (
                   <div key={product.id} className="grid items-center" style={{ gridTemplateColumns: '0.6fr 2fr 1fr 1.5fr 0.8fr', padding: '16px 24px', borderBottom: index < filteredAvailableProducts.length - 1 ? '1px solid #E5E7EB' : 'none' }}>
                     <button onClick={() => handleAddProduct(product)} style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', padding: '2px 10px', borderRadius: '10px', backgroundColor: '#003450', border: 'none', cursor: 'pointer', width: 'fit-content' }}>
-                      <span style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '12px', lineHeight: '16px', color: '#FFFFFF' }}>Add</span>
+                      <span style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '12px', lineHeight: '16px', color: '#FFFFFF' }}>{tMessages('add')}</span>
                     </button>
                     <span style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '14px', lineHeight: '20px', color: '#111827' }}>{product.name}</span>
                     <span style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '14px', lineHeight: '20px', color: '#111827' }}>{product.sku}</span>
@@ -318,21 +318,21 @@ export default function CreateInboundPage() {
 
             {/* Delivery Section */}
             <div style={{ width: '100%', maxWidth: '927px', borderRadius: '8px', gap: '20px', padding: '24px', backgroundColor: '#FFFFFF', boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.06), 0px 1px 3px 0px rgba(0, 0, 0, 0.1)' }}>
-              <h2 style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '18px', lineHeight: '24px', color: '#111827', marginBottom: '8px' }}>Delivery</h2>
-              <p style={{ fontFamily: 'Inter, sans-serif', fontWeight: 400, fontSize: '14px', lineHeight: '20px', color: '#6B7280', marginBottom: '20px' }}>Use a permanent address where you can receive mail.</p>
+              <h2 style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '18px', lineHeight: '24px', color: '#111827', marginBottom: '8px' }}>{tMessages('delivery')}</h2>
+              <p style={{ fontFamily: 'Inter, sans-serif', fontWeight: 400, fontSize: '14px', lineHeight: '20px', color: '#6B7280', marginBottom: '20px' }}>{tMessages('deliveryDescription')}</p>
 
               {/* Row 1 */}
               <div className="grid grid-cols-3 gap-4 mb-4">
                 <div>
-                  <label style={{ display: 'block', fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '14px', lineHeight: '20px', color: '#374151', marginBottom: '6px' }}>ETA</label>
+                  <label style={{ display: 'block', fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '14px', lineHeight: '20px', color: '#374151', marginBottom: '6px' }}>{tMessages('eta')}</label>
                   <input type="text" value={eta} onChange={(e) => setEta(e.target.value)} style={{ width: '100%', height: '38px', borderRadius: '6px', border: '1px solid #D1D5DB', padding: '9px 13px', fontFamily: 'Inter, sans-serif', fontSize: '14px', lineHeight: '20px', color: '#111827', backgroundColor: '#FFFFFF', boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.05)' }} />
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '14px', lineHeight: '20px', color: '#374151', marginBottom: '6px' }}>Freigt forwarder</label>
+                  <label style={{ display: 'block', fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '14px', lineHeight: '20px', color: '#374151', marginBottom: '6px' }}>{tMessages('freightForwarder')}</label>
                   <input type="text" value={freightForwarder} onChange={(e) => setFreightForwarder(e.target.value)} style={{ width: '100%', height: '38px', borderRadius: '6px', border: '1px solid #D1D5DB', padding: '9px 13px', fontFamily: 'Inter, sans-serif', fontSize: '14px', lineHeight: '20px', color: '#111827', backgroundColor: '#FFFFFF', boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.05)' }} />
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '14px', lineHeight: '20px', color: '#374151', marginBottom: '6px' }}>Tracking no</label>
+                  <label style={{ display: 'block', fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '14px', lineHeight: '20px', color: '#374151', marginBottom: '6px' }}>{tMessages('trackingNo')}</label>
                   <input type="text" value={trackingNo} onChange={(e) => setTrackingNo(e.target.value)} style={{ width: '100%', height: '38px', borderRadius: '6px', border: '1px solid #D1D5DB', padding: '9px 13px', fontFamily: 'Inter, sans-serif', fontSize: '14px', lineHeight: '20px', color: '#111827', backgroundColor: '#FFFFFF', boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.05)' }} />
                 </div>
               </div>
@@ -340,15 +340,15 @@ export default function CreateInboundPage() {
               {/* Row 2 */}
               <div className="grid grid-cols-3 gap-4 mb-4">
                 <div>
-                  <label style={{ display: 'block', fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '14px', lineHeight: '20px', color: '#374151', marginBottom: '6px' }}>Qty boxes</label>
+                  <label style={{ display: 'block', fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '14px', lineHeight: '20px', color: '#374151', marginBottom: '6px' }}>{tMessages('qtyBoxes')}</label>
                   <input type="text" value={qtyBoxes} onChange={(e) => setQtyBoxes(e.target.value)} style={{ width: '100%', height: '38px', borderRadius: '6px', border: '1px solid #D1D5DB', padding: '9px 13px', fontFamily: 'Inter, sans-serif', fontSize: '14px', lineHeight: '20px', color: '#111827', backgroundColor: '#FFFFFF', boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.05)' }} />
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '14px', lineHeight: '20px', color: '#374151', marginBottom: '6px' }}>Qty pallets</label>
+                  <label style={{ display: 'block', fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '14px', lineHeight: '20px', color: '#374151', marginBottom: '6px' }}>{tMessages('qtyPallets')}</label>
                   <input type="text" value={qtyPallets} onChange={(e) => setQtyPallets(e.target.value)} style={{ width: '100%', height: '38px', borderRadius: '6px', border: '1px solid #D1D5DB', padding: '9px 13px', fontFamily: 'Inter, sans-serif', fontSize: '14px', lineHeight: '20px', color: '#111827', backgroundColor: '#FFFFFF', boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.05)' }} />
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '14px', lineHeight: '20px', color: '#374151', marginBottom: '6px' }}>Total CBM</label>
+                  <label style={{ display: 'block', fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '14px', lineHeight: '20px', color: '#374151', marginBottom: '6px' }}>{tMessages('totalCBM')}</label>
                   <input type="text" value={totalCBM} onChange={(e) => setTotalCBM(e.target.value)} style={{ width: '100%', height: '38px', borderRadius: '6px', border: '1px solid #D1D5DB', padding: '9px 13px', fontFamily: 'Inter, sans-serif', fontSize: '14px', lineHeight: '20px', color: '#111827', backgroundColor: '#FFFFFF', boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.05)' }} />
                 </div>
               </div>
@@ -356,7 +356,7 @@ export default function CreateInboundPage() {
               {/* Row 3 */}
               <div className="grid grid-cols-3 gap-4">
                 <div>
-                  <label style={{ display: 'block', fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '14px', lineHeight: '20px', color: '#374151', marginBottom: '6px' }}>Ext. Inorder ID</label>
+                  <label style={{ display: 'block', fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '14px', lineHeight: '20px', color: '#374151', marginBottom: '6px' }}>{tMessages('extInboundId')}</label>
                   <input type="text" value={extInorderId} onChange={(e) => setExtInorderId(e.target.value)} style={{ width: '100%', height: '38px', borderRadius: '6px', border: '1px solid #D1D5DB', padding: '9px 13px', fontFamily: 'Inter, sans-serif', fontSize: '14px', lineHeight: '20px', color: '#111827', backgroundColor: '#FFFFFF', boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.05)' }} />
                 </div>
               </div>
@@ -364,17 +364,17 @@ export default function CreateInboundPage() {
 
             {/* Import Inbound File Section */}
             <div style={{ width: '100%', maxWidth: '927px', borderRadius: '8px', gap: '20px', padding: '24px', backgroundColor: '#FFFFFF', boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.06), 0px 1px 3px 0px rgba(0, 0, 0, 0.1)' }}>
-              <h2 style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '18px', lineHeight: '24px', color: '#111827', marginBottom: '8px' }}>Import inbound file</h2>
+              <h2 style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '18px', lineHeight: '24px', color: '#111827', marginBottom: '8px' }}>{tMessages('importInboundFile')}</h2>
               <p style={{ fontFamily: 'Inter, sans-serif', fontWeight: 400, fontSize: '14px', lineHeight: '20px', color: '#6B7280', marginBottom: '20px' }}>
-                You can upload an csv file to create easier inbound orders, please download our template{' '}
-                <a href="#" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 400, fontSize: '14px', lineHeight: '20px', color: '#6B7280', textDecoration: 'underline' }}>here</a>
+                {tMessages('uploadCsvDescription')}{' '}
+                <a href="#" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 400, fontSize: '14px', lineHeight: '20px', color: '#6B7280', textDecoration: 'underline' }}>{tMessages('here')}</a>
               </p>
 
               {/* File Upload Area */}
               <div onDragOver={handleDragOver} onDrop={handleDrop} onClick={() => fileInputRef.current?.click()} style={{ width: '100%', minHeight: '131px', borderRadius: '8px', border: '2px dashed #D1D5DB', padding: '50px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '8px', cursor: 'pointer', backgroundColor: '#FFFFFF' }}>
                 <input ref={fileInputRef} type="file" accept=".csv" onChange={handleFileUpload} style={{ display: 'none' }} />
                 <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M23.3333 5H10C8.16667 5 6.68333 6.5 6.68333 8.33333L6.66667 31.6667C6.66667 33.5 8.15 35 9.98333 35H30C31.8333 35 33.3333 33.5 33.3333 31.6667V15L23.3333 5Z" stroke="#9CA3AF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><path d="M23.3333 5V15H33.3333" stroke="#9CA3AF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                <span style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '14px', lineHeight: '20px', color: '#111827', textAlign: 'center' }}>Import inbound file</span>
+                <span style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '14px', lineHeight: '20px', color: '#111827', textAlign: 'center' }}>{tMessages('importInboundFile')}</span>
               </div>
 
               {/* Uploaded File */}
@@ -383,7 +383,7 @@ export default function CreateInboundPage() {
                   <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M18.3333 8.58333V10C18.3333 13.6819 18.3333 15.5228 17.178 16.678C16.0228 17.8333 14.1819 17.8333 10.5 17.8333H9.5C5.8181 17.8333 3.97715 17.8333 2.82191 16.678C1.66667 15.5228 1.66667 13.6819 1.66667 10V9.16667C1.66667 5.48477 1.66667 3.64382 2.82191 2.48858C3.97715 1.33333 5.8181 1.33333 9.5 1.33333H10.9167" stroke="#6B7280" strokeWidth="1.5" strokeLinecap="round"/><path d="M1.66667 10.8333L3.72678 9.01229C4.58993 8.24847 5.89358 8.29571 6.69887 9.11955L10.4138 12.9249C11.0813 13.6072 12.1395 13.7196 12.9377 13.1896L13.2206 13.001C14.2981 12.2832 15.7039 12.3469 16.7103 13.157L18.3333 14.4643" stroke="#6B7280" strokeWidth="1.5" strokeLinecap="round"/><path d="M15 1.66667V6.66667M15 6.66667L17.5 4.16667M15 6.66667L12.5 4.16667" stroke="#6B7280" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
                   <span style={{ fontFamily: 'Inter, sans-serif', fontWeight: 400, fontSize: '14px', lineHeight: '20px', color: '#6B7280' }}>{uploadedFile.name}</span>
                   <button onClick={(e) => { e.stopPropagation(); handleDeleteFile(); }} style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', padding: '2px 10px', borderRadius: '10px', backgroundColor: '#FEE2E2', border: 'none', cursor: 'pointer' }}>
-                    <span style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '12px', lineHeight: '16px', color: '#991B1B', textAlign: 'center' }}>Delete</span>
+                    <span style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '12px', lineHeight: '16px', color: '#991B1B', textAlign: 'center' }}>{tCommon('delete')}</span>
                   </button>
                 </div>
               )}
@@ -391,9 +391,9 @@ export default function CreateInboundPage() {
 
             {/* Activate Presale Section */}
             <div style={{ width: '100%', maxWidth: '927px', borderRadius: '8px', padding: '20px 16px', gap: '4px', backgroundColor: '#FFFFFF', boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.06), 0px 1px 3px 0px rgba(0, 0, 0, 0.1)' }}>
-              <h2 style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '18px', lineHeight: '24px', color: '#111827', marginBottom: '8px' }}>Activate presale</h2>
+              <h2 style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '18px', lineHeight: '24px', color: '#111827', marginBottom: '8px' }}>{tMessages('activatePresale')}</h2>
               <p style={{ fontFamily: 'Inter, sans-serif', fontWeight: 400, fontSize: '14px', lineHeight: '20px', color: '#6B7280', marginBottom: '16px' }}>
-                By activating this function you can push all stocks of this inbound to your sales channels, this will allow you to sell before we set the stocks. After we set the stock it will reset this function.
+                {tMessages('presaleDescription')}
               </p>
               <button onClick={() => setPresaleActive(!presaleActive)} style={{ width: '44px', height: '24px', borderRadius: '12px', backgroundColor: presaleActive ? '#003450' : '#E5E7EB', border: 'none', cursor: 'pointer', position: 'relative', transition: 'background-color 0.2s ease' }}>
                 <div style={{ width: '20px', height: '20px', borderRadius: '50%', backgroundColor: '#FFFFFF', position: 'absolute', top: '2px', left: presaleActive ? '22px' : '2px', transition: 'left 0.2s ease', boxShadow: '0px 1px 2px rgba(0, 0, 0, 0.1)' }} />
@@ -409,7 +409,7 @@ export default function CreateInboundPage() {
               <div style={{ width: '48px', height: '48px', borderRadius: '24px', backgroundColor: '#D1FAE5', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M5 13L9 17L19 7" stroke="#059669" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
               </div>
-              <span style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '18px', lineHeight: '24px', textAlign: 'center', color: '#111827' }}>Inbound saved successfully</span>
+              <span style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '18px', lineHeight: '24px', textAlign: 'center', color: '#111827' }}>{tMessages('inboundSavedSuccessfully')}</span>
             </div>
           </div>
         )}

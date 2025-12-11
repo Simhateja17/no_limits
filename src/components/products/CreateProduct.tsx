@@ -2,6 +2,7 @@
 
 import { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 
 interface CreateProductProps {
   backUrl: string;
@@ -51,6 +52,8 @@ function Field({ label, value, onChange }: FieldProps) {
 
 export function CreateProduct({ backUrl }: CreateProductProps) {
   const router = useRouter();
+  const tCommon = useTranslations('common');
+  const tProducts = useTranslations('products');
 
   // Form state for new product
   const [formData, setFormData] = useState({
@@ -152,7 +155,7 @@ export function CreateProduct({ backUrl }: CreateProductProps) {
               color: '#374151',
             }}
           >
-            Back
+            {tCommon('back')}
           </span>
         </button>
       </div>
@@ -183,7 +186,7 @@ export function CreateProduct({ backUrl }: CreateProductProps) {
               color: '#003450',
             }}
           >
-            Product Data
+            {tProducts('productData')}
           </span>
         </button>
       </div>
@@ -258,7 +261,7 @@ export function CreateProduct({ backUrl }: CreateProductProps) {
                       <polyline points="17,8 12,3 7,8" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                       <line x1="12" y1="3" x2="12" y2="15" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                     </svg>
-                    <span style={{ color: 'white', fontSize: '12px', fontWeight: 500 }}>Change</span>
+                    <span style={{ color: 'white', fontSize: '12px', fontWeight: 500 }}>{tCommon('change')}</span>
                   </div>
                 </div>
               </>
@@ -276,7 +279,7 @@ export function CreateProduct({ backUrl }: CreateProductProps) {
                     textAlign: 'center',
                   }}
                 >
-                  <span style={{ textDecoration: 'underline' }}>Upload a file</span> or drag and drop
+                    <span style={{ textDecoration: 'underline' }}>{tProducts('upload')}</span> {tCommon('or')} {tCommon('dragAndDrop')}
                 </span>
                 <span
                   style={{
@@ -284,9 +287,9 @@ export function CreateProduct({ backUrl }: CreateProductProps) {
                     fontSize: '11px',
                     color: '#9CA3AF',
                   }}
-                >
-                  PNG, JPG, GIF up to 10MB
-                </span>
+                  >
+                    {tProducts('uploadFileDescription')}
+                  </span>
               </>
             )}
           </div>
@@ -312,16 +315,16 @@ export function CreateProduct({ backUrl }: CreateProductProps) {
                 marginBottom: '16px',
               }}
             >
-              Product Details
+              {tProducts('productDetails')}
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Field
-                label="Product Name"
+                label={tProducts('productName')}
                 value={formData.productName}
                 onChange={updateField('productName')}
               />
               <Field
-                label="Manufacture"
+                label={tProducts('manufacturer')}
                 value={formData.manufacturer}
                 onChange={updateField('manufacturer')}
               />
@@ -350,12 +353,12 @@ export function CreateProduct({ backUrl }: CreateProductProps) {
                   marginBottom: '8px',
                 }}
               >
-                Geodata
+                {tProducts('geodata')}
               </h3>
-              <Field label="Höhe in cm" value={formData.heightInCm} onChange={updateField('heightInCm')} />
-              <Field label="Länge in cm" value={formData.lengthInCm} onChange={updateField('lengthInCm')} />
-              <Field label="Breite in cm" value={formData.widthInCm} onChange={updateField('widthInCm')} />
-              <Field label="Gewicht in kg" value={formData.weightInKg} onChange={updateField('weightInKg')} />
+              <Field label={tProducts('heightInCm')} value={formData.heightInCm} onChange={updateField('heightInCm')} />
+              <Field label={tProducts('lengthInCm')} value={formData.lengthInCm} onChange={updateField('lengthInCm')} />
+              <Field label={tProducts('widthInCm')} value={formData.widthInCm} onChange={updateField('widthInCm')} />
+              <Field label={tProducts('weightInKg')} value={formData.weightInKg} onChange={updateField('weightInKg')} />
             </div>
 
             {/* Identifier Column */}
@@ -370,14 +373,14 @@ export function CreateProduct({ backUrl }: CreateProductProps) {
                   marginBottom: '8px',
                 }}
               >
-                Identifier
+                {tProducts('identification')}
               </h3>
-              <Field label="SKU" value={formData.sku} onChange={updateField('sku')} />
-              <Field label="GTIN" value={formData.gtin} onChange={updateField('gtin')} />
-              <Field label="Amazon ASIN" value={formData.amazonAsin} onChange={updateField('amazonAsin')} />
-              <Field label="Amazon SKU" value={formData.amazonSku} onChange={updateField('amazonSku')} />
-              <Field label="ISBN" value={formData.isbn} onChange={updateField('isbn')} />
-              <Field label="HAN" value={formData.han} onChange={updateField('han')} />
+              <Field label={tProducts('sku')} value={formData.sku} onChange={updateField('sku')} />
+              <Field label={tProducts('gtin')} value={formData.gtin} onChange={updateField('gtin')} />
+              <Field label={tProducts('amazonAsin')} value={formData.amazonAsin} onChange={updateField('amazonAsin')} />
+              <Field label={tProducts('amazonSku')} value={formData.amazonSku} onChange={updateField('amazonSku')} />
+              <Field label={tProducts('isbn')} value={formData.isbn} onChange={updateField('isbn')} />
+              <Field label={tProducts('han')} value={formData.han} onChange={updateField('han')} />
             </div>
 
             {/* Attributes Column */}
@@ -392,14 +395,14 @@ export function CreateProduct({ backUrl }: CreateProductProps) {
                   marginBottom: '8px',
                 }}
               >
-                Attributes
+                {tProducts('properties')}
               </h3>
-              <Field label="MHD" value={formData.mhd} onChange={updateField('mhd')} />
-              <Field label="Charge" value={formData.charge} onChange={updateField('charge')} />
-              <Field label="Zolltarifnummer" value={formData.zolltarifnummer} onChange={updateField('zolltarifnummer')} />
-              <Field label="Ursprung" value={formData.ursprung} onChange={updateField('ursprung')} />
-              <Field label="Netto-Verkaufspreis" value={formData.nettoVerkaufspreis} onChange={updateField('nettoVerkaufspreis')} />
-              <Field label="Manufacture" value={formData.manufacture} onChange={updateField('manufacture')} />
+              <Field label={tProducts('mhd')} value={formData.mhd} onChange={updateField('mhd')} />
+              <Field label={tProducts('charge')} value={formData.charge} onChange={updateField('charge')} />
+              <Field label={tProducts('zolltarifnummer')} value={formData.zolltarifnummer} onChange={updateField('zolltarifnummer')} />
+              <Field label={tProducts('ursprung')} value={formData.ursprung} onChange={updateField('ursprung')} />
+              <Field label={tProducts('nettoVerkaufspreis')} value={formData.nettoVerkaufspreis} onChange={updateField('nettoVerkaufspreis')} />
+              <Field label={tProducts('manufacturer')} value={formData.manufacture} onChange={updateField('manufacture')} />
             </div>
           </div>
         </div>
@@ -425,7 +428,7 @@ export function CreateProduct({ backUrl }: CreateProductProps) {
               color: '#111827',
             }}
           >
-            Save product
+            {tProducts('createProduct')}
           </span>
           <button
             onClick={handleSave}
@@ -452,7 +455,7 @@ export function CreateProduct({ backUrl }: CreateProductProps) {
                 color: '#FFFFFF',
               }}
             >
-              Speichern
+              {tCommon('save')}
             </span>
           </button>
         </div>

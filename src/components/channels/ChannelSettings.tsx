@@ -17,6 +17,7 @@ interface ChannelSettingsProps {
 export function ChannelSettings({ channelId, baseUrl, initialChannelType = 'Woocommerce', isNewChannel = false }: ChannelSettingsProps) {
   const router = useRouter();
   const tCommon = useTranslations('common');
+  const tChannels = useTranslations('channels');
   const [channelName, setChannelName] = useState('');
   const [selectedChannel, setSelectedChannel] = useState(initialChannelType);
   const [isChannelOn, setIsChannelOn] = useState(true);
@@ -80,7 +81,7 @@ export function ChannelSettings({ channelId, baseUrl, initialChannelType = 'Wooc
             color: '#374151',
           }}
         >
-          Back
+          {tCommon('back')}
         </span>
       </button>
 
@@ -96,7 +97,7 @@ export function ChannelSettings({ channelId, baseUrl, initialChannelType = 'Wooc
           margin: '0 0 clamp(15px, 1.47vw, 20px) 0',
         }}
       >
-        Sales-Channels
+        {tChannels('title')}
       </h1>
 
       {/* Horizontal Line */}
@@ -140,7 +141,7 @@ export function ChannelSettings({ channelId, baseUrl, initialChannelType = 'Wooc
               margin: 0,
             }}
           >
-            Channel Information
+            {tChannels('channelInformation')}
           </h2>
           <p
             style={{
@@ -152,7 +153,7 @@ export function ChannelSettings({ channelId, baseUrl, initialChannelType = 'Wooc
               margin: 0,
             }}
           >
-            Type in your Channel name + choose your Channel.
+            {tChannels('channelInformationDescription')}
           </p>
         </div>
 
@@ -187,7 +188,7 @@ export function ChannelSettings({ channelId, baseUrl, initialChannelType = 'Wooc
                 color: '#374151',
               }}
             >
-              Channel name
+              {tChannels('channelName')}
             </label>
             <input
               type="text"
@@ -230,7 +231,7 @@ export function ChannelSettings({ channelId, baseUrl, initialChannelType = 'Wooc
                 color: '#374151',
               }}
             >
-              Channel
+              {tChannels('channelLabel')}
             </label>
             <div className="relative" style={{ width: '100%', maxWidth: 'clamp(281px, 27.54vw, 374px)' }}>
               <select
@@ -316,7 +317,7 @@ export function ChannelSettings({ channelId, baseUrl, initialChannelType = 'Wooc
                   color: '#FFFFFF',
                 }}
               >
-                Next
+                {tCommon('next')}
               </span>
             </button>
           </div>
@@ -354,7 +355,7 @@ export function ChannelSettings({ channelId, baseUrl, initialChannelType = 'Wooc
                 margin: 0,
               }}
             >
-              Manage channel
+              {tChannels('manageChannel')}
             </h2>
             <p
               style={{
@@ -366,7 +367,7 @@ export function ChannelSettings({ channelId, baseUrl, initialChannelType = 'Wooc
                 margin: 0,
               }}
             >
-              Turn off and delete channel
+              {tChannels('manageChannelDescription')}
             </p>
           </div>
 
@@ -402,7 +403,7 @@ export function ChannelSettings({ channelId, baseUrl, initialChannelType = 'Wooc
                   color: '#111827',
                 }}
               >
-                Turn off channel
+                {tChannels('turnOffChannel')}
               </span>
               
               {/* Toggle Switch */}
@@ -467,7 +468,7 @@ export function ChannelSettings({ channelId, baseUrl, initialChannelType = 'Wooc
                     margin: 0,
                   }}
                 >
-                  Delete channel
+                  {tChannels('deleteChannel')}
                 </h3>
                 <p
                   style={{
@@ -507,7 +508,7 @@ export function ChannelSettings({ channelId, baseUrl, initialChannelType = 'Wooc
                     color: '#991B1B',
                   }}
                 >
-                  Delete channel
+                  {tChannels('deleteChannel')}
                 </span>
               </button>
             </div>

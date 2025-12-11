@@ -26,7 +26,7 @@ interface TaskData {
   description: string;
 }
 
-// Task types and priority levels (keys for translation)
+// Task types and priority levels - use translation keys
 const taskTypeKeys = [
   'internalWarehouse',
   'clientCommunication',
@@ -247,9 +247,9 @@ function CreateTaskModal({
                 outline: 'none',
               }}
             >
-              {taskTypeKeys.map((key) => (
-                <option key={key} value={key}>
-                  {t(key)}
+              {taskTypeKeys.map((type) => (
+                <option key={type} value={type}>
+                  {t(type)}
                 </option>
               ))}
             </select>
@@ -316,9 +316,9 @@ function CreateTaskModal({
                 outline: 'none',
               }}
             >
-              {prioLevelKeys.map((key) => (
-                <option key={key} value={key}>
-                  {t(key)}
+              {prioLevelKeys.map((level) => (
+                <option key={level} value={level}>
+                  {t(level)}
                 </option>
               ))}
             </select>
@@ -544,6 +544,7 @@ export function TasksTable({ showClientColumn, baseUrl }: TasksTableProps) {
   // Priority badge component - responsive sizing based on 1358px reference
   const PriorityBadge = ({ priority }: { priority: Task['priority'] }) => {
     const isHigh = priority === 'High';
+    const priorityKey = priority.toLowerCase() as 'low' | 'high';
     
     return (
       <span
@@ -564,9 +565,14 @@ export function TasksTable({ showClientColumn, baseUrl }: TasksTableProps) {
           minHeight: 'clamp(16px, 1.47vw, 20px)',
         }}
       >
-        {priority}
+        {t(priorityKey)}
       </span>
     );
+  };
+
+  // Get translated status
+  const getTranslatedStatus = (status: Task['status']) => {
+    return status === 'Open' ? t('open') : t('closed');
   };
 
   return (
@@ -1072,7 +1078,7 @@ export function TasksTable({ showClientColumn, baseUrl }: TasksTableProps) {
                     color: '#FFFFFF',
                   }}
                 >
-                  {task.status}
+                  {getTranslatedStatus(task.status)}
                 </span>
               </div>
             </div>

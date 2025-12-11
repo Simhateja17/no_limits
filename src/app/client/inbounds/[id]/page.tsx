@@ -36,6 +36,8 @@ export default function ClientInboundDetailPage() {
   const router = useRouter();
   const params = useParams();
   const tCommon = useTranslations('common');
+  const tOrders = useTranslations('orders');
+  const tInbounds = useTranslations('inbounds');
   const tMessages = useTranslations('messages');
   const inboundId = params.id as string;
 
@@ -185,7 +187,7 @@ export default function ClientInboundDetailPage() {
               border: '1px solid #E5E7EB'
             }}>
               <div className="flex items-center gap-2 mb-2">
-                <span style={{ fontSize: styles.fontSizeBase, fontWeight: 600, color: '#111827' }}>{tMessages('inboundId')}</span>
+                <span style={{ fontSize: styles.fontSizeBase, fontWeight: 600, color: '#111827' }}>{tInbounds('inboundId')}</span>
                 <span style={{
                   display: 'inline-flex',
                   alignItems: 'center',
@@ -199,12 +201,12 @@ export default function ClientInboundDetailPage() {
                   fontWeight: 500
                 }}>
                   <span style={{ width: 'clamp(8px, 0.74vw, 12px)', height: 'clamp(8px, 0.74vw, 12px)', backgroundColor: '#F59E0B', borderRadius: '50%' }}></span>
-                  Pending
+                  {tInbounds('pending')}
                 </span>
               </div>
               <div style={{ fontSize: styles.fontSizeBase, color: '#6B7280', marginBottom: styles.gridGap }}>{inboundId}</div>
               
-              <div style={{ fontSize: styles.fontSizeBase, fontWeight: 600, color: '#111827' }}>External ID</div>
+              <div style={{ fontSize: styles.fontSizeBase, fontWeight: 600, color: '#111827' }}>{tInbounds('extInboundId')}</div>
               <div style={{ fontSize: styles.fontSizeBase, color: '#6B7280' }}>DE3-3245</div>
             </div>
 
@@ -215,9 +217,9 @@ export default function ClientInboundDetailPage() {
               padding: styles.cardPadding,
               border: '1px solid #E5E7EB'
             }}>
-              <div style={{ fontSize: styles.fontSizeBase, fontWeight: 600, color: '#111827', marginBottom: 'clamp(6px, 0.59vw, 10px)' }}>Activate presale</div>
+              <div style={{ fontSize: styles.fontSizeBase, fontWeight: 600, color: '#111827', marginBottom: 'clamp(6px, 0.59vw, 10px)' }}>{tMessages('activatePresale')}</div>
               <p style={{ fontSize: styles.fontSizeXs, color: '#6B7280', marginBottom: styles.gridGap, lineHeight: '1.5' }}>
-                By activating this function you can push all stocks of this inbound to your sales channels, this will allow you to sell before we set the stocks. After we set the stock it will reset this function.
+                {tMessages('activatePresaleDescription')}
               </p>
               
               {/* Toggle */}
@@ -262,10 +264,10 @@ export default function ClientInboundDetailPage() {
                 <thead>
                   <tr style={{ backgroundColor: '#F9FAFB' }}>
                     {editMode && <th style={{ padding: `${styles.cellPaddingY} ${styles.cellPaddingX}`, textAlign: 'left', fontSize: styles.fontSizeXs, fontWeight: 500, color: '#6B7280', textTransform: 'uppercase' }}></th>}
-                    <th style={{ padding: `${styles.cellPaddingY} ${styles.cellPaddingX}`, textAlign: 'left', fontSize: styles.fontSizeXs, fontWeight: 500, color: '#6B7280', textTransform: 'uppercase' }}>Product Name</th>
-                    <th style={{ padding: `${styles.cellPaddingY} ${styles.cellPaddingX}`, textAlign: 'left', fontSize: styles.fontSizeXs, fontWeight: 500, color: '#6B7280', textTransform: 'uppercase' }}>SKU</th>
-                    <th style={{ padding: `${styles.cellPaddingY} ${styles.cellPaddingX}`, textAlign: 'left', fontSize: styles.fontSizeXs, fontWeight: 500, color: '#6B7280', textTransform: 'uppercase' }}>GTIN</th>
-                    <th style={{ padding: `${styles.cellPaddingY} ${styles.cellPaddingX}`, textAlign: 'left', fontSize: styles.fontSizeXs, fontWeight: 500, color: '#6B7280', textTransform: 'uppercase' }}>QTY</th>
+                    <th style={{ padding: `${styles.cellPaddingY} ${styles.cellPaddingX}`, textAlign: 'left', fontSize: styles.fontSizeXs, fontWeight: 500, color: '#6B7280', textTransform: 'uppercase' }}>{tOrders('productName')}</th>
+                    <th style={{ padding: `${styles.cellPaddingY} ${styles.cellPaddingX}`, textAlign: 'left', fontSize: styles.fontSizeXs, fontWeight: 500, color: '#6B7280', textTransform: 'uppercase' }}>{tOrders('sku')}</th>
+                    <th style={{ padding: `${styles.cellPaddingY} ${styles.cellPaddingX}`, textAlign: 'left', fontSize: styles.fontSizeXs, fontWeight: 500, color: '#6B7280', textTransform: 'uppercase' }}>{tOrders('gtin')}</th>
+                    <th style={{ padding: `${styles.cellPaddingY} ${styles.cellPaddingX}`, textAlign: 'left', fontSize: styles.fontSizeXs, fontWeight: 500, color: '#6B7280', textTransform: 'uppercase' }}>{tOrders('qty')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -286,7 +288,7 @@ export default function ClientInboundDetailPage() {
                               cursor: 'pointer'
                             }}
                           >
-                            Remove
+                            {tCommon('remove')}
                           </button>
                         </td>
                       )}
@@ -318,7 +320,7 @@ export default function ClientInboundDetailPage() {
               </table>
             </div>
 
-            {/* Add Products Section - Only in Edit Mode */}
+            {/* {tOrders('addProducts')} Section - Only in Edit Mode */}
             {editMode && (
               <div style={{
                 backgroundColor: 'white',
@@ -327,13 +329,13 @@ export default function ClientInboundDetailPage() {
                 padding: styles.cardPadding
               }}>
                 <div style={{ marginBottom: searchQuery ? styles.gridGap : 0 }}>
-                  <label style={{ fontSize: styles.fontSizeXs, color: '#6B7280', display: 'block', marginBottom: 'clamp(3px, 0.29vw, 5px)' }}>Add Products</label>
+                  <label style={{ fontSize: styles.fontSizeXs, color: '#6B7280', display: 'block', marginBottom: 'clamp(3px, 0.29vw, 5px)' }}>{tOrders('addProducts')}</label>
                   <div style={{ position: 'relative', width: 'clamp(280px, 30vw, 400px)' }}>
                     <input
                       type="text"
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      placeholder="Search products..."
+                      placeholder={tOrders('searchProducts')}
                       style={{
                         width: '100%',
                         padding: 'clamp(8px, 0.74vw, 12px) clamp(12px, 1.18vw, 16px)',
@@ -378,7 +380,7 @@ export default function ClientInboundDetailPage() {
                     <thead>
                       <tr style={{ backgroundColor: '#F9FAFB' }}>
                         <th style={{ padding: `${styles.cellPaddingY} ${styles.cellPaddingX}`, textAlign: 'left', fontSize: styles.fontSizeXs, fontWeight: 500, color: '#6B7280', textTransform: 'uppercase' }}></th>
-                        <th style={{ padding: `${styles.cellPaddingY} ${styles.cellPaddingX}`, textAlign: 'left', fontSize: styles.fontSizeXs, fontWeight: 500, color: '#6B7280', textTransform: 'uppercase' }}>Product Name</th>
+                        <th style={{ padding: `${styles.cellPaddingY} ${styles.cellPaddingX}`, textAlign: 'left', fontSize: styles.fontSizeXs, fontWeight: 500, color: '#6B7280', textTransform: 'uppercase' }}>{tOrders('productName')}</th>
                         <th style={{ padding: `${styles.cellPaddingY} ${styles.cellPaddingX}`, textAlign: 'left', fontSize: styles.fontSizeXs, fontWeight: 500, color: '#6B7280', textTransform: 'uppercase' }}>SKU</th>
                         <th style={{ padding: `${styles.cellPaddingY} ${styles.cellPaddingX}`, textAlign: 'left', fontSize: styles.fontSizeXs, fontWeight: 500, color: '#6B7280', textTransform: 'uppercase' }}>GTIN</th>
                         <th style={{ padding: `${styles.cellPaddingY} ${styles.cellPaddingX}`, textAlign: 'left', fontSize: styles.fontSizeXs, fontWeight: 500, color: '#6B7280', textTransform: 'uppercase' }}>QTY</th>
@@ -401,7 +403,7 @@ export default function ClientInboundDetailPage() {
                                 cursor: 'pointer'
                               }}
                             >
-                              Add
+                              {tCommon('add')}
                             </button>
                           </td>
                           <td style={{ padding: `${styles.cellPaddingY} ${styles.cellPaddingX}`, fontSize: styles.fontSizeBase, color: '#111827' }}>{product.name}</td>
@@ -431,19 +433,19 @@ export default function ClientInboundDetailPage() {
               </div>
             )}
 
-            {/* Delivery Section */}
+            {/* {tMessages('delivery')} Section */}
             <div style={{
               backgroundColor: 'white',
               borderRadius: 'clamp(6px, 0.59vw, 10px)',
               border: '1px solid #E5E7EB',
               padding: styles.sectionPadding
             }}>
-              <h3 style={{ fontSize: styles.fontSizeLg, fontWeight: 600, color: '#111827', marginBottom: 'clamp(3px, 0.29vw, 5px)' }}>Delivery</h3>
-              <p style={{ fontSize: styles.fontSizeBase, color: '#6B7280', marginBottom: styles.cardPadding }}>Use a permanent address where you can receive mail.</p>
+              <h3 style={{ fontSize: styles.fontSizeLg, fontWeight: 600, color: '#111827', marginBottom: 'clamp(3px, 0.29vw, 5px)' }}>{tMessages('delivery')}</h3>
+              <p style={{ fontSize: styles.fontSizeBase, color: '#6B7280', marginBottom: styles.cardPadding }}>{tMessages('deliveryDescription')}</p>
               
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: styles.gridGap }}>
                 <div>
-                  <label style={{ fontSize: styles.fontSizeBase, fontWeight: 500, color: '#374151', display: 'block', marginBottom: 'clamp(4px, 0.44vw, 8px)' }}>{tMessages('eta')}</label>
+                  <label style={{ fontSize: styles.fontSizeBase, fontWeight: 500, color: '#374151', display: 'block', marginBottom: 'clamp(4px, 0.44vw, 8px)' }}>ETA</label>
                   <input
                     type="text"
                     value={eta}
@@ -551,7 +553,7 @@ export default function ClientInboundDetailPage() {
                   />
                 </div>
                 <div>
-                  <label style={{ fontSize: styles.fontSizeBase, fontWeight: 500, color: '#374151', display: 'block', marginBottom: 'clamp(4px, 0.44vw, 8px)' }}>Ext. Inorder ID</label>
+                  <label style={{ fontSize: styles.fontSizeBase, fontWeight: 500, color: '#374151', display: 'block', marginBottom: 'clamp(4px, 0.44vw, 8px)' }}>{tInbounds('extInboundId')}</label>
                   <input
                     type="text"
                     value={extInorderId}
@@ -581,7 +583,7 @@ export default function ClientInboundDetailPage() {
               justifyContent: 'space-between',
               alignItems: 'center'
             }}>
-              <span style={{ fontSize: styles.fontSizeLg, fontWeight: 600, color: '#111827' }}>Edit inorder</span>
+              <span style={{ fontSize: styles.fontSizeLg, fontWeight: 600, color: '#111827' }}>{tInbounds('editInbound')}</span>
               <button
                 onClick={() => setEditMode(!editMode)}
                 style={{
@@ -616,7 +618,7 @@ export default function ClientInboundDetailPage() {
               border: '1px solid #E5E7EB',
               padding: styles.cardPadding
             }}>
-              <h3 style={{ fontSize: styles.fontSizeLg, fontWeight: 600, color: '#111827', marginBottom: 'clamp(6px, 0.59vw, 10px)' }}>Cancel inbound</h3>
+              <h3 style={{ fontSize: styles.fontSizeLg, fontWeight: 600, color: '#111827', marginBottom: 'clamp(6px, 0.59vw, 10px)' }}>{tInbounds('cancelInbound')}</h3>
               <p style={{ fontSize: styles.fontSizeBase, color: '#6B7280', marginBottom: styles.gridGap, lineHeight: '1.5' }}>
                 {tCommon('deleteWarning')}
               </p>
@@ -632,7 +634,7 @@ export default function ClientInboundDetailPage() {
                   cursor: 'pointer'
                 }}
               >
-                Cancel order
+                {tInbounds('cancelInbound')}
               </button>
             </div>
           </div>
