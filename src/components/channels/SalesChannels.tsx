@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 
 // Channel interface
 interface Channel {
@@ -31,7 +32,7 @@ const mockChannels: Channel[] = [
 ];
 
 // Status Badge Component
-function StatusBadge({ status }: { status: 'Active' | 'Inactive' }) {
+function StatusBadge({ status, t }: { status: 'Active' | 'Inactive'; t: (key: string) => string }) {
   const isActive = status === 'Active';
   
   return (
@@ -52,7 +53,7 @@ function StatusBadge({ status }: { status: 'Active' | 'Inactive' }) {
         color: isActive ? '#003450' : '#991B1B',
       }}
     >
-      {status}
+      {isActive ? t('active') : t('inactive')}
     </span>
   );
 }
@@ -78,7 +79,7 @@ function AdjustmentsIcon() {
 }
 
 // Channel Card Component
-function ChannelCard({ channel, onSettingsClick, onNameClick }: { channel: Channel; onSettingsClick: (id: string) => void; onNameClick: (id: string) => void }) {
+function ChannelCard({ channel, onSettingsClick, onNameClick, t }: { channel: Channel; onSettingsClick: (id: string) => void; onNameClick: (id: string) => void; t: (key: string) => string }) {
   return (
     <div
       style={{
@@ -123,7 +124,7 @@ function ChannelCard({ channel, onSettingsClick, onNameClick }: { channel: Chann
           >
             {channel.name}
           </span>
-          <StatusBadge status={channel.status} />
+          <StatusBadge status={channel.status} t={t} />
         </div>
 
         {/* URL */}
@@ -176,7 +177,7 @@ function ChannelCard({ channel, onSettingsClick, onNameClick }: { channel: Chann
             color: '#374151',
           }}
         >
-          Settings
+          {t('settings')}
         </span>
       </button>
     </div>
@@ -246,18 +247,20 @@ interface SalesChannelsProps {
 function ChannelTypeModal({ 
   isOpen, 
   onClose, 
-  onSelect 
+  onSelect,
+  t
 }: { 
   isOpen: boolean; 
   onClose: () => void; 
   onSelect: (type: 'Woocommerce' | 'Shopify' | 'Amazon') => void;
+  t: (key: string) => string;
 }) {
   if (!isOpen) return null;
 
-  const channelTypes: { type: 'Woocommerce' | 'Shopify' | 'Amazon'; label: string; description: string }[] = [
-    { type: 'Woocommerce', label: 'Woocommerce', description: 'Connect your WooCommerce store' },
-    { type: 'Shopify', label: 'Shopify', description: 'Connect your Shopify store' },
-    { type: 'Amazon', label: 'Amazon', description: 'Connect your Amazon marketplace' },
+  const channelTypes: { type: 'Woocommerce' | 'Shopify' | 'Amazon'; label: string; descriptionKey: string }[] = [
+    { type: 'Woocommerce', label: 'Woocommerce', descriptionKey: 'woocommerceDescription' },
+    { type: 'Shopify', label: 'Shopify', descriptionKey: 'shopifyDescription' },
+    { type: 'Amazon', label: 'Amazon', descriptionKey: 'amazonDescription' },
   ];
 
   return (
@@ -307,7 +310,7 @@ function ChannelTypeModal({
               margin: 0,
             }}
           >
-            Select Channel Type
+            {t('selectChannelType')}
           </h2>
           <button
             onClick={onClose}
@@ -395,7 +398,7 @@ function ChannelTypeModal({
                   color: '#6B7280',
                 }}
               >
-                {channel.description}
+                {t(channel.descriptionKey)}
               </span>
             </button>
           ))}
@@ -407,6 +410,8 @@ function ChannelTypeModal({
 
 export function SalesChannels({ baseUrl }: SalesChannelsProps) {
   const router = useRouter();
+  const t = useTranslations('channels');
+  const tCommon = useTranslations('common');
   const [showChannelTypeModal, setShowChannelTypeModal] = useState(false);
 
   // For demo purposes, you can toggle this to see empty state
@@ -485,7 +490,7 @@ export function SalesChannels({ baseUrl }: SalesChannelsProps) {
               color: '#374151',
             }}
           >
-            Back
+            {tCommon('back')}
           </span>
         </button>
 
@@ -516,7 +521,7 @@ export function SalesChannels({ baseUrl }: SalesChannelsProps) {
               color: '#FFFFFF',
             }}
           >
-            New Channel
+            {t('newChannel')}
           </span>
         </button>
       </div>
@@ -533,7 +538,7 @@ export function SalesChannels({ baseUrl }: SalesChannelsProps) {
           margin: '0 0 clamp(15px, 1.47vw, 20px) 0',
         }}
       >
-        Sales-Channels
+        {t('title')}
       </h1>
 
       {/* Horizontal Line */}
@@ -561,6 +566,7 @@ export function SalesChannels({ baseUrl }: SalesChannelsProps) {
               channel={channel}
               onSettingsClick={handleSettingsClick}
               onNameClick={handleNameClick}
+              t={t}
             />
           ))}
         </div>
@@ -588,7 +594,7 @@ export function SalesChannels({ baseUrl }: SalesChannelsProps) {
               textAlign: 'center',
             }}
           >
-            No connected Sales-Channel
+            {t('noChannelsTitle')}
           </h2>
           <p
             style={{
@@ -601,7 +607,7 @@ export function SalesChannels({ baseUrl }: SalesChannelsProps) {
               textAlign: 'center',
             }}
           >
-            Get started by connect your first channel.
+            {t('noChannelsDescription')}
           </p>
           <button
             onClick={handleNewChannel}
@@ -629,7 +635,7 @@ export function SalesChannels({ baseUrl }: SalesChannelsProps) {
                 color: '#FFFFFF',
               }}
             >
-              New Channel
+              {t('newChannel')}
             </span>
           </button>
         </div>
@@ -640,6 +646,7 @@ export function SalesChannels({ baseUrl }: SalesChannelsProps) {
         isOpen={showChannelTypeModal}
         onClose={() => setShowChannelTypeModal(false)}
         onSelect={handleChannelTypeSelect}
+        t={t}
       />
     </div>
   );

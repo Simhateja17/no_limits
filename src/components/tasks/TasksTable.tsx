@@ -3,6 +3,7 @@
 import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
+import { useTranslations } from 'next-intl';
 
 // Tab type
 type TabType = 'all' | 'open' | 'closed';
@@ -70,8 +71,8 @@ function CreateTaskModal({
 
   if (!isOpen) return null;
 
-  // Filter out 'Alle' from client options
-  const clientOptions = clients.filter(c => c !== 'Alle');
+  // Filter out 'ALL' from client options (not needed since we removed it from array)
+  const clientOptions = clients;
 
   return (
     <>
@@ -453,8 +454,8 @@ const mockTasks: Task[] = [
   { id: '10', taskId: '22222', client: 'Merchant 4', created: '05.10.2025', priority: 'High', status: 'Closed' },
 ];
 
-// Clients for filter
-const clients = ['Alle', 'Merchant 1', 'Merchant 2', 'Merchant 3', 'Merchant 4', 'Merchant 5', 'Warehouse'];
+// Clients for filter (excluding 'All' which will be added dynamically with translation)
+const clients = ['Merchant 1', 'Merchant 2', 'Merchant 3', 'Merchant 4', 'Merchant 5', 'Warehouse'];
 
 interface TasksTableProps {
   showClientColumn: boolean;
@@ -463,9 +464,11 @@ interface TasksTableProps {
 
 export function TasksTable({ showClientColumn, baseUrl }: TasksTableProps) {
   const router = useRouter();
+  const t = useTranslations('tasks');
+  const tCommon = useTranslations('common');
   const [activeTab, setActiveTab] = useState<TabType>('all');
   const [searchQuery, setSearchQuery] = useState('');
-  const [clientFilter, setClientFilter] = useState('Alle');
+  const [clientFilter, setClientFilter] = useState('ALL');
   const [currentPage, setCurrentPage] = useState(1);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const itemsPerPage = 10;
@@ -496,7 +499,7 @@ export function TasksTable({ showClientColumn, baseUrl }: TasksTableProps) {
     }
 
     // Filter by client
-    if (clientFilter !== 'Alle') {
+    if (clientFilter !== 'ALL') {
       tasks = tasks.filter(t => t.client === clientFilter);
     }
 
@@ -596,7 +599,7 @@ export function TasksTable({ showClientColumn, baseUrl }: TasksTableProps) {
                 color: activeTab === 'all' ? '#003450' : '#6B7280',
               }}
             >
-              All Tasks
+              {t('allTasks')}
             </span>
             <span
               style={{
@@ -634,7 +637,7 @@ export function TasksTable({ showClientColumn, baseUrl }: TasksTableProps) {
                 color: activeTab === 'open' ? '#003450' : '#6B7280',
               }}
             >
-              Open
+              {t('open')}
             </span>
             <span
               style={{
@@ -672,7 +675,7 @@ export function TasksTable({ showClientColumn, baseUrl }: TasksTableProps) {
                 color: activeTab === 'closed' ? '#003450' : '#6B7280',
               }}
             >
-              Closed
+              {t('closed')}
             </span>
             <span
               style={{
@@ -722,7 +725,7 @@ export function TasksTable({ showClientColumn, baseUrl }: TasksTableProps) {
               whiteSpace: 'nowrap',
             }}
           >
-            Create task
+            {t('createTask')}
           </span>
         </button>
       </div>
@@ -751,7 +754,7 @@ export function TasksTable({ showClientColumn, baseUrl }: TasksTableProps) {
               color: '#374151',
             }}
           >
-            Filter by Client
+            {t('filterByCustomer')}
           </label>
           <div className="relative">
             <select
@@ -776,6 +779,9 @@ export function TasksTable({ showClientColumn, baseUrl }: TasksTableProps) {
                 cursor: 'pointer',
               }}
             >
+              <option key="ALL" value="ALL">
+                {tCommon('all')}
+              </option>
               {clients.map((client) => (
                 <option key={client} value={client}>
                   {client}
@@ -810,11 +816,11 @@ export function TasksTable({ showClientColumn, baseUrl }: TasksTableProps) {
               color: '#374151',
             }}
           >
-            Search
+            {tCommon('search')}
           </label>
           <input
             type="text"
-            placeholder="Search"
+            placeholder=""
             value={searchQuery}
             onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
             style={{
@@ -869,7 +875,7 @@ export function TasksTable({ showClientColumn, baseUrl }: TasksTableProps) {
                 color: '#6B7280',
               }}
             >
-              Task ID
+              {t('taskId')}
             </span>
           </div>
           <div style={{ padding: 'clamp(10px, 0.88vw, 12px) clamp(18px, 1.77vw, 24px)' }}>
@@ -884,7 +890,7 @@ export function TasksTable({ showClientColumn, baseUrl }: TasksTableProps) {
                 color: '#6B7280',
               }}
             >
-              Client
+              {t('client')}
             </span>
           </div>
           <div style={{ padding: 'clamp(10px, 0.88vw, 12px) clamp(18px, 1.77vw, 24px)' }}>
@@ -899,7 +905,7 @@ export function TasksTable({ showClientColumn, baseUrl }: TasksTableProps) {
                 color: '#6B7280',
               }}
             >
-              Created
+              {t('created')}
             </span>
           </div>
           <div style={{ padding: 'clamp(10px, 0.88vw, 12px) clamp(18px, 1.77vw, 24px)' }}>
@@ -914,7 +920,7 @@ export function TasksTable({ showClientColumn, baseUrl }: TasksTableProps) {
                 color: '#6B7280',
               }}
             >
-              Prio LVL
+              {t('prioLevel')}
             </span>
           </div>
           <div style={{ padding: 'clamp(10px, 0.88vw, 12px) clamp(18px, 1.77vw, 24px)', display: 'flex', justifyContent: 'center' }}>
@@ -929,7 +935,7 @@ export function TasksTable({ showClientColumn, baseUrl }: TasksTableProps) {
                 color: '#6B7280',
               }}
             >
-              Status
+              {tCommon('status')}
             </span>
           </div>
         </div>
@@ -1082,7 +1088,7 @@ export function TasksTable({ showClientColumn, baseUrl }: TasksTableProps) {
               fontSize: '14px',
             }}
           >
-            No tasks found
+            {t('noTasksFound')}
           </div>
         )}
       </div>
@@ -1169,7 +1175,7 @@ export function TasksTable({ showClientColumn, baseUrl }: TasksTableProps) {
                 color: '#374151',
               }}
             >
-              Next
+              {tCommon('next')}
             </span>
           </button>
         </div>

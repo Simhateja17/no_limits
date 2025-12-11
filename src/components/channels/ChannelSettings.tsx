@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 
 // Channel types
 const channelTypes = ['Woocommerce', 'Shopify', 'Amazon'];
@@ -15,6 +16,7 @@ interface ChannelSettingsProps {
 
 export function ChannelSettings({ channelId, baseUrl, initialChannelType = 'Woocommerce', isNewChannel = false }: ChannelSettingsProps) {
   const router = useRouter();
+  const tCommon = useTranslations('common');
   const [channelName, setChannelName] = useState('');
   const [selectedChannel, setSelectedChannel] = useState(initialChannelType);
   const [isChannelOn, setIsChannelOn] = useState(true);
@@ -322,177 +324,73 @@ export function ChannelSettings({ channelId, baseUrl, initialChannelType = 'Wooc
       </div>
 
       {/* Manage Channel Section */}
-      <div
-        style={{
-          width: '100%',
-          maxWidth: 'clamp(912px, 89.54vw, 1216px)',
-          display: 'flex',
-          flexDirection: 'row',
-          gap: 'clamp(18px, 1.77vw, 24px)',
-        }}
-      >
-        {/* Left Side - Title and Description */}
+      {!isNewChannel && (
         <div
           style={{
-            width: 'clamp(292px, 28.65vw, 389px)',
+            width: '100%',
+            maxWidth: 'clamp(912px, 89.54vw, 1216px)',
             display: 'flex',
-            flexDirection: 'column',
-            gap: 'clamp(3px, 0.29vw, 4px)',
-            flexShrink: 0,
-          }}
-        >
-          <h2
-            style={{
-              fontFamily: 'Inter, sans-serif',
-              fontWeight: 500,
-              fontSize: 'clamp(14px, 1.33vw, 18px)',
-              lineHeight: 'clamp(18px, 1.77vw, 24px)',
-              color: '#111827',
-              margin: 0,
-            }}
-          >
-            Manage channel
-          </h2>
-          <p
-            style={{
-              fontFamily: 'Inter, sans-serif',
-              fontWeight: 400,
-              fontSize: 'clamp(11px, 1.03vw, 14px)',
-              lineHeight: 'clamp(15px, 1.47vw, 20px)',
-              color: '#6B7280',
-              margin: 0,
-            }}
-          >
-            Turn off and delete channel
-          </p>
-        </div>
-
-        {/* Right Side - Toggle and Delete Cards */}
-        <div
-          style={{
-            flex: 1,
-            maxWidth: 'clamp(602px, 59.13vw, 803px)',
-            display: 'flex',
-            flexDirection: 'column',
+            flexDirection: 'row',
             gap: 'clamp(18px, 1.77vw, 24px)',
           }}
         >
-          {/* Turn off Channel Card */}
+          {/* Left Side - Title and Description */}
           <div
             style={{
-              width: '100%',
-              borderRadius: '8px',
-              backgroundColor: '#FFFFFF',
-              boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.06), 0px 1px 3px 0px rgba(0, 0, 0, 0.1)',
-              padding: 'clamp(18px, 1.77vw, 24px)',
+              width: 'clamp(292px, 28.65vw, 389px)',
               display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
+              flexDirection: 'column',
+              gap: 'clamp(3px, 0.29vw, 4px)',
+              flexShrink: 0,
             }}
           >
-            <span
+            <h2
               style={{
                 fontFamily: 'Inter, sans-serif',
                 fontWeight: 500,
+                fontSize: 'clamp(14px, 1.33vw, 18px)',
+                lineHeight: 'clamp(18px, 1.77vw, 24px)',
+                color: '#111827',
+                margin: 0,
+              }}
+            >
+              Manage channel
+            </h2>
+            <p
+              style={{
+                fontFamily: 'Inter, sans-serif',
+                fontWeight: 400,
                 fontSize: 'clamp(11px, 1.03vw, 14px)',
                 lineHeight: 'clamp(15px, 1.47vw, 20px)',
-                color: '#111827',
+                color: '#6B7280',
+                margin: 0,
               }}
             >
-              Turn off channel
-            </span>
-            
-            {/* Toggle Switch */}
-            <button
-              onClick={handleToggleChannel}
-              style={{
-                width: 'clamp(36px, 3.53vw, 48px)',
-                height: 'clamp(20px, 1.96vw, 26px)',
-                borderRadius: '999px',
-                border: 'none',
-                backgroundColor: isChannelOn ? '#003450' : '#E5E7EB',
-                cursor: 'pointer',
-                position: 'relative',
-                transition: 'background-color 0.2s ease',
-                padding: 0,
-              }}
-            >
-              <div
-                style={{
-                  width: 'clamp(16px, 1.57vw, 22px)',
-                  height: 'clamp(16px, 1.57vw, 22px)',
-                  borderRadius: '50%',
-                  backgroundColor: '#FFFFFF',
-                  boxShadow: '0px 1px 3px rgba(0, 0, 0, 0.1)',
-                  position: 'absolute',
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  left: isChannelOn ? 'calc(100% - clamp(18px, 1.77vw, 24px))' : 'clamp(2px, 0.20vw, 2px)',
-                  transition: 'left 0.2s ease',
-                }}
-              />
-            </button>
+              Turn off and delete channel
+            </p>
           </div>
 
-          {/* Delete Channel Card */}
+          {/* Right Side - Toggle and Delete Cards */}
           <div
             style={{
-              width: '100%',
-              borderRadius: '8px',
-              backgroundColor: '#FFFFFF',
-              boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.06), 0px 1px 3px 0px rgba(0, 0, 0, 0.1)',
-              padding: 'clamp(18px, 1.77vw, 24px)',
+              flex: 1,
+              maxWidth: 'clamp(602px, 59.13vw, 803px)',
               display: 'flex',
               flexDirection: 'column',
-              gap: 'clamp(15px, 1.47vw, 20px)',
+              gap: 'clamp(18px, 1.77vw, 24px)',
             }}
           >
+            {/* Turn off Channel Card */}
             <div
               style={{
+                width: '100%',
+                borderRadius: '8px',
+                backgroundColor: '#FFFFFF',
+                boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.06), 0px 1px 3px 0px rgba(0, 0, 0, 0.1)',
+                padding: 'clamp(18px, 1.77vw, 24px)',
                 display: 'flex',
-                flexDirection: 'column',
-                gap: 'clamp(6px, 0.59vw, 8px)',
-              }}
-            >
-              <h3
-                style={{
-                  fontFamily: 'Inter, sans-serif',
-                  fontWeight: 500,
-                  fontSize: 'clamp(11px, 1.03vw, 14px)',
-                  lineHeight: 'clamp(15px, 1.47vw, 20px)',
-                  color: '#111827',
-                  margin: 0,
-                }}
-              >
-                Delete channel
-              </h3>
-              <p
-                style={{
-                  fontFamily: 'Inter, sans-serif',
-                  fontWeight: 400,
-                  fontSize: 'clamp(11px, 1.03vw, 14px)',
-                  lineHeight: 'clamp(15px, 1.47vw, 20px)',
-                  color: '#6B7280',
-                  margin: 0,
-                }}
-              >
-                Achtung, das Löschen des Artikels führt dazu, dass alle Warenbewegungen verloren gehen. Artikel können nur gelöscht werden wenn kein Bestand vorhanden ist und keine Reservierungen oder Anlieferungen anliegen.
-              </p>
-            </div>
-            
-            <button
-              onClick={handleDeleteChannel}
-              style={{
-                width: 'fit-content',
-                height: 'clamp(29px, 2.80vw, 38px)',
-                borderRadius: '6px',
-                border: 'none',
-                padding: 'clamp(7px, 0.66vw, 9px) clamp(13px, 1.25vw, 17px)',
-                backgroundColor: '#FEE2E2',
-                cursor: 'pointer',
-                display: 'flex',
+                justifyContent: 'space-between',
                 alignItems: 'center',
-                justifyContent: 'center',
               }}
             >
               <span
@@ -501,15 +399,121 @@ export function ChannelSettings({ channelId, baseUrl, initialChannelType = 'Wooc
                   fontWeight: 500,
                   fontSize: 'clamp(11px, 1.03vw, 14px)',
                   lineHeight: 'clamp(15px, 1.47vw, 20px)',
-                  color: '#991B1B',
+                  color: '#111827',
                 }}
               >
-                Delete channel
+                Turn off channel
               </span>
-            </button>
+              
+              {/* Toggle Switch */}
+              <button
+                onClick={handleToggleChannel}
+                style={{
+                  width: 'clamp(36px, 3.53vw, 48px)',
+                  height: 'clamp(20px, 1.96vw, 26px)',
+                  borderRadius: '999px',
+                  border: 'none',
+                  backgroundColor: isChannelOn ? '#003450' : '#E5E7EB',
+                  cursor: 'pointer',
+                  position: 'relative',
+                  transition: 'background-color 0.2s ease',
+                  padding: 0,
+                }}
+              >
+                <div
+                  style={{
+                    width: 'clamp(16px, 1.57vw, 22px)',
+                    height: 'clamp(16px, 1.57vw, 22px)',
+                    borderRadius: '50%',
+                    backgroundColor: '#FFFFFF',
+                    boxShadow: '0px 1px 3px rgba(0, 0, 0, 0.1)',
+                    position: 'absolute',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    left: isChannelOn ? 'calc(100% - clamp(18px, 1.77vw, 24px))' : 'clamp(2px, 0.20vw, 2px)',
+                    transition: 'left 0.2s ease',
+                  }}
+                />
+              </button>
+            </div>
+
+            {/* Delete Channel Card */}
+            <div
+              style={{
+                width: '100%',
+                borderRadius: '8px',
+                backgroundColor: '#FFFFFF',
+                boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.06), 0px 1px 3px 0px rgba(0, 0, 0, 0.1)',
+                padding: 'clamp(18px, 1.77vw, 24px)',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 'clamp(15px, 1.47vw, 20px)',
+              }}
+            >
+              <div
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 'clamp(6px, 0.59vw, 8px)',
+                }}
+              >
+                <h3
+                  style={{
+                    fontFamily: 'Inter, sans-serif',
+                    fontWeight: 500,
+                    fontSize: 'clamp(11px, 1.03vw, 14px)',
+                    lineHeight: 'clamp(15px, 1.47vw, 20px)',
+                    color: '#111827',
+                    margin: 0,
+                  }}
+                >
+                  Delete channel
+                </h3>
+                <p
+                  style={{
+                    fontFamily: 'Inter, sans-serif',
+                    fontWeight: 400,
+                    fontSize: 'clamp(11px, 1.03vw, 14px)',
+                    lineHeight: 'clamp(15px, 1.47vw, 20px)',
+                    color: '#6B7280',
+                    margin: 0,
+                  }}
+                >
+                  {tCommon('deleteWarning')}
+                </p>
+              </div>
+              
+              <button
+                onClick={handleDeleteChannel}
+                style={{
+                  width: 'fit-content',
+                  height: 'clamp(29px, 2.80vw, 38px)',
+                  borderRadius: '6px',
+                  border: 'none',
+                  padding: 'clamp(7px, 0.66vw, 9px) clamp(13px, 1.25vw, 17px)',
+                  backgroundColor: '#FEE2E2',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <span
+                  style={{
+                    fontFamily: 'Inter, sans-serif',
+                    fontWeight: 500,
+                    fontSize: 'clamp(11px, 1.03vw, 14px)',
+                    lineHeight: 'clamp(15px, 1.47vw, 20px)',
+                    color: '#991B1B',
+                  }}
+                >
+                  Delete channel
+                </span>
+              </button>
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

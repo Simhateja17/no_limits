@@ -2,12 +2,13 @@
 
 import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
+import { useTranslations, useLocale } from 'next-intl';
 
 // Tab type for orders
-type OrderTabType = 'all' | 'inStock' | 'outOfStock' | 'errors' | 'cancelled' | 'sent';
+type OrderTabType = 'all' | 'inStock' | 'outOfStock' | 'errors' | 'partiallyFulfilled' | 'cancelled' | 'sent';
 
 // Order status type
-type OrderStatus = 'success' | 'error' | 'mildError';
+type OrderStatus = 'success' | 'error' | 'mildError' | 'partiallyFulfilled';
 
 // Order interface
 interface Order {
@@ -44,35 +45,16 @@ const mockOrders: Order[] = [
   { id: '18', orderId: '21006', orderDate: new Date('2022-04-15'), client: 'Merchant 5', weight: '0,9 kg', quantity: 2, method: 'DHL Paket', status: 'success' },
   { id: '19', orderId: '21007', orderDate: new Date('2022-04-16'), client: 'Papercrush', weight: '0,6 kg', quantity: 2, method: 'Brief National', status: 'success' },
   { id: '20', orderId: '21008', orderDate: new Date('2022-04-17'), client: 'Caobali', weight: '1,8 kg', quantity: 4, method: 'DHL Paket', status: 'success' },
+  { id: '21', orderId: '21009', orderDate: new Date('2022-04-18'), client: 'Terppens', weight: '1,2 kg', quantity: 3, method: 'DHL Paket', status: 'partiallyFulfilled' },
 ];
 
-// Customers for filter
-const customers = ['Alle', 'Papercrush', 'Caobali', 'Terppens', 'Protabo', 'Merchant 3', 'Merchant 5', 'Merchant 7'];
+// Customers for filter (excluding 'All' which will be added dynamically with translation)
+const customers = ['Papercrush', 'Caobali', 'Terppens', 'Protabo', 'Merchant 3', 'Merchant 5', 'Merchant 7'];
 
 interface OrdersTableProps {
   showClientColumn: boolean; // Show client column only for superadmin and warehouse labor view
   basePath?: string; // Base path for navigation (e.g., '/admin/orders' or '/employee/orders')
 }
-
-// Format date for display
-const formatOrderDate = (date: Date): string => {
-  const now = new Date();
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const yesterday = new Date(today.getTime() - 24 * 60 * 60 * 1000);
-  const orderDay = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-
-  const timeStr = date.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
-
-  if (orderDay.getTime() === today.getTime()) {
-    return `Heute, ${timeStr}`;
-  } else if (orderDay.getTime() === yesterday.getTime()) {
-    return `Gestern, ${timeStr}`;
-  } else {
-    const dayOfWeek = date.toLocaleDateString('de-DE', { weekday: 'short' });
-    const dateStr = date.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: '2-digit' });
-    return `${dayOfWeek}, ${dateStr}`;
-  }
-};
 
 // Status tag component
 const StatusTag = ({ status }: { status: OrderStatus }) => {
@@ -92,6 +74,11 @@ const StatusTag = ({ status }: { status: OrderStatus }) => {
         return {
           label: 'Issue',
           dotColor: '#F59E0B',
+        };
+      case 'partiallyFulfilled':
+        return {
+          label: 'Partially Fulfilled',
+          dotColor: '#3B82F6', // Blue
         };
       default:
         return {
@@ -137,9 +124,33 @@ export function OrdersTable({ showClientColumn, basePath = '/admin/orders' }: Or
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<OrderTabType>('all');
   const [searchQuery, setSearchQuery] = useState('');
-  const [customerFilter, setCustomerFilter] = useState('Alle');
+  const [customerFilter, setCustomerFilter] = useState('ALL');
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
+  const t = useTranslations('orders');
+  const tCommon = useTranslations('common');
+  const locale = useLocale();
+
+  // Format date for display with locale support
+  const formatOrderDate = (date: Date): string => {
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const yesterday = new Date(today.getTime() - 24 * 60 * 60 * 1000);
+    const orderDay = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+
+    const localeStr = locale === 'de' ? 'de-DE' : 'en-US';
+    const timeStr = date.toLocaleTimeString(localeStr, { hour: '2-digit', minute: '2-digit' });
+
+    if (orderDay.getTime() === today.getTime()) {
+      return `${tCommon('today')}, ${timeStr}`;
+    } else if (orderDay.getTime() === yesterday.getTime()) {
+      return `${tCommon('yesterday')}, ${timeStr}`;
+    } else {
+      const dayOfWeek = date.toLocaleDateString(localeStr, { weekday: 'short' });
+      const dateStr = date.toLocaleDateString(localeStr, { day: '2-digit', month: '2-digit', year: '2-digit' });
+      return `${dayOfWeek}, ${dateStr}`;
+    }
+  };
 
   // Handle order row click - navigate to order detail page
   const handleOrderClick = (orderId: string) => {
@@ -157,6 +168,8 @@ export function OrdersTable({ showClientColumn, basePath = '/admin/orders' }: Or
       orders = orders.filter(o => o.status === 'mildError');
     } else if (activeTab === 'errors') {
       orders = orders.filter(o => o.status === 'error');
+    } else if (activeTab === 'partiallyFulfilled') {
+      orders = orders.filter(o => o.status === 'partiallyFulfilled');
     } else if (activeTab === 'cancelled') {
       // For now, no cancelled orders in mock data
       orders = [];
@@ -166,7 +179,7 @@ export function OrdersTable({ showClientColumn, basePath = '/admin/orders' }: Or
     }
 
     // Filter by customer
-    if (customerFilter !== 'Alle') {
+    if (customerFilter !== 'ALL') {
       orders = orders.filter(o => o.client === customerFilter);
     }
 
@@ -198,6 +211,7 @@ export function OrdersTable({ showClientColumn, basePath = '/admin/orders' }: Or
   const inStockCount = mockOrders.filter(o => o.status === 'success').length;
   const outOfStockCount = mockOrders.filter(o => o.status === 'mildError').length;
   const errorsCount = mockOrders.filter(o => o.status === 'error').length;
+  const partiallyFulfilledCount = mockOrders.filter(o => o.status === 'partiallyFulfilled').length;
   // cancelledCount and sentCount not shown in tabs currently
 
   const handlePrevious = () => {
@@ -244,7 +258,7 @@ export function OrdersTable({ showClientColumn, basePath = '/admin/orders' }: Or
                 color: activeTab === 'all' ? '#003450' : '#6B7280',
               }}
             >
-              All Orders
+              {t('allOrders')}
             </span>
             <span
               style={{
@@ -282,7 +296,7 @@ export function OrdersTable({ showClientColumn, basePath = '/admin/orders' }: Or
                 color: activeTab === 'inStock' ? '#003450' : '#6B7280',
               }}
             >
-              In Stock
+              {t('inStock')}
             </span>
             <span
               style={{
@@ -320,7 +334,7 @@ export function OrdersTable({ showClientColumn, basePath = '/admin/orders' }: Or
                 color: activeTab === 'outOfStock' ? '#003450' : '#6B7280',
               }}
             >
-              Out of Stock
+              {t('outOfStock')}
             </span>
             <span
               style={{
@@ -358,7 +372,7 @@ export function OrdersTable({ showClientColumn, basePath = '/admin/orders' }: Or
                 color: activeTab === 'errors' ? '#003450' : '#6B7280',
               }}
             >
-              Errors
+              {t('errors')}
             </span>
             <span
               style={{
@@ -373,6 +387,44 @@ export function OrdersTable({ showClientColumn, basePath = '/admin/orders' }: Or
               }}
             >
               {errorsCount}
+            </span>
+          </button>
+
+          {/* Partially Fulfilled Tab */}
+          <button
+            onClick={() => { setActiveTab('partiallyFulfilled'); setCurrentPage(1); }}
+            className="flex items-center"
+            style={{
+              gap: 'clamp(4px, 0.59vw, 8px)',
+              paddingBottom: 'clamp(8px, 0.88vw, 12px)',
+              borderBottom: activeTab === 'partiallyFulfilled' ? '2px solid #003450' : '2px solid transparent',
+              marginBottom: '-1px',
+            }}
+          >
+            <span
+              style={{
+                fontFamily: 'Inter, sans-serif',
+                fontWeight: 500,
+                fontSize: 'clamp(12px, 1.03vw, 14px)',
+                lineHeight: '20px',
+                color: activeTab === 'partiallyFulfilled' ? '#003450' : '#6B7280',
+              }}
+            >
+              Partially Fulfilled
+            </span>
+            <span
+              style={{
+                fontFamily: 'Inter, sans-serif',
+                fontWeight: 500,
+                fontSize: 'clamp(10px, 0.88vw, 12px)',
+                lineHeight: '16px',
+                color: activeTab === 'partiallyFulfilled' ? '#003450' : '#6B7280',
+                backgroundColor: activeTab === 'partiallyFulfilled' ? '#E5E7EB' : 'transparent',
+                padding: '2px 8px',
+                borderRadius: '10px',
+              }}
+            >
+              {partiallyFulfilledCount}
             </span>
           </button>
 
@@ -420,7 +472,7 @@ export function OrdersTable({ showClientColumn, basePath = '/admin/orders' }: Or
                 color: activeTab === 'sent' ? '#003450' : '#6B7280',
               }}
             >
-              Sent
+              {t('sent')}
             </span>
           </button>
         </div>
@@ -455,7 +507,7 @@ export function OrdersTable({ showClientColumn, basePath = '/admin/orders' }: Or
               whiteSpace: 'nowrap',
             }}
           >
-            Create order
+            {tCommon('create')} {t('title').toLowerCase()}
           </span>
         </button>
       </div>
@@ -484,7 +536,7 @@ export function OrdersTable({ showClientColumn, basePath = '/admin/orders' }: Or
               color: '#374151',
             }}
           >
-            {showClientColumn ? 'Filter by Customer' : 'Channels'}
+            {showClientColumn ? t('filterByCustomer') : 'Channels'}
           </label>
           <div className="relative">
             <select
@@ -509,6 +561,9 @@ export function OrdersTable({ showClientColumn, basePath = '/admin/orders' }: Or
                 cursor: 'pointer',
               }}
             >
+              <option key="ALL" value="ALL">
+                {tCommon('all')}
+              </option>
               {customers.map((customer) => (
                 <option key={customer} value={customer}>
                   {customer}
@@ -543,7 +598,7 @@ export function OrdersTable({ showClientColumn, basePath = '/admin/orders' }: Or
               color: '#374151',
             }}
           >
-            Search
+            {tCommon('search')}
           </label>
           <input
             type="text"
@@ -616,7 +671,7 @@ export function OrdersTable({ showClientColumn, basePath = '/admin/orders' }: Or
               color: '#6B7280',
             }}
           >
-            Order-ID
+            {t('orderId')}
           </span>
           {showClientColumn && (
             <span
@@ -630,7 +685,7 @@ export function OrdersTable({ showClientColumn, basePath = '/admin/orders' }: Or
                 color: '#6B7280',
               }}
             >
-              Client
+              {t('client')}
             </span>
           )}
           <span
@@ -644,7 +699,7 @@ export function OrdersTable({ showClientColumn, basePath = '/admin/orders' }: Or
               color: '#6B7280',
             }}
           >
-            Weight
+            {t('weight')}
           </span>
           <span
             style={{
@@ -657,7 +712,7 @@ export function OrdersTable({ showClientColumn, basePath = '/admin/orders' }: Or
               color: '#6B7280',
             }}
           >
-            Qty
+            {t('quantity')}
           </span>
           <span
             style={{
@@ -670,7 +725,7 @@ export function OrdersTable({ showClientColumn, basePath = '/admin/orders' }: Or
               color: '#6B7280',
             }}
           >
-            Method
+            {t('method')}
           </span>
           <span
             style={{
@@ -683,7 +738,7 @@ export function OrdersTable({ showClientColumn, basePath = '/admin/orders' }: Or
               color: '#6B7280',
             }}
           >
-            Status
+            {t('status')}
           </span>
         </div>
 
@@ -850,7 +905,7 @@ export function OrdersTable({ showClientColumn, basePath = '/admin/orders' }: Or
                 color: '#374151',
               }}
             >
-              Previous
+              {tCommon('previous')}
             </span>
           </button>
 
@@ -882,7 +937,7 @@ export function OrdersTable({ showClientColumn, basePath = '/admin/orders' }: Or
                 color: '#374151',
               }}
             >
-              Next
+              {tCommon('next')}
             </span>
           </button>
         </div>

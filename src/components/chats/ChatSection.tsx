@@ -4,6 +4,7 @@ import Image from 'next/image';
 import { useState, useRef, useEffect } from 'react';
 import type { Contact } from './ContactsList';
 import { CreateTaskModal } from './CreateTaskModal';
+import { useTranslations } from 'next-intl';
 
 export interface ChatMessage {
   id: string;
@@ -43,6 +44,7 @@ export function ChatSection({
   const [selectedMessageContent, setSelectedMessageContent] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const t = useTranslations('chat');
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -89,7 +91,7 @@ export function ChatSection({
             color: '#90A0B7',
           }}
         >
-          Select a conversation to start chatting
+          {t('selectConversation')}
         </span>
       </div>
     );
@@ -104,8 +106,8 @@ export function ChatSection({
         minWidth: '400px',
       }}
     >
-      {/* Chat Header */}
-      <div
+      {/* Chat Header - Removed as per request */}
+      {/* <div
         className="flex items-center px-6 py-4"
         style={{
           borderBottom: '1px solid #E4E9EE',
@@ -140,7 +142,6 @@ export function ChatSection({
         >
           {contact.name}
         </span>
-        {/* Online/Offline indicator */}
         <div
           className="ml-2"
           style={{
@@ -150,7 +151,7 @@ export function ChatSection({
             background: contact.isOnline ? '#22C55E' : '#9CA3AF',
           }}
         />
-      </div>
+      </div> */}
 
       {/* Messages Area */}
       <div

@@ -71,6 +71,7 @@ export default function ClientOrderDetailPage() {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [editOrderEnabled, setEditOrderEnabled] = useState(false);
+  const [onHoldStatus, setOnHoldStatus] = useState(mockOrderDetails.onHoldStatus);
   const [orderProducts, setOrderProducts] = useState(mockOrderDetails.products);
   const [productSearchQuery, setProductSearchQuery] = useState('');
   const [productQuantities, setProductQuantities] = useState<Record<string, number>>({});
@@ -162,10 +163,8 @@ export default function ClientOrderDetailPage() {
           <button
             onClick={handleBack}
             style={{
-              width: '65px',
               height: '38px',
-              gap: '8px',
-              padding: '9px 17px 9px 15px',
+              padding: '9px 17px',
               borderRadius: '6px',
               border: '1px solid #D1D5DB',
               backgroundColor: '#FFFFFF',
@@ -176,9 +175,6 @@ export default function ClientOrderDetailPage() {
               cursor: 'pointer',
             }}
           >
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M15 10H5M5 10L10 15M5 10L10 5" stroke="#374151" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
             <span
               style={{
                 fontFamily: 'Inter, sans-serif',
@@ -513,6 +509,60 @@ export default function ClientOrderDetailPage() {
                     </span>
                   </div>
                 )}
+              </div>
+
+              {/* On Hold Toggle */}
+              <div
+                style={{
+                  width: '100%',
+                  padding: 'clamp(16px, 1.5vw, 20px) clamp(12px, 1.2vw, 16px)',
+                  borderRadius: '8px',
+                  backgroundColor: '#FFFFFF',
+                  boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.06), 0px 1px 3px 0px rgba(0, 0, 0, 0.1)',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                }}
+              >
+                <span
+                  style={{
+                    fontFamily: 'Inter, sans-serif',
+                    fontWeight: 500,
+                    fontSize: 'clamp(16px, 1.3vw, 18px)',
+                    lineHeight: '24px',
+                    color: '#111827',
+                  }}
+                >
+                  On Hold
+                </span>
+                <button
+                  onClick={() => setOnHoldStatus(!onHoldStatus)}
+                  style={{
+                    width: '44px',
+                    height: '24px',
+                    borderRadius: '12px',
+                    padding: '2px',
+                    backgroundColor: onHoldStatus ? '#003450' : '#E5E7EB',
+                    position: 'relative',
+                    cursor: 'pointer',
+                    border: 'none',
+                    transition: 'background-color 0.2s',
+                  }}
+                >
+                  <div
+                    style={{
+                      width: '20px',
+                      height: '20px',
+                      borderRadius: '50%',
+                      backgroundColor: '#FFFFFF',
+                      position: 'absolute',
+                      top: '2px',
+                      left: onHoldStatus ? '22px' : '2px',
+                      transition: 'left 0.2s',
+                      boxShadow: '0px 1px 2px rgba(0, 0, 0, 0.1)',
+                    }}
+                  />
+                </button>
               </div>
 
               {/* Shipment Weight Box */}
@@ -1077,6 +1127,68 @@ export default function ClientOrderDetailPage() {
                       transition: 'transform 0.2s ease',
                     }}
                   />
+                </button>
+              </div>
+
+              {/* Delete Order Box */}
+              <div
+                style={{
+                  width: '100%',
+                  borderRadius: '8px',
+                  padding: 'clamp(16px, 1.8vw, 24px)',
+                  backgroundColor: '#FFFFFF',
+                  boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.06), 0px 1px 3px 0px rgba(0, 0, 0, 0.1)',
+                }}
+              >
+                <h3
+                  style={{
+                    fontFamily: 'Inter, sans-serif',
+                    fontWeight: 600,
+                    fontSize: '16px',
+                    lineHeight: '24px',
+                    color: '#111827',
+                    marginBottom: '8px',
+                  }}
+                >
+                  Delete order
+                </h3>
+                <p
+                  style={{
+                    fontFamily: 'Inter, sans-serif',
+                    fontWeight: 400,
+                    fontSize: '14px',
+                    lineHeight: '20px',
+                    color: '#6B7280',
+                    marginBottom: '16px',
+                  }}
+                >
+                  Attention, deleting the order leads to permanent loss of data. Orders can only be deleted if they are not yet shipped.
+                </p>
+                <button
+                  style={{
+                    minWidth: '120px',
+                    height: '38px',
+                    borderRadius: '6px',
+                    padding: '9px 17px',
+                    backgroundColor: '#FEE2E2',
+                    border: 'none',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <span
+                    style={{
+                      fontFamily: 'Inter, sans-serif',
+                      fontWeight: 500,
+                      fontSize: '14px',
+                      lineHeight: '20px',
+                      color: '#DC2626',
+                    }}
+                  >
+                    Delete order
+                  </span>
                 </button>
               </div>
             </div>

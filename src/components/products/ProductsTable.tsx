@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 
 // Tab type
 type TabType = 'all' | 'outOfStock' | 'missingData';
@@ -31,8 +32,8 @@ const mockProducts: Product[] = [
   { id: '10', productId: '22222', productName: 'Complete Product', available: 200, reserved: 15, announced: 30, client: '' },
 ];
 
-// Customers for filter
-const customers = ['Alle', 'Papercrush', 'Caobali', 'Terppens', 'Protabo', 'TestClient'];
+// Customers for filter (excluding 'All' which will be added dynamically with translation)
+const customers = ['Papercrush', 'Caobali', 'Terppens', 'Protabo', 'TestClient'];
 
 interface ProductsTableProps {
   showClientColumn: boolean; // Show client column only for superadmin and warehouse labor view
@@ -43,9 +44,11 @@ export function ProductsTable({ showClientColumn, baseUrl }: ProductsTableProps)
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabType>('all');
   const [searchQuery, setSearchQuery] = useState('');
-  const [customerFilter, setCustomerFilter] = useState('Alle');
+  const [customerFilter, setCustomerFilter] = useState('ALL');
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
+  const t = useTranslations('products');
+  const tCommon = useTranslations('common');
 
   const handleProductClick = (productId: string) => {
     router.push(`${baseUrl}/${productId}`);
@@ -63,7 +66,7 @@ export function ProductsTable({ showClientColumn, baseUrl }: ProductsTableProps)
     }
 
     // Filter by customer
-    if (customerFilter !== 'Alle') {
+    if (customerFilter !== 'ALL') {
       products = products.filter(p => p.client === customerFilter);
     }
 
@@ -136,7 +139,7 @@ export function ProductsTable({ showClientColumn, baseUrl }: ProductsTableProps)
                 color: activeTab === 'all' ? '#003450' : '#6B7280',
               }}
             >
-              All Products
+              {t('allProducts')}
             </span>
             <span
               style={{
@@ -174,7 +177,7 @@ export function ProductsTable({ showClientColumn, baseUrl }: ProductsTableProps)
                 color: activeTab === 'outOfStock' ? '#003450' : '#6B7280',
               }}
             >
-              Out of Stock
+              {t('outOfStock')}
             </span>
             <span
               style={{
@@ -212,7 +215,7 @@ export function ProductsTable({ showClientColumn, baseUrl }: ProductsTableProps)
                 color: activeTab === 'missingData' ? '#003450' : '#6B7280',
               }}
             >
-              Missing Data
+              {t('missingData')}
             </span>
             <span
               style={{
@@ -262,7 +265,7 @@ export function ProductsTable({ showClientColumn, baseUrl }: ProductsTableProps)
               whiteSpace: 'nowrap',
             }}
           >
-            Create product
+            {t('createProduct')}
           </span>
         </button>
       </div>
@@ -291,7 +294,7 @@ export function ProductsTable({ showClientColumn, baseUrl }: ProductsTableProps)
               color: '#374151',
             }}
           >
-            Filter by Customer
+            {t('filterByCustomer')}
           </label>
           <div className="relative">
             <select
@@ -316,6 +319,9 @@ export function ProductsTable({ showClientColumn, baseUrl }: ProductsTableProps)
                 cursor: 'pointer',
               }}
             >
+              <option key="ALL" value="ALL">
+                {tCommon('all')}
+              </option>
               {customers.map((customer) => (
                 <option key={customer} value={customer}>
                   {customer}
@@ -350,11 +356,11 @@ export function ProductsTable({ showClientColumn, baseUrl }: ProductsTableProps)
               color: '#374151',
             }}
           >
-            Search
+            {tCommon('search')}
           </label>
           <input
             type="text"
-            placeholder="Search"
+            placeholder={tCommon('search')}
             value={searchQuery}
             onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
             style={{
@@ -426,7 +432,7 @@ export function ProductsTable({ showClientColumn, baseUrl }: ProductsTableProps)
               color: '#6B7280',
             }}
           >
-            Product ID
+            {t('productId')}
           </span>
           <span
             style={{
@@ -439,7 +445,7 @@ export function ProductsTable({ showClientColumn, baseUrl }: ProductsTableProps)
               color: '#6B7280',
             }}
           >
-            Product Name
+            {t('productName')}
           </span>
           <span
             style={{
@@ -452,7 +458,7 @@ export function ProductsTable({ showClientColumn, baseUrl }: ProductsTableProps)
               color: '#6B7280',
             }}
           >
-            Available
+            {t('available')}
           </span>
           <span
             style={{
@@ -465,7 +471,7 @@ export function ProductsTable({ showClientColumn, baseUrl }: ProductsTableProps)
               color: '#6B7280',
             }}
           >
-            Reserved
+            {t('reserved')}
           </span>
           <span
             style={{
@@ -478,7 +484,7 @@ export function ProductsTable({ showClientColumn, baseUrl }: ProductsTableProps)
               color: '#6B7280',
             }}
           >
-            Announced
+            {t('announced')}
           </span>
           {showClientColumn && (
             <span
@@ -492,7 +498,7 @@ export function ProductsTable({ showClientColumn, baseUrl }: ProductsTableProps)
                 color: '#6B7280',
               }}
             >
-              Client
+              {t('client')}
             </span>
           )}
         </div>
@@ -657,7 +663,7 @@ export function ProductsTable({ showClientColumn, baseUrl }: ProductsTableProps)
                 color: '#374151',
               }}
             >
-              Previous
+              {tCommon('previous')}
             </span>
           </button>
 
@@ -689,7 +695,7 @@ export function ProductsTable({ showClientColumn, baseUrl }: ProductsTableProps)
                 color: '#374151',
               }}
             >
-              Next
+              {tCommon('next')}
             </span>
           </button>
         </div>

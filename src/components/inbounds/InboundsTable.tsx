@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 
 // Tab type
 type TabType = 'all' | 'booked_in' | 'partially_booked_in' | 'pending';
@@ -45,11 +46,11 @@ const mockInbounds: Inbound[] = [
   { id: '20', inboundId: '30303', deliveryType: 'Parcel service', anouncedQty: 40, noOfProducts: 6, expectDate: '05.05.2025', status: 'booked_in', client: 'Terppens' },
 ];
 
-// Customers for filter (for warehouse users)
-const customers = ['Alle', 'Papercrush', 'Caobali', 'Terppens', 'Protabo', 'TestClient'];
+// Customers for filter (for warehouse users - excluding 'All' which will be added dynamically)
+const customers = ['Papercrush', 'Caobali', 'Terppens', 'Protabo', 'TestClient'];
 
-// Freight forwarders for filter (for client view)
-const freightForwarders = ['Alle', 'Freight forwarder', 'Parcel service'];
+// Freight forwarders for filter (for client view - excluding 'All' which will be added dynamically)
+const freightForwarders = ['Freight forwarder', 'Parcel service'];
 
 interface InboundsTableProps {
   showClientColumn: boolean;
@@ -61,16 +62,18 @@ export function InboundsTable({ showClientColumn, baseUrl, userRole }: InboundsT
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabType>('all');
   const [searchQuery, setSearchQuery] = useState('');
-  const [filterValue, setFilterValue] = useState('Alle');
+  const [filterValue, setFilterValue] = useState('ALL');
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
+  const t = useTranslations('inbounds');
+  const tCommon = useTranslations('common');
 
   // Determine if this is a client view
   const isClientView = userRole === 'CLIENT';
   
   // Get filter options based on role
   const filterOptions = isClientView ? freightForwarders : customers;
-  const filterLabel = isClientView ? 'Filter by Freight Forwarder' : 'Filter by Customer';
+  const filterLabel = isClientView ? t('filterByFreightForwarder') : t('filterByCustomer');
 
   const handleInboundClick = (inboundId: string) => {
     router.push(`${baseUrl}/${inboundId}`);
@@ -90,7 +93,7 @@ export function InboundsTable({ showClientColumn, baseUrl, userRole }: InboundsT
     }
 
     // Filter by selected value
-    if (filterValue !== 'Alle') {
+    if (filterValue !== 'ALL') {
       if (isClientView) {
         // Filter by delivery type for clients
         inbounds = inbounds.filter(i => i.deliveryType === filterValue);
@@ -173,7 +176,7 @@ export function InboundsTable({ showClientColumn, baseUrl, userRole }: InboundsT
                   color: activeTab === 'all' ? '#003450' : '#6B7280',
                 }}
               >
-                All inbounds
+                {t('allInbounds')}
               </span>
               <span
                 style={{
@@ -211,7 +214,7 @@ export function InboundsTable({ showClientColumn, baseUrl, userRole }: InboundsT
                   color: activeTab === 'booked_in' ? '#003450' : '#6B7280',
                 }}
               >
-                Booked in
+                {t('bookedIn')}
               </span>
               <span
                 style={{
@@ -249,7 +252,7 @@ export function InboundsTable({ showClientColumn, baseUrl, userRole }: InboundsT
                   color: activeTab === 'partially_booked_in' ? '#003450' : '#6B7280',
                 }}
               >
-                Partially booked in
+                {t('partiallyBookedIn')}
               </span>
               <span
                 style={{
@@ -287,7 +290,7 @@ export function InboundsTable({ showClientColumn, baseUrl, userRole }: InboundsT
                   color: activeTab === 'pending' ? '#003450' : '#6B7280',
                 }}
               >
-                Pending
+                {t('pending')}
               </span>
               <span
                 style={{
@@ -337,7 +340,7 @@ export function InboundsTable({ showClientColumn, baseUrl, userRole }: InboundsT
                 whiteSpace: 'nowrap',
               }}
             >
-              Create inbound
+              {t('createInbound')}
             </span>
           </button>
         </div>
@@ -390,6 +393,9 @@ export function InboundsTable({ showClientColumn, baseUrl, userRole }: InboundsT
                 cursor: 'pointer',
               }}
             >
+              <option key="ALL" value="ALL">
+                {tCommon('all')}
+              </option>
               {filterOptions.map((option) => (
                 <option key={option} value={option}>
                   {option}
@@ -424,7 +430,7 @@ export function InboundsTable({ showClientColumn, baseUrl, userRole }: InboundsT
               color: '#374151',
             }}
           >
-            Search
+            {tCommon('search')}
           </label>
           <input
             type="text"
@@ -484,7 +490,7 @@ export function InboundsTable({ showClientColumn, baseUrl, userRole }: InboundsT
               color: '#6B7280',
             }}
           >
-            INBOUND ID
+            {t('inboundId')}
           </span>
           <span
             style={{
@@ -497,7 +503,7 @@ export function InboundsTable({ showClientColumn, baseUrl, userRole }: InboundsT
               color: '#6B7280',
             }}
           >
-            DELIVERY TYPE
+            {t('deliveryType')}
           </span>
           <span
             style={{
@@ -510,7 +516,7 @@ export function InboundsTable({ showClientColumn, baseUrl, userRole }: InboundsT
               color: '#6B7280',
             }}
           >
-            ANOUNCED QTY
+            {t('announcedQty')}
           </span>
           <span
             style={{
@@ -523,7 +529,7 @@ export function InboundsTable({ showClientColumn, baseUrl, userRole }: InboundsT
               color: '#6B7280',
             }}
           >
-            NO OF PRODUCTS
+            {t('numberOfProducts')}
           </span>
           <span
             style={{
@@ -536,7 +542,7 @@ export function InboundsTable({ showClientColumn, baseUrl, userRole }: InboundsT
               color: '#6B7280',
             }}
           >
-            EXPECT DATE
+            {t('expectedDate')}
           </span>
           {showClientColumn && (
             <span
@@ -550,7 +556,7 @@ export function InboundsTable({ showClientColumn, baseUrl, userRole }: InboundsT
                 color: '#6B7280',
               }}
             >
-              CLIENT
+              {t('client')}
             </span>
           )}
         </div>
@@ -660,7 +666,7 @@ export function InboundsTable({ showClientColumn, baseUrl, userRole }: InboundsT
               fontSize: 'clamp(12px, 1.03vw, 14px)',
             }}
           >
-            No inbounds found
+            {t('noInboundsFound')}
           </div>
         )}
       </div>
@@ -714,7 +720,7 @@ export function InboundsTable({ showClientColumn, baseUrl, userRole }: InboundsT
                 color: '#374151',
               }}
             >
-              Previous
+              {tCommon('previous')}
             </span>
           </button>
 
@@ -746,7 +752,7 @@ export function InboundsTable({ showClientColumn, baseUrl, userRole }: InboundsT
                 color: '#374151',
               }}
             >
-              Next
+              {tCommon('next')}
             </span>
           </button>
         </div>

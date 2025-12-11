@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Image from 'next/image';
+import { useTranslations } from 'next-intl';
 
 // Condition type
 type ConditionType = 'Damaged' | 'Well condition' | 'Acceptable';
@@ -102,6 +103,7 @@ interface ReturnDetailsProps {
 export function ReturnDetails({ returnId }: ReturnDetailsProps) {
   const router = useRouter();
   const pathname = usePathname();
+  const tCommon = useTranslations('common');
   const [showReplacementModal, setShowReplacementModal] = useState(false);
   const [replacementCount, setReplacementCount] = useState(0);
 
@@ -739,7 +741,7 @@ export function ReturnDetails({ returnId }: ReturnDetailsProps) {
             color: '#6B7280',
           }}
         >
-          Achtung, das Löschen des Artikels führt dazu, dass alle Warenbewegungen verloren gehen. Artikel können nur gelöscht werden wenn kein Bestand vorhanden ist und keine Reservierungen oder Anlieferungen anliegen.
+          {tCommon('deleteWarning')}
         </p>
         <button
           onClick={handleCreateReplacementOrder}

@@ -4,6 +4,8 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useAuthStore, getDashboardRoute, LoginType, UserRole } from "@/lib/store";
+import { useTranslations } from 'next-intl';
+import { LanguageSwitcher } from '@/components/ui';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -12,6 +14,7 @@ export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
+  const t = useTranslations('login');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,30 +44,35 @@ export default function LoginPage() {
   const getLoginTypeLabel = (type: LoginType) => {
     switch (type) {
       case 'client':
-        return 'Store Owner';
+        return t('storeOwner');
       case 'employee':
-        return 'Employee';
+        return t('employee');
       case 'admin':
-        return 'Admin';
+        return t('admin');
     }
   };
 
   const getLoginTypeDescription = (type: LoginType) => {
     switch (type) {
       case 'client':
-        return 'Login as Shopify or WooCommerce store owner';
+        return t('storeOwnerDescription');
       case 'employee':
-        return 'Login as warehouse employee';
+        return t('employeeDescription');
       case 'admin':
-        return 'Admin access';
+        return t('adminDescription');
     }
   };
 
   return (
     <div 
-      className="flex min-h-screen w-full items-center justify-center"
+      className="flex min-h-screen w-full items-center justify-center relative"
       style={{ background: '#F8FAFC' }}
     >
+      {/* Language Switcher */}
+      <div className="absolute top-4 right-4">
+        <LanguageSwitcher />
+      </div>
+
       {/* Login Card */}
       <div
         className="flex flex-col w-full max-w-[448px] mx-4"
@@ -137,7 +145,7 @@ export default function LoginPage() {
                 cursor: 'pointer',
               }}
             >
-              Employee
+              {t('employee')}
             </button>
 
             {/* Admin Tab */}
@@ -158,7 +166,7 @@ export default function LoginPage() {
                 cursor: 'pointer',
               }}
             >
-              Admin
+              {t('admin')}
             </button>
           </div>
 
@@ -189,7 +197,7 @@ export default function LoginPage() {
                 color: '#374151',
               }}
             >
-              Email
+              {t('email')}
             </label>
             <input
               type="email"
@@ -222,7 +230,7 @@ export default function LoginPage() {
                 color: '#374151',
               }}
             >
-              Password
+              {t('password')}
             </label>
             <input
               type="password"
@@ -266,7 +274,7 @@ export default function LoginPage() {
                   cursor: 'pointer',
                 }}
               >
-                Remember me
+                {t('rememberMe')}
               </label>
             </div>
             <a
@@ -281,7 +289,7 @@ export default function LoginPage() {
               }}
               className="hover:underline"
             >
-              Forgot your password?
+              {t('forgotPassword')}
             </a>
           </div>
 
@@ -304,7 +312,7 @@ export default function LoginPage() {
               cursor: 'pointer',
             }}
           >
-            Sign in
+            {t('signIn')}
           </button>
         </form>
       </div>

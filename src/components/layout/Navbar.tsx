@@ -5,59 +5,58 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuthStore, UserRole, getDashboardRoute } from '@/lib/store';
 import { useState, useRef, useEffect } from 'react';
+import { useTranslations } from 'next-intl';
+import { LanguageSwitcher } from '@/components/ui';
 
-// Navigation items per role
-const navItemsByRole: Record<UserRole, { name: string; href: string }[]> = {
+// Navigation items per role - using translation keys
+const navItemsByRole: Record<UserRole, { key: string; href: string }[]> = {
   CLIENT: [
-    { name: 'Dashboard', href: '/client/dashboard' },
-    { name: 'Orders', href: '/client/orders' },
-    { name: 'Products', href: '/client/products' },
-    { name: 'Inbounds', href: '/client/inbounds' },
-    { name: 'Returns', href: '/client/returns' },
-    { name: 'Chat', href: '/client/chat' },
-    { name: 'Channels', href: '/client/channels' },
+    { key: 'dashboard', href: '/client/dashboard' },
+    { key: 'orders', href: '/client/orders' },
+    { key: 'products', href: '/client/products' },
+    { key: 'inbounds', href: '/client/inbounds' },
+    { key: 'returns', href: '/client/returns' },
+    { key: 'chat', href: '/client/chat' },
+    { key: 'channels', href: '/client/channels' },
   ],
   EMPLOYEE: [
-    { name: 'Dashboard', href: '/employee/dashboard' },
-    { name: 'Orders', href: '/employee/orders' },
-    { name: 'Products', href: '/employee/products' },
-    { name: 'Inbounds', href: '/employee/inbounds' },
-    { name: 'Returns', href: '/employee/returns' },
-    { name: 'Chat', href: '/employee/chat' },
-    { name: 'Tasks', href: '/employee/tasks' },
+    { key: 'dashboard', href: '/employee/dashboard' },
+    { key: 'orders', href: '/employee/orders' },
+    { key: 'products', href: '/employee/products' },
+    { key: 'inbounds', href: '/employee/inbounds' },
+    { key: 'returns', href: '/employee/returns' },
+    { key: 'chat', href: '/employee/chat' },
+    { key: 'tasks', href: '/employee/tasks' },
   ],
   ADMIN: [
-    { name: 'Dashboard', href: '/admin/dashboard' },
-    { name: 'Orders', href: '/admin/orders' },
-    { name: 'Products', href: '/admin/products' },
-    { name: 'Inbounds', href: '/admin/inbounds' },
-    { name: 'Returns', href: '/admin/returns' },
-    { name: 'Chat', href: '/admin/chat' },
-    { name: 'Tasks', href: '/admin/tasks' },
-    { name: 'Settings', href: '/admin/settings' },
+    { key: 'dashboard', href: '/admin/dashboard' },
+    { key: 'orders', href: '/admin/orders' },
+    { key: 'products', href: '/admin/products' },
+    { key: 'inbounds', href: '/admin/inbounds' },
+    { key: 'returns', href: '/admin/returns' },
+    { key: 'chat', href: '/admin/chat' },
+    { key: 'tasks', href: '/admin/tasks' },
   ],
   SUPER_ADMIN: [
-    { name: 'Dashboard', href: '/admin/dashboard' },
-    { name: 'Orders', href: '/admin/orders' },
-    { name: 'Products', href: '/admin/products' },
-    { name: 'Inbounds', href: '/admin/inbounds' },
-    { name: 'Returns', href: '/admin/returns' },
-    { name: 'Clients', href: '/admin/clients' },
-    { name: 'Employees', href: '/admin/employees' },
-    { name: 'System', href: '/admin/system' },
-    { name: 'Settings', href: '/admin/settings' },
+    { key: 'dashboard', href: '/admin/dashboard' },
+    { key: 'orders', href: '/admin/orders' },
+    { key: 'products', href: '/admin/products' },
+    { key: 'inbounds', href: '/admin/inbounds' },
+    { key: 'returns', href: '/admin/returns' },
+    { key: 'clients', href: '/admin/clients' },
+    { key: 'employees', href: '/admin/employees' },
+    { key: 'system', href: '/admin/system' },
   ],
 };
 
 // Fallback for unauthenticated users
 const defaultNavItems = [
-  { name: 'Dashboard', href: '/dashboard' },
-  { name: 'Orders', href: '/orders' },
-  { name: 'Products', href: '/products' },
-  { name: 'Returns', href: '/returns' },
-  { name: 'Chat', href: '/chat' },
-  { name: 'Tasks', href: '/tasks' },
-  { name: 'Settings', href: '/settings' },
+  { key: 'dashboard', href: '/dashboard' },
+  { key: 'orders', href: '/orders' },
+  { key: 'products', href: '/products' },
+  { key: 'returns', href: '/returns' },
+  { key: 'chat', href: '/chat' },
+  { key: 'tasks', href: '/tasks' },
 ];
 
 export function Navbar() {
@@ -66,6 +65,8 @@ export function Navbar() {
   const { user, logout } = useAuthStore();
   const [showDropdown, setShowDropdown] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const t = useTranslations('navbar');
+  const tCommon = useTranslations('common');
 
   // Get navigation items based on user role
   const navItems = user?.role ? navItemsByRole[user.role] : defaultNavItems;
@@ -93,15 +94,15 @@ export function Navbar() {
   const getRoleLabel = (role: UserRole) => {
     switch (role) {
       case 'CLIENT':
-        return 'Fulfillment Client';
+        return t('fulfillmentClient');
       case 'EMPLOYEE':
-        return 'Warehouse';
+        return t('warehouse');
       case 'ADMIN':
-        return 'Admin';
+        return t('dashboard');
       case 'SUPER_ADMIN':
-        return 'Super Admin';
+        return t('dashboard');
       default:
-        return 'User';
+        return tCommon('user');
     }
   };
 
@@ -135,7 +136,7 @@ export function Navbar() {
             const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
             return (
               <Link
-                key={item.name}
+                key={item.key}
                 href={item.href}
                 style={{
                   fontFamily: 'Inter, sans-serif',
@@ -148,15 +149,18 @@ export function Navbar() {
                 }}
                 className="hover:text-[#111827]"
               >
-                {item.name}
+                {t(item.key)}
               </Link>
             );
           })}
         </div>
       </div>
 
-      {/* Right Section: Bell Icon + Profile */}
+      {/* Right Section: Language Switcher + Bell Icon + Profile */}
       <div className="flex items-center" style={{ gap: '16px' }}>
+        {/* Language Switcher */}
+        <LanguageSwitcher />
+
         {/* Role Badge */}
         {user?.role && (
           <span
@@ -281,7 +285,7 @@ export function Navbar() {
                     cursor: 'pointer',
                   }}
                 >
-                  Settings
+                  {tCommon('settings')}
                 </button>
                 <button
                   onClick={handleLogout}
@@ -295,7 +299,7 @@ export function Navbar() {
                     cursor: 'pointer',
                   }}
                 >
-                  Sign out
+                  {tCommon('signOut')}
                 </button>
               </div>
             </div>

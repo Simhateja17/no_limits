@@ -2,6 +2,7 @@
 
 import { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 
 // Tab type for product details
 type ProductTab = 'productData' | 'stockMovements' | 'orders' | 'bundle';
@@ -36,6 +37,7 @@ interface ProductDetailsData {
   ursprung: string;
   nettoVerkaufspreis: string;
   manufacture: string;
+  qtyMastercarton: string;
   // Orders count
   ordersCount: number;
 }
@@ -67,6 +69,7 @@ const mockProductDetails: ProductDetailsData = {
   ursprung: '-',
   nettoVerkaufspreis: '12,5',
   manufacture: 'Herzbach Home',
+  qtyMastercarton: '10',
   ordersCount: 6,
 };
 
@@ -142,6 +145,7 @@ function Field({ label, value, editMode, onChange }: FieldProps) {
 
 export function ProductDetails({ productId, backUrl }: ProductDetailsProps) {
   const router = useRouter();
+  const tCommon = useTranslations('common');
   const [activeTab, setActiveTab] = useState<ProductTab>('productData');
   const [editMode, setEditMode] = useState(false);
   const [barcodeType, setBarcodeType] = useState('GTIN');
@@ -170,6 +174,7 @@ export function ProductDetails({ productId, backUrl }: ProductDetailsProps) {
     ursprung: mockProductDetails.ursprung,
     nettoVerkaufspreis: mockProductDetails.nettoVerkaufspreis,
     manufacture: mockProductDetails.manufacture,
+    qtyMastercarton: mockProductDetails.qtyMastercarton,
   });
 
   // Product image state
@@ -776,6 +781,7 @@ export function ProductDetails({ productId, backUrl }: ProductDetailsProps) {
                     <Field label="Ursprung" value={formData.ursprung} editMode={editMode} onChange={updateField('ursprung')} />
                     <Field label="Netto-Verkaufspreis" value={formData.nettoVerkaufspreis} editMode={editMode} onChange={updateField('nettoVerkaufspreis')} />
                     <Field label="Manufacture" value={formData.manufacture} editMode={editMode} onChange={updateField('manufacture')} />
+                    <Field label="QTY Mastercarton" value={formData.qtyMastercarton} editMode={editMode} onChange={updateField('qtyMastercarton')} />
                   </div>
                 </div>
               </div>
@@ -1023,7 +1029,7 @@ export function ProductDetails({ productId, backUrl }: ProductDetailsProps) {
                     marginBottom: '16px',
                   }}
                 >
-                  Achtung, das Löschen des Artikels führt dazu, dass alle Warenbewegungen verloren gehen. Artikel können nur gelöscht werden wenn kein Bestand vorhanden ist und keine Reservierungen oder Anlieferungen anliegen.
+                  {tCommon('deleteWarning')}
                 </p>
                 <button
                   style={{

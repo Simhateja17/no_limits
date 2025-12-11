@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
+import { useTranslations, useLocale } from 'next-intl';
 
 // Tab type for returns
 type ReturnTabType = 'all' | 'pending' | 'approved' | 'rejected' | 'processing' | 'completed';
@@ -37,61 +38,41 @@ const mockReturns: Return[] = [
   { id: '12', returnId: '22064', returnDate: new Date('2022-05-15'), client: 'Merchant 5', orderId: '22064', quantity: 5, reason: 'Defective', status: 'rejected' },
 ];
 
-// Customers for filter
-const customers = ['Alle', 'Papercrush', 'Caobali', 'Terppens', 'Protabo', 'Merchant 3', 'Merchant 5', 'Merchant 7'];
+// Customers for filter (excluding 'All' which will be added dynamically with translation)
+const customers = ['Papercrush', 'Caobali', 'Terppens', 'Protabo', 'Merchant 3', 'Merchant 5', 'Merchant 7'];
 
 interface ReturnsTableProps {
   showClientColumn: boolean;
   basePath?: string;
 }
 
-// Format date for display
-const formatReturnDate = (date: Date): string => {
-  const now = new Date();
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const yesterday = new Date(today.getTime() - 24 * 60 * 60 * 1000);
-  const returnDay = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-
-  const timeStr = date.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
-
-  if (returnDay.getTime() === today.getTime()) {
-    return `Heute, ${timeStr}`;
-  } else if (returnDay.getTime() === yesterday.getTime()) {
-    return `Gestern, ${timeStr}`;
-  } else {
-    const dayOfWeek = date.toLocaleDateString('de-DE', { weekday: 'short' });
-    const dateStr = date.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: '2-digit' });
-    return `${dayOfWeek}, ${dateStr}`;
-  }
-};
-
-// Status tag component
-const StatusTag = ({ status }: { status: ReturnStatus }) => {
+// Status tag component - needs translations
+const StatusTag = ({ status, t }: { status: ReturnStatus; t: (key: string) => string }) => {
   const getStatusConfig = () => {
     switch (status) {
       case 'pending':
         return {
-          label: 'Pending',
+          label: t('pending'),
           dotColor: '#F59E0B',
         };
       case 'approved':
         return {
-          label: 'Approved',
+          label: t('approved'),
           dotColor: '#22C55E',
         };
       case 'rejected':
         return {
-          label: 'Rejected',
+          label: t('rejected'),
           dotColor: '#EF4444',
         };
       case 'processing':
         return {
-          label: 'Processing',
+          label: t('processing'),
           dotColor: '#3B82F6',
         };
       case 'completed':
         return {
-          label: 'Completed',
+          label: t('completed'),
           dotColor: '#6B7280',
         };
       default:
@@ -136,11 +117,35 @@ const StatusTag = ({ status }: { status: ReturnStatus }) => {
 
 export function ReturnsTable({ showClientColumn, basePath = '/admin/returns' }: ReturnsTableProps) {
   const router = useRouter();
+  const t = useTranslations('returns');
+  const tCommon = useTranslations('common');
+  const locale = useLocale();
   const [activeTab, setActiveTab] = useState<ReturnTabType>('all');
   const [searchQuery, setSearchQuery] = useState('');
-  const [customerFilter, setCustomerFilter] = useState('Alle');
+  const [customerFilter, setCustomerFilter] = useState('ALL');
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
+
+  // Format date for display with locale awareness
+  const formatReturnDate = (date: Date): string => {
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const yesterday = new Date(today.getTime() - 24 * 60 * 60 * 1000);
+    const returnDay = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+
+    const localeCode = locale === 'de' ? 'de-DE' : 'en-US';
+    const timeStr = date.toLocaleTimeString(localeCode, { hour: '2-digit', minute: '2-digit' });
+
+    if (returnDay.getTime() === today.getTime()) {
+      return `${tCommon('today')}, ${timeStr}`;
+    } else if (returnDay.getTime() === yesterday.getTime()) {
+      return `${tCommon('yesterday')}, ${timeStr}`;
+    } else {
+      const dayOfWeek = date.toLocaleDateString(localeCode, { weekday: 'short' });
+      const dateStr = date.toLocaleDateString(localeCode, { day: '2-digit', month: '2-digit', year: '2-digit' });
+      return `${dayOfWeek}, ${dateStr}`;
+    }
+  };
 
   // Handle return row click
   const handleReturnClick = (returnId: string) => {
@@ -165,7 +170,7 @@ export function ReturnsTable({ showClientColumn, basePath = '/admin/returns' }: 
     }
 
     // Filter by customer
-    if (customerFilter !== 'Alle') {
+    if (customerFilter !== 'ALL') {
       returns = returns.filter(r => r.client === customerFilter);
     }
 
@@ -245,7 +250,7 @@ export function ReturnsTable({ showClientColumn, basePath = '/admin/returns' }: 
                 color: activeTab === 'all' ? '#003450' : '#6B7280',
               }}
             >
-              All Returns
+              {t('allReturns')}
             </span>
             <span
               style={{
@@ -283,7 +288,7 @@ export function ReturnsTable({ showClientColumn, basePath = '/admin/returns' }: 
                 color: activeTab === 'pending' ? '#003450' : '#6B7280',
               }}
             >
-              Pending
+              {t('pending')}
             </span>
             <span
               style={{
@@ -359,7 +364,7 @@ export function ReturnsTable({ showClientColumn, basePath = '/admin/returns' }: 
                 color: activeTab === 'rejected' ? '#003450' : '#6B7280',
               }}
             >
-              Rejected
+              {t('rejected')}
             </span>
             <span
               style={{
@@ -397,7 +402,7 @@ export function ReturnsTable({ showClientColumn, basePath = '/admin/returns' }: 
                 color: activeTab === 'processing' ? '#003450' : '#6B7280',
               }}
             >
-              Processing
+              {t('processing')}
             </span>
             <span
               style={{
@@ -435,7 +440,7 @@ export function ReturnsTable({ showClientColumn, basePath = '/admin/returns' }: 
                 color: activeTab === 'completed' ? '#003450' : '#6B7280',
               }}
             >
-              Completed
+              {t('completed')}
             </span>
             <span
               style={{
@@ -453,6 +458,15 @@ export function ReturnsTable({ showClientColumn, basePath = '/admin/returns' }: 
             </span>
           </button>
         </div>
+
+        {/* Invisible spacer to match height of pages with Create button */}
+        <div
+          style={{
+            height: 'clamp(32px, 2.8vw, 38px)',
+            marginBottom: 'clamp(8px, 0.88vw, 12px)',
+            visibility: 'hidden',
+          }}
+        />
       </div>
 
       {/* Full-width horizontal line below tabs */}
@@ -479,7 +493,7 @@ export function ReturnsTable({ showClientColumn, basePath = '/admin/returns' }: 
               color: '#374151',
             }}
           >
-            {showClientColumn ? 'Filter by Customer' : 'Channels'}
+            {showClientColumn ? t('filterByCustomer') : tCommon('channels')}
           </label>
           <div className="relative">
             <select
@@ -504,6 +518,9 @@ export function ReturnsTable({ showClientColumn, basePath = '/admin/returns' }: 
                 cursor: 'pointer',
               }}
             >
+              <option key="ALL" value="ALL">
+                {tCommon('all')}
+              </option>
               {customers.map((customer) => (
                 <option key={customer} value={customer}>
                   {customer}
@@ -537,11 +554,11 @@ export function ReturnsTable({ showClientColumn, basePath = '/admin/returns' }: 
               color: '#374151',
             }}
           >
-            Search
+            {tCommon('search')}
           </label>
           <input
             type="text"
-            placeholder="Search"
+            placeholder=""
             value={searchQuery}
             onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
             style={{
@@ -587,27 +604,27 @@ export function ReturnsTable({ showClientColumn, basePath = '/admin/returns' }: 
           }}
         >
           <span style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: 'clamp(10px, 0.9vw, 12px)', lineHeight: '16px', letterSpacing: '0.05em', textTransform: 'uppercase', color: '#6B7280' }}>
-            Return Date
+            {t('returnDate')}
           </span>
           <span style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: 'clamp(10px, 0.9vw, 12px)', lineHeight: '16px', letterSpacing: '0.05em', textTransform: 'uppercase', color: '#6B7280' }}>
-            Return-ID
+            {t('returnId')}
           </span>
           {showClientColumn && (
             <span style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: 'clamp(10px, 0.9vw, 12px)', lineHeight: '16px', letterSpacing: '0.05em', textTransform: 'uppercase', color: '#6B7280' }}>
-              Client
+              {t('client')}
             </span>
           )}
           <span style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: 'clamp(10px, 0.9vw, 12px)', lineHeight: '16px', letterSpacing: '0.05em', textTransform: 'uppercase', color: '#6B7280' }}>
-            Order-ID
+            {t('orderId')}
           </span>
           <span style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: 'clamp(10px, 0.9vw, 12px)', lineHeight: '16px', letterSpacing: '0.05em', textTransform: 'uppercase', color: '#6B7280' }}>
-            Qty
+            {t('quantity')}
           </span>
           <span style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: 'clamp(10px, 0.9vw, 12px)', lineHeight: '16px', letterSpacing: '0.05em', textTransform: 'uppercase', color: '#6B7280' }}>
-            Reason
+            {t('reason')}
           </span>
           <span style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: 'clamp(10px, 0.9vw, 12px)', lineHeight: '16px', letterSpacing: '0.05em', textTransform: 'uppercase', color: '#6B7280' }}>
-            Status
+            {tCommon('status')}
           </span>
         </div>
 
@@ -651,7 +668,7 @@ export function ReturnsTable({ showClientColumn, basePath = '/admin/returns' }: 
               {returnItem.reason}
             </span>
             <div className="flex items-center justify-start">
-              <StatusTag status={returnItem.status} />
+              <StatusTag status={returnItem.status} t={t} />
             </div>
           </div>
         ))}
@@ -659,7 +676,7 @@ export function ReturnsTable({ showClientColumn, basePath = '/admin/returns' }: 
         {/* Empty State */}
         {paginatedReturns.length === 0 && (
           <div style={{ padding: '48px 24px', textAlign: 'center', color: '#6B7280', fontFamily: 'Inter, sans-serif', fontSize: 'clamp(12px, 1vw, 14px)' }}>
-            No returns found
+            {t('noReturnsFound')}
           </div>
         )}
       </div>
@@ -692,7 +709,7 @@ export function ReturnsTable({ showClientColumn, basePath = '/admin/returns' }: 
             }}
           >
             <span style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: 'clamp(12px, 1vw, 14px)', lineHeight: '20px', color: '#374151' }}>
-              Previous
+              {tCommon('previous')}
             </span>
           </button>
 
@@ -715,7 +732,7 @@ export function ReturnsTable({ showClientColumn, basePath = '/admin/returns' }: 
             }}
           >
             <span style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: 'clamp(12px, 1vw, 14px)', lineHeight: '20px', color: '#374151' }}>
-              Next
+              {tCommon('next')}
             </span>
           </button>
         </div>
