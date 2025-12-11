@@ -258,6 +258,7 @@ export default function ClientInboundDetailPage() {
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead>
                   <tr style={{ backgroundColor: '#F9FAFB' }}>
+                    {editMode && <th style={{ padding: `${styles.cellPaddingY} ${styles.cellPaddingX}`, textAlign: 'left', fontSize: styles.fontSizeXs, fontWeight: 500, color: '#6B7280', textTransform: 'uppercase' }}></th>}
                     <th style={{ padding: `${styles.cellPaddingY} ${styles.cellPaddingX}`, textAlign: 'left', fontSize: styles.fontSizeXs, fontWeight: 500, color: '#6B7280', textTransform: 'uppercase' }}>Product Name</th>
                     <th style={{ padding: `${styles.cellPaddingY} ${styles.cellPaddingX}`, textAlign: 'left', fontSize: styles.fontSizeXs, fontWeight: 500, color: '#6B7280', textTransform: 'uppercase' }}>SKU</th>
                     <th style={{ padding: `${styles.cellPaddingY} ${styles.cellPaddingX}`, textAlign: 'left', fontSize: styles.fontSizeXs, fontWeight: 500, color: '#6B7280', textTransform: 'uppercase' }}>GTIN</th>
@@ -267,11 +268,46 @@ export default function ClientInboundDetailPage() {
                 <tbody>
                   {products.map((product) => (
                     <tr key={product.id} style={{ borderTop: '1px solid #E5E7EB' }}>
+                      {editMode && (
+                        <td style={{ padding: `${styles.cellPaddingY} ${styles.cellPaddingX}` }}>
+                          <button
+                            onClick={() => handleRemoveProduct(product.id)}
+                            style={{
+                              padding: 'clamp(3px, 0.29vw, 5px) clamp(10px, 0.88vw, 14px)',
+                              backgroundColor: '#FEE2E2',
+                              color: '#991B1B',
+                              border: 'none',
+                              borderRadius: '4px',
+                              fontSize: styles.fontSizeXs,
+                              fontWeight: 500,
+                              cursor: 'pointer'
+                            }}
+                          >
+                            Remove
+                          </button>
+                        </td>
+                      )}
                       <td style={{ padding: `${styles.cellPaddingY} ${styles.cellPaddingX}`, fontSize: styles.fontSizeBase, color: '#111827' }}>{product.name}</td>
                       <td style={{ padding: `${styles.cellPaddingY} ${styles.cellPaddingX}`, fontSize: styles.fontSizeBase, color: '#6B7280' }}>{product.sku}</td>
-                      <td style={{ padding: `${styles.cellPaddingY} ${styles.cellPaddingX}`, fontSize: styles.fontSizeBase, color: '#6B7280' }}>{`Merchant ${product.qty}`}</td>
+                      <td style={{ padding: `${styles.cellPaddingY} ${styles.cellPaddingX}`, fontSize: styles.fontSizeBase, color: '#6B7280' }}>{editMode ? product.gtin : `Merchant ${product.qty}`}</td>
                       <td style={{ padding: `${styles.cellPaddingY} ${styles.cellPaddingX}` }}>
-                        <span style={{ fontSize: styles.fontSizeBase, color: '#111827' }}>{product.qty}</span>
+                        {editMode ? (
+                          <input
+                            type="number"
+                            value={product.qty}
+                            onChange={(e) => handleQuantityChange(product.id, parseInt(e.target.value) || 0)}
+                            style={{
+                              width: styles.qtyInputWidth,
+                              padding: 'clamp(4px, 0.44vw, 8px) clamp(8px, 0.74vw, 12px)',
+                              border: '1px solid #D1D5DB',
+                              borderRadius: 'clamp(4px, 0.44vw, 8px)',
+                              fontSize: styles.fontSizeBase,
+                              textAlign: 'center'
+                            }}
+                          />
+                        ) : (
+                          <span style={{ fontSize: styles.fontSizeBase, color: '#111827' }}>{product.qty}</span>
+                        )}
                       </td>
                     </tr>
                   ))}
@@ -279,8 +315,8 @@ export default function ClientInboundDetailPage() {
               </table>
             </div>
 
-            {/* Add Products Section - Hidden */}
-            {false && (
+            {/* Add Products Section - Only in Edit Mode */}
+            {editMode && (
               <div style={{
                 backgroundColor: 'white',
                 borderRadius: 'clamp(6px, 0.59vw, 10px)',

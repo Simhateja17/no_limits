@@ -549,7 +549,7 @@ export function ProductDetails({ productId, backUrl }: ProductDetailsProps) {
                   style={{
                     flex: 1,
                     borderRadius: '8px',
-                    border: editMode ? '1px solid #003450' : '1px solid #D1D5DB',
+                    border: '1px solid #D1D5DB',
                     padding: 'clamp(12px, 1.1vw, 16px) clamp(16px, 1.47vw, 20px)',
                     backgroundColor: '#FFFFFF',
                     boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.05)',
@@ -570,37 +570,17 @@ export function ProductDetails({ productId, backUrl }: ProductDetailsProps) {
                   >
                     Total Stock
                   </span>
-                  {editMode ? (
-                    <input
-                      type="number"
-                      value={product.totalStock}
-                      onChange={() => {}}
-                      style={{
-                        fontFamily: 'Inter, sans-serif',
-                        fontWeight: 600,
-                        fontSize: 'clamp(16px, 1.33vw, 18px)',
-                        lineHeight: '1.3',
-                        color: '#111827',
-                        border: 'none',
-                        outline: 'none',
-                        background: 'transparent',
-                        width: '100%',
-                        padding: 0,
-                      }}
-                    />
-                  ) : (
-                    <span
-                      style={{
-                        fontFamily: 'Inter, sans-serif',
-                        fontWeight: 600,
-                        fontSize: 'clamp(16px, 1.33vw, 18px)',
-                        lineHeight: '1.3',
-                        color: '#111827',
-                      }}
-                    >
-                      {product.totalStock}
-                    </span>
-                  )}
+                  <span
+                    style={{
+                      fontFamily: 'Inter, sans-serif',
+                      fontWeight: 600,
+                      fontSize: 'clamp(16px, 1.33vw, 18px)',
+                      lineHeight: '1.3',
+                      color: '#111827',
+                    }}
+                  >
+                    {product.totalStock}
+                  </span>
                 </div>
 
                 {/* Available */}
@@ -608,7 +588,7 @@ export function ProductDetails({ productId, backUrl }: ProductDetailsProps) {
                   style={{
                     flex: 1,
                     borderRadius: '8px',
-                    border: editMode ? '1px solid #003450' : '1px solid #D1D5DB',
+                    border: '1px solid #D1D5DB',
                     padding: 'clamp(12px, 1.1vw, 16px) clamp(16px, 1.47vw, 20px)',
                     backgroundColor: '#FFFFFF',
                     boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.05)',
@@ -629,37 +609,17 @@ export function ProductDetails({ productId, backUrl }: ProductDetailsProps) {
                   >
                     Available
                   </span>
-                  {editMode ? (
-                    <input
-                      type="number"
-                      value={product.available}
-                      onChange={() => {}}
-                      style={{
-                        fontFamily: 'Inter, sans-serif',
-                        fontWeight: 600,
-                        fontSize: 'clamp(16px, 1.33vw, 18px)',
-                        lineHeight: '1.3',
-                        color: '#111827',
-                        border: 'none',
-                        outline: 'none',
-                        background: 'transparent',
-                        width: '100%',
-                        padding: 0,
-                      }}
-                    />
-                  ) : (
-                    <span
-                      style={{
-                        fontFamily: 'Inter, sans-serif',
-                        fontWeight: 600,
-                        fontSize: 'clamp(16px, 1.33vw, 18px)',
-                        lineHeight: '1.3',
-                        color: '#111827',
-                      }}
-                    >
-                      {product.available}
-                    </span>
-                  )}
+                  <span
+                    style={{
+                      fontFamily: 'Inter, sans-serif',
+                      fontWeight: 600,
+                      fontSize: 'clamp(16px, 1.33vw, 18px)',
+                      lineHeight: '1.3',
+                      color: '#111827',
+                    }}
+                  >
+                    {product.available}
+                  </span>
                 </div>
 
                 {/* Reserved */}
@@ -667,7 +627,7 @@ export function ProductDetails({ productId, backUrl }: ProductDetailsProps) {
                   style={{
                     flex: 1,
                     borderRadius: '8px',
-                    border: editMode ? '1px solid #003450' : '1px solid #D1D5DB',
+                    border: '1px solid #D1D5DB',
                     padding: 'clamp(12px, 1.1vw, 16px) clamp(16px, 1.47vw, 20px)',
                     backgroundColor: '#FFFFFF',
                     boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.05)',
@@ -688,37 +648,17 @@ export function ProductDetails({ productId, backUrl }: ProductDetailsProps) {
                   >
                     Reserved
                   </span>
-                  {editMode ? (
-                    <input
-                      type="number"
-                      value={product.reserved}
-                      onChange={() => {}}
-                      style={{
-                        fontFamily: 'Inter, sans-serif',
-                        fontWeight: 600,
-                        fontSize: 'clamp(16px, 1.33vw, 18px)',
-                        lineHeight: '1.3',
-                        color: '#111827',
-                        border: 'none',
-                        outline: 'none',
-                        background: 'transparent',
-                        width: '100%',
-                        padding: 0,
-                      }}
-                    />
-                  ) : (
-                    <span
-                      style={{
-                        fontFamily: 'Inter, sans-serif',
-                        fontWeight: 600,
-                        fontSize: 'clamp(16px, 1.33vw, 18px)',
-                        lineHeight: '1.3',
-                        color: '#111827',
-                      }}
-                    >
-                      {product.reserved}
-                    </span>
-                  )}
+                  <span
+                    style={{
+                      fontFamily: 'Inter, sans-serif',
+                      fontWeight: 600,
+                      fontSize: 'clamp(16px, 1.33vw, 18px)',
+                      lineHeight: '1.3',
+                      color: '#111827',
+                    }}
+                  >
+                    {product.reserved}
+                  </span>
                 </div>
 
                 {/* Announced */}
@@ -726,7 +666,7 @@ export function ProductDetails({ productId, backUrl }: ProductDetailsProps) {
                   style={{
                     flex: 1,
                     borderRadius: '8px',
-                    border: editMode ? '1px solid #003450' : '1px solid #D1D5DB',
+                    border: '1px solid #D1D5DB',
                     padding: 'clamp(12px, 1.1vw, 16px) clamp(16px, 1.47vw, 20px)',
                     backgroundColor: '#FFFFFF',
                     boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.05)',
@@ -747,37 +687,17 @@ export function ProductDetails({ productId, backUrl }: ProductDetailsProps) {
                   >
                     Announced
                   </span>
-                  {editMode ? (
-                    <input
-                      type="number"
-                      value={product.announced}
-                      onChange={() => {}}
-                      style={{
-                        fontFamily: 'Inter, sans-serif',
-                        fontWeight: 600,
-                        fontSize: 'clamp(16px, 1.33vw, 18px)',
-                        lineHeight: '1.3',
-                        color: '#111827',
-                        border: 'none',
-                        outline: 'none',
-                        background: 'transparent',
-                        width: '100%',
-                        padding: 0,
-                      }}
-                    />
-                  ) : (
-                    <span
-                      style={{
-                        fontFamily: 'Inter, sans-serif',
-                        fontWeight: 600,
-                        fontSize: 'clamp(16px, 1.33vw, 18px)',
-                        lineHeight: '1.3',
-                        color: '#111827',
-                      }}
-                    >
-                      {product.announced}
-                    </span>
-                  )}
+                  <span
+                    style={{
+                      fontFamily: 'Inter, sans-serif',
+                      fontWeight: 600,
+                      fontSize: 'clamp(16px, 1.33vw, 18px)',
+                      lineHeight: '1.3',
+                      color: '#111827',
+                    }}
+                  >
+                    {product.announced}
+                  </span>
                 </div>
               </div>
             </div>
