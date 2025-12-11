@@ -146,18 +146,42 @@ export function ReturnDetails({ returnId }: ReturnDetailsProps) {
   };
 
   return (
-    <div
-      style={{
-        width: '100%',
-        minHeight: '100%',
-        backgroundColor: '#F9FAFB',
-        padding: 'clamp(24px, 2.36vw, 32px) clamp(39px, 3.83vw, 52px)',
-        paddingBottom: 'clamp(100px, 9.8vw, 150px)',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-      }}
-    >
+    <div className="w-full min-h-screen bg-[#F9FAFB]">
+      <div className="px-[3.8%] py-6">
+        {/* Back Button */}
+        <button
+          onClick={handleBack}
+          style={{
+            height: '38px',
+            gap: '8px',
+            padding: '9px 17px 9px 15px',
+            borderRadius: '6px',
+            border: '1px solid #D1D5DB',
+            backgroundColor: '#FFFFFF',
+            boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.05)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: 'pointer',
+            marginBottom: '24px',
+          }}
+        >
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M15 10H5M5 10L10 15M5 10L10 5" stroke="#374151" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+          <span
+            style={{
+              fontFamily: 'Inter, sans-serif',
+              fontWeight: 500,
+              fontSize: '14px',
+              lineHeight: '20px',
+              color: '#374151',
+            }}
+          >
+            Back
+          </span>
+        </button>
+
       {/* Content Container */}
       <div
         style={{
@@ -165,38 +189,9 @@ export function ReturnDetails({ returnId }: ReturnDetailsProps) {
           maxWidth: 'clamp(736px, 72.46vw, 984px)',
           display: 'flex',
           flexDirection: 'column',
+          margin: '0 auto',
         }}
       >
-        {/* Back Button */}
-        <button
-          onClick={handleBack}
-          style={{
-            width: 'fit-content',
-            height: 'clamp(29px, 2.80vw, 38px)',
-            borderRadius: '6px',
-            border: '1px solid #D1D5DB',
-            padding: 'clamp(7px, 0.66vw, 9px) clamp(13px, 1.25vw, 17px)',
-            backgroundColor: '#FFFFFF',
-            boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.05)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            cursor: 'pointer',
-            marginBottom: 'clamp(24px, 2.36vw, 32px)',
-          }}
-        >
-        <span
-          style={{
-            fontFamily: 'Inter, sans-serif',
-            fontWeight: 500,
-            fontSize: 'clamp(11px, 1.03vw, 14px)',
-            lineHeight: '1',
-            color: '#374151',
-          }}
-        >
-          Back
-        </span>
-      </button>
 
       {/* Return Information Section */}
       <div
@@ -846,6 +841,7 @@ export function ReturnDetails({ returnId }: ReturnDetailsProps) {
           </div>
         </div>
       )}
+    </div>
     </div>
   );
 }

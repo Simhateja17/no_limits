@@ -229,21 +229,21 @@ export function ProductDetails({ productId, backUrl }: ProductDetailsProps) {
         <button
           onClick={handleBack}
           style={{
-            minWidth: '65px',
             height: '38px',
+            gap: '8px',
+            padding: '9px 17px 9px 15px',
             borderRadius: '6px',
             border: '1px solid #D1D5DB',
-            padding: '9px 17px 9px 15px',
             backgroundColor: '#FFFFFF',
             boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.05)',
             display: 'flex',
             alignItems: 'center',
-            gap: '8px',
+            justifyContent: 'center',
             cursor: 'pointer',
           }}
         >
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M10 12L6 8L10 4" stroke="#374151" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M15 10H5M5 10L10 15M5 10L10 5" stroke="#374151" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
           <span
             style={{

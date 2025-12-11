@@ -24,8 +24,10 @@ export default function AdminProductDetailsPage() {
 
   return (
     <DashboardLayout>
-      <div className="w-full px-[5.2%] py-8">
-        <ProductDetails productId={productId} backUrl="/admin/products" />
+      <div className="w-full min-h-screen bg-[#F9FAFB]">
+        <div className="px-[3.8%] py-6">
+          <ProductDetails productId={productId} backUrl="/admin/products" />
+        </div>
       </div>
     </DashboardLayout>
   );
