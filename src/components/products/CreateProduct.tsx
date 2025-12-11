@@ -193,9 +193,7 @@ export function CreateProduct({ backUrl }: CreateProductProps) {
       </div>
 
       {/* Product Data Content */}
-      <div className="flex flex-col gap-6">
-        {/* Product Header Section */}
-        <div className="flex gap-6 flex-wrap lg:flex-nowrap">
+      <div className="flex gap-6 flex-wrap lg:flex-nowrap">
           {/* Product Image Upload */}
           <div
             onClick={handleImageClick}
@@ -297,9 +295,10 @@ export function CreateProduct({ backUrl }: CreateProductProps) {
             )}
           </div>
 
+          <div className="flex-1 flex flex-col gap-6" style={{ maxWidth: '927px' }}>
           {/* Product Details Box */}
           <div
-            className="flex-1"
+            className="w-full"
             style={{
               borderRadius: '8px',
               padding: '24px',
@@ -332,7 +331,6 @@ export function CreateProduct({ backUrl }: CreateProductProps) {
               />
             </div>
           </div>
-        </div>
 
         {/* Information Box - Geodata, Identifier, Attributes */}
         <div
@@ -341,7 +339,6 @@ export function CreateProduct({ backUrl }: CreateProductProps) {
             padding: '24px',
             backgroundColor: '#FFFFFF',
             boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.06), 0px 1px 3px 0px rgba(0, 0, 0, 0.1)',
-            marginLeft: '216px',
           }}
         >
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -418,7 +415,6 @@ export function CreateProduct({ backUrl }: CreateProductProps) {
             padding: '24px',
             backgroundColor: '#FFFFFF',
             boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.06), 0px 1px 3px 0px rgba(0, 0, 0, 0.1)',
-            marginLeft: '216px',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
@@ -464,6 +460,7 @@ export function CreateProduct({ backUrl }: CreateProductProps) {
             </span>
           </button>
         </div>
+      </div>
       </div>
     </div>
   );
