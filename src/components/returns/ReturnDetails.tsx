@@ -153,8 +153,7 @@ export function ReturnDetails({ returnId }: ReturnDetailsProps) {
           onClick={handleBack}
           style={{
             height: '38px',
-            gap: '8px',
-            padding: '9px 17px 9px 15px',
+            padding: '9px 17px',
             borderRadius: '6px',
             border: '1px solid #D1D5DB',
             backgroundColor: '#FFFFFF',
@@ -166,9 +165,6 @@ export function ReturnDetails({ returnId }: ReturnDetailsProps) {
             marginBottom: '24px',
           }}
         >
-          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M15 10H5M5 10L10 15M5 10L10 5" stroke="#374151" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
           <span
             style={{
               fontFamily: 'Inter, sans-serif',
