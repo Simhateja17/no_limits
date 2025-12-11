@@ -769,18 +769,23 @@ export default function OrderDetailPage() {
                 >
                   Activate this to set the order status to on-hold. This will be set by default when the payment is pending. You can use this also for your own reason. You can also release the order without payment.
                 </div>
-                {/* Toggle */}
+                {/* Toggle - only clickable when edit mode is enabled */}
                 <button
-                  onClick={() => setOnHoldStatus(!onHoldStatus)}
+                  onClick={() => editOrderEnabled && setOnHoldStatus(!onHoldStatus)}
+                  disabled={!editOrderEnabled}
                   style={{
                     marginTop: '16px',
                     width: '44px',
                     height: '24px',
                     borderRadius: '12px',
                     padding: '2px',
-                    backgroundColor: onHoldStatus ? '#003450' : '#E5E7EB',
+                    backgroundColor: !editOrderEnabled
+                      ? '#EAEAEA'
+                      : onHoldStatus
+                      ? '#003450'
+                      : '#E5E7EB',
                     border: 'none',
-                    cursor: 'pointer',
+                    cursor: editOrderEnabled ? 'pointer' : 'not-allowed',
                     position: 'relative',
                     transition: 'background-color 0.2s ease',
                   }}

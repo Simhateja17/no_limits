@@ -1053,6 +1053,9 @@ export function ProductDetails({ productId, backUrl }: ProductDetailsProps) {
                       boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.05)',
                       border: 'none',
                       cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
                     }}
                   >
                     <span
@@ -1115,6 +1118,9 @@ export function ProductDetails({ productId, backUrl }: ProductDetailsProps) {
                     backgroundColor: '#FEE2E2',
                     border: 'none',
                     cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
                   }}
                 >
                   <span
