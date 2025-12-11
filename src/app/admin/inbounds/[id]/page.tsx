@@ -4,6 +4,7 @@ import { DashboardLayout } from '@/components/layout';
 import { useAuthStore } from '@/lib/store';
 import { useRouter, useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { useTranslations } from 'next-intl';
 
 // Mock product data
 interface Product {
@@ -34,6 +35,8 @@ export default function AdminInboundDetailPage() {
   const { user, isAuthenticated } = useAuthStore();
   const router = useRouter();
   const params = useParams();
+  const tCommon = useTranslations('common');
+  const tMessages = useTranslations('messages');
   const inboundId = params.id as string;
 
   const [editMode, setEditMode] = useState(false);
@@ -102,7 +105,7 @@ export default function AdminInboundDetailPage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
                 </div>
-                <span className="font-medium text-base">Inbound saved successfully!</span>
+                <span className="font-medium text-base">{tMessages('inboundSavedSuccessfully')}</span>
               </div>
             </div>
           </div>
@@ -134,7 +137,7 @@ export default function AdminInboundDetailPage() {
                 color: '#374151',
               }}
             >
-              Back
+              {tCommon('back')}
             </span>
           </button>
 
@@ -520,7 +523,7 @@ export default function AdminInboundDetailPage() {
                     color: '#374151', 
                     display: 'block', 
                     marginBottom: '8px' 
-                  }}>ETA</label>
+                  }}>{tMessages('eta')}</label>
                   <input
                     type="text"
                     value={eta}
@@ -545,7 +548,7 @@ export default function AdminInboundDetailPage() {
                     color: '#374151', 
                     display: 'block', 
                     marginBottom: '8px' 
-                  }}>Freigt forwarder</label>
+                  }}>{tMessages('freightForwarder')}</label>
                   <input
                     type="text"
                     value={freightForwarder}
@@ -570,7 +573,7 @@ export default function AdminInboundDetailPage() {
                     color: '#374151', 
                     display: 'block', 
                     marginBottom: '8px' 
-                  }}>Tracking no</label>
+                  }}>{tMessages('trackingNo')}</label>
                   <input
                     type="text"
                     value={trackingNo}
@@ -595,7 +598,7 @@ export default function AdminInboundDetailPage() {
                     color: '#374151', 
                     display: 'block', 
                     marginBottom: '8px' 
-                  }}>Qty boxes</label>
+                  }}>{tMessages('qtyBoxes')}</label>
                   <input
                     type="text"
                     value={qtyBoxes}
@@ -620,7 +623,7 @@ export default function AdminInboundDetailPage() {
                     color: '#374151', 
                     display: 'block', 
                     marginBottom: '8px' 
-                  }}>Qty pallets</label>
+                  }}>{tMessages('qtyPallets')}</label>
                   <input
                     type="text"
                     value={qtyPallets}
@@ -645,7 +648,7 @@ export default function AdminInboundDetailPage() {
                     color: '#374151', 
                     display: 'block', 
                     marginBottom: '8px' 
-                  }}>Total CBM</label>
+                  }}>{tMessages('totalCBM')}</label>
                   <input
                     type="text"
                     value={totalCBM}
@@ -756,7 +759,7 @@ export default function AdminInboundDetailPage() {
                 marginBottom: '16px', 
                 lineHeight: '1.5' 
               }}>
-                Achtung, das Löschen des Artikels führt dazu, dass alle Warenbewegungen verloren gehen. Artikel können nur gelöscht werden wenn kein Bestand vorhanden ist und keine Reservierungen oder Anlieferungen anliegen.
+                {tCommon('deleteWarning')}
               </p>
               <button
                 style={{

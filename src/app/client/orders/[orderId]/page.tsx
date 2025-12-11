@@ -6,11 +6,12 @@ import Image from 'next/image';
 import { DashboardLayout } from '@/components/layout';
 import { useAuthStore } from '@/lib/store';
 import { useEffect } from 'react';
+import { useTranslations } from 'next-intl';
 
 // Mock order data - in real app this would come from API
 const mockOrderDetails = {
   orderId: '934242',
-  status: 'Processing' as 'Processing' | 'On Hold' | 'Shipped' | 'Cancelled',
+  status: 'processing' as 'processing' | 'onHold' | 'shipped' | 'cancelled',
   deliveryMethod: {
     name: 'Max Mustermann',
     street: 'Musterstr. 10',
@@ -51,13 +52,13 @@ const shippingMethods = [
 // Status color mapping
 const getStatusColor = (status: string) => {
   switch (status) {
-    case 'Processing':
+    case 'processing':
       return '#6BAC4D';
-    case 'On Hold':
+    case 'onHold':
       return '#F59E0B';
-    case 'Shipped':
+    case 'shipped':
       return '#10B981';
-    case 'Cancelled':
+    case 'cancelled':
       return '#EF4444';
     default:
       return '#6BAC4D';
@@ -68,6 +69,11 @@ export default function ClientOrderDetailPage() {
   const params = useParams();
   const router = useRouter();
   const { user, isAuthenticated } = useAuthStore();
+  const tCommon = useTranslations('common');
+  const tOrders = useTranslations('orders');
+  const tStatus = useTranslations('status');
+  const tCountries = useTranslations('countries');
+  const tMessages = useTranslations('messages');
   const [showEditModal, setShowEditModal] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [editOrderEnabled, setEditOrderEnabled] = useState(false);
@@ -184,7 +190,7 @@ export default function ClientOrderDetailPage() {
                 color: '#374151',
               }}
             >
-              Back
+              {tCommon('back')}
             </span>
           </button>
 
@@ -214,7 +220,7 @@ export default function ClientOrderDetailPage() {
                       color: '#111827',
                     }}
                   >
-                    Order ID
+                    {tOrders('orderId')}
                   </span>
                   {/* Status Pill */}
                   <div
@@ -287,7 +293,7 @@ export default function ClientOrderDetailPage() {
                       color: '#111827',
                     }}
                   >
-                    Delivery method
+                    {tOrders('deliveryMethod')}
                   </span>
                   {/* Edit Pill - Only show when edit mode is enabled */}
                   {editOrderEnabled && (
@@ -533,7 +539,7 @@ export default function ClientOrderDetailPage() {
                     color: '#111827',
                   }}
                 >
-                  On Hold
+                  {tOrders('onHold')}
                 </span>
                 <button
                   onClick={() => setOnHoldStatus(!onHoldStatus)}
@@ -650,7 +656,7 @@ export default function ClientOrderDetailPage() {
                       color: '#6B7280',
                     }}
                   >
-                    Product Name
+                    {tOrders('productName')}
                   </span>
                   <span
                     style={{
@@ -663,7 +669,7 @@ export default function ClientOrderDetailPage() {
                       color: '#6B7280',
                     }}
                   >
-                    SKU
+                    {tOrders('sku')}
                   </span>
                   <span
                     style={{
@@ -676,7 +682,7 @@ export default function ClientOrderDetailPage() {
                       color: '#6B7280',
                     }}
                   >
-                    GTIN
+                    {tOrders('gtin')}
                   </span>
                   <span
                     style={{
@@ -689,7 +695,7 @@ export default function ClientOrderDetailPage() {
                       color: '#6B7280',
                     }}
                   >
-                    QTY
+                    {tOrders('qty')}
                   </span>
                 </div>
 
@@ -1099,7 +1105,7 @@ export default function ClientOrderDetailPage() {
                     color: '#111827',
                   }}
                 >
-                  Edit order
+                  {tOrders('editOrder')}
                 </span>
                 {/* Toggle */}
                 <button
@@ -1150,7 +1156,7 @@ export default function ClientOrderDetailPage() {
                     marginBottom: '8px',
                   }}
                 >
-                  Delete order
+                  {tOrders('deleteOrder')}
                 </h3>
                 <p
                   style={{
@@ -1162,7 +1168,7 @@ export default function ClientOrderDetailPage() {
                     marginBottom: '16px',
                   }}
                 >
-                  Attention, deleting the order leads to permanent loss of data. Orders can only be deleted if they are not yet shipped.
+                  {tOrders('deleteOrderWarning')}
                 </p>
                 <button
                   style={{
@@ -1187,7 +1193,7 @@ export default function ClientOrderDetailPage() {
                       color: '#DC2626',
                     }}
                   >
-                    Delete order
+                    {tOrders('deleteOrder')}
                   </span>
                 </button>
               </div>
@@ -1235,7 +1241,7 @@ export default function ClientOrderDetailPage() {
                   marginBottom: '24px',
                 }}
               >
-                Edit order
+                {tOrders('editOrder')}
               </h2>
 
               <div className="grid grid-cols-2 gap-6">
@@ -1496,10 +1502,10 @@ export default function ClientOrderDetailPage() {
                         cursor: 'pointer',
                       }}
                     >
-                      <option value="United States">United States</option>
-                      <option value="Germany">Germany</option>
-                      <option value="Austria">Austria</option>
-                      <option value="Switzerland">Switzerland</option>
+                      <option value="unitedStates">{tCountries('unitedStates')}</option>
+                      <option value="germany">{tCountries('germany')}</option>
+                      <option value="austria">{tCountries('austria')}</option>
+                      <option value="switzerland">{tCountries('switzerland')}</option>
                     </select>
                     <div
                       style={{
@@ -1609,7 +1615,7 @@ export default function ClientOrderDetailPage() {
                   color: '#111827',
                 }}
               >
-                Shipping address changed
+                {tOrders('shippingAddressChanged')}
               </span>
             </div>
           </div>

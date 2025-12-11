@@ -4,6 +4,7 @@ import { DashboardLayout } from '@/components/layout';
 import { useAuthStore } from '@/lib/store';
 import { useRouter, useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { useTranslations } from 'next-intl';
 
 // Mock product data
 interface Product {
@@ -34,6 +35,8 @@ export default function EmployeeInboundDetailPage() {
   const { user, isAuthenticated } = useAuthStore();
   const router = useRouter();
   const params = useParams();
+  const tCommon = useTranslations('common');
+  const tMessages = useTranslations('messages');
   const inboundId = params.id as string;
 
   const [editMode, setEditMode] = useState(false);
@@ -133,7 +136,7 @@ export default function EmployeeInboundDetailPage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
                 </div>
-                <span style={{ fontSize: styles.fontSizeLg }} className="font-medium">Inbound saved successfully!</span>
+                <span style={{ fontSize: styles.fontSizeLg }} className="font-medium">{tMessages('inboundSavedSuccessfully')}</span>
               </div>
             </div>
           </div>
@@ -153,7 +156,7 @@ export default function EmployeeInboundDetailPage() {
               cursor: 'pointer'
             }}
           >
-            Back
+            {tCommon('back')}
           </button>
         </div>
 
@@ -182,7 +185,7 @@ export default function EmployeeInboundDetailPage() {
               border: '1px solid #E5E7EB'
             }}>
               <div className="flex items-center gap-2 mb-2">
-                <span style={{ fontSize: styles.fontSizeBase, fontWeight: 600, color: '#111827' }}>Inbound ID</span>
+                <span style={{ fontSize: styles.fontSizeBase, fontWeight: 600, color: '#111827' }}>{tMessages('inboundId')}</span>
                 <span style={{
                   display: 'inline-flex',
                   alignItems: 'center',
@@ -440,7 +443,7 @@ export default function EmployeeInboundDetailPage() {
               
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: styles.gridGap }}>
                 <div>
-                  <label style={{ fontSize: styles.fontSizeBase, fontWeight: 500, color: '#374151', display: 'block', marginBottom: 'clamp(4px, 0.44vw, 8px)' }}>ETA</label>
+                  <label style={{ fontSize: styles.fontSizeBase, fontWeight: 500, color: '#374151', display: 'block', marginBottom: 'clamp(4px, 0.44vw, 8px)' }}>{tMessages('eta')}</label>
                   <input
                     type="text"
                     value={eta}
@@ -458,7 +461,7 @@ export default function EmployeeInboundDetailPage() {
                   />
                 </div>
                 <div>
-                  <label style={{ fontSize: styles.fontSizeBase, fontWeight: 500, color: '#374151', display: 'block', marginBottom: 'clamp(4px, 0.44vw, 8px)' }}>Freigt forwarder</label>
+                  <label style={{ fontSize: styles.fontSizeBase, fontWeight: 500, color: '#374151', display: 'block', marginBottom: 'clamp(4px, 0.44vw, 8px)' }}>{tMessages('freightForwarder')}</label>
                   <input
                     type="text"
                     value={freightForwarder}
@@ -476,7 +479,7 @@ export default function EmployeeInboundDetailPage() {
                   />
                 </div>
                 <div>
-                  <label style={{ fontSize: styles.fontSizeBase, fontWeight: 500, color: '#374151', display: 'block', marginBottom: 'clamp(4px, 0.44vw, 8px)' }}>Tracking no</label>
+                  <label style={{ fontSize: styles.fontSizeBase, fontWeight: 500, color: '#374151', display: 'block', marginBottom: 'clamp(4px, 0.44vw, 8px)' }}>{tMessages('trackingNo')}</label>
                   <input
                     type="text"
                     value={trackingNo}
@@ -494,7 +497,7 @@ export default function EmployeeInboundDetailPage() {
                   />
                 </div>
                 <div>
-                  <label style={{ fontSize: styles.fontSizeBase, fontWeight: 500, color: '#374151', display: 'block', marginBottom: 'clamp(4px, 0.44vw, 8px)' }}>Qty boxes</label>
+                  <label style={{ fontSize: styles.fontSizeBase, fontWeight: 500, color: '#374151', display: 'block', marginBottom: 'clamp(4px, 0.44vw, 8px)' }}>{tMessages('qtyBoxes')}</label>
                   <input
                     type="text"
                     value={qtyBoxes}
@@ -512,7 +515,7 @@ export default function EmployeeInboundDetailPage() {
                   />
                 </div>
                 <div>
-                  <label style={{ fontSize: styles.fontSizeBase, fontWeight: 500, color: '#374151', display: 'block', marginBottom: 'clamp(4px, 0.44vw, 8px)' }}>Qty pallets</label>
+                  <label style={{ fontSize: styles.fontSizeBase, fontWeight: 500, color: '#374151', display: 'block', marginBottom: 'clamp(4px, 0.44vw, 8px)' }}>{tMessages('qtyPallets')}</label>
                   <input
                     type="text"
                     value={qtyPallets}
@@ -530,7 +533,7 @@ export default function EmployeeInboundDetailPage() {
                   />
                 </div>
                 <div>
-                  <label style={{ fontSize: styles.fontSizeBase, fontWeight: 500, color: '#374151', display: 'block', marginBottom: 'clamp(4px, 0.44vw, 8px)' }}>Total CBM</label>
+                  <label style={{ fontSize: styles.fontSizeBase, fontWeight: 500, color: '#374151', display: 'block', marginBottom: 'clamp(4px, 0.44vw, 8px)' }}>{tMessages('totalCBM')}</label>
                   <input
                     type="text"
                     value={totalCBM}
@@ -615,7 +618,7 @@ export default function EmployeeInboundDetailPage() {
             }}>
               <h3 style={{ fontSize: styles.fontSizeLg, fontWeight: 600, color: '#111827', marginBottom: 'clamp(6px, 0.59vw, 10px)' }}>Cancel inbound</h3>
               <p style={{ fontSize: styles.fontSizeBase, color: '#6B7280', marginBottom: styles.gridGap, lineHeight: '1.5' }}>
-                Achtung, das Löschen des Artikels führt dazu, dass alle Warenbewegungen verloren gehen. Artikel können nur gelöscht werden wenn kein Bestand vorhanden ist und keine Reservierungen oder Anlieferungen anliegen.
+                {tCommon('deleteWarning')}
               </p>
               <button
                 style={{

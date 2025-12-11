@@ -11,7 +11,7 @@ import { useTranslations } from 'next-intl';
 // Mock order data - in real app this would come from API
 const mockOrderDetails = {
   orderId: '934242',
-  status: 'Processing' as 'Processing' | 'On Hold' | 'Shipped' | 'Cancelled',
+  status: 'processing' as 'processing' | 'onHold' | 'shipped' | 'cancelled',
   deliveryMethod: {
     name: 'Max Mustermann',
     street: 'Musterstr. 10',
@@ -52,13 +52,13 @@ const shippingMethods = [
 // Status color mapping
 const getStatusColor = (status: string) => {
   switch (status) {
-    case 'Processing':
+    case 'processing':
       return '#6BAC4D';
-    case 'On Hold':
+    case 'onHold':
       return '#F59E0B';
-    case 'Shipped':
+    case 'shipped':
       return '#10B981';
-    case 'Cancelled':
+    case 'cancelled':
       return '#EF4444';
     default:
       return '#6BAC4D';
@@ -70,6 +70,8 @@ export default function OrderDetailPage() {
   const router = useRouter();
   const { user, isAuthenticated } = useAuthStore();
   const tCommon = useTranslations('common');
+  const tOrders = useTranslations('orders');
+  const tCountries = useTranslations('countries');
   const [editOrderEnabled, setEditOrderEnabled] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
@@ -94,7 +96,7 @@ export default function OrderDetailPage() {
     streetAddress: '',
     city: '',
     zipPostal: '',
-    country: 'United States',
+    country: 'unitedStates',
   });
 
   useEffect(() => {
@@ -232,7 +234,7 @@ export default function OrderDetailPage() {
                 color: '#374151',
               }}
             >
-              Back
+              {tCommon('back')}
             </span>
           </button>
 
@@ -262,7 +264,7 @@ export default function OrderDetailPage() {
                       color: '#111827',
                     }}
                   >
-                    Order ID
+                    {tOrders('orderId')}
                   </span>
                   {/* Status Pill */}
                   <div
@@ -294,7 +296,7 @@ export default function OrderDetailPage() {
                         color: '#000000',
                       }}
                     >
-                      {onHoldStatus ? 'On Hold' : mockOrderDetails.status}
+                      {onHoldStatus ? tOrders('onHold') : tOrders(mockOrderDetails.status.toLowerCase())}
                     </span>
                   </div>
                 </div>
@@ -335,7 +337,7 @@ export default function OrderDetailPage() {
                       color: '#111827',
                     }}
                   >
-                    Delivery method
+                    {tOrders('deliveryMethod')}
                   </span>
                   {/* Edit Pill - Only show when edit mode is enabled */}
                   {editOrderEnabled && (
@@ -364,7 +366,7 @@ export default function OrderDetailPage() {
                           textAlign: 'center',
                         }}
                       >
-                        Edit
+                        {tCommon('edit')}
                       </span>
                     </button>
                   )}
@@ -408,7 +410,7 @@ export default function OrderDetailPage() {
                     color: '#111827',
                   }}
                 >
-                  Shipping method
+                  {tOrders('shippingMethod')}
                 </span>
                 {editOrderEnabled ? (
                   <div style={{ position: 'relative', marginTop: '12px' }}>
@@ -581,7 +583,7 @@ export default function OrderDetailPage() {
                     color: '#111827',
                   }}
                 >
-                  On Hold
+                  {tOrders('onHold')}
                 </span>
                 <button
                   onClick={() => setOnHoldStatus(!onHoldStatus)}
@@ -634,7 +636,7 @@ export default function OrderDetailPage() {
                     color: '#111827',
                   }}
                 >
-                  Shipment Weight
+                  {tOrders('shipmentWeight')}
                 </span>
                 <div
                   style={{
@@ -658,7 +660,7 @@ export default function OrderDetailPage() {
                     color: '#9CA3AF',
                   }}
                 >
-                  Shipment weight is total weight of all products in this order, to change weight of the order you have to edit the single product weight
+                  {tOrders('shipmentWeightDescription')}
                 </div>
               </div>
 
@@ -684,7 +686,7 @@ export default function OrderDetailPage() {
                     color: '#111827',
                   }}
                 >
-                  Tags
+                  {tOrders('tags')}
                 </span>
                 <div className="flex flex-wrap gap-2 mt-3">
                   {tags.map((tag) => (
@@ -746,7 +748,7 @@ export default function OrderDetailPage() {
                           handleAddTag();
                         }
                       }}
-                      placeholder="Add tag"
+                      placeholder={tOrders('addTag')}
                       style={{
                         width: '100%',
                         height: '42px',
@@ -779,7 +781,7 @@ export default function OrderDetailPage() {
                         cursor: 'pointer',
                       }}
                     >
-                      Add
+                      {tOrders('add')}
                     </button>
                   </div>
                 )}
@@ -821,7 +823,7 @@ export default function OrderDetailPage() {
                       color: '#6B7280',
                     }}
                   >
-                    Product Name
+                    {tOrders('productName')}
                   </span>
                   <span
                     style={{
@@ -834,7 +836,7 @@ export default function OrderDetailPage() {
                       color: '#6B7280',
                     }}
                   >
-                    SKU
+                    {tOrders('sku')}
                   </span>
                   <span
                     style={{
@@ -847,7 +849,7 @@ export default function OrderDetailPage() {
                       color: '#6B7280',
                     }}
                   >
-                    GTIN
+                    {tOrders('gtin')}
                   </span>
                   <span
                     style={{
@@ -860,7 +862,7 @@ export default function OrderDetailPage() {
                       color: '#6B7280',
                     }}
                   >
-                    QTY
+                    {tOrders('qty')}
                   </span>
                 </div>
 
@@ -899,7 +901,7 @@ export default function OrderDetailPage() {
                             color: '#DC2626',
                           }}
                         >
-                          Remove
+                          {tOrders('remove')}
                         </span>
                       </button>
                     )}
@@ -1015,7 +1017,7 @@ export default function OrderDetailPage() {
                         marginBottom: '4px',
                       }}
                     >
-                      Add Products
+                      {tOrders('addProducts')}
                     </label>
                     <input
                       type="text"
@@ -1026,7 +1028,7 @@ export default function OrderDetailPage() {
                           setShowProductList(true);
                         }
                       }}
-                      placeholder="Search products..."
+                      placeholder={tOrders('searchProducts')}
                       style={{
                         width: 'calc(100% - 24px)',
                         border: 'none',
@@ -1099,7 +1101,7 @@ export default function OrderDetailPage() {
                             color: '#6B7280',
                           }}
                         >
-                          Product Name
+                          {tOrders('productName')}
                         </span>
                         <span
                           style={{
@@ -1112,7 +1114,7 @@ export default function OrderDetailPage() {
                             color: '#6B7280',
                           }}
                         >
-                          SKU
+                          {tOrders('sku')}
                         </span>
                         <span
                           style={{
@@ -1125,7 +1127,7 @@ export default function OrderDetailPage() {
                             color: '#6B7280',
                           }}
                         >
-                          GTIN
+                          {tOrders('gtin')}
                         </span>
                         <span
                           style={{
@@ -1138,7 +1140,7 @@ export default function OrderDetailPage() {
                             color: '#6B7280',
                           }}
                         >
-                          QTY
+                          {tOrders('qty')}
                         </span>
                       </div>
 
@@ -1176,7 +1178,7 @@ export default function OrderDetailPage() {
                                 color: '#FFFFFF',
                               }}
                             >
-                              Add
+                              {tOrders('add')}
                             </span>
                           </button>
                           <span
@@ -1270,7 +1272,7 @@ export default function OrderDetailPage() {
                     color: '#111827',
                   }}
                 >
-                  Edit order
+                  {tOrders('editOrder')}
                 </span>
                 {/* Toggle */}
                 <button
@@ -1321,7 +1323,7 @@ export default function OrderDetailPage() {
                     marginBottom: '8px',
                   }}
                 >
-                  Delete order
+                  {tOrders('deleteOrder')}
                 </h3>
                 <p
                   style={{
@@ -1333,7 +1335,7 @@ export default function OrderDetailPage() {
                     marginBottom: '16px',
                   }}
                 >
-                  Attention, deleting the order leads to permanent loss of data. Orders can only be deleted if they are not yet shipped.
+                  {tOrders('deleteOrderWarning')}
                 </p>
                 <button
                   style={{
@@ -1358,73 +1360,7 @@ export default function OrderDetailPage() {
                       color: '#DC2626',
                     }}
                   >
-                    Delete order
-                  </span>
-                </button>
-              </div>
-
-              {/* Cancel Order Box */}
-              <div
-                style={{
-                  width: '100%',
-                  minHeight: '178px',
-                  gap: '20px',
-                  borderRadius: '8px',
-                  padding: 'clamp(16px, 1.8vw, 24px)',
-                  backgroundColor: '#FFFFFF',
-                  boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.06), 0px 1px 3px 0px rgba(0, 0, 0, 0.1)',
-                }}
-              >
-                <span
-                  style={{
-                    fontFamily: 'Inter, sans-serif',
-                    fontWeight: 500,
-                    fontSize: 'clamp(16px, 1.3vw, 18px)',
-                    lineHeight: '24px',
-                    color: '#111827',
-                    display: 'block',
-                  }}
-                >
-                  Cancel order
-                </span>
-                <p
-                  style={{
-                    marginTop: '12px',
-                    fontFamily: 'Inter, sans-serif',
-                    fontWeight: 400,
-                    fontSize: '14px',
-                    lineHeight: '20px',
-                    color: '#6B7280',
-                  }}
-                >
-                  {tCommon('deleteWarning')}
-                </p>
-                <button
-                  style={{
-                    marginTop: '20px',
-                    width: 'clamp(100px, 8.8vw, 120px)',
-                    height: 'clamp(34px, 2.8vw, 38px)',
-                    padding: 'clamp(7px, 0.66vw, 9px) clamp(13px, 1.25vw, 17px)',
-                    borderRadius: '6px',
-                    backgroundColor: '#FEE2E2',
-                    border: 'none',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
-                >
-                  <span
-                    style={{
-                      fontFamily: 'Inter, sans-serif',
-                      fontWeight: 500,
-                      fontSize: 'clamp(12px, 1.03vw, 14px)',
-                      lineHeight: '20px',
-                      color: '#DC2626',
-                      whiteSpace: 'nowrap',
-                    }}
-                  >
-                    Cancel order
+                    {tOrders('deleteOrder')}
                   </span>
                 </button>
               </div>
@@ -1451,7 +1387,7 @@ export default function OrderDetailPage() {
                     display: 'block',
                   }}
                 >
-                  Create replacement order
+                  {tOrders('createReplacementOrder')}
                 </span>
                 <p
                   style={{
@@ -1463,7 +1399,7 @@ export default function OrderDetailPage() {
                     color: '#6B7280',
                   }}
                 >
-                  {tCommon('deleteWarning')}
+                  {tOrders('cancelOrderWarning')}
                 </p>
                 <button
                   onClick={handleCreateReplacementOrder}
@@ -1492,7 +1428,7 @@ export default function OrderDetailPage() {
                       textAlign: 'center',
                     }}
                   >
-                    Create replacement order
+                    {tOrders('createReplacementOrder')}
                   </span>
                 </button>
               </div>
@@ -1540,7 +1476,7 @@ export default function OrderDetailPage() {
                   marginBottom: '24px',
                 }}
               >
-                Edit order
+                {tOrders('editOrder')}
               </h2>
 
               <div className="grid grid-cols-2 gap-6">
@@ -1555,7 +1491,7 @@ export default function OrderDetailPage() {
                       color: '#374151',
                     }}
                   >
-                    First name
+                    {tOrders('firstName')}
                   </label>
                   <input
                     type="text"
@@ -1587,7 +1523,7 @@ export default function OrderDetailPage() {
                       color: '#374151',
                     }}
                   >
-                    Last name
+                    {tOrders('lastName')}
                   </label>
                   <input
                     type="text"
@@ -1619,7 +1555,7 @@ export default function OrderDetailPage() {
                       color: '#374151',
                     }}
                   >
-                    Company
+                    {tOrders('company')}
                   </label>
                   <input
                     type="text"
@@ -1651,7 +1587,7 @@ export default function OrderDetailPage() {
                       color: '#374151',
                     }}
                   >
-                    Address Line 2
+                    {tOrders('addressLine2')}
                   </label>
                   <input
                     type="text"
@@ -1683,7 +1619,7 @@ export default function OrderDetailPage() {
                       color: '#374151',
                     }}
                   >
-                    Street address
+                    {tOrders('streetAddress')}
                   </label>
                   <input
                     type="text"
@@ -1715,7 +1651,7 @@ export default function OrderDetailPage() {
                       color: '#374151',
                     }}
                   >
-                    City
+                    {tOrders('city')}
                   </label>
                   <input
                     type="text"
@@ -1747,7 +1683,7 @@ export default function OrderDetailPage() {
                       color: '#374151',
                     }}
                   >
-                    ZIP / Postal
+                    {tOrders('zipPostal')}
                   </label>
                   <input
                     type="text"
@@ -1779,7 +1715,7 @@ export default function OrderDetailPage() {
                       color: '#374151',
                     }}
                   >
-                    Country
+                    {tOrders('country')}
                   </label>
                   <div className="relative">
                     <select
@@ -1801,10 +1737,10 @@ export default function OrderDetailPage() {
                         cursor: 'pointer',
                       }}
                     >
-                      <option value="United States">United States</option>
-                      <option value="Germany">Germany</option>
-                      <option value="Austria">Austria</option>
-                      <option value="Switzerland">Switzerland</option>
+                      <option value="unitedStates">{tCountries('unitedStates')}</option>
+                      <option value="germany">{tCountries('germany')}</option>
+                      <option value="austria">{tCountries('austria')}</option>
+                      <option value="switzerland">{tCountries('switzerland')}</option>
                     </select>
                     <div
                       style={{
@@ -1850,7 +1786,7 @@ export default function OrderDetailPage() {
                       textAlign: 'center',
                     }}
                   >
-                    Save
+                    {tCommon('save')}
                   </span>
                 </button>
               </div>
@@ -1914,7 +1850,7 @@ export default function OrderDetailPage() {
                   color: '#111827',
                 }}
               >
-                Shipping address changed
+                {tOrders('shippingAddressChanged')}
               </span>
             </div>
           </div>
@@ -1978,7 +1914,7 @@ export default function OrderDetailPage() {
                   color: '#111827',
                 }}
               >
-                Replacement order created
+                {tOrders('replacementOrderCreated')}
               </span>
             </div>
           </div>

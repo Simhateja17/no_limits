@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
+import { useTranslations } from 'next-intl';
 
 interface CreateTaskModalProps {
   isOpen: boolean;
@@ -18,15 +19,15 @@ interface TaskData {
   description: string;
 }
 
-const taskTypes = [
-  'Internal / Warehouse',
-  'Client Communication',
-  'Order Processing',
-  'Returns',
-  'Inventory Check',
+const taskTypeKeys = [
+  'internalWarehouse',
+  'clientCommunication',
+  'orderProcessing',
+  'returns',
+  'inventoryCheck',
 ];
 
-const prioLevels = ['Low', 'Medium', 'High', 'Urgent'];
+const prioLevelKeys = ['low', 'medium', 'high', 'urgent'];
 
 export function CreateTaskModal({
   isOpen,
@@ -35,8 +36,11 @@ export function CreateTaskModal({
   clientName,
   initialDescription = '',
 }: CreateTaskModalProps) {
-  const [taskType, setTaskType] = useState('Internal / Warehouse');
-  const [prioLevel, setPrioLevel] = useState('Low');
+  const t = useTranslations('tasks');
+  const tCommon = useTranslations('common');
+  const tChat = useTranslations('chat');
+  const [taskType, setTaskType] = useState('internalWarehouse');
+  const [prioLevel, setPrioLevel] = useState('low');
   const [description, setDescription] = useState(initialDescription);
 
   const handleSubmit = () => {
@@ -123,7 +127,7 @@ export function CreateTaskModal({
             margin: 0,
           }}
         >
-          Create Task
+          {t('createTask')}
         </h2>
 
         {/* Client Field */}
@@ -137,7 +141,7 @@ export function CreateTaskModal({
               color: '#374151',
             }}
           >
-            Client
+            {t('client')}
           </label>
           <div
             className="flex items-center justify-between"
@@ -190,7 +194,7 @@ export function CreateTaskModal({
               color: '#374151',
             }}
           >
-            Task type
+            {t('taskType')}
           </label>
           <div
             className="relative"
@@ -217,9 +221,9 @@ export function CreateTaskModal({
                 outline: 'none',
               }}
             >
-              {taskTypes.map((type) => (
-                <option key={type} value={type}>
-                  {type}
+              {taskTypeKeys.map((key) => (
+                <option key={key} value={key}>
+                  {t(key)}
                 </option>
               ))}
             </select>
@@ -259,7 +263,7 @@ export function CreateTaskModal({
               color: '#374151',
             }}
           >
-            Prio level
+            {t('prioLevel')}
           </label>
           <div
             className="relative"
@@ -286,9 +290,9 @@ export function CreateTaskModal({
                 outline: 'none',
               }}
             >
-              {prioLevels.map((level) => (
-                <option key={level} value={level}>
-                  {level}
+              {prioLevelKeys.map((key) => (
+                <option key={key} value={key}>
+                  {t(key)}
                 </option>
               ))}
             </select>
@@ -328,7 +332,7 @@ export function CreateTaskModal({
               color: '#374151',
             }}
           >
-            Task desc.
+            {t('description')}
           </label>
           <textarea
             value={description}
@@ -347,7 +351,7 @@ export function CreateTaskModal({
               lineHeight: '20px',
               color: '#111827',
             }}
-            placeholder="Enter task description..."
+            placeholder={`${t('description')}...`}
           />
         </div>
 
@@ -389,7 +393,7 @@ export function CreateTaskModal({
                 color: '#111827',
               }}
             >
-              Adopt client message
+              {tChat('adoptClientMessage')}
             </span>
           </button>
         </div>
@@ -419,7 +423,7 @@ export function CreateTaskModal({
                 color: '#374151',
               }}
             >
-              Back
+              {tCommon('back')}
             </span>
           </button>
 
@@ -446,7 +450,7 @@ export function CreateTaskModal({
                 color: '#FFFFFF',
               }}
             >
-              Create
+              {tCommon('create')}
             </span>
           </button>
         </div>

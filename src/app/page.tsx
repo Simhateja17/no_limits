@@ -124,7 +124,7 @@ export default function LoginPage() {
                 cursor: 'pointer',
               }}
             >
-              Store Owner
+              {t('storeOwner')}
             </button>
 
             {/* Employee Tab */}

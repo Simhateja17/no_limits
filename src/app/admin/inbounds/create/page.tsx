@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { DashboardLayout } from '@/components/layout';
 import { useAuthStore } from '@/lib/store';
 import { useEffect } from 'react';
+import { useTranslations } from 'next-intl';
 
 // Mock available products to add
 const mockAvailableProducts = [
@@ -20,6 +21,10 @@ const mockAvailableProducts = [
 export default function CreateInboundPage() {
   const router = useRouter();
   const { user, isAuthenticated } = useAuthStore();
+  const tCommon = useTranslations('common');
+  const tInbounds = useTranslations('inbounds');
+  const tOrders = useTranslations('orders');
+  const tMessages = useTranslations('messages');
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [inboundProducts, setInboundProducts] = useState<typeof mockAvailableProducts>([]);
   const [productSearchQuery, setProductSearchQuery] = useState('');
@@ -172,7 +177,7 @@ export default function CreateInboundPage() {
                   color: '#374151',
                 }}
               >
-                Back
+                {tCommon('back')}
               </span>
             </button>
 
@@ -201,7 +206,7 @@ export default function CreateInboundPage() {
                   whiteSpace: 'nowrap',
                 }}
               >
-                Save inbound
+                {tInbounds('createInbound')}
               </span>
             </button>
           </div>
@@ -242,7 +247,7 @@ export default function CreateInboundPage() {
                     color: '#6B7280',
                   }}
                 >
-                  Product Name
+                  {tOrders('productName')}
                 </span>
                 <span
                   style={{
@@ -255,7 +260,7 @@ export default function CreateInboundPage() {
                     color: '#6B7280',
                   }}
                 >
-                  SKU
+                  {tOrders('sku')}
                 </span>
                 <span
                   style={{
@@ -268,7 +273,7 @@ export default function CreateInboundPage() {
                     color: '#6B7280',
                   }}
                 >
-                  GTIN
+                  {tOrders('gtin')}
                 </span>
                 <span
                   style={{
@@ -281,7 +286,7 @@ export default function CreateInboundPage() {
                     color: '#6B7280',
                   }}
                 >
-                  QTY
+                  {tOrders('qty')}
                 </span>
               </div>
 
@@ -296,7 +301,7 @@ export default function CreateInboundPage() {
                     fontSize: '14px',
                   }}
                 >
-                  No products added yet. Use the search below to add products.
+                  {tOrders('searchProducts')}
                 </div>
               ) : (
                 inboundProducts.map((product, index) => (
@@ -332,7 +337,7 @@ export default function CreateInboundPage() {
                           color: '#DC2626',
                         }}
                       >
-                        Remove
+                        {tOrders('remove')}
                       </span>
                     </button>
                     <span
@@ -438,7 +443,7 @@ export default function CreateInboundPage() {
                     marginBottom: '4px',
                   }}
                 >
-                  Add Products
+                  {tOrders('addProducts')}
                 </label>
                 <input
                   type="text"
@@ -449,7 +454,7 @@ export default function CreateInboundPage() {
                       setShowProductList(true);
                     }
                   }}
-                  placeholder="Search products..."
+                  placeholder={tOrders('searchProducts')}
                   style={{
                     width: 'calc(100% - 24px)',
                     border: 'none',
@@ -513,10 +518,10 @@ export default function CreateInboundPage() {
                   }}
                 >
                   <span></span>
-                  <span style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '12px', lineHeight: '16px', letterSpacing: '0.05em', textTransform: 'uppercase', color: '#6B7280' }}>Product Name</span>
-                  <span style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '12px', lineHeight: '16px', letterSpacing: '0.05em', textTransform: 'uppercase', color: '#6B7280' }}>SKU</span>
-                  <span style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '12px', lineHeight: '16px', letterSpacing: '0.05em', textTransform: 'uppercase', color: '#6B7280' }}>GTIN</span>
-                  <span style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '12px', lineHeight: '16px', letterSpacing: '0.05em', textTransform: 'uppercase', color: '#6B7280' }}>QTY</span>
+                  <span style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '12px', lineHeight: '16px', letterSpacing: '0.05em', textTransform: 'uppercase', color: '#6B7280' }}>{tOrders('productName')}</span>
+                  <span style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '12px', lineHeight: '16px', letterSpacing: '0.05em', textTransform: 'uppercase', color: '#6B7280' }}>{tOrders('sku')}</span>
+                  <span style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '12px', lineHeight: '16px', letterSpacing: '0.05em', textTransform: 'uppercase', color: '#6B7280' }}>{tOrders('gtin')}</span>
+                  <span style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '12px', lineHeight: '16px', letterSpacing: '0.05em', textTransform: 'uppercase', color: '#6B7280' }}>{tOrders('qty')}</span>
                 </div>
 
                 {/* Table Body */}
@@ -544,7 +549,7 @@ export default function CreateInboundPage() {
                         width: 'fit-content',
                       }}
                     >
-                      <span style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '12px', lineHeight: '16px', color: '#FFFFFF' }}>Add</span>
+                      <span style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '12px', lineHeight: '16px', color: '#FFFFFF' }}>{tMessages('add')}</span>
                     </button>
                     <span style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '14px', lineHeight: '20px', color: '#111827' }}>{product.name}</span>
                     <span style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '14px', lineHeight: '20px', color: '#111827' }}>{product.sku}</span>
@@ -584,7 +589,7 @@ export default function CreateInboundPage() {
                   marginBottom: '8px',
                 }}
               >
-                Delivery
+                {tMessages('delivery')}
               </h2>
               <p
                 style={{
@@ -596,7 +601,7 @@ export default function CreateInboundPage() {
                   marginBottom: '20px',
                 }}
               >
-                Use a permanent address where you can receive mail.
+                {tMessages('deliveryDescription')}
               </p>
 
               {/* Row 1: ETA, Freight forwarder, Tracking no */}
@@ -613,7 +618,7 @@ export default function CreateInboundPage() {
                       marginBottom: '6px',
                     }}
                   >
-                    ETA
+                    {tMessages('eta')}
                   </label>
                   <input
                     type="text"
@@ -647,7 +652,7 @@ export default function CreateInboundPage() {
                       marginBottom: '6px',
                     }}
                   >
-                    Freigt forwarder
+                    {tMessages('freightForwarder')}
                   </label>
                   <input
                     type="text"
@@ -681,7 +686,7 @@ export default function CreateInboundPage() {
                       marginBottom: '6px',
                     }}
                   >
-                    Tracking no
+                    {tMessages('trackingNo')}
                   </label>
                   <input
                     type="text"
@@ -719,7 +724,7 @@ export default function CreateInboundPage() {
                       marginBottom: '6px',
                     }}
                   >
-                    Qty boxes
+                    {tMessages('qtyBoxes')}
                   </label>
                   <input
                     type="text"
@@ -753,7 +758,7 @@ export default function CreateInboundPage() {
                       marginBottom: '6px',
                     }}
                   >
-                    Qty pallets
+                    {tMessages('qtyPallets')}
                   </label>
                   <input
                     type="text"
@@ -787,7 +792,7 @@ export default function CreateInboundPage() {
                       marginBottom: '6px',
                     }}
                   >
-                    Total CBM
+                    {tMessages('totalCBM')}
                   </label>
                   <input
                     type="text"
@@ -825,7 +830,7 @@ export default function CreateInboundPage() {
                       marginBottom: '6px',
                     }}
                   >
-                    Ext. Inorder ID
+                    {tMessages('extInboundId')}
                   </label>
                   <input
                     type="text"
@@ -872,7 +877,7 @@ export default function CreateInboundPage() {
                   marginBottom: '8px',
                 }}
               >
-                Import inbound file
+                {tMessages('importInboundFile')}
               </h2>
               <p
                 style={{
@@ -884,7 +889,7 @@ export default function CreateInboundPage() {
                   marginBottom: '20px',
                 }}
               >
-                You can upload an csv file to create easier inbound orders, please download our template{' '}
+                {tMessages('uploadCsvDescription')}{' '}
                 <a
                   href="#"
                   style={{
@@ -896,7 +901,7 @@ export default function CreateInboundPage() {
                     textDecoration: 'underline',
                   }}
                 >
-                  here
+                  {tMessages('here')}
                 </a>
               </p>
 
@@ -941,7 +946,7 @@ export default function CreateInboundPage() {
                     textAlign: 'center',
                   }}
                 >
-                  Import inbound file
+                  {tMessages('importInboundFile')}
                 </span>
               </div>
 
@@ -997,7 +1002,7 @@ export default function CreateInboundPage() {
                         textAlign: 'center',
                       }}
                     >
-                      Delete
+                      {tCommon('delete')}
                     </span>
                   </button>
                 </div>
@@ -1026,7 +1031,7 @@ export default function CreateInboundPage() {
                   marginBottom: '8px',
                 }}
               >
-                Activate presale
+                {tMessages('activatePresale')}
               </h2>
               <p
                 style={{
@@ -1038,7 +1043,7 @@ export default function CreateInboundPage() {
                   marginBottom: '16px',
                 }}
               >
-                By activating this function you can push all stocks of this inbound to your sales channels, this will allow you to sell before we set the stocks. After we set the stock it will reset this function.
+                {tMessages('presaleDescription')}
               </p>
 
               {/* Toggle Switch */}
@@ -1082,7 +1087,7 @@ export default function CreateInboundPage() {
                   <path d="M5 13L9 17L19 7" stroke="#059669" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
               </div>
-              <span style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '18px', lineHeight: '24px', textAlign: 'center', color: '#111827' }}>Inbound saved successfully</span>
+              <span style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '18px', lineHeight: '24px', textAlign: 'center', color: '#111827' }}>{tMessages('inboundSavedSuccessfully')}</span>
             </div>
           </div>
         )}
