@@ -135,7 +135,7 @@
     "cancelOrder": "Bestellung stornieren",
     "cancelOrderWarning": "Achtung, das Löschen des Artikels führt dazu, dass alle Warenbewegungen verloren gehen. Artikel können nur gelöscht werden wenn kein Bestand vorhanden ist und keine Reservierungen oder Anlieferungen anliegen.",
     "createReplacementOrder": "Ersatzlieferung erstellen",
-    "createReplacementOrderDescription": "Über den Button kann eine Ersatzlieferung angelegt werden. Der Vorgang startet automatisch, und alle notwendigen Informationen werden aus dem Ursprungsauftrag übernommen. Bei Bedarf kann die Ersatzlieferung angepasst und anschließend gespeichert werden – zum Beispiel, wenn nur ein Produkt erneut geliefert werden soll, statt der gesamten ursprünglichen Lieferung.",
+    "createReplacementOrderDescription": "Das Anlegen einer Ersatzlieferung führt dazu, dass die ursprüngliche Order ID vollständig übernommen wird. Alle Bestandteile des ursprünglichen Auftrags werden automatisch in die neue Ersatzlieferung übertragen.\n\nIm nächsten Schritt können diese Positionen angepasst werden – beispielsweise, wenn aufgrund eines Defekts nur ein statt ursprünglich zwei Bestandteile des Ursprungsauftrags erneut versendet werden müssen.",
     "replacementOrderCreated": "Ersatzlieferung erstellt",
     "shippingAddressChanged": "Lieferadresse geändert",
     "productName": "Produktname",

@@ -489,13 +489,15 @@ export default function ClientOrderDetailPage() {
                       }}
                     >
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <Image
-                          src={selectedShippingMethod.logo}
-                          alt={selectedShippingMethod.name}
-                          width={24}
-                          height={24}
-                          style={{ borderRadius: '50%', objectFit: 'cover' }}
-                        />
+                        <div style={{ width: '24px', height: '24px', borderRadius: '50%', overflow: 'hidden', flexShrink: 0, position: 'relative' }}>
+                          <Image
+                            src={selectedShippingMethod.logo}
+                            alt={selectedShippingMethod.name}
+                            fill
+                            sizes="24px"
+                            style={{ objectFit: 'cover' }}
+                          />
+                        </div>
                         <span
                           style={{
                             fontWeight: 400,
@@ -574,13 +576,15 @@ export default function ClientOrderDetailPage() {
                               }
                             }}
                           >
-                            <Image
-                              src={method.logo}
-                              alt={method.name}
-                              width={24}
-                              height={24}
-                              style={{ borderRadius: '50%', objectFit: 'cover' }}
-                            />
+                            <div style={{ width: '24px', height: '24px', borderRadius: '50%', overflow: 'hidden', flexShrink: 0, position: 'relative' }}>
+                              <Image
+                                src={method.logo}
+                                alt={method.name}
+                                fill
+                                sizes="24px"
+                                style={{ objectFit: 'cover' }}
+                              />
+                            </div>
                             <span
                               style={{
                                 fontWeight: 400,
@@ -598,13 +602,15 @@ export default function ClientOrderDetailPage() {
                   </div>
                 ) : (
                   <div className="flex items-center gap-2 mt-3">
-                    <Image
-                      src={selectedShippingMethod.logo}
-                      alt={selectedShippingMethod.name}
-                      width={24}
-                      height={24}
-                      style={{ borderRadius: '50%', objectFit: 'cover' }}
-                    />
+                    <div style={{ width: '24px', height: '24px', borderRadius: '50%', overflow: 'hidden', flexShrink: 0, position: 'relative' }}>
+                      <Image
+                        src={selectedShippingMethod.logo}
+                        alt={selectedShippingMethod.name}
+                        fill
+                        sizes="24px"
+                        style={{ objectFit: 'cover' }}
+                      />
+                    </div>
                     <span
                       style={{
                         fontFamily: 'Inter, sans-serif',
@@ -1388,18 +1394,19 @@ export default function ClientOrderDetailPage() {
                   boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.06), 0px 1px 3px 0px rgba(0, 0, 0, 0.1)',
                 }}
               >
-                <h3
+                <span
                   style={{
                     fontFamily: 'Inter, sans-serif',
-                    fontWeight: 600,
-                    fontSize: '16px',
+                    fontWeight: 500,
+                    fontSize: 'clamp(16px, 1.3vw, 18px)',
                     lineHeight: '24px',
                     color: '#111827',
+                    display: 'block',
                     marginBottom: '8px',
                   }}
                 >
                   {tOrders('deleteOrder')}
-                </h3>
+                </span>
                 <p
                   style={{
                     fontFamily: 'Inter, sans-serif',
@@ -1430,7 +1437,7 @@ export default function ClientOrderDetailPage() {
                     style={{
                       fontFamily: 'Inter, sans-serif',
                       fontWeight: 500,
-                      fontSize: '14px',
+                      fontSize: 'clamp(12px, 1.03vw, 14px)',
                       lineHeight: '20px',
                       color: '#DC2626',
                     }}
@@ -1476,7 +1483,7 @@ export default function ClientOrderDetailPage() {
                     color: '#6B7280',
                   }}
                 >
-                  {tCommon('deleteWarning')}
+                  {tOrders('createReplacementOrderDescription')}
                 </p>
                 <button
                   onClick={handleCreateReplacementOrder}

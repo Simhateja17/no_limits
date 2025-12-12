@@ -134,7 +134,7 @@
     "cancelOrder": "Cancel order",
     "cancelOrderWarning": "Warning: Canceling this order will lead to permanent loss of data. Orders can only be canceled if they have not been shipped yet.",
     "createReplacementOrder": "Create replacement delivery",
-    "createReplacementOrderDescription": "A replacement delivery can be created via the button. The process starts automatically, and all necessary information is taken from the original order. If necessary, the replacement delivery can be adjusted and then saved – for example, if only one product is to be delivered again instead of the entire original delivery.",
+    "createReplacementOrderDescription": "Creating a replacement delivery results in the original Order ID being fully adopted. All components of the original order are automatically transferred to the new replacement delivery.\n\nIn the next step, these items can be adjusted – for example, if due to a defect only one instead of originally two components of the original order need to be reshipped.",
     "replacementOrderCreated": "Replacement delivery created",
     "shippingAddressChanged": "Shipping address changed",
     "productName": "Product Name",
