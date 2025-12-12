@@ -684,7 +684,7 @@ export default function OrderDetailPage() {
                     color: '#6B7280',
                   }}
                 >
-                  Mit dieser Funktion kann ein Auftrag zurückgehalten werden. Dadurch wird sie in den Status „In Vorbereitung“ versetzt. In diesem Status kann die Bestellung von uns nicht bearbeitet werden.
+                  {tOrders('onHoldDescription')}
                 </p>
               </div>
 

@@ -1,3 +1,5 @@
+"use client";
+
 import { DashboardLayout } from '@/components/layout';
 
 import { useRouter, useParams } from 'next/navigation';
