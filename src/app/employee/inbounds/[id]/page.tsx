@@ -38,8 +38,8 @@ export default function EmployeeInboundDetailPage() {
   const locale = useLocale();
   const tCommon = useTranslations('common');
   const tOrders = useTranslations('orders');
-  const tInbounds = useTranslations('inbounds');
   const tMessages = useTranslations('messages');
+  const tInbounds = useTranslations('inbounds');
   const inboundId = params.id as string;
 
   const [editMode, setEditMode] = useState(false);
@@ -55,7 +55,7 @@ export default function EmployeeInboundDetailPage() {
   const [qtyBoxes, setQtyBoxes] = useState('10');
   const [qtyPallets, setQtyPallets] = useState('10');
   const [totalCBM, setTotalCBM] = useState('10');
-  const [extInorderId, setExtInorderId] = useState('10');
+  const [extInorderId, setExtInorderId] = useState('DE3-3245');
 
   useEffect(() => {
     if (!isAuthenticated || user?.role !== 'EMPLOYEE') {
@@ -95,37 +95,6 @@ export default function EmployeeInboundDetailPage() {
     p.sku.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  // Responsive styles based on 1358px reference width
-  // Using clamp() for proportional scaling across desktop sizes
-  const styles = {
-    // Sidebar width: 220px at 1358px = 16.2% -> clamp(180px, 16.2vw, 250px)
-    sidebarWidth: 'clamp(180px, 16.2vw, 250px)',
-    // Gap: 24px at 1358px = 1.77% -> clamp(16px, 1.77vw, 32px)
-    mainGap: 'clamp(16px, 1.77vw, 32px)',
-    // Padding: 32px (px-8) at 1358px = 2.36% -> clamp(20px, 2.36vw, 40px)
-    containerPadding: 'clamp(20px, 2.36vw, 40px)',
-    // Card padding: 20px at 1358px = 1.47% -> clamp(16px, 1.47vw, 24px)
-    cardPadding: 'clamp(16px, 1.47vw, 24px)',
-    // Section padding: 24px at 1358px = 1.77% -> clamp(18px, 1.77vw, 28px)
-    sectionPadding: 'clamp(18px, 1.77vw, 28px)',
-    // Grid gap: 16px at 1358px = 1.18% -> clamp(12px, 1.18vw, 20px)
-    gridGap: 'clamp(12px, 1.18vw, 20px)',
-    // Input height: 38px at 1358px = 2.8% -> clamp(34px, 2.8vw, 42px)
-    inputHeight: 'clamp(34px, 2.8vw, 42px)',
-    // Table cell padding: 12px 16px -> clamp values
-    cellPaddingY: 'clamp(10px, 0.88vw, 14px)',
-    cellPaddingX: 'clamp(12px, 1.18vw, 20px)',
-    // Search input width: 200px at 1358px = 14.7% -> clamp(160px, 14.7vw, 240px)
-    searchInputWidth: 'clamp(160px, 14.7vw, 240px)',
-    // QTY input width: 60px at 1358px = 4.4% -> clamp(50px, 4.4vw, 70px)
-    qtyInputWidth: 'clamp(50px, 4.4vw, 70px)',
-    // Font sizes with clamp
-    fontSizeXs: 'clamp(11px, 0.88vw, 13px)',
-    fontSizeSm: 'clamp(12px, 1.03vw, 14px)',
-    fontSizeBase: 'clamp(13px, 1.03vw, 15px)',
-    fontSizeLg: 'clamp(14px, 1.18vw, 18px)',
-  };
-
   return (
     <DashboardLayout>
       <div className="w-full min-h-screen bg-[#F9FAFB]">
@@ -139,181 +108,295 @@ export default function EmployeeInboundDetailPage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
                 </div>
-                <span style={{ fontSize: styles.fontSizeLg }} className="font-medium">{tMessages('inboundSavedSuccessfully')}</span>
+                <span className="font-medium text-base">{tMessages('inboundSavedSuccessfully')}</span>
               </div>
             </div>
           </div>
         )}
 
-        {/* Back button (no header) */}
-        <div style={{ padding: `clamp(12px, 1.18vw, 16px) ${styles.containerPadding}` }}>
+        <div className="px-[3.8%] py-6">
+          {/* Back button */}
           <button
             onClick={() => router.push('/employee/inbounds')}
             style={{
-              padding: 'clamp(6px, 0.59vw, 10px) clamp(12px, 1.18vw, 20px)',
+              height: '38px',
+              padding: '9px 17px',
+              borderRadius: '6px',
               border: '1px solid #D1D5DB',
-              borderRadius: 'clamp(4px, 0.44vw, 8px)',
-              backgroundColor: 'transparent',
-              fontSize: styles.fontSizeBase,
-              fontWeight: 500,
-              cursor: 'pointer'
+              backgroundColor: '#FFFFFF',
+              boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.05)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
             }}
           >
-            {tCommon('back')}
+            <span
+              style={{
+                fontFamily: 'Inter, sans-serif',
+                fontWeight: 500,
+                fontSize: '14px',
+                lineHeight: '20px',
+                color: '#374151',
+              }}
+            >
+              {tCommon('back')}
+            </span>
           </button>
-        </div>
 
-        {/* Main Content */}
-        <div 
-          className="flex"
-          style={{ 
-            gap: styles.mainGap, 
-            padding: `${styles.mainGap} ${styles.containerPadding}` 
-          }}
-        >
-          {/* Left Sidebar */}
-          <div 
-            className="flex flex-col"
-            style={{ 
-              width: styles.sidebarWidth, 
-              flexShrink: 0,
-              gap: styles.gridGap
-            }}
-          >
+          {/* Main Content */}
+          <div className="mt-6 flex gap-[2.5%] flex-wrap lg:flex-nowrap">
+            {/* Left Sidebar */}
+            <div className="flex flex-col gap-4 w-full lg:w-[20%] lg:min-w-[240px] lg:max-w-[280px]">
             {/* Inbound ID Card */}
-            <div style={{
-              backgroundColor: 'white',
-              borderRadius: 'clamp(6px, 0.59vw, 10px)',
-              padding: styles.cardPadding,
-              border: '1px solid #E5E7EB'
-            }}>
-              {locale === 'de' ? (
-                // German layout: Tag above ID
-                <>
-                  <div className="flex items-center gap-2 mb-2">
-                    <span style={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: 'clamp(6px, 0.59vw, 10px)',
-                      padding: 'clamp(4px, 0.44vw, 8px) clamp(12px, 1.18vw, 16px)',
-                      backgroundColor: 'transparent',
-                      border: '1px solid #E5E7EB',
-                      borderRadius: '9999px',
-                      fontSize: styles.fontSizeBase,
-                      color: '#111827',
-                      fontWeight: 500,
-                      whiteSpace: 'nowrap'
-                    }}>
-                      <span style={{ width: 'clamp(8px, 0.74vw, 12px)', height: 'clamp(8px, 0.74vw, 12px)', backgroundColor: '#F59E0B', borderRadius: '50%' }}></span>
-                      {tInbounds('pending')}
-                    </span>
-                  </div>
-                  <div className="mb-2">
-                    <span style={{ fontSize: styles.fontSizeBase, fontWeight: 600, color: '#111827' }}>{tInbounds('inboundId')}</span>
-                  </div>
-                </>
-              ) : (
-                // English layout: Tag inline with ID
-                <div className="flex items-center gap-2 mb-2" style={{ flexWrap: 'wrap' }}>
-                  <span style={{ fontSize: styles.fontSizeBase, fontWeight: 600, color: '#111827' }}>{tInbounds('inboundId')}</span>
-                  <span style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: 'clamp(6px, 0.59vw, 10px)',
-                    padding: 'clamp(4px, 0.44vw, 8px) clamp(12px, 1.18vw, 16px)',
-                    backgroundColor: 'transparent',
-                    border: '1px solid #E5E7EB',
-                    borderRadius: '9999px',
-                    fontSize: styles.fontSizeBase,
-                    color: '#111827',
-                    fontWeight: 500,
-                    whiteSpace: 'nowrap'
-                  }}>
-                    <span style={{ width: 'clamp(8px, 0.74vw, 12px)', height: 'clamp(8px, 0.74vw, 12px)', backgroundColor: '#F59E0B', borderRadius: '50%' }}></span>
-                    {tInbounds('pending')}
-                  </span>
-                </div>
-              )}
-              <div style={{ fontSize: styles.fontSizeBase, color: '#6B7280', marginBottom: styles.gridGap }}>{inboundId}</div>
-              
-              <div style={{ fontSize: styles.fontSizeBase, fontWeight: 600, color: '#111827' }}>{tMessages('extInboundId')}</div>
-              <div style={{ fontSize: styles.fontSizeBase, color: '#6B7280' }}>DE3-3245</div>
-            </div>
-
-            {/* Activate Presale Card */}
-            <div style={{
-              backgroundColor: 'white',
-              borderRadius: 'clamp(6px, 0.59vw, 10px)',
-              padding: styles.cardPadding,
-              border: '1px solid #E5E7EB'
-            }}>
-              <div style={{ fontSize: styles.fontSizeBase, fontWeight: 600, color: '#111827', marginBottom: 'clamp(6px, 0.59vw, 10px)' }}>{tMessages('activatePresale')}</div>
-              <p style={{ fontSize: styles.fontSizeXs, color: '#6B7280', marginBottom: styles.gridGap, lineHeight: '1.5' }}>
-                {tMessages('activatePresaleDescription')}
-              </p>
-              
-              {/* Toggle */}
-              <button
-                onClick={() => setPresaleActive(!presaleActive)}
+              <div
                 style={{
-                  position: 'relative',
-                  width: 'clamp(40px, 3.24vw, 48px)',
-                  height: 'clamp(22px, 1.77vw, 26px)',
-                  borderRadius: '12px',
-                  border: 'none',
-                  backgroundColor: presaleActive ? '#003450' : '#D1D5DB',
-                  cursor: 'pointer',
-                  transition: 'background-color 0.2s'
+                  width: '100%',
+                  minHeight: '104px',
+                  gap: '4px',
+                  padding: 'clamp(16px, 1.5vw, 20px) clamp(12px, 1.2vw, 16px)',
+                  borderRadius: '8px',
+                  backgroundColor: '#FFFFFF',
+                  boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.06), 0px 1px 3px 0px rgba(0, 0, 0, 0.1)',
                 }}
               >
-                <span style={{
-                  position: 'absolute',
-                  top: '2px',
-                  left: presaleActive ? 'calc(100% - 22px)' : '2px',
-                  width: 'clamp(18px, 1.47vw, 22px)',
-                  height: 'clamp(18px, 1.47vw, 22px)',
-                  borderRadius: '50%',
-                  backgroundColor: 'white',
-                  transition: 'left 0.2s',
-                  boxShadow: '0 1px 3px rgba(0,0,0,0.2)'
-                }}></span>
-              </button>
+                {locale === 'de' ? (
+                  // German layout: Tag above ID
+                  <>
+                    <div className="flex items-center justify-start mb-2">
+                      <div
+                        style={{
+                          height: '26px',
+                          gap: '8px',
+                          padding: '3px 13px',
+                          borderRadius: '13px',
+                          border: '1px solid #D1D5DB',
+                          display: 'flex',
+                          alignItems: 'center',
+                          whiteSpace: 'nowrap'
+                        }}
+                      >
+                        <div
+                          style={{
+                            width: '6px',
+                            height: '6px',
+                            borderRadius: '50%',
+                            backgroundColor: '#F59E0B',
+                          }}
+                        />
+                        <span
+                          style={{
+                            fontFamily: 'Inter, sans-serif',
+                            fontWeight: 500,
+                            fontSize: '15px',
+                            lineHeight: '20px',
+                            color: '#000000',
+                          }}
+                        >
+                          {tInbounds('pending')}
+                        </span>
+                      </div>
+                    </div>
+                    <span
+                      style={{
+                        fontFamily: 'Inter, sans-serif',
+                        fontWeight: 500,
+                        fontSize: 'clamp(16px, 1.3vw, 18px)',
+                        lineHeight: '24px',
+                        color: '#111827',
+                      }}
+                    >
+                      {tInbounds('inboundId')}
+                    </span>
+                  </>
+                ) : (
+                  // English layout: Tag inline with ID
+                  <div className="flex items-center justify-between">
+                    <span
+                      style={{
+                        fontFamily: 'Inter, sans-serif',
+                        fontWeight: 500,
+                        fontSize: 'clamp(16px, 1.3vw, 18px)',
+                        lineHeight: '24px',
+                        color: '#111827',
+                      }}
+                    >
+                      {tInbounds('inboundId')}
+                    </span>
+                    <div
+                      style={{
+                        height: '26px',
+                        gap: '8px',
+                        padding: '3px 13px',
+                        borderRadius: '13px',
+                        border: '1px solid #D1D5DB',
+                        display: 'flex',
+                        alignItems: 'center',
+                        whiteSpace: 'nowrap'
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: '6px',
+                          height: '6px',
+                          borderRadius: '50%',
+                          backgroundColor: '#F59E0B',
+                        }}
+                      />
+                      <span
+                        style={{
+                          fontFamily: 'Inter, sans-serif',
+                          fontWeight: 500,
+                          fontSize: '15px',
+                          lineHeight: '20px',
+                          color: '#000000',
+                        }}
+                      >
+                        {tInbounds('pending')}
+                      </span>
+                    </div>
+                  </div>
+                )}
+                <span
+                  style={{
+                    fontFamily: 'Inter, sans-serif',
+                    fontWeight: 400,
+                    fontSize: '15px',
+                    lineHeight: '24px',
+                    color: '#6B7280',
+                    marginTop: '4px',
+                    display: 'block',
+                  }}
+                >
+                  {inboundId}
+                </span>
+                
+                <div style={{ marginTop: '12px' }}>
+                  <span
+                    style={{
+                      fontFamily: 'Inter, sans-serif',
+                      fontWeight: 500,
+                      fontSize: 'clamp(14px, 1.1vw, 16px)',
+                      lineHeight: '24px',
+                      color: '#111827',
+                    }}
+                  >
+                    {tInbounds('extInboundId')}
+                  </span>
+                  <span
+                    style={{
+                      fontFamily: 'Inter, sans-serif',
+                      fontWeight: 400,
+                      fontSize: '15px',
+                      lineHeight: '24px',
+                      color: '#6B7280',
+                      display: 'block',
+                    }}
+                  >
+                    {extInorderId}
+                  </span>
+                </div>
+              </div>
+
+            {/* Activate Presale Card */}
+              <div
+                style={{
+                  width: '100%',
+                  minHeight: '140px',
+                  gap: '4px',
+                  padding: 'clamp(16px, 1.5vw, 20px) clamp(12px, 1.2vw, 16px)',
+                  borderRadius: '8px',
+                  backgroundColor: '#FFFFFF',
+                  boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.06), 0px 1px 3px 0px rgba(0, 0, 0, 0.1)',
+                }}
+              >
+                <span
+                  style={{
+                    fontFamily: 'Inter, sans-serif',
+                    fontWeight: 500,
+                    fontSize: 'clamp(16px, 1.3vw, 18px)',
+                    lineHeight: '24px',
+                    color: '#111827',
+                  }}
+                >
+                  {tMessages('activatePresale')}
+                </span>
+                <p
+                  style={{
+                    fontFamily: 'Inter, sans-serif',
+                    fontWeight: 400,
+                    fontSize: 'clamp(12px, 1vw, 14px)',
+                    lineHeight: '1.5',
+                    color: '#6B7280',
+                    marginTop: '8px',
+                    marginBottom: '16px',
+                  }}
+                >
+                  {tMessages('activatePresaleDescription')}
+                </p>
+              
+                {/* Toggle */}
+                <button
+                  onClick={() => setPresaleActive(!presaleActive)}
+                  style={{
+                    position: 'relative',
+                    width: '44px',
+                    height: '24px',
+                    borderRadius: '12px',
+                    border: 'none',
+                    backgroundColor: presaleActive ? '#003450' : '#D1D5DB',
+                    cursor: 'pointer',
+                    transition: 'background-color 0.2s'
+                  }}
+                >
+                  <span style={{
+                    position: 'absolute',
+                    top: '2px',
+                    left: presaleActive ? '22px' : '2px',
+                    width: '20px',
+                    height: '20px',
+                    borderRadius: '50%',
+                    backgroundColor: 'white',
+                    transition: 'left 0.2s',
+                    boxShadow: '0 1px 3px rgba(0,0,0,0.2)'
+                  }}></span>
+                </button>
+              </div>
             </div>
-          </div>
 
           {/* Right Content */}
-          <div className="flex-1 flex flex-col" style={{ gap: styles.mainGap }}>
-            {/* Products Table */}
-            <div style={{
-              backgroundColor: 'white',
-              borderRadius: 'clamp(6px, 0.59vw, 10px)',
-              border: '1px solid #E5E7EB',
-              overflow: 'hidden'
-            }}>
+            <div className="flex-1 flex flex-col gap-4 min-w-0" style={{ maxWidth: '927px' }}>
+              {/* Products Table */}
+              <div style={{
+                backgroundColor: 'white',
+                borderRadius: '8px',
+                boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.06), 0px 1px 3px 0px rgba(0, 0, 0, 0.1)',
+                overflow: 'hidden'
+              }}>
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead>
                   <tr style={{ backgroundColor: '#F9FAFB' }}>
-                    {editMode && <th style={{ padding: `${styles.cellPaddingY} ${styles.cellPaddingX}`, textAlign: 'left', fontSize: styles.fontSizeXs, fontWeight: 500, color: '#6B7280', textTransform: 'uppercase' }}></th>}
-                    <th style={{ padding: `${styles.cellPaddingY} ${styles.cellPaddingX}`, textAlign: 'left', fontSize: styles.fontSizeXs, fontWeight: 500, color: '#6B7280', textTransform: 'uppercase' }}>{tOrders('productName')}</th>
-                    <th style={{ padding: `${styles.cellPaddingY} ${styles.cellPaddingX}`, textAlign: 'left', fontSize: styles.fontSizeXs, fontWeight: 500, color: '#6B7280', textTransform: 'uppercase' }}>{tOrders('sku')}</th>
-                    <th style={{ padding: `${styles.cellPaddingY} ${styles.cellPaddingX}`, textAlign: 'left', fontSize: styles.fontSizeXs, fontWeight: 500, color: '#6B7280', textTransform: 'uppercase' }}>{tOrders('gtin')}</th>
-                    <th style={{ padding: `${styles.cellPaddingY} ${styles.cellPaddingX}`, textAlign: 'left', fontSize: styles.fontSizeXs, fontWeight: 500, color: '#6B7280', textTransform: 'uppercase' }}>{tOrders('qty')}</th>
+                    {editMode && <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '12px', fontWeight: 500, color: '#6B7280', textTransform: 'uppercase' }}></th>}
+                    <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '12px', fontWeight: 500, color: '#6B7280', textTransform: 'uppercase' }}>{tOrders('productName')}</th>
+                    <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '12px', fontWeight: 500, color: '#6B7280', textTransform: 'uppercase' }}>{tOrders('sku')}</th>
+                    <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '12px', fontWeight: 500, color: '#6B7280', textTransform: 'uppercase' }}>{tOrders('gtin')}</th>
+                    <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '12px', fontWeight: 500, color: '#6B7280', textTransform: 'uppercase' }}>{tOrders('qty')}</th>
                   </tr>
                 </thead>
                 <tbody>
                   {products.map((product) => (
                     <tr key={product.id} style={{ borderTop: '1px solid #E5E7EB' }}>
                       {editMode && (
-                        <td style={{ padding: `${styles.cellPaddingY} ${styles.cellPaddingX}` }}>
+                        <td style={{ padding: '12px 16px' }}>
                           <button
                             onClick={() => handleRemoveProduct(product.id)}
                             style={{
-                              padding: 'clamp(3px, 0.29vw, 5px) clamp(10px, 0.88vw, 14px)',
+                              padding: '4px 12px',
                               backgroundColor: '#FEE2E2',
                               color: '#991B1B',
                               border: 'none',
                               borderRadius: '4px',
-                              fontSize: styles.fontSizeXs,
+                              fontSize: '12px',
                               fontWeight: 500,
                               cursor: 'pointer'
                             }}
@@ -322,26 +405,26 @@ export default function EmployeeInboundDetailPage() {
                           </button>
                         </td>
                       )}
-                      <td style={{ padding: `${styles.cellPaddingY} ${styles.cellPaddingX}`, fontSize: styles.fontSizeBase, color: '#111827' }}>{product.name}</td>
-                      <td style={{ padding: `${styles.cellPaddingY} ${styles.cellPaddingX}`, fontSize: styles.fontSizeBase, color: '#6B7280' }}>{product.sku}</td>
-                      <td style={{ padding: `${styles.cellPaddingY} ${styles.cellPaddingX}`, fontSize: styles.fontSizeBase, color: '#6B7280' }}>{editMode ? product.gtin : `Merchant ${product.qty}`}</td>
-                      <td style={{ padding: `${styles.cellPaddingY} ${styles.cellPaddingX}` }}>
+                      <td style={{ padding: '12px 16px', fontSize: '14px', color: '#111827' }}>{product.name}</td>
+                      <td style={{ padding: '12px 16px', fontSize: '14px', color: '#6B7280' }}>{product.sku}</td>
+                      <td style={{ padding: '12px 16px', fontSize: '14px', color: '#6B7280' }}>{editMode ? product.gtin : `Merchant ${product.qty}`}</td>
+                      <td style={{ padding: '12px 16px' }}>
                         {editMode ? (
                           <input
                             type="number"
                             value={product.qty}
                             onChange={(e) => handleQuantityChange(product.id, parseInt(e.target.value) || 0)}
                             style={{
-                              width: styles.qtyInputWidth,
-                              padding: 'clamp(4px, 0.44vw, 8px) clamp(8px, 0.74vw, 12px)',
+                              width: '60px',
+                              padding: '6px 10px',
                               border: '1px solid #D1D5DB',
-                              borderRadius: 'clamp(4px, 0.44vw, 8px)',
-                              fontSize: styles.fontSizeBase,
+                              borderRadius: '6px',
+                              fontSize: '14px',
                               textAlign: 'center'
                             }}
                           />
                         ) : (
-                          <span style={{ fontSize: styles.fontSizeBase, color: '#111827' }}>{product.qty}</span>
+                          <span style={{ fontSize: '14px', color: '#111827' }}>{product.qty}</span>
                         )}
                       </td>
                     </tr>
@@ -350,17 +433,17 @@ export default function EmployeeInboundDetailPage() {
               </table>
             </div>
 
-            {/* {tOrders('addProducts')} Section - Only in Edit Mode */}
+            {/* Add Products Section - Only in Edit Mode */}
             {editMode && (
               <div style={{
                 backgroundColor: 'white',
-                borderRadius: 'clamp(6px, 0.59vw, 10px)',
-                border: '1px solid #E5E7EB',
-                padding: styles.cardPadding
+                borderRadius: '8px',
+                boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.06), 0px 1px 3px 0px rgba(0, 0, 0, 0.1)',
+                padding: 'clamp(16px, 1.5vw, 20px) clamp(12px, 1.2vw, 16px)'
               }}>
-                <div style={{ marginBottom: searchQuery ? styles.gridGap : 0 }}>
-                  <label style={{ fontSize: styles.fontSizeXs, color: '#6B7280', display: 'block', marginBottom: 'clamp(3px, 0.29vw, 5px)' }}>{tOrders('addProducts')}</label>
-                  <div style={{ position: 'relative', width: 'clamp(280px, 30vw, 400px)' }}>
+                <div style={{ marginBottom: searchQuery ? '16px' : 0 }}>
+                  <label style={{ fontSize: '12px', color: '#6B7280', display: 'block', marginBottom: '4px' }}>{tOrders('addProducts')}</label>
+                  <div style={{ position: 'relative', width: '320px', maxWidth: '100%' }}>
                     <input
                       type="text"
                       value={searchQuery}
@@ -368,11 +451,11 @@ export default function EmployeeInboundDetailPage() {
                       placeholder={tOrders('searchProducts')}
                       style={{
                         width: '100%',
-                        padding: 'clamp(8px, 0.74vw, 12px) clamp(12px, 1.18vw, 16px)',
-                        paddingRight: searchQuery ? 'clamp(36px, 3vw, 44px)' : 'clamp(12px, 1.18vw, 16px)',
+                        padding: '9px 12px',
+                        paddingRight: searchQuery ? '36px' : '12px',
                         border: '1px solid #D1D5DB',
-                        borderRadius: 'clamp(6px, 0.59vw, 10px)',
-                        fontSize: styles.fontSizeBase,
+                        borderRadius: '6px',
+                        fontSize: '14px',
                         backgroundColor: 'white'
                       }}
                     />
@@ -381,11 +464,11 @@ export default function EmployeeInboundDetailPage() {
                         onClick={() => setSearchQuery('')}
                         style={{
                           position: 'absolute',
-                          right: 'clamp(10px, 0.88vw, 14px)',
+                          right: '10px',
                           top: '50%',
                           transform: 'translateY(-50%)',
-                          width: 'clamp(18px, 1.47vw, 22px)',
-                          height: 'clamp(18px, 1.47vw, 22px)',
+                          width: '20px',
+                          height: '20px',
                           borderRadius: '50%',
                           border: 'none',
                           backgroundColor: '#E5E7EB',
@@ -394,7 +477,7 @@ export default function EmployeeInboundDetailPage() {
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
-                          fontSize: 'clamp(12px, 1.03vw, 16px)',
+                          fontSize: '14px',
                           lineHeight: 1,
                           padding: 0
                         }}
@@ -409,51 +492,51 @@ export default function EmployeeInboundDetailPage() {
                   <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                     <thead>
                       <tr style={{ backgroundColor: '#F9FAFB' }}>
-                        <th style={{ padding: `${styles.cellPaddingY} ${styles.cellPaddingX}`, textAlign: 'left', fontSize: styles.fontSizeXs, fontWeight: 500, color: '#6B7280', textTransform: 'uppercase' }}>{tOrders('productName')}</th>
-                        <th style={{ padding: `${styles.cellPaddingY} ${styles.cellPaddingX}`, textAlign: 'left', fontSize: styles.fontSizeXs, fontWeight: 500, color: '#6B7280', textTransform: 'uppercase' }}>SKU</th>
-                        <th style={{ padding: `${styles.cellPaddingY} ${styles.cellPaddingX}`, textAlign: 'left', fontSize: styles.fontSizeXs, fontWeight: 500, color: '#6B7280', textTransform: 'uppercase' }}>GTIN</th>
-                        <th style={{ padding: `${styles.cellPaddingY} ${styles.cellPaddingX}`, textAlign: 'left', fontSize: styles.fontSizeXs, fontWeight: 500, color: '#6B7280', textTransform: 'uppercase' }}>QTY</th>
-                        <th style={{ padding: `${styles.cellPaddingY} ${styles.cellPaddingX}`, textAlign: 'left', fontSize: styles.fontSizeXs, fontWeight: 500, color: '#6B7280', textTransform: 'uppercase' }}></th>
+                        <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '12px', fontWeight: 500, color: '#6B7280', textTransform: 'uppercase' }}>{tOrders('productName')}</th>
+                        <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '12px', fontWeight: 500, color: '#6B7280', textTransform: 'uppercase' }}>SKU</th>
+                        <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '12px', fontWeight: 500, color: '#6B7280', textTransform: 'uppercase' }}>GTIN</th>
+                        <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '12px', fontWeight: 500, color: '#6B7280', textTransform: 'uppercase' }}>QTY</th>
+                        <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '12px', fontWeight: 500, color: '#6B7280', textTransform: 'uppercase' }}></th>
                       </tr>
                     </thead>
                     <tbody>
                       {filteredAvailableProducts.map((product) => (
                         <tr key={product.id} style={{ borderTop: '1px solid #E5E7EB' }}>
-                          <td style={{ padding: `${styles.cellPaddingY} ${styles.cellPaddingX}`, fontSize: styles.fontSizeBase, color: '#111827' }}>{product.name}</td>
-                          <td style={{ padding: `${styles.cellPaddingY} ${styles.cellPaddingX}`, fontSize: styles.fontSizeBase, color: '#6B7280' }}>{product.sku}</td>
-                          <td style={{ padding: `${styles.cellPaddingY} ${styles.cellPaddingX}`, fontSize: styles.fontSizeBase, color: '#6B7280' }}>{product.gtin}</td>
-                          <td style={{ padding: `${styles.cellPaddingY} ${styles.cellPaddingX}` }}>
-                            <input
-                              type="number"
-                              value={product.qty}
-                              readOnly
-                              style={{
-                                width: styles.qtyInputWidth,
-                                padding: 'clamp(4px, 0.44vw, 8px) clamp(8px, 0.74vw, 12px)',
-                                border: '1px solid #D1D5DB',
-                                borderRadius: 'clamp(4px, 0.44vw, 8px)',
-                                fontSize: styles.fontSizeBase,
-                                textAlign: 'center',
-                                backgroundColor: 'white'
-                              }}
-                            />
-                          </td>
-                          <td style={{ padding: `${styles.cellPaddingY} ${styles.cellPaddingX}` }}>
+                          <td style={{ padding: '12px 16px' }}>
                             <button
                               onClick={() => handleAddProduct(product)}
                               style={{
-                                padding: 'clamp(4px, 0.44vw, 6px) clamp(12px, 1.18vw, 18px)',
+                                padding: '5px 14px',
                                 backgroundColor: '#003450',
                                 color: 'white',
                                 border: 'none',
                                 borderRadius: '9999px',
-                                fontSize: styles.fontSizeXs,
+                                fontSize: '12px',
                                 fontWeight: 500,
                                 cursor: 'pointer'
                               }}
                             >
                               {tOrders('add')}
                             </button>
+                          </td>
+                          <td style={{ padding: '12px 16px', fontSize: '14px', color: '#111827' }}>{product.name}</td>
+                          <td style={{ padding: '12px 16px', fontSize: '14px', color: '#6B7280' }}>{product.sku}</td>
+                          <td style={{ padding: '12px 16px', fontSize: '14px', color: '#6B7280' }}>{product.gtin}</td>
+                          <td style={{ padding: '12px 16px' }}>
+                            <input
+                              type="number"
+                              value={product.qty}
+                              readOnly
+                              style={{
+                                width: '60px',
+                                padding: '6px 10px',
+                                border: '1px solid #D1D5DB',
+                                borderRadius: '6px',
+                                fontSize: '14px',
+                                textAlign: 'center',
+                                backgroundColor: 'white'
+                              }}
+                            />
                           </td>
                         </tr>
                       ))}
@@ -463,19 +546,38 @@ export default function EmployeeInboundDetailPage() {
               </div>
             )}
 
-            {/* {tMessages('delivery')} Section */}
+            {/* Delivery Section */}
             <div style={{
               backgroundColor: 'white',
-              borderRadius: 'clamp(6px, 0.59vw, 10px)',
-              border: '1px solid #E5E7EB',
-              padding: styles.sectionPadding
+              borderRadius: '8px',
+              boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.06), 0px 1px 3px 0px rgba(0, 0, 0, 0.1)',
+              padding: 'clamp(16px, 1.5vw, 20px) clamp(12px, 1.2vw, 16px)'
             }}>
-              <h3 style={{ fontSize: styles.fontSizeLg, fontWeight: 600, color: '#111827', marginBottom: 'clamp(3px, 0.29vw, 5px)' }}>{tMessages('delivery')}</h3>
-              <p style={{ fontSize: styles.fontSizeBase, color: '#6B7280', marginBottom: styles.cardPadding }}>{tMessages('deliveryDescription')}</p>
+              <h3 style={{ 
+                fontFamily: 'Inter, sans-serif',
+                fontWeight: 500,
+                fontSize: 'clamp(16px, 1.3vw, 18px)',
+                lineHeight: '24px',
+                color: '#111827', 
+                marginBottom: '4px' 
+              }}>{tMessages('delivery')}</h3>
+              <p style={{ 
+                fontFamily: 'Inter, sans-serif',
+                fontSize: 'clamp(13px, 1.1vw, 15px)', 
+                color: '#6B7280', 
+                marginBottom: '16px' 
+              }}>{tMessages('deliveryDescription')}</p>
               
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: styles.gridGap }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
                 <div>
-                  <label style={{ fontSize: styles.fontSizeBase, fontWeight: 500, color: '#374151', display: 'block', marginBottom: 'clamp(4px, 0.44vw, 8px)' }}>{tMessages('eta')}</label>
+                  <label style={{ 
+                    fontFamily: 'Inter, sans-serif',
+                    fontSize: 'clamp(13px, 1.1vw, 15px)', 
+                    fontWeight: 500, 
+                    color: '#374151', 
+                    display: 'block', 
+                    marginBottom: '8px' 
+                  }}>{tMessages('eta')}</label>
                   <input
                     type="text"
                     value={eta}
@@ -483,17 +585,24 @@ export default function EmployeeInboundDetailPage() {
                     disabled={!editMode}
                     style={{
                       width: '100%',
-                      height: styles.inputHeight,
-                      padding: '0 clamp(10px, 0.88vw, 14px)',
+                      height: '38px',
+                      padding: '0 12px',
                       border: '1px solid #D1D5DB',
-                      borderRadius: 'clamp(4px, 0.44vw, 8px)',
-                      fontSize: styles.fontSizeBase,
+                      borderRadius: '6px',
+                      fontSize: 'clamp(13px, 1.1vw, 15px)',
                       backgroundColor: editMode ? 'white' : '#F9FAFB'
                     }}
                   />
                 </div>
                 <div>
-                  <label style={{ fontSize: styles.fontSizeBase, fontWeight: 500, color: '#374151', display: 'block', marginBottom: 'clamp(4px, 0.44vw, 8px)' }}>Freigt forwarder</label>
+                  <label style={{ 
+                    fontFamily: 'Inter, sans-serif',
+                    fontSize: 'clamp(13px, 1.1vw, 15px)', 
+                    fontWeight: 500, 
+                    color: '#374151', 
+                    display: 'block', 
+                    marginBottom: '8px' 
+                  }}>{tMessages('freightForwarder')}</label>
                   <input
                     type="text"
                     value={freightForwarder}
@@ -501,17 +610,24 @@ export default function EmployeeInboundDetailPage() {
                     disabled={!editMode}
                     style={{
                       width: '100%',
-                      height: styles.inputHeight,
-                      padding: '0 clamp(10px, 0.88vw, 14px)',
+                      height: '38px',
+                      padding: '0 12px',
                       border: '1px solid #D1D5DB',
-                      borderRadius: 'clamp(4px, 0.44vw, 8px)',
-                      fontSize: styles.fontSizeBase,
+                      borderRadius: '6px',
+                      fontSize: 'clamp(13px, 1.1vw, 15px)',
                       backgroundColor: editMode ? 'white' : '#F9FAFB'
                     }}
                   />
                 </div>
                 <div>
-                  <label style={{ fontSize: styles.fontSizeBase, fontWeight: 500, color: '#374151', display: 'block', marginBottom: 'clamp(4px, 0.44vw, 8px)' }}>Tracking no</label>
+                  <label style={{ 
+                    fontFamily: 'Inter, sans-serif',
+                    fontSize: 'clamp(13px, 1.1vw, 15px)', 
+                    fontWeight: 500, 
+                    color: '#374151', 
+                    display: 'block', 
+                    marginBottom: '8px' 
+                  }}>{tMessages('trackingNo')}</label>
                   <input
                     type="text"
                     value={trackingNo}
@@ -519,17 +635,24 @@ export default function EmployeeInboundDetailPage() {
                     disabled={!editMode}
                     style={{
                       width: '100%',
-                      height: styles.inputHeight,
-                      padding: '0 clamp(10px, 0.88vw, 14px)',
+                      height: '38px',
+                      padding: '0 12px',
                       border: '1px solid #D1D5DB',
-                      borderRadius: 'clamp(4px, 0.44vw, 8px)',
-                      fontSize: styles.fontSizeBase,
+                      borderRadius: '6px',
+                      fontSize: 'clamp(13px, 1.1vw, 15px)',
                       backgroundColor: editMode ? 'white' : '#F9FAFB'
                     }}
                   />
                 </div>
                 <div>
-                  <label style={{ fontSize: styles.fontSizeBase, fontWeight: 500, color: '#374151', display: 'block', marginBottom: 'clamp(4px, 0.44vw, 8px)' }}>{tMessages('qtyBoxes')}</label>
+                  <label style={{ 
+                    fontFamily: 'Inter, sans-serif',
+                    fontSize: 'clamp(13px, 1.1vw, 15px)', 
+                    fontWeight: 500, 
+                    color: '#374151', 
+                    display: 'block', 
+                    marginBottom: '8px' 
+                  }}>{tMessages('qtyBoxes')}</label>
                   <input
                     type="text"
                     value={qtyBoxes}
@@ -537,17 +660,24 @@ export default function EmployeeInboundDetailPage() {
                     disabled={!editMode}
                     style={{
                       width: '100%',
-                      height: styles.inputHeight,
-                      padding: '0 clamp(10px, 0.88vw, 14px)',
+                      height: '38px',
+                      padding: '0 12px',
                       border: '1px solid #D1D5DB',
-                      borderRadius: 'clamp(4px, 0.44vw, 8px)',
-                      fontSize: styles.fontSizeBase,
+                      borderRadius: '6px',
+                      fontSize: 'clamp(13px, 1.1vw, 15px)',
                       backgroundColor: editMode ? 'white' : '#F9FAFB'
                     }}
                   />
                 </div>
                 <div>
-                  <label style={{ fontSize: styles.fontSizeBase, fontWeight: 500, color: '#374151', display: 'block', marginBottom: 'clamp(4px, 0.44vw, 8px)' }}>{tMessages('qtyPallets')}</label>
+                  <label style={{ 
+                    fontFamily: 'Inter, sans-serif',
+                    fontSize: 'clamp(13px, 1.1vw, 15px)', 
+                    fontWeight: 500, 
+                    color: '#374151', 
+                    display: 'block', 
+                    marginBottom: '8px' 
+                  }}>{tMessages('qtyPallets')}</label>
                   <input
                     type="text"
                     value={qtyPallets}
@@ -555,17 +685,24 @@ export default function EmployeeInboundDetailPage() {
                     disabled={!editMode}
                     style={{
                       width: '100%',
-                      height: styles.inputHeight,
-                      padding: '0 clamp(10px, 0.88vw, 14px)',
+                      height: '38px',
+                      padding: '0 12px',
                       border: '1px solid #D1D5DB',
-                      borderRadius: 'clamp(4px, 0.44vw, 8px)',
-                      fontSize: styles.fontSizeBase,
+                      borderRadius: '6px',
+                      fontSize: 'clamp(13px, 1.1vw, 15px)',
                       backgroundColor: editMode ? 'white' : '#F9FAFB'
                     }}
                   />
                 </div>
                 <div>
-                  <label style={{ fontSize: styles.fontSizeBase, fontWeight: 500, color: '#374151', display: 'block', marginBottom: 'clamp(4px, 0.44vw, 8px)' }}>{tMessages('totalCBM')}</label>
+                  <label style={{ 
+                    fontFamily: 'Inter, sans-serif',
+                    fontSize: 'clamp(13px, 1.1vw, 15px)', 
+                    fontWeight: 500, 
+                    color: '#374151', 
+                    display: 'block', 
+                    marginBottom: '8px' 
+                  }}>{tMessages('totalCBM')}</label>
                   <input
                     type="text"
                     value={totalCBM}
@@ -573,17 +710,24 @@ export default function EmployeeInboundDetailPage() {
                     disabled={!editMode}
                     style={{
                       width: '100%',
-                      height: styles.inputHeight,
-                      padding: '0 clamp(10px, 0.88vw, 14px)',
+                      height: '38px',
+                      padding: '0 12px',
                       border: '1px solid #D1D5DB',
-                      borderRadius: 'clamp(4px, 0.44vw, 8px)',
-                      fontSize: styles.fontSizeBase,
+                      borderRadius: '6px',
+                      fontSize: 'clamp(13px, 1.1vw, 15px)',
                       backgroundColor: editMode ? 'white' : '#F9FAFB'
                     }}
                   />
                 </div>
                 <div>
-                  <label style={{ fontSize: styles.fontSizeBase, fontWeight: 500, color: '#374151', display: 'block', marginBottom: 'clamp(4px, 0.44vw, 8px)' }}>{tInbounds('extInboundId')}</label>
+                  <label style={{ 
+                    fontFamily: 'Inter, sans-serif',
+                    fontSize: 'clamp(13px, 1.1vw, 15px)', 
+                    fontWeight: 500, 
+                    color: '#374151', 
+                    display: 'block', 
+                    marginBottom: '8px' 
+                  }}>{tInbounds('extInboundId')}</label>
                   <input
                     type="text"
                     value={extInorderId}
@@ -591,11 +735,11 @@ export default function EmployeeInboundDetailPage() {
                     disabled={!editMode}
                     style={{
                       width: '100%',
-                      height: styles.inputHeight,
-                      padding: '0 clamp(10px, 0.88vw, 14px)',
+                      height: '38px',
+                      padding: '0 12px',
                       border: '1px solid #D1D5DB',
-                      borderRadius: 'clamp(4px, 0.44vw, 8px)',
-                      fontSize: styles.fontSizeBase,
+                      borderRadius: '6px',
+                      fontSize: 'clamp(13px, 1.1vw, 15px)',
                       backgroundColor: editMode ? 'white' : '#F9FAFB'
                     }}
                   />
@@ -606,20 +750,26 @@ export default function EmployeeInboundDetailPage() {
             {/* Edit Inorder Section */}
             <div style={{
               backgroundColor: 'white',
-              borderRadius: 'clamp(6px, 0.59vw, 10px)',
-              border: '1px solid #E5E7EB',
-              padding: styles.cardPadding,
+              borderRadius: '8px',
+              boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.06), 0px 1px 3px 0px rgba(0, 0, 0, 0.1)',
+              padding: 'clamp(16px, 1.5vw, 20px) clamp(12px, 1.2vw, 16px)',
               display: 'flex',
               justifyContent: 'space-between',
               alignItems: 'center'
             }}>
-              <span style={{ fontSize: styles.fontSizeLg, fontWeight: 600, color: '#111827' }}>{tInbounds('editInbound')}</span>
+              <span style={{ 
+                fontFamily: 'Inter, sans-serif',
+                fontWeight: 500,
+                fontSize: 'clamp(16px, 1.3vw, 18px)',
+                lineHeight: '24px',
+                color: '#111827' 
+              }}>{tInbounds('editInbound')}</span>
               <button
                 onClick={() => setEditMode(!editMode)}
                 style={{
                   position: 'relative',
-                  width: 'clamp(40px, 3.24vw, 48px)',
-                  height: 'clamp(22px, 1.77vw, 26px)',
+                  width: '44px',
+                  height: '24px',
                   borderRadius: '12px',
                   border: 'none',
                   backgroundColor: editMode ? '#003450' : '#D1D5DB',
@@ -630,9 +780,9 @@ export default function EmployeeInboundDetailPage() {
                 <span style={{
                   position: 'absolute',
                   top: '2px',
-                  left: editMode ? 'calc(100% - 22px)' : '2px',
-                  width: 'clamp(18px, 1.47vw, 22px)',
-                  height: 'clamp(18px, 1.47vw, 22px)',
+                  left: editMode ? '22px' : '2px',
+                  width: '20px',
+                  height: '20px',
                   borderRadius: '50%',
                   backgroundColor: 'white',
                   transition: 'left 0.2s',
@@ -644,22 +794,35 @@ export default function EmployeeInboundDetailPage() {
             {/* Cancel Inbound Section */}
             <div style={{
               backgroundColor: 'white',
-              borderRadius: 'clamp(6px, 0.59vw, 10px)',
-              border: '1px solid #E5E7EB',
-              padding: styles.cardPadding
+              borderRadius: '8px',
+              boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.06), 0px 1px 3px 0px rgba(0, 0, 0, 0.1)',
+              padding: 'clamp(16px, 1.5vw, 20px) clamp(12px, 1.2vw, 16px)'
             }}>
-              <h3 style={{ fontSize: styles.fontSizeLg, fontWeight: 600, color: '#111827', marginBottom: 'clamp(6px, 0.59vw, 10px)' }}>{tInbounds('cancelInbound')}</h3>
-              <p style={{ fontSize: styles.fontSizeBase, color: '#6B7280', marginBottom: styles.gridGap, lineHeight: '1.5' }}>
+              <h3 style={{ 
+                fontFamily: 'Inter, sans-serif',
+                fontWeight: 500,
+                fontSize: 'clamp(16px, 1.3vw, 18px)',
+                lineHeight: '24px',
+                color: '#111827', 
+                marginBottom: '8px' 
+              }}>{tInbounds('cancelInbound')}</h3>
+              <p style={{ 
+                fontFamily: 'Inter, sans-serif',
+                fontSize: 'clamp(13px, 1.1vw, 15px)', 
+                color: '#6B7280', 
+                marginBottom: '16px', 
+                lineHeight: '1.5' 
+              }}>
                 {tCommon('deleteWarning')}
               </p>
               <button
                 style={{
-                  padding: 'clamp(6px, 0.59vw, 10px) clamp(12px, 1.18vw, 20px)',
+                  padding: '9px 17px',
                   backgroundColor: '#FEE2E2',
                   color: '#DC2626',
                   border: 'none',
-                  borderRadius: 'clamp(4px, 0.44vw, 8px)',
-                  fontSize: styles.fontSizeBase,
+                  borderRadius: '6px',
+                  fontSize: '14px',
                   fontWeight: 500,
                   cursor: 'pointer'
                 }}
@@ -669,6 +832,7 @@ export default function EmployeeInboundDetailPage() {
             </div>
           </div>
         </div>
+      </div>
       </div>
     </DashboardLayout>
   );

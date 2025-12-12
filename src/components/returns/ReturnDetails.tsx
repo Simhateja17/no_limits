@@ -233,19 +233,6 @@ export function ReturnDetails({ returnId }: ReturnDetailsProps) {
             >
               {tReturns('returnDetails')}
             </h2>
-            <p
-              style={{
-                fontFamily: 'Inter, sans-serif',
-                fontWeight: 400,
-                fontSize: 'clamp(11px, 1.03vw, 14px)',
-                lineHeight: 'clamp(15px, 1.47vw, 20px)',
-                color: '#6B7280',
-                margin: 0,
-                marginTop: 'clamp(4px, 0.39vw, 6px)',
-              }}
-            >
-              {tReturns('returnDetails')}
-            </p>
           </div>
           
           {/* Done Badge */}
@@ -668,18 +655,6 @@ export function ReturnDetails({ returnId }: ReturnDetailsProps) {
         >
           {tReturns('returnImages')}
         </h2>
-        <p
-          style={{
-            fontFamily: 'Inter, sans-serif',
-            fontWeight: 400,
-            fontSize: 'clamp(11px, 1.03vw, 14px)',
-            lineHeight: 'clamp(15px, 1.47vw, 20px)',
-            color: '#6B7280',
-            margin: 0,
-          }}
-        >
-          {tReturns('returnImages')}
-        </p>
 
         {/* Images Grid */}
         <div
@@ -748,7 +723,7 @@ export function ReturnDetails({ returnId }: ReturnDetailsProps) {
             color: '#6B7280',
           }}
         >
-          {tCommon('deleteWarning')}
+          {tOrders('createReplacementOrderDescription')}
         </p>
         <button
           onClick={handleCreateReplacementOrder}
