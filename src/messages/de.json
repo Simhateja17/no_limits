@@ -42,7 +42,9 @@
     "isTyping": "schreibt...",
     "enterTaskDescription": "Aufgabenbeschreibung eingeben...",
     "imagesOfReturnedItems": "Bilder der retournierten Artikel",
-    "detailsOfReturn": "Details der Retoure"
+    "detailsOfReturn": "Details der Retoure",
+    "add": "Hinzufügen",
+    "remove": "Entfernen"
   },
   "login": {
     "storeOwner": "Fulfillment Kunde",

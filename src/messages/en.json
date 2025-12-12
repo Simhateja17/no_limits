@@ -42,7 +42,9 @@
     "isTyping": "is typing...",
     "enterTaskDescription": "Enter task description...",
     "imagesOfReturnedItems": "Images of returned items",
-    "detailsOfReturn": "Details of return"
+    "detailsOfReturn": "Details of return",
+    "add": "Add",
+    "remove": "Remove"
   },
   "login": {
     "storeOwner": "Fulfillment Client",
