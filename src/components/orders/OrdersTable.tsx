@@ -67,7 +67,7 @@ const StatusTag = ({ status, t }: { status: OrderStatus; t: (key: string) => str
         };
       case 'error':
         return {
-          label: t('cancelled'),
+          label: 'Error',
           dotColor: '#EF4444',
         };
       case 'mildError':

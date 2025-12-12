@@ -337,7 +337,7 @@ export default function ClientInboundDetailPage() {
               
                 {/* Toggle */}
                 <button
-                  onClick={() => setPresaleActive(!presaleActive)}
+                  onClick={() => editMode && setPresaleActive(!presaleActive)}
                   style={{
                     position: 'relative',
                     width: '44px',
@@ -345,8 +345,9 @@ export default function ClientInboundDetailPage() {
                     borderRadius: '12px',
                     border: 'none',
                     backgroundColor: presaleActive ? '#003450' : '#D1D5DB',
-                    cursor: 'pointer',
-                    transition: 'background-color 0.2s'
+                    cursor: editMode ? 'pointer' : 'not-allowed',
+                    transition: 'background-color 0.2s',
+                    opacity: editMode ? 1 : 0.6
                   }}
                 >
                   <span style={{

@@ -255,6 +255,42 @@ export default function OrderDetailPage() {
                   boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.06), 0px 1px 3px 0px rgba(0, 0, 0, 0.1)',
                 }}
               >
+                {/* Status Pill */}
+                <div
+                  style={{
+                    height: '26px',
+                    gap: '8px',
+                    padding: '3px 13px',
+                    borderRadius: '13px',
+                    border: '1px solid #D1D5DB',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    marginBottom: '8px',
+                    width: 'fit-content'
+                  }}
+                >
+                  {/* Status Dot */}
+                  <div
+                    style={{
+                      width: '6px',
+                      height: '6px',
+                      borderRadius: '50%',
+                      backgroundColor: onHoldStatus ? '#F59E0B' : getStatusColor(mockOrderDetails.status),
+                    }}
+                  />
+                  <span
+                    style={{
+                      fontFamily: 'Inter, sans-serif',
+                      fontWeight: 500,
+                      fontSize: '15px',
+                      lineHeight: '20px',
+                      color: '#000000',
+                    }}
+                  >
+                    {onHoldStatus ? tOrders('onHold') : tOrders(mockOrderDetails.status.toLowerCase())}
+                  </span>
+                </div>
+
                 <div className="flex items-center justify-between">
                   <span
                     style={{
@@ -267,39 +303,6 @@ export default function OrderDetailPage() {
                   >
                     {tOrders('orderId')}
                   </span>
-                  {/* Status Pill */}
-                  <div
-                    style={{
-                      height: '26px',
-                      gap: '8px',
-                      padding: '3px 13px',
-                      borderRadius: '13px',
-                      border: '1px solid #D1D5DB',
-                      display: 'flex',
-                      alignItems: 'center',
-                    }}
-                  >
-                    {/* Status Dot */}
-                    <div
-                      style={{
-                        width: '6px',
-                        height: '6px',
-                        borderRadius: '50%',
-                        backgroundColor: onHoldStatus ? '#F59E0B' : getStatusColor(mockOrderDetails.status),
-                      }}
-                    />
-                    <span
-                      style={{
-                        fontFamily: 'Inter, sans-serif',
-                        fontWeight: 500,
-                        fontSize: '15px',
-                        lineHeight: '20px',
-                        color: '#000000',
-                      }}
-                    >
-                      {onHoldStatus ? tOrders('onHold') : tOrders(mockOrderDetails.status.toLowerCase())}
-                    </span>
-                  </div>
                 </div>
                 <span
                   style={{
@@ -345,7 +348,8 @@ export default function OrderDetailPage() {
                     <button
                       onClick={handleEditClick}
                       style={{
-                        width: 'clamp(38px, 3.2vw, 43px)',
+                        width: 'auto',
+                        minWidth: '43px',
                         height: 'clamp(18px, 1.5vw, 20px)',
                         padding: 'clamp(1px, 0.15vw, 2px) clamp(8px, 0.74vw, 10px)',
                         borderRadius: '10px',
@@ -571,49 +575,61 @@ export default function OrderDetailPage() {
                   backgroundColor: '#FFFFFF',
                   boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.06), 0px 1px 3px 0px rgba(0, 0, 0, 0.1)',
                   display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
+                  flexDirection: 'column',
+                  gap: '12px',
                 }}
               >
-                <span
-                  style={{
-                    fontFamily: 'Inter, sans-serif',
-                    fontWeight: 500,
-                    fontSize: 'clamp(16px, 1.3vw, 18px)',
-                    lineHeight: '24px',
-                    color: '#111827',
-                  }}
-                >
-                  {tOrders('onHold')}
-                </span>
-                <button
-                  onClick={() => setOnHoldStatus(!onHoldStatus)}
-                  style={{
-                    width: '44px',
-                    height: '24px',
-                    borderRadius: '12px',
-                    padding: '2px',
-                    backgroundColor: onHoldStatus ? '#003450' : '#E5E7EB',
-                    position: 'relative',
-                    cursor: 'pointer',
-                    border: 'none',
-                    transition: 'background-color 0.2s',
-                  }}
-                >
-                  <div
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+                  <span
                     style={{
-                      width: '20px',
-                      height: '20px',
-                      borderRadius: '50%',
-                      backgroundColor: '#FFFFFF',
-                      position: 'absolute',
-                      top: '2px',
-                      left: onHoldStatus ? '22px' : '2px',
-                      transition: 'left 0.2s',
-                      boxShadow: '0px 1px 2px rgba(0, 0, 0, 0.1)',
+                      fontFamily: 'Inter, sans-serif',
+                      fontWeight: 500,
+                      fontSize: 'clamp(16px, 1.3vw, 18px)',
+                      lineHeight: '24px',
+                      color: '#111827',
                     }}
-                  />
-                </button>
+                  >
+                    {tOrders('onHold')}
+                  </span>
+                  <button
+                    onClick={() => editOrderEnabled && setOnHoldStatus(!onHoldStatus)}
+                    style={{
+                      width: '44px',
+                      height: '24px',
+                      borderRadius: '12px',
+                      padding: '2px',
+                      backgroundColor: onHoldStatus ? '#003450' : '#E5E7EB',
+                      position: 'relative',
+                      cursor: editOrderEnabled ? 'pointer' : 'not-allowed',
+                      border: 'none',
+                      transition: 'background-color 0.2s',
+                      opacity: editOrderEnabled ? 1 : 0.6,
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: '20px',
+                        height: '20px',
+                        borderRadius: '50%',
+                        backgroundColor: '#FFFFFF',
+                        position: 'absolute',
+                        top: '2px',
+                        left: onHoldStatus ? '22px' : '2px',
+                        transition: 'left 0.2s',
+                        boxShadow: '0px 1px 2px rgba(0, 0, 0, 0.1)',
+                      }}
+                    />
+                  </button>
+                </div>
+                <span style={{
+                    fontFamily: 'Inter, sans-serif',
+                    fontWeight: 400,
+                    fontSize: '14px',
+                    lineHeight: '20px',
+                    color: '#6B7280',
+                }}>
+                    {tOrders('onHoldDescription')}
+                </span>
               </div>
 
               {/* Shipment Weight Box */}

@@ -73,10 +73,15 @@ export default function ClientOrderDetailPage() {
   const tOrders = useTranslations('orders');
   const tCountries = useTranslations('countries');
   const tStatus = useTranslations('status');
+  const tMessages = useTranslations('messages');
+  const [editOrderEnabled, setEditOrderEnabled] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
-  const [editOrderEnabled, setEditOrderEnabled] = useState(false);
+  const [showReplacementModal, setShowReplacementModal] = useState(false);
   const [onHoldStatus, setOnHoldStatus] = useState(mockOrderDetails.onHoldStatus);
+  const [tags, setTags] = useState(mockOrderDetails.tags);
+  const [newTag, setNewTag] = useState('');
+  const [replacementCount, setReplacementCount] = useState(0);
   const [orderProducts, setOrderProducts] = useState(mockOrderDetails.products);
   const [productSearchQuery, setProductSearchQuery] = useState('');
   const [productQuantities, setProductQuantities] = useState<Record<string, number>>({});
@@ -93,7 +98,7 @@ export default function ClientOrderDetailPage() {
     streetAddress: '',
     city: '',
     zipPostal: '',
-    country: 'unitedStates',
+    country: 'United States',
   });
 
   useEffect(() => {
@@ -122,6 +127,17 @@ export default function ClientOrderDetailPage() {
     setTimeout(() => {
       setShowSuccessModal(false);
     }, 2000);
+  };
+
+  const handleAddTag = () => {
+    if (newTag.trim() && !tags.includes(newTag.trim())) {
+      setTags([...tags, newTag.trim()]);
+      setNewTag('');
+    }
+  };
+
+  const handleRemoveTag = (tagToRemove: string) => {
+    setTags(tags.filter(tag => tag !== tagToRemove));
   };
 
   // Handle removing product from order
@@ -159,6 +175,37 @@ export default function ClientOrderDetailPage() {
     p.name.toLowerCase().includes(productSearchQuery.toLowerCase()) &&
     !orderProducts.find(op => op.id === p.id)
   );
+
+  // Get the base order ID (without replacement suffix)
+  const getBaseOrderId = (id: string) => {
+    const match = id.match(/^(.+?)-\d+$/);
+    return match ? match[1] : id;
+  };
+
+  // Get current replacement number from order ID
+  const getCurrentReplacementNumber = (id: string) => {
+    const match = id.match(/-(\d+)$/);
+    return match ? parseInt(match[1], 10) : 0;
+  };
+
+  // Handle create replacement order
+  const handleCreateReplacementOrder = () => {
+    const baseId = getBaseOrderId(orderId);
+    const currentNum = getCurrentReplacementNumber(orderId);
+    const newReplacementNum = currentNum > 0 ? currentNum + 1 : replacementCount + 1;
+    const newOrderId = `${baseId}-${newReplacementNum}`;
+    
+    // In a real app, this would call an API to create the replacement order
+    // For now, we'll just show the success modal and navigate
+    setReplacementCount(newReplacementNum);
+    setShowReplacementModal(true);
+    
+    setTimeout(() => {
+      setShowReplacementModal(false);
+      // Navigate to the new replacement order
+      router.push(`/client/orders/${newOrderId}`);
+    }, 2000);
+  };
 
   return (
     <DashboardLayout>
@@ -233,13 +280,13 @@ export default function ClientOrderDetailPage() {
                       alignItems: 'center',
                     }}
                   >
-                    {/* Green Dot */}
+                    {/* Status Dot */}
                     <div
                       style={{
                         width: '6px',
                         height: '6px',
                         borderRadius: '50%',
-                        backgroundColor: getStatusColor(mockOrderDetails.status),
+                        backgroundColor: onHoldStatus ? '#F59E0B' : getStatusColor(mockOrderDetails.status),
                       }}
                     />
                     <span
@@ -274,7 +321,7 @@ export default function ClientOrderDetailPage() {
               <div
                 style={{
                   width: '100%',
-                  minHeight: '212px',
+                  minHeight: '180px',
                   gap: '4px',
                   padding: 'clamp(16px, 1.5vw, 20px) clamp(12px, 1.2vw, 16px)',
                   borderRadius: '8px',
@@ -321,7 +368,7 @@ export default function ClientOrderDetailPage() {
                           textAlign: 'center',
                         }}
                       >
-                        {tCommon('edit')}
+                        Edit
                       </span>
                     </button>
                   )}
@@ -331,8 +378,8 @@ export default function ClientOrderDetailPage() {
                     marginTop: '12px',
                     fontFamily: 'Inter, sans-serif',
                     fontWeight: 500,
-                    fontSize: '15px',
-                    lineHeight: '36px',
+                    fontSize: 'clamp(13px, 1.1vw, 15px)',
+                    lineHeight: '32px',
                     color: '#111827',
                   }}
                 >
@@ -347,7 +394,7 @@ export default function ClientOrderDetailPage() {
               <div
                 style={{
                   width: '100%',
-                  minHeight: '104px',
+                  minHeight: '90px',
                   gap: '4px',
                   padding: 'clamp(16px, 1.5vw, 20px) clamp(12px, 1.2vw, 16px)',
                   borderRadius: '8px',
@@ -365,7 +412,7 @@ export default function ClientOrderDetailPage() {
                     color: '#111827',
                   }}
                 >
-                  {tOrders('shippingMethod')}
+                  Shipping method
                 </span>
                 {editOrderEnabled ? (
                   <div style={{ position: 'relative', marginTop: '12px' }}>
@@ -574,7 +621,8 @@ export default function ClientOrderDetailPage() {
               <div
                 style={{
                   width: '100%',
-                  minHeight: '187px',
+                  minWidth: 'clamp(240px, 19.9%, 270px)',
+                  minHeight: '140px',
                   gap: '4px',
                   padding: 'clamp(16px, 1.5vw, 20px) clamp(12px, 1.2vw, 16px)',
                   borderRadius: '8px',
@@ -598,7 +646,7 @@ export default function ClientOrderDetailPage() {
                     marginTop: '8px',
                     fontFamily: 'Inter, sans-serif',
                     fontWeight: 500,
-                    fontSize: '15px',
+                    fontSize: 'clamp(13px, 1.1vw, 15px)',
                     lineHeight: '20px',
                     color: '#111827',
                   }}
@@ -618,10 +666,133 @@ export default function ClientOrderDetailPage() {
                   {tOrders('shipmentWeightDescription')}
                 </div>
               </div>
+
+              {/* Tags Box */}
+              <div
+                style={{
+                  width: '100%',
+                  minWidth: 'clamp(240px, 19.9%, 270px)',
+                  minHeight: editOrderEnabled ? '150px' : '100px',
+                  gap: '4px',
+                  padding: 'clamp(16px, 1.5vw, 20px) clamp(12px, 1.2vw, 16px)',
+                  borderRadius: '8px',
+                  backgroundColor: '#FFFFFF',
+                  boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.06), 0px 1px 3px 0px rgba(0, 0, 0, 0.1)',
+                }}
+              >
+                <span
+                  style={{
+                    fontFamily: 'Inter, sans-serif',
+                    fontWeight: 500,
+                    fontSize: 'clamp(16px, 1.3vw, 18px)',
+                    lineHeight: '24px',
+                    color: '#111827',
+                  }}
+                >
+                  {tOrders('tags')}
+                </span>
+                <div className="flex flex-wrap gap-2 mt-3">
+                  {tags.map((tag) => (
+                    <div
+                      key={tag}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                        padding: '4px 8px',
+                        borderRadius: '6px',
+                        backgroundColor: '#F3F4F6',
+                      }}
+                    >
+                      <span
+                        style={{
+                          fontFamily: 'Inter, sans-serif',
+                          fontWeight: 500,
+                          fontSize: '14px',
+                          lineHeight: '20px',
+                          color: '#374151',
+                        }}
+                      >
+                        {tag}
+                      </span>
+                      {editOrderEnabled && (
+                        <button
+                          onClick={() => handleRemoveTag(tag)}
+                          style={{
+                            background: 'none',
+                            border: 'none',
+                            cursor: 'pointer',
+                            padding: '0',
+                            display: 'flex',
+                            alignItems: 'center',
+                          }}
+                        >
+                          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M9 3L3 9M3 3L9 9" stroke="#6B7280" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                          </svg>
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+                {editOrderEnabled && (
+                  <div 
+                    className="relative mt-4"
+                    style={{
+                      width: '100%',
+                    }}
+                  >
+                    <input
+                      type="text"
+                      value={newTag}
+                      onChange={(e) => setNewTag(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          handleAddTag();
+                        }
+                      }}
+                      placeholder={tOrders('addTag')}
+                      style={{
+                        width: '100%',
+                        height: '42px',
+                        borderRadius: '6px',
+                        border: '1px solid #E5E7EB',
+                        padding: '10px 60px 10px 12px',
+                        fontFamily: 'Inter, sans-serif',
+                        fontSize: '14px',
+                        lineHeight: '20px',
+                        color: '#111827',
+                      }}
+                    />
+                    <button
+                      onClick={handleAddTag}
+                      style={{
+                        position: 'absolute',
+                        right: '8px',
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        height: '28px',
+                        padding: '4px 12px',
+                        borderRadius: '4px',
+                        border: '1px solid #E5E7EB',
+                        backgroundColor: '#FFFFFF',
+                        fontFamily: 'Inter, sans-serif',
+                        fontWeight: 400,
+                        fontSize: '14px',
+                        lineHeight: '20px',
+                        color: '#9CA3AF',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      Add
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
 
-            {/* Right Column - Products Table */}
-            <div className="flex flex-col gap-4" style={{ flex: 1 }}>
+            {/* Right Column - Products and Actions */}
+            <div className="flex flex-col gap-6" style={{ flex: 1, maxWidth: '927px' }}>
               {/* Products Table */}
               <div
                 style={{
@@ -655,7 +826,7 @@ export default function ClientOrderDetailPage() {
                       color: '#6B7280',
                     }}
                   >
-                    {tOrders('productName')}
+                    Product Name
                   </span>
                   <span
                     style={{
@@ -668,7 +839,7 @@ export default function ClientOrderDetailPage() {
                       color: '#6B7280',
                     }}
                   >
-                    {tOrders('sku')}
+                    SKU
                   </span>
                   <span
                     style={{
@@ -681,7 +852,7 @@ export default function ClientOrderDetailPage() {
                       color: '#6B7280',
                     }}
                   >
-                    {tOrders('gtin')}
+                    GTIN
                   </span>
                   <span
                     style={{
@@ -694,7 +865,7 @@ export default function ClientOrderDetailPage() {
                       color: '#6B7280',
                     }}
                   >
-                    {tOrders('qty')}
+                    QTY
                   </span>
                 </div>
 
@@ -733,7 +904,7 @@ export default function ClientOrderDetailPage() {
                             color: '#DC2626',
                           }}
                         >
-                          {tOrders('remove')}
+                          Remove
                         </span>
                       </button>
                     )}
@@ -932,7 +1103,7 @@ export default function ClientOrderDetailPage() {
                             color: '#6B7280',
                           }}
                         >
-                          {tOrders('productName')}
+                          Product Name
                         </span>
                         <span
                           style={{
@@ -945,7 +1116,7 @@ export default function ClientOrderDetailPage() {
                             color: '#6B7280',
                           }}
                         >
-                          {tOrders('sku')}
+                          SKU
                         </span>
                         <span
                           style={{
@@ -958,7 +1129,7 @@ export default function ClientOrderDetailPage() {
                             color: '#6B7280',
                           }}
                         >
-                          {tOrders('gtin')}
+                          GTIN
                         </span>
                         <span
                           style={{
@@ -971,7 +1142,7 @@ export default function ClientOrderDetailPage() {
                             color: '#6B7280',
                           }}
                         >
-                          {tOrders('qty')}
+                          QTY
                         </span>
                         <span></span>
                       </div>
@@ -1193,6 +1364,140 @@ export default function ClientOrderDetailPage() {
                     }}
                   >
                     {tOrders('deleteOrder')}
+                  </span>
+                </button>
+              </div>
+
+              {/* Cancel Order Box */}
+              <div
+                style={{
+                  width: '100%',
+                  minHeight: '178px',
+                  gap: '20px',
+                  borderRadius: '8px',
+                  padding: 'clamp(16px, 1.8vw, 24px)',
+                  backgroundColor: '#FFFFFF',
+                  boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.06), 0px 1px 3px 0px rgba(0, 0, 0, 0.1)',
+                }}
+              >
+                <span
+                  style={{
+                    fontFamily: 'Inter, sans-serif',
+                    fontWeight: 500,
+                    fontSize: 'clamp(16px, 1.3vw, 18px)',
+                    lineHeight: '24px',
+                    color: '#111827',
+                    display: 'block',
+                  }}
+                >
+                  {tOrders('cancelOrder')}
+                </span>
+                <p
+                  style={{
+                    marginTop: '12px',
+                    fontFamily: 'Inter, sans-serif',
+                    fontWeight: 400,
+                    fontSize: '14px',
+                    lineHeight: '20px',
+                    color: '#6B7280',
+                  }}
+                >
+                  {tCommon('deleteWarning')}
+                </p>
+                <button
+                  style={{
+                    marginTop: '20px',
+                    width: 'clamp(100px, 8.8vw, 120px)',
+                    height: 'clamp(34px, 2.8vw, 38px)',
+                    padding: 'clamp(7px, 0.66vw, 9px) clamp(13px, 1.25vw, 17px)',
+                    borderRadius: '6px',
+                    backgroundColor: '#FEE2E2',
+                    border: 'none',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <span
+                    style={{
+                      fontFamily: 'Inter, sans-serif',
+                      fontWeight: 500,
+                      fontSize: 'clamp(12px, 1.03vw, 14px)',
+                      lineHeight: '20px',
+                      color: '#DC2626',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    {tOrders('cancelOrder')}
+                  </span>
+                </button>
+              </div>
+
+              {/* Create Replacement Order Box */}
+              <div
+                style={{
+                  width: '100%',
+                  minHeight: '178px',
+                  gap: '20px',
+                  borderRadius: '8px',
+                  padding: 'clamp(16px, 1.8vw, 24px)',
+                  backgroundColor: '#FFFFFF',
+                  boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.06), 0px 1px 3px 0px rgba(0, 0, 0, 0.1)',
+                }}
+              >
+                <span
+                  style={{
+                    fontFamily: 'Inter, sans-serif',
+                    fontWeight: 500,
+                    fontSize: 'clamp(16px, 1.3vw, 18px)',
+                    lineHeight: '24px',
+                    color: '#111827',
+                    display: 'block',
+                  }}
+                >
+                  {tOrders('createReplacementOrder')}
+                </span>
+                <p
+                  style={{
+                    marginTop: '12px',
+                    fontFamily: 'Inter, sans-serif',
+                    fontWeight: 400,
+                    fontSize: '14px',
+                    lineHeight: '20px',
+                    color: '#6B7280',
+                  }}
+                >
+                  {tCommon('deleteWarning')}
+                </p>
+                <button
+                  onClick={handleCreateReplacementOrder}
+                  style={{
+                    marginTop: '20px',
+                    width: 'clamp(170px, 15.2vw, 206px)',
+                    height: 'clamp(34px, 2.8vw, 38px)',
+                    padding: 'clamp(7px, 0.66vw, 9px) clamp(13px, 1.25vw, 17px)',
+                    borderRadius: '6px',
+                    backgroundColor: '#003450',
+                    border: 'none',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <span
+                    style={{
+                      fontFamily: 'Inter, sans-serif',
+                      fontWeight: 500,
+                      fontSize: 'clamp(12px, 1.03vw, 14px)',
+                      lineHeight: '20px',
+                      color: '#FFFFFF',
+                      whiteSpace: 'nowrap',
+                      textAlign: 'center',
+                    }}
+                  >
+                    {tOrders('createReplacementOrder')}
                   </span>
                 </button>
               </div>
@@ -1615,6 +1920,70 @@ export default function ClientOrderDetailPage() {
                 }}
               >
                 {tOrders('shippingAddressChanged')}
+              </span>
+            </div>
+          </div>
+        )}
+
+        {/* Replacement Order Created Modal */}
+        {showReplacementModal && (
+          <div
+            style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: 'rgba(0, 0, 0, 0.5)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              zIndex: 1000,
+            }}
+          >
+            <div
+              style={{
+                width: '512px',
+                height: '140px',
+                maxWidth: '90vw',
+                gap: '24px',
+                borderRadius: '8px',
+                padding: '24px',
+                backgroundColor: '#FFFFFF',
+                boxShadow: '0px 10px 10px -5px rgba(0, 0, 0, 0.04), 0px 20px 25px -5px rgba(0, 0, 0, 0.1)',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              {/* Green Checkmark Circle */}
+              <div
+                style={{
+                  width: '48px',
+                  height: '48px',
+                  borderRadius: '24px',
+                  backgroundColor: '#D1FAE5',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M5 13L9 17L19 7" stroke="#059669" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </div>
+              <span
+                style={{
+                  fontFamily: 'Inter, sans-serif',
+                  fontWeight: 500,
+                  fontSize: '18px',
+                  lineHeight: '24px',
+                  textAlign: 'center',
+                  color: '#111827',
+                }}
+              >
+                {tOrders('replacementOrderCreated')}
               </span>
             </div>
           </div>

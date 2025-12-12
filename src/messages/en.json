@@ -122,6 +122,7 @@
     "deliveryMethod": "Delivery method",
     "shippingMethod": "Shipping method",
     "onHold": "On Hold",
+    "onHoldDescription": "With this function an order can be put on hold. This sets it to the status 'In Preparation'. In this status the order cannot be processed by us.",
     "shipmentWeight": "Shipment Weight",
     "shipmentWeightDescription": "Shipment weight is total weight of all products in this order, to change weight of the order you have to edit the single product weight",
     "tags": "Tags",

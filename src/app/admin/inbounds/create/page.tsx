@@ -44,6 +44,38 @@ export default function CreateInboundPage() {
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
+  // Inbound image state
+  const [inboundImage, setInboundImage] = useState<string | null>(null);
+  const imageInputRef = useRef<HTMLInputElement>(null);
+
+  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        alert('Please select an image file');
+        return;
+      }
+      // Validate file size (max 10MB)
+      if (file.size > 10 * 1024 * 1024) {
+        alert('File size must be less than 10MB');
+        return;
+      }
+      // Create preview URL
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setInboundImage(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleImageClick = () => {
+    if (imageInputRef.current) {
+      imageInputRef.current.click();
+    }
+  };
+  
   // Presale toggle
   const [presaleActive, setPresaleActive] = useState(false);
 
@@ -150,7 +182,7 @@ export default function CreateInboundPage() {
     <DashboardLayout>
       <div className="w-full min-h-screen bg-[#F9FAFB]">
         <div className="px-[3.8%] py-6">
-          {/* Header with Back and Save buttons */}
+          {/* Header with Back button */}
           <div className="flex items-center justify-between mb-6">
             {/* Back Button */}
             <button
@@ -180,20 +212,24 @@ export default function CreateInboundPage() {
                 {tCommon('back')}
               </span>
             </button>
+          </div>
 
-            {/* Save Inbound Button */}
+          {/* Tab - Inbound Data */}
+          <div
+            className="flex items-center"
+            style={{
+              borderBottom: '1px solid #E5E7EB',
+              marginBottom: '24px',
+            }}
+          >
             <button
-              onClick={handleSaveInbound}
               style={{
                 height: '38px',
-                padding: '9px 17px',
-                borderRadius: '6px',
-                backgroundColor: '#003450',
-                border: 'none',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
+                paddingLeft: '4px',
+                paddingRight: '4px',
+                paddingBottom: '16px',
+                borderBottom: '2px solid #003450',
+                marginBottom: '-1px',
               }}
             >
               <span
@@ -202,17 +238,118 @@ export default function CreateInboundPage() {
                   fontWeight: 500,
                   fontSize: '14px',
                   lineHeight: '20px',
-                  color: '#FFFFFF',
-                  whiteSpace: 'nowrap',
+                  color: '#003450',
                 }}
               >
-                {tInbounds('createInbound')}
+                Inbound Data
               </span>
             </button>
           </div>
 
-          {/* Main Content - Centered */}
-          <div className="flex flex-col items-center gap-6">
+          <div className="flex gap-6 flex-wrap lg:flex-nowrap">
+            {/* Image Upload */}
+            <div
+              onClick={handleImageClick}
+              style={{
+                width: '192px',
+                minWidth: '192px',
+                height: '192px',
+                borderRadius: '8px',
+                border: inboundImage ? 'none' : '2px dashed #D1D5DB',
+                backgroundColor: '#FFFFFF',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px',
+                cursor: 'pointer',
+                overflow: 'hidden',
+                position: 'relative',
+              }}
+            >
+              {/* Hidden file input */}
+              <input
+                ref={imageInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleImageUpload}
+                style={{ display: 'none' }}
+              />
+              {inboundImage ? (
+                <>
+                  <img
+                    src={inboundImage}
+                    alt="Inbound"
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      objectFit: 'cover',
+                    }}
+                  />
+                  {/* Hover overlay for re-upload */}
+                  <div
+                    style={{
+                      position: 'absolute',
+                      inset: 0,
+                      backgroundColor: 'rgba(0, 0, 0, 0.4)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      opacity: 0,
+                      transition: 'opacity 0.2s',
+                    }}
+                    className="hover:!opacity-100"
+                    onMouseEnter={(e) => (e.currentTarget.style.opacity = '1')}
+                    onMouseLeave={(e) => (e.currentTarget.style.opacity = '0')}
+                  >
+                    <div
+                      style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        gap: '4px',
+                      }}
+                    >
+                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M21 15V19C21 19.5304 20.7893 20.0391 20.4142 20.4142C20.0391 20.7893 19.5304 21 19 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V15" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        <polyline points="17,8 12,3 7,8" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        <line x1="12" y1="3" x2="12" y2="15" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                      <span style={{ color: 'white', fontSize: '12px', fontWeight: 500 }}>{tCommon('change')}</span>
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="3" y="3" width="18" height="18" rx="2" stroke="#9CA3AF" strokeWidth="1.5"/>
+                    <path d="M12 8V16M8 12H16" stroke="#9CA3AF" strokeWidth="1.5" strokeLinecap="round"/>
+                  </svg>
+                  <span
+                    style={{
+                      fontFamily: 'Inter, sans-serif',
+                      fontSize: '12px',
+                      color: '#003450',
+                      textAlign: 'center',
+                    }}
+                  >
+                      <span style={{ textDecoration: 'underline' }}>{tCommon('upload')}</span> {tCommon('or')} {tCommon('dragAndDrop')}
+                  </span>
+                  <span
+                    style={{
+                      fontFamily: 'Inter, sans-serif',
+                      fontSize: '11px',
+                      color: '#9CA3AF',
+                    }}
+                    >
+                      PNG, JPG, GIF up to 10MB
+                    </span>
+                </>
+              )}
+            </div>
+
+            {/* Main Content - Centered */}
+            <div className="flex-1 flex flex-col gap-6" style={{ maxWidth: '927px' }}>
             {/* Products Table */}
             <div
               style={{
@@ -1075,6 +1212,38 @@ export default function CreateInboundPage() {
                 />
               </button>
             </div>
+
+            {/* Save Button at Bottom */}
+            <div style={{ width: '100%', maxWidth: '927px', display: 'flex', justifyContent: 'flex-end', marginTop: '24px' }}>
+              <button
+                onClick={handleSaveInbound}
+                style={{
+                  height: '38px',
+                  padding: '9px 17px',
+                  borderRadius: '6px',
+                  backgroundColor: '#003450',
+                  border: 'none',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <span
+                  style={{
+                    fontFamily: 'Inter, sans-serif',
+                    fontWeight: 500,
+                    fontSize: '14px',
+                    lineHeight: '20px',
+                    color: '#FFFFFF',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  {tCommon('save')}
+                </span>
+              </button>
+            </div>
+          </div>
           </div>
         </div>
 
