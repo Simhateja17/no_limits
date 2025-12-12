@@ -4,7 +4,7 @@ import { DashboardLayout } from '@/components/layout';
 import { useAuthStore } from '@/lib/store';
 import { useRouter, useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 
 // Mock product data
 interface Product {
@@ -35,6 +35,7 @@ export default function EmployeeInboundDetailPage() {
   const { user, isAuthenticated } = useAuthStore();
   const router = useRouter();
   const params = useParams();
+  const locale = useLocale();
   const tCommon = useTranslations('common');
   const tOrders = useTranslations('orders');
   const tInbounds = useTranslations('inbounds');
@@ -186,24 +187,53 @@ export default function EmployeeInboundDetailPage() {
               padding: styles.cardPadding,
               border: '1px solid #E5E7EB'
             }}>
-              <div className="flex items-center gap-2 mb-2">
-                <span style={{ fontSize: styles.fontSizeBase, fontWeight: 600, color: '#111827' }}>{tInbounds('inboundId')}</span>
-                <span style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: 'clamp(6px, 0.59vw, 10px)',
-                  padding: 'clamp(4px, 0.44vw, 8px) clamp(12px, 1.18vw, 16px)',
-                  backgroundColor: 'transparent',
-                  border: '1px solid #E5E7EB',
-                  borderRadius: '9999px',
-                  fontSize: styles.fontSizeBase,
-                  color: '#111827',
-                  fontWeight: 500
-                }}>
-                  <span style={{ width: 'clamp(8px, 0.74vw, 12px)', height: 'clamp(8px, 0.74vw, 12px)', backgroundColor: '#F59E0B', borderRadius: '50%' }}></span>
-                  {tInbounds('pending')}
-                </span>
-              </div>
+              {locale === 'de' ? (
+                // German layout: Tag above ID
+                <>
+                  <div className="flex items-center gap-2 mb-2">
+                    <span style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 'clamp(6px, 0.59vw, 10px)',
+                      padding: 'clamp(4px, 0.44vw, 8px) clamp(12px, 1.18vw, 16px)',
+                      backgroundColor: 'transparent',
+                      border: '1px solid #E5E7EB',
+                      borderRadius: '9999px',
+                      fontSize: styles.fontSizeBase,
+                      color: '#111827',
+                      fontWeight: 500,
+                      whiteSpace: 'nowrap'
+                    }}>
+                      <span style={{ width: 'clamp(8px, 0.74vw, 12px)', height: 'clamp(8px, 0.74vw, 12px)', backgroundColor: '#F59E0B', borderRadius: '50%' }}></span>
+                      {tInbounds('pending')}
+                    </span>
+                  </div>
+                  <div className="mb-2">
+                    <span style={{ fontSize: styles.fontSizeBase, fontWeight: 600, color: '#111827' }}>{tInbounds('inboundId')}</span>
+                  </div>
+                </>
+              ) : (
+                // English layout: Tag inline with ID
+                <div className="flex items-center gap-2 mb-2" style={{ flexWrap: 'wrap' }}>
+                  <span style={{ fontSize: styles.fontSizeBase, fontWeight: 600, color: '#111827' }}>{tInbounds('inboundId')}</span>
+                  <span style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 'clamp(6px, 0.59vw, 10px)',
+                    padding: 'clamp(4px, 0.44vw, 8px) clamp(12px, 1.18vw, 16px)',
+                    backgroundColor: 'transparent',
+                    border: '1px solid #E5E7EB',
+                    borderRadius: '9999px',
+                    fontSize: styles.fontSizeBase,
+                    color: '#111827',
+                    fontWeight: 500,
+                    whiteSpace: 'nowrap'
+                  }}>
+                    <span style={{ width: 'clamp(8px, 0.74vw, 12px)', height: 'clamp(8px, 0.74vw, 12px)', backgroundColor: '#F59E0B', borderRadius: '50%' }}></span>
+                    {tInbounds('pending')}
+                  </span>
+                </div>
+              )}
               <div style={{ fontSize: styles.fontSizeBase, color: '#6B7280', marginBottom: styles.gridGap }}>{inboundId}</div>
               
               <div style={{ fontSize: styles.fontSizeBase, fontWeight: 600, color: '#111827' }}>{tMessages('extInboundId')}</div>
@@ -441,11 +471,11 @@ export default function EmployeeInboundDetailPage() {
               padding: styles.sectionPadding
             }}>
               <h3 style={{ fontSize: styles.fontSizeLg, fontWeight: 600, color: '#111827', marginBottom: 'clamp(3px, 0.29vw, 5px)' }}>{tMessages('delivery')}</h3>
-              <p style={{ fontSize: styles.fontSizeBase, color: '#6B7280', marginBottom: styles.cardPadding }}>Use a permanent address where you can receive mail.</p>
+              <p style={{ fontSize: styles.fontSizeBase, color: '#6B7280', marginBottom: styles.cardPadding }}>{tMessages('deliveryDescription')}</p>
               
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: styles.gridGap }}>
                 <div>
-                  <label style={{ fontSize: styles.fontSizeBase, fontWeight: 500, color: '#374151', display: 'block', marginBottom: 'clamp(4px, 0.44vw, 8px)' }}>ETA</label>
+                  <label style={{ fontSize: styles.fontSizeBase, fontWeight: 500, color: '#374151', display: 'block', marginBottom: 'clamp(4px, 0.44vw, 8px)' }}>{tMessages('eta')}</label>
                   <input
                     type="text"
                     value={eta}

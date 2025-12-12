@@ -4,7 +4,7 @@ import { DashboardLayout } from '@/components/layout';
 import { useAuthStore } from '@/lib/store';
 import { useRouter, useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 
 // Mock product data
 interface Product {
@@ -35,6 +35,7 @@ export default function AdminInboundDetailPage() {
   const { user, isAuthenticated } = useAuthStore();
   const router = useRouter();
   const params = useParams();
+  const locale = useLocale();
   const tCommon = useTranslations('common');
   const tOrders = useTranslations('orders');
   const tMessages = useTranslations('messages');
@@ -159,52 +160,103 @@ export default function AdminInboundDetailPage() {
                   boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.06), 0px 1px 3px 0px rgba(0, 0, 0, 0.1)',
                 }}
               >
-                <div className="flex items-center justify-between">
-                  <span
-                    style={{
-                      fontFamily: 'Inter, sans-serif',
-                      fontWeight: 500,
-                      fontSize: 'clamp(16px, 1.3vw, 18px)',
-                      lineHeight: '24px',
-                      color: '#111827',
-                    }}
-                  >
-                    {tInbounds('inboundId')}
-                  </span>
-                  {/* Status Pill */}
-                  <div
-                    style={{
-                      height: '26px',
-                      gap: '8px',
-                      padding: '3px 13px',
-                      borderRadius: '13px',
-                      border: '1px solid #D1D5DB',
-                      display: 'flex',
-                      alignItems: 'center',
-                    }}
-                  >
-                    {/* Status Dot */}
-                    <div
-                      style={{
-                        width: '6px',
-                        height: '6px',
-                        borderRadius: '50%',
-                        backgroundColor: '#F59E0B',
-                      }}
-                    />
+                {locale === 'de' ? (
+                  // German layout: Tag above ID
+                  <>
+                    <div className="flex items-center justify-start mb-2">
+                      <div
+                        style={{
+                          height: '26px',
+                          gap: '8px',
+                          padding: '3px 13px',
+                          borderRadius: '13px',
+                          border: '1px solid #D1D5DB',
+                          display: 'flex',
+                          alignItems: 'center',
+                          whiteSpace: 'nowrap'
+                        }}
+                      >
+                        <div
+                          style={{
+                            width: '6px',
+                            height: '6px',
+                            borderRadius: '50%',
+                            backgroundColor: '#F59E0B',
+                          }}
+                        />
+                        <span
+                          style={{
+                            fontFamily: 'Inter, sans-serif',
+                            fontWeight: 500,
+                            fontSize: '15px',
+                            lineHeight: '20px',
+                            color: '#000000',
+                          }}
+                        >
+                          {tInbounds('pending')}
+                        </span>
+                      </div>
+                    </div>
                     <span
                       style={{
                         fontFamily: 'Inter, sans-serif',
                         fontWeight: 500,
-                        fontSize: '15px',
-                        lineHeight: '20px',
-                        color: '#000000',
+                        fontSize: 'clamp(16px, 1.3vw, 18px)',
+                        lineHeight: '24px',
+                        color: '#111827',
                       }}
                     >
-                      {tInbounds('pending')}
+                      {tInbounds('inboundId')}
                     </span>
+                  </>
+                ) : (
+                  // English layout: Tag inline with ID
+                  <div className="flex items-center justify-between">
+                    <span
+                      style={{
+                        fontFamily: 'Inter, sans-serif',
+                        fontWeight: 500,
+                        fontSize: 'clamp(16px, 1.3vw, 18px)',
+                        lineHeight: '24px',
+                        color: '#111827',
+                      }}
+                    >
+                      {tInbounds('inboundId')}
+                    </span>
+                    <div
+                      style={{
+                        height: '26px',
+                        gap: '8px',
+                        padding: '3px 13px',
+                        borderRadius: '13px',
+                        border: '1px solid #D1D5DB',
+                        display: 'flex',
+                        alignItems: 'center',
+                        whiteSpace: 'nowrap'
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: '6px',
+                          height: '6px',
+                          borderRadius: '50%',
+                          backgroundColor: '#F59E0B',
+                        }}
+                      />
+                      <span
+                        style={{
+                          fontFamily: 'Inter, sans-serif',
+                          fontWeight: 500,
+                          fontSize: '15px',
+                          lineHeight: '20px',
+                          color: '#000000',
+                        }}
+                      >
+                        {tInbounds('pending')}
+                      </span>
+                    </div>
                   </div>
-                </div>
+                )}
                 <span
                   style={{
                     fontFamily: 'Inter, sans-serif',
@@ -464,7 +516,7 @@ export default function AdminInboundDetailPage() {
                                 cursor: 'pointer'
                               }}
                             >
-                              {tCommon('add')}
+                              {tOrders('add')}
                             </button>
                           </td>
                           <td style={{ padding: '12px 16px', fontSize: '14px', color: '#111827' }}>{product.name}</td>
