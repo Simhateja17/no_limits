@@ -469,7 +469,7 @@ export default function EmployeeOrderDetailPage() {
                     color: '#111827',
                   }}
                 >
-                  Shipping method
+                  {tOrders('shippingMethod')}
                 </span>
                 {editOrderEnabled ? (
                   <div style={{ position: 'relative', marginTop: '12px' }}>
@@ -897,7 +897,7 @@ export default function EmployeeOrderDetailPage() {
                       color: '#6B7280',
                     }}
                   >
-                    Product Name
+                    {tOrders('productName')}
                   </span>
                   <span
                     style={{
@@ -964,6 +964,7 @@ export default function EmployeeOrderDetailPage() {
                           border: 'none',
                           cursor: 'pointer',
                           width: 'fit-content',
+                          marginRight: '10px',
                         }}
                       >
                         <span
@@ -1091,7 +1092,7 @@ export default function EmployeeOrderDetailPage() {
                         marginBottom: '4px',
                       }}
                     >
-                      Add Products
+                      {tOrders('addProducts')}
                     </label>
                     <input
                       type="text"
@@ -1174,7 +1175,7 @@ export default function EmployeeOrderDetailPage() {
                             color: '#6B7280',
                           }}
                         >
-                          Product Name
+                          {tOrders('productName')}
                         </span>
                         <span
                           style={{

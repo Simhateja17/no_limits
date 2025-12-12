@@ -511,7 +511,6 @@ export function SalesChannels({ baseUrl }: SalesChannelsProps) {
             cursor: 'pointer',
           }}
         >
-          <PlusIcon />
           <span
             style={{
               fontFamily: 'Inter, sans-serif',
@@ -625,7 +624,6 @@ export function SalesChannels({ baseUrl }: SalesChannelsProps) {
               cursor: 'pointer',
             }}
           >
-            <PlusIcon />
             <span
               style={{
                 fontFamily: 'Inter, sans-serif',
