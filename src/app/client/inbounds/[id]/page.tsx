@@ -1,9 +1,9 @@
-'use client';
-
 import { DashboardLayout } from '@/components/layout';
-import { useAuthStore } from '@/lib/store';
+
 import { useRouter, useParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useAuthStore } from '@/lib/store';
+import { useEffect } from 'react';
+import { useState, useRef } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 
 // Mock product data
@@ -56,6 +56,38 @@ export default function ClientInboundDetailPage() {
   const [qtyPallets, setQtyPallets] = useState('10');
   const [totalCBM, setTotalCBM] = useState('10');
   const [extInorderId, setExtInorderId] = useState('DE3-3245');
+  
+  // Inbound image state
+  const [inboundImage, setInboundImage] = useState<string | null>(null);
+  const imageInputRef = useRef<HTMLInputElement>(null);
+
+  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        alert('Please select an image file');
+        return;
+      }
+      // Validate file size (max 10MB)
+      if (file.size > 10 * 1024 * 1024) {
+        alert('File size must be less than 10MB');
+        return;
+      }
+      // Create preview URL
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setInboundImage(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleImageClick = () => {
+    if (imageInputRef.current) {
+      imageInputRef.current.click();
+    }
+  };
 
   useEffect(() => {
     if (!isAuthenticated || user?.role !== 'CLIENT') {
@@ -144,10 +176,145 @@ export default function ClientInboundDetailPage() {
             </span>
           </button>
 
+          {/* Tab - Inbound Data */}
+          <div
+            className="flex items-center"
+            style={{
+              borderBottom: '1px solid #E5E7EB',
+              marginTop: '24px',
+            }}
+          >
+            <button
+              style={{
+                height: '38px',
+                paddingLeft: '4px',
+                paddingRight: '4px',
+                paddingBottom: '16px',
+                borderBottom: '2px solid #003450',
+                marginBottom: '-1px',
+              }}
+            >
+              <span
+                style={{
+                  fontFamily: 'Inter, sans-serif',
+                  fontWeight: 500,
+                  fontSize: '14px',
+                  lineHeight: '20px',
+                  color: '#003450',
+                }}
+              >
+                Inbound Data
+              </span>
+            </button>
+          </div>
+
           {/* Main Content */}
           <div className="mt-6 flex gap-[2.5%] flex-wrap lg:flex-nowrap">
             {/* Left Sidebar */}
             <div className="flex flex-col gap-4 w-full lg:w-[20%] lg:min-w-[240px] lg:max-w-[280px]">
+              {/* Image Upload */}
+              <div
+                onClick={handleImageClick}
+                style={{
+                  width: '100%',
+                  aspectRatio: '1/1',
+                  borderRadius: '8px',
+                  border: inboundImage ? 'none' : '2px dashed #D1D5DB',
+                  backgroundColor: '#FFFFFF',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px',
+                  cursor: 'pointer',
+                  overflow: 'hidden',
+                  position: 'relative',
+                  boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.06), 0px 1px 3px 0px rgba(0, 0, 0, 0.1)',
+                }}
+              >
+                {/* Hidden file input */}
+                <input
+                  ref={imageInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageUpload}
+                  style={{ display: 'none' }}
+                />
+                {inboundImage ? (
+                  <>
+                    <img
+                      src={inboundImage}
+                      alt="Inbound"
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover',
+                      }}
+                    />
+                    {/* Hover overlay for re-upload */}
+                    <div
+                      style={{
+                        position: 'absolute',
+                        inset: 0,
+                        backgroundColor: 'rgba(0, 0, 0, 0.4)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        opacity: 0,
+                        transition: 'opacity 0.2s',
+                      }}
+                      className="hover:!opacity-100"
+                      onMouseEnter={(e) => (e.currentTarget.style.opacity = '1')}
+                      onMouseLeave={(e) => (e.currentTarget.style.opacity = '0')}
+                    >
+                      <div
+                        style={{
+                          display: 'flex',
+                          flexDirection: 'column',
+                          alignItems: 'center',
+                          gap: '4px',
+                        }}
+                      >
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <path d="M21 15V19C21 19.5304 20.7893 20.0391 20.4142 20.4142C20.0391 20.7893 19.5304 21 19 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V15" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                          <polyline points="17,8 12,3 7,8" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                          <line x1="12" y1="3" x2="12" y2="15" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                        <span style={{ color: 'white', fontSize: '12px', fontWeight: 500 }}>{tCommon('change')}</span>
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <rect x="3" y="3" width="18" height="18" rx="2" stroke="#9CA3AF" strokeWidth="1.5"/>
+                      <path d="M12 8V16M8 12H16" stroke="#9CA3AF" strokeWidth="1.5" strokeLinecap="round"/>
+                    </svg>
+                    <span
+                      style={{
+                        fontFamily: 'Inter, sans-serif',
+                        fontSize: '12px',
+                        color: '#003450',
+                        textAlign: 'center',
+                      }}
+                    >
+                        <span style={{ textDecoration: 'underline' }}>{tCommon('upload')}</span> {tCommon('or')} {tCommon('dragAndDrop')}
+                    </span>
+                    <span
+                      style={{
+                        fontFamily: 'Inter, sans-serif',
+                        fontSize: '11px',
+                        color: '#9CA3AF',
+                        textAlign: 'center',
+                        padding: '0 10px',
+                      }}
+                      >
+                        PNG, JPG, GIF up to 10MB
+                      </span>
+                  </>
+                )}
+              </div>
+
             {/* Inbound ID Card */}
               <div
                 style={{

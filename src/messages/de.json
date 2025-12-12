@@ -149,7 +149,7 @@
     "lastName": "Nachname",
     "company": "Firma",
     "addressLine2": "Adresszeile 2",
-    "streetAddress": "Straßenadresse",
+    "streetAddress": "Straße + Hausnummer",
     "city": "Stadt",
     "zipPostal": "PLZ",
     "country": "Land"

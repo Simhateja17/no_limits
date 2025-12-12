@@ -6,7 +6,7 @@ import Image from 'next/image';
 import { DashboardLayout } from '@/components/layout';
 import { useAuthStore } from '@/lib/store';
 import { useEffect } from 'react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 
 // Mock order data - in real app this would come from API
 const mockOrderDetails = {
@@ -69,6 +69,7 @@ export default function ClientOrderDetailPage() {
   const params = useParams();
   const router = useRouter();
   const { user, isAuthenticated } = useAuthStore();
+  const locale = useLocale();
   const tCommon = useTranslations('common');
   const tOrders = useTranslations('orders');
   const tCountries = useTranslations('countries');
@@ -256,52 +257,108 @@ export default function ClientOrderDetailPage() {
                   boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.06), 0px 1px 3px 0px rgba(0, 0, 0, 0.1)',
                 }}
               >
-                <div className="flex items-center justify-between">
-                  <span
-                    style={{
-                      fontFamily: 'Inter, sans-serif',
-                      fontWeight: 500,
-                      fontSize: 'clamp(16px, 1.3vw, 18px)',
-                      lineHeight: '24px',
-                      color: '#111827',
-                    }}
-                  >
-                    {tOrders('orderId')}
-                  </span>
-                  {/* Status Pill */}
-                  <div
-                    style={{
-                      height: '26px',
-                      gap: '8px',
-                      padding: '3px 13px',
-                      borderRadius: '13px',
-                      border: '1px solid #D1D5DB',
-                      display: 'flex',
-                      alignItems: 'center',
-                    }}
-                  >
-                    {/* Status Dot */}
+                {locale === 'de' ? (
+                  // German layout: Pill above Label
+                  <>
+                    {/* Status Pill */}
                     <div
                       style={{
-                        width: '6px',
-                        height: '6px',
-                        borderRadius: '50%',
-                        backgroundColor: onHoldStatus ? '#F59E0B' : getStatusColor(mockOrderDetails.status),
+                        height: '26px',
+                        gap: '8px',
+                        padding: '3px 13px',
+                        borderRadius: '13px',
+                        border: '1px solid #D1D5DB',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        marginBottom: '8px',
+                        width: 'fit-content'
                       }}
-                    />
+                    >
+                      {/* Status Dot */}
+                      <div
+                        style={{
+                          width: '6px',
+                          height: '6px',
+                          borderRadius: '50%',
+                          backgroundColor: onHoldStatus ? '#F59E0B' : getStatusColor(mockOrderDetails.status),
+                        }}
+                      />
+                      <span
+                        style={{
+                          fontFamily: 'Inter, sans-serif',
+                          fontWeight: 500,
+                          fontSize: '15px',
+                          lineHeight: '20px',
+                          color: '#000000',
+                        }}
+                      >
+                        {onHoldStatus ? tOrders('onHold') : tOrders(mockOrderDetails.status.toLowerCase())}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <span
+                        style={{
+                          fontFamily: 'Inter, sans-serif',
+                          fontWeight: 500,
+                          fontSize: 'clamp(16px, 1.3vw, 18px)',
+                          lineHeight: '24px',
+                          color: '#111827',
+                        }}
+                      >
+                        {tOrders('orderId')}
+                      </span>
+                    </div>
+                  </>
+                ) : (
+                  // English/Other layout: Pill inline/right
+                  <div className="flex items-center justify-between">
                     <span
                       style={{
                         fontFamily: 'Inter, sans-serif',
                         fontWeight: 500,
-                        fontSize: '15px',
-                        lineHeight: '20px',
-                        color: '#000000',
+                        fontSize: 'clamp(16px, 1.3vw, 18px)',
+                        lineHeight: '24px',
+                        color: '#111827',
                       }}
                     >
-                      {onHoldStatus ? tOrders('onHold') : tOrders(mockOrderDetails.status.toLowerCase())}
+                      {tOrders('orderId')}
                     </span>
+                    {/* Status Pill */}
+                    <div
+                      style={{
+                        height: '26px',
+                        gap: '8px',
+                        padding: '3px 13px',
+                        borderRadius: '13px',
+                        border: '1px solid #D1D5DB',
+                        display: 'flex',
+                        alignItems: 'center',
+                      }}
+                    >
+                      {/* Status Dot */}
+                      <div
+                        style={{
+                          width: '6px',
+                          height: '6px',
+                          borderRadius: '50%',
+                          backgroundColor: onHoldStatus ? '#F59E0B' : getStatusColor(mockOrderDetails.status),
+                        }}
+                      />
+                      <span
+                        style={{
+                          fontFamily: 'Inter, sans-serif',
+                          fontWeight: 500,
+                          fontSize: '15px',
+                          lineHeight: '20px',
+                          color: '#000000',
+                        }}
+                      >
+                        {onHoldStatus ? tOrders('onHold') : tOrders(mockOrderDetails.status.toLowerCase())}
+                      </span>
+                    </div>
                   </div>
-                </div>
+                )}
                 <span
                   style={{
                     fontFamily: 'Inter, sans-serif',
@@ -346,7 +403,6 @@ export default function ClientOrderDetailPage() {
                     <button
                       onClick={handleEditClick}
                       style={{
-                        width: 'clamp(38px, 3.2vw, 43px)',
                         height: 'clamp(18px, 1.5vw, 20px)',
                         padding: 'clamp(1px, 0.15vw, 2px) clamp(8px, 0.74vw, 10px)',
                         borderRadius: '10px',
@@ -366,9 +422,10 @@ export default function ClientOrderDetailPage() {
                           lineHeight: '16px',
                           color: '#003450',
                           textAlign: 'center',
+                          whiteSpace: 'nowrap',
                         }}
                       >
-                        Edit
+                        {tCommon('edit')}
                       </span>
                     </button>
                   )}
@@ -437,7 +494,7 @@ export default function ClientOrderDetailPage() {
                           alt={selectedShippingMethod.name}
                           width={24}
                           height={24}
-                          style={{ borderRadius: '12px' }}
+                          style={{ borderRadius: '50%', objectFit: 'cover' }}
                         />
                         <span
                           style={{
@@ -522,7 +579,7 @@ export default function ClientOrderDetailPage() {
                               alt={method.name}
                               width={24}
                               height={24}
-                              style={{ borderRadius: '12px' }}
+                              style={{ borderRadius: '50%', objectFit: 'cover' }}
                             />
                             <span
                               style={{
@@ -546,7 +603,7 @@ export default function ClientOrderDetailPage() {
                       alt={selectedShippingMethod.name}
                       width={24}
                       height={24}
-                      style={{ borderRadius: '12px' }}
+                      style={{ borderRadius: '50%', objectFit: 'cover' }}
                     />
                     <span
                       style={{
@@ -572,49 +629,63 @@ export default function ClientOrderDetailPage() {
                   backgroundColor: '#FFFFFF',
                   boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.06), 0px 1px 3px 0px rgba(0, 0, 0, 0.1)',
                   display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
+                  flexDirection: 'column',
+                  gap: '12px',
                 }}
               >
-                <span
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+                  <span
+                    style={{
+                      fontFamily: 'Inter, sans-serif',
+                      fontWeight: 500,
+                      fontSize: 'clamp(16px, 1.3vw, 18px)',
+                      lineHeight: '24px',
+                      color: '#111827',
+                    }}
+                  >
+                    {tOrders('onHold')}
+                  </span>
+                  <button
+                    onClick={() => editOrderEnabled && setOnHoldStatus(!onHoldStatus)}
+                    style={{
+                      width: '44px',
+                      height: '24px',
+                      borderRadius: '12px',
+                      padding: '2px',
+                      backgroundColor: onHoldStatus ? '#003450' : '#E5E7EB',
+                      position: 'relative',
+                      cursor: editOrderEnabled ? 'pointer' : 'not-allowed',
+                      border: 'none',
+                      transition: 'background-color 0.2s',
+                      opacity: editOrderEnabled ? 1 : 0.6,
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: '20px',
+                        height: '20px',
+                        borderRadius: '50%',
+                        backgroundColor: '#FFFFFF',
+                        position: 'absolute',
+                        top: '2px',
+                        left: onHoldStatus ? '22px' : '2px',
+                        transition: 'left 0.2s',
+                        boxShadow: '0px 1px 2px rgba(0, 0, 0, 0.1)',
+                      }}
+                    />
+                  </button>
+                </div>
+                <p
                   style={{
                     fontFamily: 'Inter, sans-serif',
-                    fontWeight: 500,
-                    fontSize: 'clamp(16px, 1.3vw, 18px)',
-                    lineHeight: '24px',
-                    color: '#111827',
+                    fontWeight: 400,
+                    fontSize: '14px',
+                    lineHeight: '20px',
+                    color: '#6B7280',
                   }}
                 >
-                  {tOrders('onHold')}
-                </span>
-                <button
-                  onClick={() => setOnHoldStatus(!onHoldStatus)}
-                  style={{
-                    width: '44px',
-                    height: '24px',
-                    borderRadius: '12px',
-                    padding: '2px',
-                    backgroundColor: onHoldStatus ? '#003450' : '#E5E7EB',
-                    position: 'relative',
-                    cursor: 'pointer',
-                    border: 'none',
-                    transition: 'background-color 0.2s',
-                  }}
-                >
-                  <div
-                    style={{
-                      width: '20px',
-                      height: '20px',
-                      borderRadius: '50%',
-                      backgroundColor: '#FFFFFF',
-                      position: 'absolute',
-                      top: '2px',
-                      left: onHoldStatus ? '22px' : '2px',
-                      transition: 'left 0.2s',
-                      boxShadow: '0px 1px 2px rgba(0, 0, 0, 0.1)',
-                    }}
-                  />
-                </button>
+                  Mit dieser Funktion kann ein Auftrag zurückgehalten werden. Dadurch wird sie in den Status „In Vorbereitung“ versetzt. In diesem Status kann die Bestellung von uns nicht bearbeitet werden.
+                </p>
               </div>
 
               {/* Shipment Weight Box */}
@@ -904,7 +975,7 @@ export default function ClientOrderDetailPage() {
                             color: '#DC2626',
                           }}
                         >
-                          Remove
+                          {tCommon('remove')}
                         </span>
                       </button>
                     )}
@@ -1368,71 +1439,7 @@ export default function ClientOrderDetailPage() {
                 </button>
               </div>
 
-              {/* Cancel Order Box */}
-              <div
-                style={{
-                  width: '100%',
-                  minHeight: '178px',
-                  gap: '20px',
-                  borderRadius: '8px',
-                  padding: 'clamp(16px, 1.8vw, 24px)',
-                  backgroundColor: '#FFFFFF',
-                  boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.06), 0px 1px 3px 0px rgba(0, 0, 0, 0.1)',
-                }}
-              >
-                <span
-                  style={{
-                    fontFamily: 'Inter, sans-serif',
-                    fontWeight: 500,
-                    fontSize: 'clamp(16px, 1.3vw, 18px)',
-                    lineHeight: '24px',
-                    color: '#111827',
-                    display: 'block',
-                  }}
-                >
-                  {tOrders('cancelOrder')}
-                </span>
-                <p
-                  style={{
-                    marginTop: '12px',
-                    fontFamily: 'Inter, sans-serif',
-                    fontWeight: 400,
-                    fontSize: '14px',
-                    lineHeight: '20px',
-                    color: '#6B7280',
-                  }}
-                >
-                  {tCommon('deleteWarning')}
-                </p>
-                <button
-                  style={{
-                    marginTop: '20px',
-                    width: 'clamp(100px, 8.8vw, 120px)',
-                    height: 'clamp(34px, 2.8vw, 38px)',
-                    padding: 'clamp(7px, 0.66vw, 9px) clamp(13px, 1.25vw, 17px)',
-                    borderRadius: '6px',
-                    backgroundColor: '#FEE2E2',
-                    border: 'none',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
-                >
-                  <span
-                    style={{
-                      fontFamily: 'Inter, sans-serif',
-                      fontWeight: 500,
-                      fontSize: 'clamp(12px, 1.03vw, 14px)',
-                      lineHeight: '20px',
-                      color: '#DC2626',
-                      whiteSpace: 'nowrap',
-                    }}
-                  >
-                    {tOrders('cancelOrder')}
-                  </span>
-                </button>
-              </div>
+
 
               {/* Create Replacement Order Box */}
               <div
@@ -1645,40 +1652,8 @@ export default function ClientOrderDetailPage() {
                   />
                 </div>
 
-                {/* Address Line 2 */}
+                {/* Street Address */}
                 <div className="flex flex-col gap-2">
-                  <label
-                    style={{
-                      fontFamily: 'Inter, sans-serif',
-                      fontWeight: 500,
-                      fontSize: '14px',
-                      lineHeight: '20px',
-                      color: '#374151',
-                    }}
-                  >
-                    {tOrders('addressLine2')}
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.addressLine2}
-                    onChange={(e) => setFormData({ ...formData, addressLine2: e.target.value })}
-                    style={{
-                      width: '100%',
-                      height: '38px',
-                      padding: '9px 13px',
-                      borderRadius: '6px',
-                      border: '1px solid #D1D5DB',
-                      backgroundColor: '#FFFFFF',
-                      boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.05)',
-                      fontFamily: 'Inter, sans-serif',
-                      fontSize: '14px',
-                    }}
-                    placeholder=""
-                  />
-                </div>
-
-                {/* Street Address - Full Width */}
-                <div className="flex flex-col gap-2 col-span-2">
                   <label
                     style={{
                       fontFamily: 'Inter, sans-serif',
@@ -1694,6 +1669,38 @@ export default function ClientOrderDetailPage() {
                     type="text"
                     value={formData.streetAddress}
                     onChange={(e) => setFormData({ ...formData, streetAddress: e.target.value })}
+                    style={{
+                      width: '100%',
+                      height: '38px',
+                      padding: '9px 13px',
+                      borderRadius: '6px',
+                      border: '1px solid #D1D5DB',
+                      backgroundColor: '#FFFFFF',
+                      boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.05)',
+                      fontFamily: 'Inter, sans-serif',
+                      fontSize: '14px',
+                    }}
+                    placeholder=""
+                  />
+                </div>
+
+                {/* Address Line 2 - Full Width */}
+                <div className="flex flex-col gap-2 col-span-2">
+                  <label
+                    style={{
+                      fontFamily: 'Inter, sans-serif',
+                      fontWeight: 500,
+                      fontSize: '14px',
+                      lineHeight: '20px',
+                      color: '#374151',
+                    }}
+                  >
+                    {tOrders('addressLine2')}
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.addressLine2}
+                    onChange={(e) => setFormData({ ...formData, addressLine2: e.target.value })}
                     style={{
                       width: '100%',
                       height: '38px',

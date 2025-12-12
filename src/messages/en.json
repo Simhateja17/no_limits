@@ -119,7 +119,7 @@
     "paymentReceived": "Payment Received",
     "orderShipped": "Order Shipped",
     "orderDelivered": "Order Delivered",
-    "deliveryMethod": "Delivery method",
+    "deliveryMethod": "Delivery address",
     "shippingMethod": "Shipping method",
     "onHold": "On Hold",
     "onHoldDescription": "With this function an order can be put on hold. This sets it to the status 'In Preparation'. In this status the order cannot be processed by us.",
