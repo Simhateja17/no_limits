@@ -915,13 +915,12 @@ export default function ClientOrderDetailPage() {
                       <div
                         className="grid"
                         style={{
-                          gridTemplateColumns: '0.5fr 2fr 1fr 1.5fr 0.8fr',
+                          gridTemplateColumns: '2fr 1fr 1.5fr 0.8fr 0.5fr',
                           padding: '12px 24px',
                           borderBottom: '1px solid #E5E7EB',
                           backgroundColor: '#F9FAFB',
                         }}
                       >
-                        <span></span>
                         <span
                           style={{
                             fontFamily: 'Inter, sans-serif',
@@ -974,6 +973,7 @@ export default function ClientOrderDetailPage() {
                         >
                           {tOrders('qty')}
                         </span>
+                        <span></span>
                       </div>
 
                       {/* Table Body */}
@@ -982,37 +982,11 @@ export default function ClientOrderDetailPage() {
                           key={product.id}
                           className="grid items-center"
                           style={{
-                            gridTemplateColumns: '0.5fr 2fr 1fr 1.5fr 0.8fr',
+                            gridTemplateColumns: '2fr 1fr 1.5fr 0.8fr 0.5fr',
                             padding: '16px 24px',
                             borderBottom: index < filteredAvailableProducts.length - 1 ? '1px solid #E5E7EB' : 'none',
                           }}
                         >
-                          <button
-                            onClick={() => handleAddProduct(product)}
-                            style={{
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              padding: '2px 10px',
-                              borderRadius: '10px',
-                              backgroundColor: '#003450',
-                              border: 'none',
-                              cursor: 'pointer',
-                              width: 'fit-content',
-                            }}
-                          >
-                            <span
-                              style={{
-                                fontFamily: 'Inter, sans-serif',
-                                fontWeight: 500,
-                                fontSize: '12px',
-                                lineHeight: '16px',
-                                color: '#FFFFFF',
-                              }}
-                            >
-                              {tOrders('add')}
-                            </span>
-                          </button>
                           <span
                             style={{
                               fontFamily: 'Inter, sans-serif',
@@ -1074,6 +1048,32 @@ export default function ClientOrderDetailPage() {
                               textAlign: 'center',
                             }}
                           />
+                          <button
+                            onClick={() => handleAddProduct(product)}
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              padding: '2px 10px',
+                              borderRadius: '10px',
+                              backgroundColor: '#003450',
+                              border: 'none',
+                              cursor: 'pointer',
+                              width: 'fit-content',
+                            }}
+                          >
+                            <span
+                              style={{
+                                fontFamily: 'Inter, sans-serif',
+                                fontWeight: 500,
+                                fontSize: '12px',
+                                lineHeight: '16px',
+                                color: '#FFFFFF',
+                              }}
+                            >
+                              {tOrders('add')}
+                            </span>
+                          </button>
                         </div>
                       ))}
                     </div>

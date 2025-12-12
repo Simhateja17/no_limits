@@ -107,7 +107,7 @@ export default function AdminInboundDetailPage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
                 </div>
-                <span className="font-medium text-base">Inbound saved successfully!</span>
+                <span className="font-medium text-base">{tMessages('inboundSavedSuccessfully')}</span>
               </div>
             </div>
           </div>
@@ -139,7 +139,7 @@ export default function AdminInboundDetailPage() {
                 color: '#374151',
               }}
             >
-              Back
+              {tCommon('back')}
             </span>
           </button>
 
@@ -169,7 +169,7 @@ export default function AdminInboundDetailPage() {
                       color: '#111827',
                     }}
                   >
-                    Inbound ID
+                    {tInbounds('inboundId')}
                   </span>
                   {/* Status Pill */}
                   <div
@@ -201,7 +201,7 @@ export default function AdminInboundDetailPage() {
                         color: '#000000',
                       }}
                     >
-                      Pending
+                      {tInbounds('pending')}
                     </span>
                   </div>
                 </div>
@@ -440,11 +440,11 @@ export default function AdminInboundDetailPage() {
                   <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                     <thead>
                       <tr style={{ backgroundColor: '#F9FAFB' }}>
-                        <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '12px', fontWeight: 500, color: '#6B7280', textTransform: 'uppercase' }}></th>
                         <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '12px', fontWeight: 500, color: '#6B7280', textTransform: 'uppercase' }}>{tOrders('productName')}</th>
                         <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '12px', fontWeight: 500, color: '#6B7280', textTransform: 'uppercase' }}>SKU</th>
                         <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '12px', fontWeight: 500, color: '#6B7280', textTransform: 'uppercase' }}>GTIN</th>
                         <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '12px', fontWeight: 500, color: '#6B7280', textTransform: 'uppercase' }}>QTY</th>
+                        <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '12px', fontWeight: 500, color: '#6B7280', textTransform: 'uppercase' }}></th>
                       </tr>
                     </thead>
                     <tbody>
@@ -464,7 +464,7 @@ export default function AdminInboundDetailPage() {
                                 cursor: 'pointer'
                               }}
                             >
-                              Add
+                              {tCommon('add')}
                             </button>
                           </td>
                           <td style={{ padding: '12px 16px', fontSize: '14px', color: '#111827' }}>{product.name}</td>
@@ -514,7 +514,7 @@ export default function AdminInboundDetailPage() {
                 fontSize: 'clamp(13px, 1.1vw, 15px)', 
                 color: '#6B7280', 
                 marginBottom: '16px' 
-              }}>Use a permanent address where you can receive mail.</p>
+              }}>{tMessages('deliveryDescription')}</p>
               
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
                 <div>
@@ -525,7 +525,7 @@ export default function AdminInboundDetailPage() {
                     color: '#374151', 
                     display: 'block', 
                     marginBottom: '8px' 
-                  }}>ETA</label>
+                  }}>{tMessages('eta')}</label>
                   <input
                     type="text"
                     value={eta}

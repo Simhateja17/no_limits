@@ -238,7 +238,10 @@
     "notes": "Notes",
     "items": "Items",
     "bookIn": "Book In",
-    "bookAll": "Book All"
+    "bookAll": "Book All",
+    "extInboundId": "Ext. Inbound ID",
+    "editInbound": "Edit Inbound",
+    "cancelInbound": "Cancel Inbound"
   },
   "returns": {
     "title": "Returns",
@@ -448,6 +451,7 @@
     "uploadCsvDescription": "You can upload an csv file to create easier inbound orders, please download our template",
     "here": "here",
     "activatePresale": "Activate presale",
+    "activatePresaleDescription": "By activating this function you can push all stocks of this inbound to your sales channels, this will allow you to sell before we set the stocks. After we set the stock it will reset this function.",
     "presaleDescription": "Activate presale to make products available for purchase before they arrive in the warehouse"
   }
 }

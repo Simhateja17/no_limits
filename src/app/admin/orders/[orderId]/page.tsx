@@ -72,6 +72,7 @@ export default function OrderDetailPage() {
   const tCommon = useTranslations('common');
   const tOrders = useTranslations('orders');
   const tCountries = useTranslations('countries');
+  const tMessages = useTranslations('messages');
   const [editOrderEnabled, setEditOrderEnabled] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
@@ -1083,13 +1084,12 @@ export default function OrderDetailPage() {
                       <div
                         className="grid"
                         style={{
-                          gridTemplateColumns: '0.5fr 2fr 1fr 1.5fr 0.8fr',
+                          gridTemplateColumns: '2fr 1fr 1.5fr 0.8fr 0.5fr',
                           padding: '12px 24px',
                           borderBottom: '1px solid #E5E7EB',
                           backgroundColor: '#F9FAFB',
                         }}
                       >
-                        <span></span>
                         <span
                           style={{
                             fontFamily: 'Inter, sans-serif',
@@ -1142,6 +1142,7 @@ export default function OrderDetailPage() {
                         >
                           {tOrders('qty')}
                         </span>
+                        <span></span>
                       </div>
 
                       {/* Table Body */}
@@ -1150,37 +1151,11 @@ export default function OrderDetailPage() {
                           key={product.id}
                           className="grid items-center"
                           style={{
-                            gridTemplateColumns: '0.5fr 2fr 1fr 1.5fr 0.8fr',
+                            gridTemplateColumns: '2fr 1fr 1.5fr 0.8fr 0.5fr',
                             padding: '16px 24px',
                             borderBottom: index < filteredAvailableProducts.length - 1 ? '1px solid #E5E7EB' : 'none',
                           }}
                         >
-                          <button
-                            onClick={() => handleAddProduct(product)}
-                            style={{
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              padding: '2px 10px',
-                              borderRadius: '10px',
-                              backgroundColor: '#003450',
-                              border: 'none',
-                              cursor: 'pointer',
-                              width: 'fit-content',
-                            }}
-                          >
-                            <span
-                              style={{
-                                fontFamily: 'Inter, sans-serif',
-                                fontWeight: 500,
-                                fontSize: '12px',
-                                lineHeight: '16px',
-                                color: '#FFFFFF',
-                              }}
-                            >
-                              {tOrders('add')}
-                            </span>
-                          </button>
                           <span
                             style={{
                               fontFamily: 'Inter, sans-serif',
@@ -1242,6 +1217,32 @@ export default function OrderDetailPage() {
                               textAlign: 'center',
                             }}
                           />
+                          <button
+                            onClick={() => handleAddProduct(product)}
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              padding: '2px 10px',
+                              borderRadius: '10px',
+                              backgroundColor: '#003450',
+                              border: 'none',
+                              cursor: 'pointer',
+                              width: 'fit-content',
+                            }}
+                          >
+                            <span
+                              style={{
+                                fontFamily: 'Inter, sans-serif',
+                                fontWeight: 500,
+                                fontSize: '12px',
+                                lineHeight: '16px',
+                                color: '#FFFFFF',
+                              }}
+                            >
+                              {tOrders('add')}
+                            </span>
+                          </button>
                         </div>
                       ))}
                     </div>
@@ -1916,7 +1917,7 @@ export default function OrderDetailPage() {
                   color: '#111827',
                 }}
               >
-                Shipping address changed
+                {tMessages('shippingAddressChanged')}
               </span>
             </div>
           </div>
@@ -1980,7 +1981,7 @@ export default function OrderDetailPage() {
                   color: '#111827',
                 }}
               >
-                Replacement order created
+                {tMessages('replacementOrderCreated')}
               </span>
             </div>
           </div>

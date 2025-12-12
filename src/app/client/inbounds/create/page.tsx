@@ -150,7 +150,7 @@ export default function CreateInboundPage() {
     <DashboardLayout>
       <div className="w-full min-h-screen bg-[#F9FAFB]">
         <div className="px-[3.8%] py-6">
-          {/* Header with Back and Save buttons */}
+          {/* Header with Back button */}
           <div className="flex items-center justify-between mb-6">
             {/* Back Button */}
             <button
@@ -178,35 +178,6 @@ export default function CreateInboundPage() {
                 }}
               >
                 {tCommon('back')}
-              </span>
-            </button>
-
-            {/* Save Inbound Button */}
-            <button
-              onClick={handleSaveInbound}
-              style={{
-                height: '38px',
-                padding: '9px 17px',
-                borderRadius: '6px',
-                backgroundColor: '#003450',
-                border: 'none',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <span
-                style={{
-                  fontFamily: 'Inter, sans-serif',
-                  fontWeight: 500,
-                  fontSize: '14px',
-                  lineHeight: '20px',
-                  color: '#FFFFFF',
-                  whiteSpace: 'nowrap',
-                }}
-              >
-                {tInbounds('createInbound')}
               </span>
             </button>
           </div>
@@ -291,22 +262,22 @@ export default function CreateInboundPage() {
             {/* Available Products Table */}
             {showProductList && productSearchQuery && filteredAvailableProducts.length > 0 && (
               <div style={{ width: '100%', maxWidth: '927px', borderRadius: '8px', border: '1px solid #E5E7EB', backgroundColor: '#FFFFFF', boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.06), 0px 1px 3px 0px rgba(0, 0, 0, 0.1)', overflow: 'hidden' }}>
-                <div className="grid" style={{ gridTemplateColumns: '0.6fr 2fr 1fr 1.5fr 0.8fr', padding: '12px 24px', borderBottom: '1px solid #E5E7EB', backgroundColor: '#F9FAFB' }}>
-                  <span></span>
+                <div className="grid" style={{ gridTemplateColumns: '2fr 1fr 1.5fr 0.8fr 0.6fr', padding: '12px 24px', borderBottom: '1px solid #E5E7EB', backgroundColor: '#F9FAFB' }}>
                   <span style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '12px', lineHeight: '16px', letterSpacing: '0.05em', textTransform: 'uppercase', color: '#6B7280' }}>{tOrders('productName')}</span>
                   <span style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '12px', lineHeight: '16px', letterSpacing: '0.05em', textTransform: 'uppercase', color: '#6B7280' }}>{tOrders('sku')}</span>
                   <span style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '12px', lineHeight: '16px', letterSpacing: '0.05em', textTransform: 'uppercase', color: '#6B7280' }}>{tOrders('gtin')}</span>
                   <span style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '12px', lineHeight: '16px', letterSpacing: '0.05em', textTransform: 'uppercase', color: '#6B7280' }}>{tOrders('qty')}</span>
+                  <span></span>
                 </div>
                 {filteredAvailableProducts.map((product, index) => (
-                  <div key={product.id} className="grid items-center" style={{ gridTemplateColumns: '0.6fr 2fr 1fr 1.5fr 0.8fr', padding: '16px 24px', borderBottom: index < filteredAvailableProducts.length - 1 ? '1px solid #E5E7EB' : 'none' }}>
-                    <button onClick={() => handleAddProduct(product)} style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', padding: '2px 10px', borderRadius: '10px', backgroundColor: '#003450', border: 'none', cursor: 'pointer', width: 'fit-content' }}>
-                      <span style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '12px', lineHeight: '16px', color: '#FFFFFF' }}>{tMessages('add')}</span>
-                    </button>
+                  <div key={product.id} className="grid items-center" style={{ gridTemplateColumns: '2fr 1fr 1.5fr 0.8fr 0.6fr', padding: '16px 24px', borderBottom: index < filteredAvailableProducts.length - 1 ? '1px solid #E5E7EB' : 'none' }}>
                     <span style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '14px', lineHeight: '20px', color: '#111827' }}>{product.name}</span>
                     <span style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '14px', lineHeight: '20px', color: '#111827' }}>{product.sku}</span>
                     <span style={{ fontFamily: 'Inter, sans-serif', fontWeight: 400, fontSize: '14px', lineHeight: '20px', color: '#6B7280' }}>{product.gtin}</span>
                     <input type="number" min="1" value={productQuantities[product.id] ?? 1} onChange={(e) => handleQuantityChange(product.id, e.target.value === '' ? 0 : parseInt(e.target.value))} onBlur={(e) => { if (!parseInt(e.target.value) || parseInt(e.target.value) < 1) handleQuantityChange(product.id, 1); }} style={{ width: '60px', height: '32px', padding: '6px 10px', borderRadius: '6px', border: '1px solid #D1D5DB', fontFamily: 'Inter, sans-serif', fontWeight: 400, fontSize: '14px', lineHeight: '20px', color: '#111827', textAlign: 'center' }} />
+                    <button onClick={() => handleAddProduct(product)} style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', padding: '2px 10px', borderRadius: '10px', backgroundColor: '#003450', border: 'none', cursor: 'pointer', width: 'fit-content' }}>
+                      <span style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '12px', lineHeight: '16px', color: '#FFFFFF' }}>{tMessages('add')}</span>
+                    </button>
                   </div>
                 ))}
               </div>
@@ -393,6 +364,37 @@ export default function CreateInboundPage() {
               </p>
               <button onClick={() => setPresaleActive(!presaleActive)} style={{ width: '44px', height: '24px', borderRadius: '12px', backgroundColor: presaleActive ? '#003450' : '#E5E7EB', border: 'none', cursor: 'pointer', position: 'relative', transition: 'background-color 0.2s ease' }}>
                 <div style={{ width: '20px', height: '20px', borderRadius: '50%', backgroundColor: '#FFFFFF', position: 'absolute', top: '2px', left: presaleActive ? '22px' : '2px', transition: 'left 0.2s ease', boxShadow: '0px 1px 2px rgba(0, 0, 0, 0.1)' }} />
+              </button>
+            </div>
+
+            {/* Save Button at Bottom */}
+            <div style={{ width: '100%', maxWidth: '927px', display: 'flex', justifyContent: 'flex-end', marginTop: '24px' }}>
+              <button
+                onClick={handleSaveInbound}
+                style={{
+                  height: '38px',
+                  padding: '9px 17px',
+                  borderRadius: '6px',
+                  backgroundColor: '#003450',
+                  border: 'none',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <span
+                  style={{
+                    fontFamily: 'Inter, sans-serif',
+                    fontWeight: 500,
+                    fontSize: '14px',
+                    lineHeight: '20px',
+                    color: '#FFFFFF',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  {tCommon('save')}
+                </span>
               </button>
             </div>
           </div>

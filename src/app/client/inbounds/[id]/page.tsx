@@ -389,23 +389,6 @@ export default function ClientInboundDetailPage() {
                     <tbody>
                       {filteredAvailableProducts.map((product) => (
                         <tr key={product.id} style={{ borderTop: '1px solid #E5E7EB' }}>
-                          <td style={{ padding: `${styles.cellPaddingY} ${styles.cellPaddingX}` }}>
-                            <button
-                              onClick={() => handleAddProduct(product)}
-                              style={{
-                                padding: 'clamp(4px, 0.44vw, 6px) clamp(12px, 1.18vw, 18px)',
-                                backgroundColor: '#003450',
-                                color: 'white',
-                                border: 'none',
-                                borderRadius: '9999px',
-                                fontSize: styles.fontSizeXs,
-                                fontWeight: 500,
-                                cursor: 'pointer'
-                              }}
-                            >
-                              {tCommon('add')}
-                            </button>
-                          </td>
                           <td style={{ padding: `${styles.cellPaddingY} ${styles.cellPaddingX}`, fontSize: styles.fontSizeBase, color: '#111827' }}>{product.name}</td>
                           <td style={{ padding: `${styles.cellPaddingY} ${styles.cellPaddingX}`, fontSize: styles.fontSizeBase, color: '#6B7280' }}>{product.sku}</td>
                           <td style={{ padding: `${styles.cellPaddingY} ${styles.cellPaddingX}`, fontSize: styles.fontSizeBase, color: '#6B7280' }}>{product.gtin}</td>
@@ -424,6 +407,23 @@ export default function ClientInboundDetailPage() {
                                 backgroundColor: 'white'
                               }}
                             />
+                          </td>
+                          <td style={{ padding: `${styles.cellPaddingY} ${styles.cellPaddingX}` }}>
+                            <button
+                              onClick={() => handleAddProduct(product)}
+                              style={{
+                                padding: 'clamp(4px, 0.44vw, 6px) clamp(12px, 1.18vw, 18px)',
+                                backgroundColor: '#003450',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '9999px',
+                                fontSize: styles.fontSizeXs,
+                                fontWeight: 500,
+                                cursor: 'pointer'
+                              }}
+                            >
+                              {tCommon('add')}
+                            </button>
                           </td>
                         </tr>
                       ))}

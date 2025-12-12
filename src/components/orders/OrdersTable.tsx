@@ -658,7 +658,7 @@ export function OrdersTable({ showClientColumn, basePath = '/admin/orders' }: Or
               color: '#6B7280',
             }}
           >
-            Order Date
+            {t('orderDate')}
           </span>
           <span
             style={{

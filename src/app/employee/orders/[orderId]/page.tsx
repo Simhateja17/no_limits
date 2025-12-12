@@ -73,6 +73,7 @@ export default function EmployeeOrderDetailPage() {
   const tOrders = useTranslations('orders');
   const tCountries = useTranslations('countries');
   const tStatus = useTranslations('status');
+  const tMessages = useTranslations('messages');
   const [editOrderEnabled, setEditOrderEnabled] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
@@ -235,7 +236,7 @@ export default function EmployeeOrderDetailPage() {
                 color: '#374151',
               }}
             >
-              Back
+              {tCommon('back')}
             </span>
           </button>
 
@@ -638,7 +639,7 @@ export default function EmployeeOrderDetailPage() {
                     color: '#111827',
                   }}
                 >
-                  Shipment Weight
+                  {tOrders('shipmentWeight')}
                 </span>
                 <div
                   style={{
@@ -662,7 +663,7 @@ export default function EmployeeOrderDetailPage() {
                     color: '#9CA3AF',
                   }}
                 >
-                  Shipment weight is total weight of all products in this order, to change weight of the order you have to edit the single product weight
+                  {tOrders('shipmentWeightDescription')}
                 </div>
               </div>
 
@@ -688,7 +689,7 @@ export default function EmployeeOrderDetailPage() {
                     color: '#111827',
                   }}
                 >
-                  Tags
+                  {tOrders('tags')}
                 </span>
                 <div className="flex flex-wrap gap-2 mt-3">
                   {tags.map((tag) => (
@@ -1085,13 +1086,12 @@ export default function EmployeeOrderDetailPage() {
                       <div
                         className="grid"
                         style={{
-                          gridTemplateColumns: '0.5fr 2fr 1fr 1.5fr 0.8fr',
+                          gridTemplateColumns: '2fr 1fr 1.5fr 0.8fr 0.5fr',
                           padding: '12px 24px',
                           borderBottom: '1px solid #E5E7EB',
                           backgroundColor: '#F9FAFB',
                         }}
                       >
-                        <span></span>
                         <span
                           style={{
                             fontFamily: 'Inter, sans-serif',
@@ -1144,6 +1144,7 @@ export default function EmployeeOrderDetailPage() {
                         >
                           QTY
                         </span>
+                        <span></span>
                       </div>
 
                       {/* Table Body */}
@@ -1152,37 +1153,11 @@ export default function EmployeeOrderDetailPage() {
                           key={product.id}
                           className="grid items-center"
                           style={{
-                            gridTemplateColumns: '0.5fr 2fr 1fr 1.5fr 0.8fr',
+                            gridTemplateColumns: '2fr 1fr 1.5fr 0.8fr 0.5fr',
                             padding: '16px 24px',
                             borderBottom: index < filteredAvailableProducts.length - 1 ? '1px solid #E5E7EB' : 'none',
                           }}
                         >
-                          <button
-                            onClick={() => handleAddProduct(product)}
-                            style={{
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              padding: '2px 10px',
-                              borderRadius: '10px',
-                              backgroundColor: '#003450',
-                              border: 'none',
-                              cursor: 'pointer',
-                              width: 'fit-content',
-                            }}
-                          >
-                            <span
-                              style={{
-                                fontFamily: 'Inter, sans-serif',
-                                fontWeight: 500,
-                                fontSize: '12px',
-                                lineHeight: '16px',
-                                color: '#FFFFFF',
-                              }}
-                            >
-                              Add
-                            </span>
-                          </button>
                           <span
                             style={{
                               fontFamily: 'Inter, sans-serif',
@@ -1244,6 +1219,32 @@ export default function EmployeeOrderDetailPage() {
                               textAlign: 'center',
                             }}
                           />
+                          <button
+                            onClick={() => handleAddProduct(product)}
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              padding: '2px 10px',
+                              borderRadius: '10px',
+                              backgroundColor: '#003450',
+                              border: 'none',
+                              cursor: 'pointer',
+                              width: 'fit-content',
+                            }}
+                          >
+                            <span
+                              style={{
+                                fontFamily: 'Inter, sans-serif',
+                                fontWeight: 500,
+                                fontSize: '12px',
+                                lineHeight: '16px',
+                                color: '#FFFFFF',
+                              }}
+                            >
+                              {tOrders('add')}
+                            </span>
+                          </button>
                         </div>
                       ))}
                     </div>
@@ -1274,7 +1275,7 @@ export default function EmployeeOrderDetailPage() {
                     color: '#111827',
                   }}
                 >
-                  Edit order
+                  {tOrders('editOrder')}
                 </span>
                 {/* Toggle */}
                 <button
@@ -1325,7 +1326,7 @@ export default function EmployeeOrderDetailPage() {
                     marginBottom: '8px',
                   }}
                 >
-                  Delete order
+                  {tOrders('deleteOrder')}
                 </h3>
                 <p
                   style={{
@@ -1337,7 +1338,7 @@ export default function EmployeeOrderDetailPage() {
                     marginBottom: '16px',
                   }}
                 >
-                  Attention, deleting the order leads to permanent loss of data. Orders can only be deleted if they are not yet shipped.
+                  {tOrders('deleteOrderWarning')}
                 </p>
                 <button
                   style={{
@@ -1362,7 +1363,7 @@ export default function EmployeeOrderDetailPage() {
                       color: '#DC2626',
                     }}
                   >
-                    Delete order
+                    {tOrders('deleteOrder')}
                   </span>
                 </button>
               </div>
@@ -1389,7 +1390,7 @@ export default function EmployeeOrderDetailPage() {
                     display: 'block',
                   }}
                 >
-                  Cancel order
+                  {tOrders('cancelOrder')}
                 </span>
                 <p
                   style={{
@@ -1428,7 +1429,7 @@ export default function EmployeeOrderDetailPage() {
                       whiteSpace: 'nowrap',
                     }}
                   >
-                    Cancel order
+                    {tOrders('cancelOrder')}
                   </span>
                 </button>
               </div>
@@ -1455,7 +1456,7 @@ export default function EmployeeOrderDetailPage() {
                     display: 'block',
                   }}
                 >
-                  Create replacement order
+                  {tOrders('createReplacementOrder')}
                 </span>
                 <p
                   style={{
@@ -1496,7 +1497,7 @@ export default function EmployeeOrderDetailPage() {
                       textAlign: 'center',
                     }}
                   >
-                    Create replacement order
+                    {tOrders('createReplacementOrder')}
                   </span>
                 </button>
               </div>

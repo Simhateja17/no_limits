@@ -158,7 +158,7 @@ export default function EmployeeInboundDetailPage() {
               cursor: 'pointer'
             }}
           >
-            Back
+            {tCommon('back')}
           </button>
         </div>
 
@@ -217,9 +217,9 @@ export default function EmployeeInboundDetailPage() {
               padding: styles.cardPadding,
               border: '1px solid #E5E7EB'
             }}>
-              <div style={{ fontSize: styles.fontSizeBase, fontWeight: 600, color: '#111827', marginBottom: 'clamp(6px, 0.59vw, 10px)' }}>Activate presale</div>
+              <div style={{ fontSize: styles.fontSizeBase, fontWeight: 600, color: '#111827', marginBottom: 'clamp(6px, 0.59vw, 10px)' }}>{tMessages('activatePresale')}</div>
               <p style={{ fontSize: styles.fontSizeXs, color: '#6B7280', marginBottom: styles.gridGap, lineHeight: '1.5' }}>
-                By activating this function you can push all stocks of this inbound to your sales channels, this will allow you to sell before we set the stocks. After we set the stock it will reset this function.
+                {tMessages('activatePresaleDescription')}
               </p>
               
               {/* Toggle */}
@@ -288,7 +288,7 @@ export default function EmployeeInboundDetailPage() {
                               cursor: 'pointer'
                             }}
                           >
-                            Remove
+                            {tCommon('remove')}
                           </button>
                         </td>
                       )}
@@ -379,33 +379,16 @@ export default function EmployeeInboundDetailPage() {
                   <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                     <thead>
                       <tr style={{ backgroundColor: '#F9FAFB' }}>
-                        <th style={{ padding: `${styles.cellPaddingY} ${styles.cellPaddingX}`, textAlign: 'left', fontSize: styles.fontSizeXs, fontWeight: 500, color: '#6B7280', textTransform: 'uppercase' }}></th>
                         <th style={{ padding: `${styles.cellPaddingY} ${styles.cellPaddingX}`, textAlign: 'left', fontSize: styles.fontSizeXs, fontWeight: 500, color: '#6B7280', textTransform: 'uppercase' }}>{tOrders('productName')}</th>
                         <th style={{ padding: `${styles.cellPaddingY} ${styles.cellPaddingX}`, textAlign: 'left', fontSize: styles.fontSizeXs, fontWeight: 500, color: '#6B7280', textTransform: 'uppercase' }}>SKU</th>
                         <th style={{ padding: `${styles.cellPaddingY} ${styles.cellPaddingX}`, textAlign: 'left', fontSize: styles.fontSizeXs, fontWeight: 500, color: '#6B7280', textTransform: 'uppercase' }}>GTIN</th>
                         <th style={{ padding: `${styles.cellPaddingY} ${styles.cellPaddingX}`, textAlign: 'left', fontSize: styles.fontSizeXs, fontWeight: 500, color: '#6B7280', textTransform: 'uppercase' }}>QTY</th>
+                        <th style={{ padding: `${styles.cellPaddingY} ${styles.cellPaddingX}`, textAlign: 'left', fontSize: styles.fontSizeXs, fontWeight: 500, color: '#6B7280', textTransform: 'uppercase' }}></th>
                       </tr>
                     </thead>
                     <tbody>
                       {filteredAvailableProducts.map((product) => (
                         <tr key={product.id} style={{ borderTop: '1px solid #E5E7EB' }}>
-                          <td style={{ padding: `${styles.cellPaddingY} ${styles.cellPaddingX}` }}>
-                            <button
-                              onClick={() => handleAddProduct(product)}
-                              style={{
-                                padding: 'clamp(4px, 0.44vw, 6px) clamp(12px, 1.18vw, 18px)',
-                                backgroundColor: '#003450',
-                                color: 'white',
-                                border: 'none',
-                                borderRadius: '9999px',
-                                fontSize: styles.fontSizeXs,
-                                fontWeight: 500,
-                                cursor: 'pointer'
-                              }}
-                            >
-                              Add
-                            </button>
-                          </td>
                           <td style={{ padding: `${styles.cellPaddingY} ${styles.cellPaddingX}`, fontSize: styles.fontSizeBase, color: '#111827' }}>{product.name}</td>
                           <td style={{ padding: `${styles.cellPaddingY} ${styles.cellPaddingX}`, fontSize: styles.fontSizeBase, color: '#6B7280' }}>{product.sku}</td>
                           <td style={{ padding: `${styles.cellPaddingY} ${styles.cellPaddingX}`, fontSize: styles.fontSizeBase, color: '#6B7280' }}>{product.gtin}</td>
@@ -424,6 +407,23 @@ export default function EmployeeInboundDetailPage() {
                                 backgroundColor: 'white'
                               }}
                             />
+                          </td>
+                          <td style={{ padding: `${styles.cellPaddingY} ${styles.cellPaddingX}` }}>
+                            <button
+                              onClick={() => handleAddProduct(product)}
+                              style={{
+                                padding: 'clamp(4px, 0.44vw, 6px) clamp(12px, 1.18vw, 18px)',
+                                backgroundColor: '#003450',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '9999px',
+                                fontSize: styles.fontSizeXs,
+                                fontWeight: 500,
+                                cursor: 'pointer'
+                              }}
+                            >
+                              {tOrders('add')}
+                            </button>
                           </td>
                         </tr>
                       ))}
@@ -499,7 +499,7 @@ export default function EmployeeInboundDetailPage() {
                   />
                 </div>
                 <div>
-                  <label style={{ fontSize: styles.fontSizeBase, fontWeight: 500, color: '#374151', display: 'block', marginBottom: 'clamp(4px, 0.44vw, 8px)' }}>Qty boxes</label>
+                  <label style={{ fontSize: styles.fontSizeBase, fontWeight: 500, color: '#374151', display: 'block', marginBottom: 'clamp(4px, 0.44vw, 8px)' }}>{tMessages('qtyBoxes')}</label>
                   <input
                     type="text"
                     value={qtyBoxes}
@@ -517,7 +517,7 @@ export default function EmployeeInboundDetailPage() {
                   />
                 </div>
                 <div>
-                  <label style={{ fontSize: styles.fontSizeBase, fontWeight: 500, color: '#374151', display: 'block', marginBottom: 'clamp(4px, 0.44vw, 8px)' }}>Qty pallets</label>
+                  <label style={{ fontSize: styles.fontSizeBase, fontWeight: 500, color: '#374151', display: 'block', marginBottom: 'clamp(4px, 0.44vw, 8px)' }}>{tMessages('qtyPallets')}</label>
                   <input
                     type="text"
                     value={qtyPallets}
@@ -535,7 +535,7 @@ export default function EmployeeInboundDetailPage() {
                   />
                 </div>
                 <div>
-                  <label style={{ fontSize: styles.fontSizeBase, fontWeight: 500, color: '#374151', display: 'block', marginBottom: 'clamp(4px, 0.44vw, 8px)' }}>Total CBM</label>
+                  <label style={{ fontSize: styles.fontSizeBase, fontWeight: 500, color: '#374151', display: 'block', marginBottom: 'clamp(4px, 0.44vw, 8px)' }}>{tMessages('totalCBM')}</label>
                   <input
                     type="text"
                     value={totalCBM}
@@ -553,7 +553,7 @@ export default function EmployeeInboundDetailPage() {
                   />
                 </div>
                 <div>
-                  <label style={{ fontSize: styles.fontSizeBase, fontWeight: 500, color: '#374151', display: 'block', marginBottom: 'clamp(4px, 0.44vw, 8px)' }}>Ext. Inorder ID</label>
+                  <label style={{ fontSize: styles.fontSizeBase, fontWeight: 500, color: '#374151', display: 'block', marginBottom: 'clamp(4px, 0.44vw, 8px)' }}>{tInbounds('extInboundId')}</label>
                   <input
                     type="text"
                     value={extInorderId}
@@ -583,7 +583,7 @@ export default function EmployeeInboundDetailPage() {
               justifyContent: 'space-between',
               alignItems: 'center'
             }}>
-              <span style={{ fontSize: styles.fontSizeLg, fontWeight: 600, color: '#111827' }}>Edit inorder</span>
+              <span style={{ fontSize: styles.fontSizeLg, fontWeight: 600, color: '#111827' }}>{tInbounds('editInbound')}</span>
               <button
                 onClick={() => setEditMode(!editMode)}
                 style={{
@@ -618,7 +618,7 @@ export default function EmployeeInboundDetailPage() {
               border: '1px solid #E5E7EB',
               padding: styles.cardPadding
             }}>
-              <h3 style={{ fontSize: styles.fontSizeLg, fontWeight: 600, color: '#111827', marginBottom: 'clamp(6px, 0.59vw, 10px)' }}>Cancel inbound</h3>
+              <h3 style={{ fontSize: styles.fontSizeLg, fontWeight: 600, color: '#111827', marginBottom: 'clamp(6px, 0.59vw, 10px)' }}>{tInbounds('cancelInbound')}</h3>
               <p style={{ fontSize: styles.fontSizeBase, color: '#6B7280', marginBottom: styles.gridGap, lineHeight: '1.5' }}>
                 {tCommon('deleteWarning')}
               </p>
@@ -634,7 +634,7 @@ export default function EmployeeInboundDetailPage() {
                   cursor: 'pointer'
                 }}
               >
-                Cancel order
+                {tInbounds('cancelInbound')}
               </button>
             </div>
           </div>
