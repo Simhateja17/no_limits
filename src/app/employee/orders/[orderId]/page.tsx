@@ -1436,7 +1436,7 @@ export default function EmployeeOrderDetailPage() {
                     margin: 0,
                   }}
                 >
-                  In diesem Bereich werden zusätzliche Informationen aus dem Auftrag des jeweiligen Kanals angezeigt – zum Beispiel aus Shopify, wenn der Kunde dort eine Notiz oder besondere Hinweise zum Auftrag hinterlegt hat. Zusätzlich kann der Fulfillment-Kunde eigene Informationen ergänzen, um den Vorgang weiter zu präzisieren oder interne Hinweise für die Bearbeitung zu hinterlassen.
+                  {tOrders('orderNotesDescription')}
                 </p>
                 <textarea
                   value={orderNotes}
@@ -1449,7 +1449,7 @@ export default function EmployeeOrderDetailPage() {
                     padding: 'clamp(10px, 0.88vw, 12px) clamp(12px, 1.03vw, 14px)',
                     borderRadius: '6px',
                     border: '1px solid #DFDFDF',
-                    backgroundColor: editOrderEnabled ? '#F9F9F9' : '#F3F4F6',
+                    backgroundColor: editOrderEnabled ? '#FFFFFF' : '#F3F4F6',
                     fontFamily: 'Inter, sans-serif',
                     fontSize: 'clamp(13px, 1.03vw, 14px)',
                     fontWeight: 400,

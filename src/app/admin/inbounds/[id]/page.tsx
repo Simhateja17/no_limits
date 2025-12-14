@@ -579,22 +579,46 @@ export default function AdminInboundDetailPage() {
                     display: 'block', 
                     marginBottom: '8px' 
                   }}>{tMessages('eta')}</label>
-                  <input
-                    type="text"
-                    value={eta}
-                    onChange={(e) => setEta(e.target.value)}
-                    disabled={!editMode}
-                    style={{
-                      width: '100%',
-                      height: '38px',
-                      padding: '0 12px',
-                      border: '1px solid #D1D5DB',
-                      borderRadius: '6px',
-                      fontSize: 'clamp(13px, 1.1vw, 15px)',
-                      backgroundColor: editMode ? 'white' : '#F9FAFB',
-                      color: editMode ? '#111827' : '#6B7280'
-                    }}
-                  />
+                  {editMode ? (
+                    <input
+                      type="text"
+                      value={eta}
+                      onChange={(e) => setEta(e.target.value)}
+                      style={{
+                        width: '100%',
+                        height: '38px',
+                        padding: '0 12px',
+                        border: '1px solid #D1D5DB',
+                        borderRadius: '6px',
+                        fontSize: 'clamp(13px, 1.1vw, 15px)',
+                        backgroundColor: 'white',
+                        color: '#111827'
+                      }}
+                    />
+                  ) : (
+                    <div
+                      style={{
+                        width: '100%',
+                        height: '38px',
+                        padding: '0 12px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        borderRadius: '4px',
+                        backgroundColor: '#F9FAFB',
+                      }}
+                    >
+                      <span
+                        style={{
+                          fontFamily: 'Inter, sans-serif',
+                          fontWeight: 400,
+                          fontSize: 'clamp(13px, 1.1vw, 15px)',
+                          color: '#6B7280',
+                        }}
+                      >
+                        {eta}
+                      </span>
+                    </div>
+                  )}
                 </div>
                 <div>
                   <label style={{ 
@@ -605,22 +629,46 @@ export default function AdminInboundDetailPage() {
                     display: 'block', 
                     marginBottom: '8px' 
                   }}>{tMessages('freightForwarder')}</label>
-                  <input
-                    type="text"
-                    value={freightForwarder}
-                    onChange={(e) => setFreightForwarder(e.target.value)}
-                    disabled={!editMode}
-                    style={{
-                      width: '100%',
-                      height: '38px',
-                      padding: '0 12px',
-                      border: '1px solid #D1D5DB',
-                      borderRadius: '6px',
-                      fontSize: 'clamp(13px, 1.1vw, 15px)',
-                      backgroundColor: editMode ? 'white' : '#F9FAFB',
-                      color: editMode ? '#111827' : '#6B7280'
-                    }}
-                  />
+                  {editMode ? (
+                    <input
+                      type="text"
+                      value={freightForwarder}
+                      onChange={(e) => setFreightForwarder(e.target.value)}
+                      style={{
+                        width: '100%',
+                        height: '38px',
+                        padding: '0 12px',
+                        border: '1px solid #D1D5DB',
+                        borderRadius: '6px',
+                        fontSize: 'clamp(13px, 1.1vw, 15px)',
+                        backgroundColor: 'white',
+                        color: '#111827'
+                      }}
+                    />
+                  ) : (
+                    <div
+                      style={{
+                        width: '100%',
+                        height: '38px',
+                        padding: '0 12px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        borderRadius: '4px',
+                        backgroundColor: '#F9FAFB',
+                      }}
+                    >
+                      <span
+                        style={{
+                          fontFamily: 'Inter, sans-serif',
+                          fontWeight: 400,
+                          fontSize: 'clamp(13px, 1.1vw, 15px)',
+                          color: '#6B7280',
+                        }}
+                      >
+                        {freightForwarder}
+                      </span>
+                    </div>
+                  )}
                 </div>
                 <div>
                   <label style={{ 
@@ -631,22 +679,46 @@ export default function AdminInboundDetailPage() {
                     display: 'block', 
                     marginBottom: '8px' 
                   }}>{tMessages('trackingNo')}</label>
-                  <input
-                    type="text"
-                    value={trackingNo}
-                    onChange={(e) => setTrackingNo(e.target.value)}
-                    disabled={!editMode}
-                    style={{
-                      width: '100%',
-                      height: '38px',
-                      padding: '0 12px',
-                      border: '1px solid #D1D5DB',
-                      borderRadius: '6px',
-                      fontSize: 'clamp(13px, 1.1vw, 15px)',
-                      backgroundColor: editMode ? 'white' : '#F9FAFB',
-                      color: editMode ? '#111827' : '#6B7280'
-                    }}
-                  />
+                  {editMode ? (
+                    <input
+                      type="text"
+                      value={trackingNo}
+                      onChange={(e) => setTrackingNo(e.target.value)}
+                      style={{
+                        width: '100%',
+                        height: '38px',
+                        padding: '0 12px',
+                        border: '1px solid #D1D5DB',
+                        borderRadius: '6px',
+                        fontSize: 'clamp(13px, 1.1vw, 15px)',
+                        backgroundColor: 'white',
+                        color: '#111827'
+                      }}
+                    />
+                  ) : (
+                    <div
+                      style={{
+                        width: '100%',
+                        height: '38px',
+                        padding: '0 12px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        borderRadius: '4px',
+                        backgroundColor: '#F9FAFB',
+                      }}
+                    >
+                      <span
+                        style={{
+                          fontFamily: 'Inter, sans-serif',
+                          fontWeight: 400,
+                          fontSize: 'clamp(13px, 1.1vw, 15px)',
+                          color: '#6B7280',
+                        }}
+                      >
+                        {trackingNo}
+                      </span>
+                    </div>
+                  )}
                 </div>
                 <div>
                   <label style={{ 
@@ -657,22 +729,46 @@ export default function AdminInboundDetailPage() {
                     display: 'block', 
                     marginBottom: '8px' 
                   }}>{tMessages('qtyBoxes')}</label>
-                  <input
-                    type="text"
-                    value={qtyBoxes}
-                    onChange={(e) => setQtyBoxes(e.target.value)}
-                    disabled={!editMode}
-                    style={{
-                      width: '100%',
-                      height: '38px',
-                      padding: '0 12px',
-                      border: '1px solid #D1D5DB',
-                      borderRadius: '6px',
-                      fontSize: 'clamp(13px, 1.1vw, 15px)',
-                      backgroundColor: editMode ? 'white' : '#F9FAFB',
-                      color: editMode ? '#111827' : '#6B7280'
-                    }}
-                  />
+                  {editMode ? (
+                    <input
+                      type="text"
+                      value={qtyBoxes}
+                      onChange={(e) => setQtyBoxes(e.target.value)}
+                      style={{
+                        width: '100%',
+                        height: '38px',
+                        padding: '0 12px',
+                        border: '1px solid #D1D5DB',
+                        borderRadius: '6px',
+                        fontSize: 'clamp(13px, 1.1vw, 15px)',
+                        backgroundColor: 'white',
+                        color: '#111827'
+                      }}
+                    />
+                  ) : (
+                    <div
+                      style={{
+                        width: '100%',
+                        height: '38px',
+                        padding: '0 12px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        borderRadius: '4px',
+                        backgroundColor: '#F9FAFB',
+                      }}
+                    >
+                      <span
+                        style={{
+                          fontFamily: 'Inter, sans-serif',
+                          fontWeight: 400,
+                          fontSize: 'clamp(13px, 1.1vw, 15px)',
+                          color: '#6B7280',
+                        }}
+                      >
+                        {qtyBoxes}
+                      </span>
+                    </div>
+                  )}
                 </div>
                 <div>
                   <label style={{ 
@@ -683,22 +779,46 @@ export default function AdminInboundDetailPage() {
                     display: 'block', 
                     marginBottom: '8px' 
                   }}>{tMessages('qtyPallets')}</label>
-                  <input
-                    type="text"
-                    value={qtyPallets}
-                    onChange={(e) => setQtyPallets(e.target.value)}
-                    disabled={!editMode}
-                    style={{
-                      width: '100%',
-                      height: '38px',
-                      padding: '0 12px',
-                      border: '1px solid #D1D5DB',
-                      borderRadius: '6px',
-                      fontSize: 'clamp(13px, 1.1vw, 15px)',
-                      backgroundColor: editMode ? 'white' : '#F9FAFB',
-                      color: editMode ? '#111827' : '#6B7280'
-                    }}
-                  />
+                  {editMode ? (
+                    <input
+                      type="text"
+                      value={qtyPallets}
+                      onChange={(e) => setQtyPallets(e.target.value)}
+                      style={{
+                        width: '100%',
+                        height: '38px',
+                        padding: '0 12px',
+                        border: '1px solid #D1D5DB',
+                        borderRadius: '6px',
+                        fontSize: 'clamp(13px, 1.1vw, 15px)',
+                        backgroundColor: 'white',
+                        color: '#111827'
+                      }}
+                    />
+                  ) : (
+                    <div
+                      style={{
+                        width: '100%',
+                        height: '38px',
+                        padding: '0 12px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        borderRadius: '4px',
+                        backgroundColor: '#F9FAFB',
+                      }}
+                    >
+                      <span
+                        style={{
+                          fontFamily: 'Inter, sans-serif',
+                          fontWeight: 400,
+                          fontSize: 'clamp(13px, 1.1vw, 15px)',
+                          color: '#6B7280',
+                        }}
+                      >
+                        {qtyPallets}
+                      </span>
+                    </div>
+                  )}
                 </div>
                 <div>
                   <label style={{ 
@@ -709,22 +829,46 @@ export default function AdminInboundDetailPage() {
                     display: 'block', 
                     marginBottom: '8px' 
                   }}>{tMessages('totalCBM')}</label>
-                  <input
-                    type="text"
-                    value={totalCBM}
-                    onChange={(e) => setTotalCBM(e.target.value)}
-                    disabled={!editMode}
-                    style={{
-                      width: '100%',
-                      height: '38px',
-                      padding: '0 12px',
-                      border: '1px solid #D1D5DB',
-                      borderRadius: '6px',
-                      fontSize: 'clamp(13px, 1.1vw, 15px)',
-                      backgroundColor: editMode ? 'white' : '#F9FAFB',
-                      color: editMode ? '#111827' : '#6B7280'
-                    }}
-                  />
+                  {editMode ? (
+                    <input
+                      type="text"
+                      value={totalCBM}
+                      onChange={(e) => setTotalCBM(e.target.value)}
+                      style={{
+                        width: '100%',
+                        height: '38px',
+                        padding: '0 12px',
+                        border: '1px solid #D1D5DB',
+                        borderRadius: '6px',
+                        fontSize: 'clamp(13px, 1.1vw, 15px)',
+                        backgroundColor: 'white',
+                        color: '#111827'
+                      }}
+                    />
+                  ) : (
+                    <div
+                      style={{
+                        width: '100%',
+                        height: '38px',
+                        padding: '0 12px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        borderRadius: '4px',
+                        backgroundColor: '#F9FAFB',
+                      }}
+                    >
+                      <span
+                        style={{
+                          fontFamily: 'Inter, sans-serif',
+                          fontWeight: 400,
+                          fontSize: 'clamp(13px, 1.1vw, 15px)',
+                          color: '#6B7280',
+                        }}
+                      >
+                        {totalCBM}
+                      </span>
+                    </div>
+                  )}
                 </div>
                 <div>
                   <label style={{ 
@@ -735,22 +879,46 @@ export default function AdminInboundDetailPage() {
                     display: 'block', 
                     marginBottom: '8px' 
                   }}>{tInbounds('extInboundId')}</label>
-                  <input
-                    type="text"
-                    value={extInorderId}
-                    onChange={(e) => setExtInorderId(e.target.value)}
-                    disabled={!editMode}
-                    style={{
-                      width: '100%',
-                      height: '38px',
-                      padding: '0 12px',
-                      border: '1px solid #D1D5DB',
-                      borderRadius: '6px',
-                      fontSize: 'clamp(13px, 1.1vw, 15px)',
-                      backgroundColor: editMode ? 'white' : '#F9FAFB',
-                      color: editMode ? '#111827' : '#6B7280'
-                    }}
-                  />
+                  {editMode ? (
+                    <input
+                      type="text"
+                      value={extInorderId}
+                      onChange={(e) => setExtInorderId(e.target.value)}
+                      style={{
+                        width: '100%',
+                        height: '38px',
+                        padding: '0 12px',
+                        border: '1px solid #D1D5DB',
+                        borderRadius: '6px',
+                        fontSize: 'clamp(13px, 1.1vw, 15px)',
+                        backgroundColor: 'white',
+                        color: '#111827'
+                      }}
+                    />
+                  ) : (
+                    <div
+                      style={{
+                        width: '100%',
+                        height: '38px',
+                        padding: '0 12px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        borderRadius: '4px',
+                        backgroundColor: '#F9FAFB',
+                      }}
+                    >
+                      <span
+                        style={{
+                          fontFamily: 'Inter, sans-serif',
+                          fontWeight: 400,
+                          fontSize: 'clamp(13px, 1.1vw, 15px)',
+                          color: '#6B7280',
+                        }}
+                      >
+                        {extInorderId}
+                      </span>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

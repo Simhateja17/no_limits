@@ -152,7 +152,8 @@
     "city": "City",
     "zipPostal": "ZIP / Postal",
     "country": "Country",
-    "orderNotes": "Order Notes"
+    "orderNotes": "Order Notes",
+    "orderNotesDescription": "This section displays additional information from the order of the respective channel - for example from Shopify, if the customer has left a note or special instructions for the order there. Additionally, the fulfillment customer can add their own information to further specify the process or leave internal notes for processing."
   },
   "products": {
     "title": "Products",

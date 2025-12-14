@@ -187,6 +187,38 @@ export function ReturnDetails({ returnId }: ReturnDetailsProps) {
           </span>
         </button>
 
+        {/* Tab - Return Data */}
+        <div
+          className="flex items-center"
+          style={{
+            borderBottom: '1px solid #E5E7EB',
+            marginTop: '24px',
+          }}
+        >
+          <button
+            style={{
+              height: '38px',
+              paddingLeft: '4px',
+              paddingRight: '4px',
+              paddingBottom: '16px',
+              borderBottom: '2px solid #003450',
+              marginBottom: '-1px',
+            }}
+          >
+            <span
+              style={{
+                fontFamily: 'Inter, sans-serif',
+                fontWeight: 500,
+                fontSize: '14px',
+                lineHeight: '20px',
+                color: '#003450',
+              }}
+            >
+              Return Data
+            </span>
+          </button>
+        </div>
+
       {/* Content Container */}
       <div
         style={{
@@ -195,6 +227,7 @@ export function ReturnDetails({ returnId }: ReturnDetailsProps) {
           display: 'flex',
           flexDirection: 'column',
           margin: '0 auto',
+          marginTop: '24px',
         }}
       >
 

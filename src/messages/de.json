@@ -153,7 +153,8 @@
     "city": "Stadt",
     "zipPostal": "PLZ",
     "country": "Land",
-    "orderNotes": "Auftragsnotizen"
+    "orderNotes": "Auftragsnotizen",
+    "orderNotesDescription": "In diesem Bereich werden zusätzliche Informationen aus dem Auftrag des jeweiligen Kanals angezeigt – zum Beispiel aus Shopify, wenn der Kunde dort eine Notiz oder besondere Hinweise zum Auftrag hinterlegt hat. Zusätzlich kann der Fulfillment-Kunde eigene Informationen ergänzen, um den Vorgang weiter zu präzisieren oder interne Hinweise für die Bearbeitung zu hinterlassen."
   },
   "products": {
     "title": "Produkte",
