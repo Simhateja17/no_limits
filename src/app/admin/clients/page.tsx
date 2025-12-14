@@ -4,6 +4,7 @@ import { DashboardLayout } from '@/components/layout';
 import { useAuthStore } from '@/lib/store';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { useTranslations } from 'next-intl';
 
 // Mock client data - for demonstration
 interface Client {
@@ -130,65 +131,69 @@ const mockClients: Client[] = [
 ];
 
 // Empty state component
-const EmptyState = ({ onCreateClient, onCreateQuotation }: { onCreateClient: () => void, onCreateQuotation: () => void }) => (
-  <div 
-    className="flex flex-col items-center justify-center w-full"
-    style={{
-      minHeight: 'clamp(300px, 29.4vw, 400px)',
-      padding: 'clamp(32px, 3.53vw, 48px) clamp(16px, 1.76vw, 24px)',
-      backgroundColor: '#F9FAFB',
-      borderRadius: '8px',
-      border: '1px solid #E5E7EB',
-    }}
-  >
+const EmptyState = ({ onCreateClient, onCreateQuotation, t }: { onCreateClient: () => void, onCreateQuotation: () => void, t: any }) => {
+  return (
     <div 
+      className="flex flex-col items-center justify-center w-full"
       style={{
-        width: 'clamp(48px, 4.12vw, 56px)',
-        height: 'clamp(48px, 4.12vw, 56px)',
-        borderRadius: '50%',
-        backgroundColor: '#F3F4F6',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        marginBottom: 'clamp(12px, 1.18vw, 16px)',
+        minHeight: 'clamp(300px, 29.4vw, 400px)',
+        padding: 'clamp(32px, 3.53vw, 48px) clamp(16px, 1.76vw, 24px)',
+        backgroundColor: '#F9FAFB',
+        borderRadius: '8px',
+        border: '1px solid #E5E7EB',
       }}
     >
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M12 5V19M5 12H19" stroke="#6B7280" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-      </svg>
+      <div 
+        style={{
+          width: 'clamp(48px, 4.12vw, 56px)',
+          height: 'clamp(48px, 4.12vw, 56px)',
+          borderRadius: '50%',
+          backgroundColor: '#F3F4F6',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          marginBottom: 'clamp(12px, 1.18vw, 16px)',
+        }}
+      >
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 5V19M5 12H19" stroke="#6B7280" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+      </div>
+      <h3 
+        style={{
+          fontFamily: 'Inter, sans-serif',
+          fontWeight: 500,
+          fontSize: 'clamp(12px, 1.03vw, 14px)',
+          lineHeight: '20px',
+          color: '#111827',
+          textAlign: 'center',
+          marginBottom: 'clamp(6px, 0.59vw, 8px)',
+        }}
+      >
+        {t('noClients')}
+      </h3>
+      <p 
+        style={{
+          fontFamily: 'Inter, sans-serif',
+          fontWeight: 400,
+          fontSize: 'clamp(12px, 1.03vw, 14px)',
+          lineHeight: '20px',
+          color: '#6B7280',
+          textAlign: 'center',
+          maxWidth: '400px',
+        }}
+      >
+        {t('noClientsDescription')}
+      </p>
     </div>
-    <h3 
-      style={{
-        fontFamily: 'Inter, sans-serif',
-        fontWeight: 500,
-        fontSize: 'clamp(12px, 1.03vw, 14px)',
-        lineHeight: '20px',
-        color: '#111827',
-        textAlign: 'center',
-        marginBottom: 'clamp(6px, 0.59vw, 8px)',
-      }}
-    >
-      No Clients
-    </h3>
-    <p 
-      style={{
-        fontFamily: 'Inter, sans-serif',
-        fontWeight: 400,
-        fontSize: 'clamp(12px, 1.03vw, 14px)',
-        lineHeight: '20px',
-        color: '#6B7280',
-        textAlign: 'center',
-        maxWidth: '400px',
-      }}
-    >
-      Get started by creating your first client or quotation.
-    </p>
-  </div>
-);
+  );
+};
 
 export default function AdminClientsPage() {
   const { user, isAuthenticated } = useAuthStore();
   const router = useRouter();
+  const t = useTranslations('clients');
+  const tCommon = useTranslations('common');
   const [activeTab, setActiveTab] = useState<'all' | 'active' | 'inactive' | 'quotations'>('all');
   
   // For demonstration - toggle this to show empty state
@@ -260,7 +265,7 @@ export default function AdminClientsPage() {
                 color: '#374151',
               }}
             >
-              Back
+              {tCommon('back')}
             </button>
           </div>
 
@@ -275,7 +280,7 @@ export default function AdminClientsPage() {
                 color: '#111827',
               }}
             >
-              Clients
+              {t('title')}
             </h1>
             <div className="flex items-center" style={{ gap: 'clamp(8px, 0.88vw, 12px)' }}>
               <button
@@ -296,7 +301,7 @@ export default function AdminClientsPage() {
                   whiteSpace: 'nowrap',
                 }}
               >
-                Create Quotation
+                {t('createQuotation')}
               </button>
               <button
                 onClick={handleCreateClient}
@@ -316,7 +321,7 @@ export default function AdminClientsPage() {
                   whiteSpace: 'nowrap',
                 }}
               >
-                Create Client
+                {t('createClient')}
               </button>
             </div>
           </div>
@@ -326,10 +331,10 @@ export default function AdminClientsPage() {
             <div className="flex items-end justify-between w-full">
               <div className="flex items-end" style={{ gap: 'clamp(16px, 1.76vw, 24px)' }}>
                 {[
-                  { key: 'all', label: 'All clients', count: allClientsCount },
-                  { key: 'active', label: 'Active clients', count: activeClientsCount },
-                  { key: 'inactive', label: 'Inactive clients', count: inactiveClientsCount },
-                  { key: 'quotations', label: 'Quotations', count: quotationsCount },
+                  { key: 'all', label: t('allClients'), count: allClientsCount },
+                  { key: 'active', label: t('activeClients'), count: activeClientsCount },
+                  { key: 'inactive', label: t('inactiveClients'), count: inactiveClientsCount },
+                  { key: 'quotations', label: t('quotations'), count: quotationsCount },
                 ].map((tab) => (
                   <button
                     key={tab.key}
@@ -377,7 +382,7 @@ export default function AdminClientsPage() {
 
           {/* Content */}
           {displayClients.length === 0 ? (
-            <EmptyState onCreateClient={handleCreateClient} onCreateQuotation={handleCreateQuotation} />
+            <EmptyState onCreateClient={handleCreateClient} onCreateQuotation={handleCreateQuotation} t={t} />
           ) : (
             <div 
               style={{
@@ -396,7 +401,7 @@ export default function AdminClientsPage() {
                   borderBottom: '1px solid #E5E7EB',
                 }}
               >
-                {['CLIENT ID', 'CLIENT', 'LAST BILLING PERIOD', 'STATUS', 'SYSTEM LOGIN', 'EMAIL', 'ACTIONS'].map((header) => (
+                {[t('clientId'), t('client'), t('lastBillingPeriod'), t('billingStatus'), t('systemLogin'), t('emailAction'), t('clientStatus')].map((header) => (
                   <div
                     key={header}
                     style={{
@@ -483,7 +488,7 @@ export default function AdminClientsPage() {
                           backgroundColor: client.billingStatus === 'paid' ? '#22C55E' : '#EF4444',
                         }}
                       />
-                      {client.billingStatus === 'paid' ? 'Paid' : 'Unpaid'}
+                      {client.billingStatus === 'paid' ? t('paid') : t('unpaid')}
                     </span>
                   </div>
                   <div
@@ -536,7 +541,7 @@ export default function AdminClientsPage() {
                         whiteSpace: 'nowrap',
                       }}
                     >
-                      {client.status === 'active' ? 'Active' : 'Inactive'}
+                      {client.status === 'active' ? t('active') : t('inactive')}
                     </span>
                   </div>
                 </div>

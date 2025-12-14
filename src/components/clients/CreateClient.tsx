@@ -23,7 +23,7 @@ function Field({ label, value, onChange, placeholder }: FieldProps) {
         style={{
           fontFamily: 'Inter, sans-serif',
           fontWeight: 400,
-          fontSize: '14px',
+          fontSize: 'clamp(13px, 1.03vw, 14px)',
           lineHeight: '20px',
           color: '#374151',
         }}
@@ -37,14 +37,14 @@ function Field({ label, value, onChange, placeholder }: FieldProps) {
         placeholder={placeholder}
         style={{
           width: '100%',
-          height: '38px',
+          height: 'clamp(36px, 2.8vw, 38px)',
           padding: '9px 13px',
           backgroundColor: '#FFFFFF',
           borderRadius: '6px',
           border: '1px solid #D1D5DB',
           fontFamily: 'Inter, sans-serif',
           fontWeight: 400,
-          fontSize: '14px',
+          fontSize: 'clamp(13px, 1.03vw, 14px)',
           lineHeight: '20px',
           color: '#374151',
           outline: 'none',
@@ -56,6 +56,7 @@ function Field({ label, value, onChange, placeholder }: FieldProps) {
 
 export function CreateClient({ backUrl }: CreateClientProps) {
   const router = useRouter();
+  const t = useTranslations('clients');
   const tCommon = useTranslations('common');
 
   // Form state - Client Information
@@ -97,7 +98,7 @@ export function CreateClient({ backUrl }: CreateClientProps) {
           <button
             onClick={handleBack}
             style={{
-              height: '38px',
+              height: 'clamp(36px, 2.8vw, 38px)',
               padding: '9px 17px 9px 15px',
               borderRadius: '6px',
               border: '1px solid #D1D5DB',
@@ -105,44 +106,46 @@ export function CreateClient({ backUrl }: CreateClientProps) {
               boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.05)',
               fontFamily: 'Inter, sans-serif',
               fontWeight: 400,
-              fontSize: '14px',
+              fontSize: 'clamp(13px, 1.03vw, 14px)',
               lineHeight: '20px',
               color: '#374151',
               cursor: 'pointer',
             }}
           >
-            Back
+            {tCommon('back')}
           </button>
         </div>
 
         {/* Client Information Section */}
-        <div className="mb-8">
-          <h2
-            className="mb-1"
-            style={{
-              fontFamily: 'Inter, sans-serif',
-              fontWeight: 500,
-              fontSize: '18px',
-              lineHeight: '24px',
-              color: '#111827',
-            }}
-          >
-            Client Information
-          </h2>
-          <p
-            className="mb-6"
-            style={{
-              fontFamily: 'Inter, sans-serif',
-              fontWeight: 400,
-              fontSize: '14px',
-              lineHeight: '20px',
-              color: '#6B7280',
-            }}
-          >
-            Type in your Clients Company name for quotation
-          </p>
+        <div className="mb-8 grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-6">
+          {/* Left: Heading and Description */}
+          <div>
+            <h2
+              className="mb-1"
+              style={{
+                fontFamily: 'Inter, sans-serif',
+                fontWeight: 500,
+                fontSize: 'clamp(16px, 1.32vw, 18px)',
+                lineHeight: '24px',
+                color: '#111827',
+              }}
+            >
+              {t('clientInformation')}
+            </h2>
+            <p
+              style={{
+                fontFamily: 'Inter, sans-serif',
+                fontWeight: 400,
+                fontSize: 'clamp(13px, 1.03vw, 14px)',
+                lineHeight: '20px',
+                color: '#6B7280',
+              }}
+            >
+              {t('clientInformationDescription')}
+            </p>
+          </div>
 
-          {/* Client Information Form */}
+          {/* Right: Client Information Form */}
           <div
             className="rounded-lg p-6 space-y-6"
             style={{
@@ -151,13 +154,13 @@ export function CreateClient({ backUrl }: CreateClientProps) {
             }}
           >
             <Field
-              label="Company or clients name"
+              label={t('companyOrClientName')}
               value={clientCompanyName}
               onChange={setClientCompanyName}
               placeholder=""
             />
             <Field
-              label="Email address"
+              label={t('emailAddress')}
               value={clientEmail}
               onChange={setClientEmail}
               placeholder=""
@@ -166,33 +169,35 @@ export function CreateClient({ backUrl }: CreateClientProps) {
         </div>
 
         {/* Pricing Section */}
-        <div className="mb-8">
-          <h2
-            className="mb-1"
-            style={{
-              fontFamily: 'Inter, sans-serif',
-              fontWeight: 500,
-              fontSize: '18px',
-              lineHeight: '24px',
-              color: '#111827',
-            }}
-          >
-            Pricing
-          </h2>
-          <p
-            className="mb-6"
-            style={{
-              fontFamily: 'Inter, sans-serif',
-              fontWeight: 400,
-              fontSize: '14px',
-              lineHeight: '20px',
-              color: '#6B7280',
-            }}
-          >
-            Type in all pricing details for the client
-          </p>
+        <div className="mb-8 grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-6">
+          {/* Left: Heading and Description */}
+          <div>
+            <h2
+              className="mb-1"
+              style={{
+                fontFamily: 'Inter, sans-serif',
+                fontWeight: 500,
+                fontSize: 'clamp(16px, 1.32vw, 18px)',
+                lineHeight: '24px',
+                color: '#111827',
+              }}
+            >
+              {t('pricing')}
+            </h2>
+            <p
+              style={{
+                fontFamily: 'Inter, sans-serif',
+                fontWeight: 400,
+                fontSize: 'clamp(13px, 1.03vw, 14px)',
+                lineHeight: '20px',
+                color: '#6B7280',
+              }}
+            >
+              {t('pricingDescription')}
+            </p>
+          </div>
 
-          {/* Pricing Form */}
+          {/* Right: Pricing Form */}
           <div
             className="rounded-lg p-6 space-y-6"
             style={{
@@ -201,13 +206,13 @@ export function CreateClient({ backUrl }: CreateClientProps) {
             }}
           >
             <Field
-              label="Company or clients name"
+              label={t('companyOrClientName')}
               value={pricingCompanyName}
               onChange={setPricingCompanyName}
               placeholder=""
             />
             <Field
-              label="Email address"
+              label={t('emailAddress')}
               value={pricingEmail}
               onChange={setPricingEmail}
               placeholder=""
@@ -216,33 +221,35 @@ export function CreateClient({ backUrl }: CreateClientProps) {
         </div>
 
         {/* Send Quotation Section */}
-        <div className="mb-8">
-          <h2
-            className="mb-1"
-            style={{
-              fontFamily: 'Inter, sans-serif',
-              fontWeight: 500,
-              fontSize: '18px',
-              lineHeight: '24px',
-              color: '#111827',
-            }}
-          >
-            Send quotation
-          </h2>
-          <p
-            className="mb-6"
-            style={{
-              fontFamily: 'Inter, sans-serif',
-              fontWeight: 400,
-              fontSize: '14px',
-              lineHeight: '20px',
-              color: '#6B7280',
-            }}
-          >
-            You can send the quotation by Mail
-          </p>
+        <div className="mb-8 grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-6">
+          {/* Left: Heading and Description */}
+          <div>
+            <h2
+              className="mb-1"
+              style={{
+                fontFamily: 'Inter, sans-serif',
+                fontWeight: 500,
+                fontSize: 'clamp(16px, 1.32vw, 18px)',
+                lineHeight: '24px',
+                color: '#111827',
+              }}
+            >
+              {t('sendQuotation')}
+            </h2>
+            <p
+              style={{
+                fontFamily: 'Inter, sans-serif',
+                fontWeight: 400,
+                fontSize: 'clamp(13px, 1.03vw, 14px)',
+                lineHeight: '20px',
+                color: '#6B7280',
+              }}
+            >
+              {t('sendQuotationDescription')}
+            </p>
+          </div>
 
-          {/* Toggle Section */}
+          {/* Right: Toggle Section */}
           <div
             className="rounded-lg p-6"
             style={{
@@ -256,12 +263,12 @@ export function CreateClient({ backUrl }: CreateClientProps) {
                   style={{
                     fontFamily: 'Inter, sans-serif',
                     fontWeight: 500,
-                    fontSize: '16px',
+                    fontSize: 'clamp(14px, 1.18vw, 16px)',
                     lineHeight: '24px',
                     color: '#111827',
                   }}
                 >
-                  Send agreement and pricing
+                  {t('sendAgreementAndPricing')}
                 </h3>
               </div>
               <div>
