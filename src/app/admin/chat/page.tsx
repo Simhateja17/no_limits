@@ -8,7 +8,7 @@ import { useEffect, useState } from 'react';
 import type { Contact } from '@/components/chats/ContactsList';
 import type { ChatMessage } from '@/components/chats/ChatSection';
 
-// Mock data for contacts - using local avatar icon
+// Mock data for contacts - using  local avatar icon
 const mockContacts: Contact[] = [
   {
     id: '1',
