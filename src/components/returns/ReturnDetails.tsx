@@ -6,7 +6,7 @@ import Image from 'next/image';
 import { useTranslations } from 'next-intl';
 
 // Condition type
-type ConditionType = 'Damaged' | 'Well condition' | 'Acceptable';
+type ConditionType = 'Damaged' | 'Good' | 'Acceptable';
 
 // Info type for products
 type InfoType = 'disposed' | 'booked in again';
@@ -32,7 +32,7 @@ const mockReturnData = {
   status: 'Done' as const,
   products: [
     { id: '1', name: 'Testproduct 1', sku: '#24234', gtin: 'Merchant 3', qty: 3, condition: 'Damaged' as ConditionType, info: 'disposed' as InfoType },
-    { id: '2', name: 'Testproduct 2', sku: '#24076', gtin: 'Merchant 5', qty: 3, condition: 'Well condition' as ConditionType, info: 'booked in again' as InfoType },
+    { id: '2', name: 'Testproduct 2', sku: '#24076', gtin: 'Merchant 5', qty: 3, condition: 'Good' as ConditionType, info: 'booked in again' as InfoType },
     { id: '3', name: 'Testproduct 3', sku: '#24089', gtin: 'Merchant 3', qty: 2, condition: 'Acceptable' as ConditionType, info: 'booked in again' as InfoType },
   ],
   images: [
@@ -54,7 +54,7 @@ function ConditionBadge({ condition }: { condition: ConditionType }) {
           color: '#991B1B',
           label: 'damaged',
         };
-      case 'Well condition':
+      case 'Good':
         return {
           backgroundColor: '#D1FAE5',
           color: '#059669',
@@ -277,6 +277,41 @@ export function ReturnDetails({ returnId }: ReturnDetailsProps) {
             marginTop: 'clamp(8px, 0.78vw, 12px)',
           }}
         >
+          {/* Returns */}
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              padding: 'clamp(15px, 1.47vw, 20px) 0',
+              borderBottom: '1px solid #E5E7EB',
+            }}
+          >
+            <span
+              style={{
+                width: 'clamp(225px, 22.09vw, 300px)',
+                fontFamily: 'Inter, sans-serif',
+                fontWeight: 500,
+                fontSize: 'clamp(11px, 1.03vw, 14px)',
+                lineHeight: 'clamp(15px, 1.47vw, 20px)',
+                color: '#6B7280',
+              }}
+            >
+              {tReturns('title')}
+            </span>
+            <span
+              style={{
+                flex: 1,
+                fontFamily: 'Inter, sans-serif',
+                fontWeight: 400,
+                fontSize: 'clamp(11px, 1.03vw, 14px)',
+                lineHeight: 'clamp(15px, 1.47vw, 20px)',
+                color: '#111827',
+              }}
+            >
+              {returnId}
+            </span>
+          </div>
+
           {/* External Order ID */}
           <div
             style={{

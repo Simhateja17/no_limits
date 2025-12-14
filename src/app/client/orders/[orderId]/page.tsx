@@ -19,6 +19,7 @@ const mockOrderDetails = {
     country: 'Deutschland',
   },
   shippingMethod: 'DHL Paket National',
+  trackingNumber: '00343553983589394',
   shipmentWeight: '0,58 kg',
   tags: ['b2b'],
   onHoldStatus: false,
@@ -89,6 +90,7 @@ export default function ClientOrderDetailPage() {
   const [showProductList, setShowProductList] = useState(false);
   const [selectedShippingMethod, setSelectedShippingMethod] = useState(shippingMethods[0]);
   const [showShippingDropdown, setShowShippingDropdown] = useState(false);
+  const [orderNotes, setOrderNotes] = useState('Please double check condition of the products before you send it out');
 
   // Form state for edit modal
   const [formData, setFormData] = useState({
@@ -601,27 +603,43 @@ export default function ClientOrderDetailPage() {
                     )}
                   </div>
                 ) : (
-                  <div className="flex items-center gap-2 mt-3">
-                    <div style={{ width: '24px', height: '24px', borderRadius: '50%', overflow: 'hidden', flexShrink: 0, position: 'relative' }}>
-                      <Image
-                        src={selectedShippingMethod.logo}
-                        alt={selectedShippingMethod.name}
-                        fill
-                        sizes="24px"
-                        style={{ objectFit: 'cover' }}
-                      />
+                  <div style={{ marginTop: '12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    <div className="flex items-center gap-2">
+                      <div style={{ width: '24px', height: '24px', borderRadius: '50%', overflow: 'hidden', flexShrink: 0, position: 'relative' }}>
+                        <Image
+                          src={selectedShippingMethod.logo}
+                          alt={selectedShippingMethod.name}
+                          fill
+                          sizes="24px"
+                          style={{ objectFit: 'cover' }}
+                        />
+                      </div>
+                      <span
+                        style={{
+                          fontFamily: 'Inter, sans-serif',
+                          fontWeight: 400,
+                          fontSize: '14px',
+                          lineHeight: '20px',
+                          color: '#111827',
+                        }}
+                      >
+                        {selectedShippingMethod.name}
+                      </span>
                     </div>
-                    <span
-                      style={{
-                        fontFamily: 'Inter, sans-serif',
-                        fontWeight: 400,
-                        fontSize: '14px',
-                        lineHeight: '20px',
-                        color: '#111827',
-                      }}
-                    >
-                      {selectedShippingMethod.name}
-                    </span>
+                    {mockOrderDetails.trackingNumber && (
+                      <div
+                        style={{
+                          fontFamily: 'Inter, sans-serif',
+                          fontWeight: 400,
+                          fontSize: '14px',
+                          lineHeight: '20px',
+                          color: '#6B7280',
+                          paddingLeft: '32px',
+                        }}
+                      >
+                        {mockOrderDetails.trackingNumber}
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -735,9 +753,9 @@ export default function ClientOrderDetailPage() {
                     marginTop: '24px',
                     fontFamily: 'Inter, sans-serif',
                     fontWeight: 400,
-                    fontSize: '13px',
+                    fontSize: '14px',
                     lineHeight: '20px',
-                    color: '#9CA3AF',
+                    color: '#6B7280',
                   }}
                 >
                   {tOrders('shipmentWeightDescription')}
@@ -861,7 +879,7 @@ export default function ClientOrderDetailPage() {
                         cursor: 'pointer',
                       }}
                     >
-                      Add
+                      +
                     </button>
                   </div>
                 )}
@@ -1382,6 +1400,67 @@ export default function ClientOrderDetailPage() {
                     }}
                   />
                 </button>
+              </div>
+
+              {/* Order Notes Box */}
+              <div
+                style={{
+                  width: '100%',
+                  borderRadius: '8px',
+                  padding: 'clamp(20px, 1.77vw, 24px)',
+                  backgroundColor: '#FFFFFF',
+                  boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.06), 0px 1px 3px 0px rgba(0, 0, 0, 0.1)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 'clamp(16px, 1.47vw, 20px)',
+                }}
+              >
+                <span
+                  style={{
+                    fontFamily: 'Inter, sans-serif',
+                    fontWeight: 500,
+                    fontSize: 'clamp(16px, 1.33vw, 18px)',
+                    lineHeight: '24px',
+                    color: '#111827',
+                  }}
+                >
+                  {tOrders('orderNotes')}
+                </span>
+                <p
+                  style={{
+                    fontFamily: 'Inter, sans-serif',
+                    fontWeight: 400,
+                    fontSize: 'clamp(13px, 1.03vw, 14px)',
+                    lineHeight: '20px',
+                    color: '#6B7280',
+                    margin: 0,
+                  }}
+                >
+                  In diesem Bereich werden zusätzliche Informationen aus dem Auftrag des jeweiligen Kanals angezeigt – zum Beispiel aus Shopify, wenn der Kunde dort eine Notiz oder besondere Hinweise zum Auftrag hinterlegt hat. Zusätzlich kann der Fulfillment-Kunde eigene Informationen ergänzen, um den Vorgang weiter zu präzisieren oder interne Hinweise für die Bearbeitung zu hinterlassen.
+                </p>
+                <textarea
+                  value={orderNotes}
+                  onChange={(e) => setOrderNotes(e.target.value)}
+                  disabled={!editOrderEnabled}
+                  placeholder="Please double check condition of the products before you send it out"
+                  style={{
+                    width: '100%',
+                    minHeight: 'clamp(70px, 5.9vw, 80px)',
+                    padding: 'clamp(10px, 0.88vw, 12px) clamp(12px, 1.03vw, 14px)',
+                    borderRadius: '6px',
+                    border: '1px solid #DFDFDF',
+                    backgroundColor: editOrderEnabled ? '#F9F9F9' : '#F3F4F6',
+                    fontFamily: 'Inter, sans-serif',
+                    fontSize: 'clamp(13px, 1.03vw, 14px)',
+                    fontWeight: 400,
+                    lineHeight: '140%',
+                    letterSpacing: '0%',
+                    color: editOrderEnabled ? '#111827' : '#6B7280',
+                    resize: 'vertical',
+                    outline: 'none',
+                    cursor: editOrderEnabled ? 'text' : 'not-allowed',
+                  }}
+                />
               </div>
 
               {/* Delete Order Box */}

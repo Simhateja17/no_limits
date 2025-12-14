@@ -151,7 +151,8 @@
     "streetAddress": "Street address",
     "city": "City",
     "zipPostal": "ZIP / Postal",
-    "country": "Country"
+    "country": "Country",
+    "orderNotes": "Order Notes"
   },
   "products": {
     "title": "Products",
@@ -289,7 +290,7 @@
     "condition": "Condition",
     "info": "Info",
     "damaged": "Damaged",
-    "wellCondition": "Well condition",
+    "wellCondition": "Good",
     "acceptable": "Acceptable",
     "disposed": "Disposed",
     "bookedInAgain": "Booked in again",

@@ -760,7 +760,8 @@ export default function ClientInboundDetailPage() {
                       border: '1px solid #D1D5DB',
                       borderRadius: '6px',
                       fontSize: 'clamp(13px, 1.1vw, 15px)',
-                      backgroundColor: editMode ? 'white' : '#F9FAFB'
+                      backgroundColor: editMode ? 'white' : '#F9FAFB',
+                      color: editMode ? '#111827' : '#6B7280'
                     }}
                   />
                 </div>
@@ -785,7 +786,8 @@ export default function ClientInboundDetailPage() {
                       border: '1px solid #D1D5DB',
                       borderRadius: '6px',
                       fontSize: 'clamp(13px, 1.1vw, 15px)',
-                      backgroundColor: editMode ? 'white' : '#F9FAFB'
+                      backgroundColor: editMode ? 'white' : '#F9FAFB',
+                      color: editMode ? '#111827' : '#6B7280'
                     }}
                   />
                 </div>
@@ -810,7 +812,8 @@ export default function ClientInboundDetailPage() {
                       border: '1px solid #D1D5DB',
                       borderRadius: '6px',
                       fontSize: 'clamp(13px, 1.1vw, 15px)',
-                      backgroundColor: editMode ? 'white' : '#F9FAFB'
+                      backgroundColor: editMode ? 'white' : '#F9FAFB',
+                      color: editMode ? '#111827' : '#6B7280'
                     }}
                   />
                 </div>
@@ -835,7 +838,8 @@ export default function ClientInboundDetailPage() {
                       border: '1px solid #D1D5DB',
                       borderRadius: '6px',
                       fontSize: 'clamp(13px, 1.1vw, 15px)',
-                      backgroundColor: editMode ? 'white' : '#F9FAFB'
+                      backgroundColor: editMode ? 'white' : '#F9FAFB',
+                      color: editMode ? '#111827' : '#6B7280'
                     }}
                   />
                 </div>
@@ -860,7 +864,8 @@ export default function ClientInboundDetailPage() {
                       border: '1px solid #D1D5DB',
                       borderRadius: '6px',
                       fontSize: 'clamp(13px, 1.1vw, 15px)',
-                      backgroundColor: editMode ? 'white' : '#F9FAFB'
+                      backgroundColor: editMode ? 'white' : '#F9FAFB',
+                      color: editMode ? '#111827' : '#6B7280'
                     }}
                   />
                 </div>
@@ -885,7 +890,8 @@ export default function ClientInboundDetailPage() {
                       border: '1px solid #D1D5DB',
                       borderRadius: '6px',
                       fontSize: 'clamp(13px, 1.1vw, 15px)',
-                      backgroundColor: editMode ? 'white' : '#F9FAFB'
+                      backgroundColor: editMode ? 'white' : '#F9FAFB',
+                      color: editMode ? '#111827' : '#6B7280'
                     }}
                   />
                 </div>
@@ -910,7 +916,8 @@ export default function ClientInboundDetailPage() {
                       border: '1px solid #D1D5DB',
                       borderRadius: '6px',
                       fontSize: 'clamp(13px, 1.1vw, 15px)',
-                      backgroundColor: editMode ? 'white' : '#F9FAFB'
+                      backgroundColor: editMode ? 'white' : '#F9FAFB',
+                      color: editMode ? '#111827' : '#6B7280'
                     }}
                   />
                 </div>
