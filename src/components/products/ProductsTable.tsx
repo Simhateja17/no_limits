@@ -313,7 +313,7 @@ export function ProductsTable({ showClientColumn, baseUrl }: ProductsTableProps)
 
       {/* Filter and Search Row */}
       <div className="flex items-end gap-6 flex-wrap">
-        {/* Filter by Customer */}
+        {/* Filter by Customer (admin/employee) or Channels (client) */}
         <div className="flex flex-col gap-2">
           <label
             style={{
@@ -324,7 +324,7 @@ export function ProductsTable({ showClientColumn, baseUrl }: ProductsTableProps)
               color: '#374151',
             }}
           >
-            {t('filterByCustomer')}
+            {showClientColumn ? t('filterByCustomer') : tCommon('channels')}
           </label>
           <div className="relative">
             <select

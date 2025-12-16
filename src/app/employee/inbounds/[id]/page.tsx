@@ -14,22 +14,31 @@ interface Product {
   sku: string;
   gtin: string;
   qty: number;
+  deliveredQty: number;
 }
 
 const mockProducts: Product[] = [
-  { id: '1', name: 'Testproduct 1', sku: '#24234', gtin: '342345235324', qty: 3 },
-  { id: '2', name: 'Testproduct 2', sku: '#24076', gtin: '324343243242', qty: 3 },
+  { id: '1', name: 'Testproduct 1', sku: '#24234', gtin: '342345235324', qty: 3, deliveredQty: 3 },
+  { id: '2', name: 'Testproduct 2', sku: '#24076', gtin: '324343243242', qty: 3, deliveredQty: 2 },
 ];
 
 // Available products for adding
 const availableProducts: Product[] = [
-  { id: '3', name: 'Testproduct 3', sku: '#24235', gtin: '342345235325', qty: 1 },
-  { id: '4', name: 'Testproduct 4', sku: '#24236', gtin: '342345235326', qty: 1 },
-  { id: '5', name: 'Testproduct 5', sku: '#24237', gtin: '342345235327', qty: 1 },
-  { id: '6', name: 'Testproduct 6', sku: '#24238', gtin: '342345235328', qty: 1 },
-  { id: '7', name: 'Testproduct 7', sku: '#24234', gtin: '342345235324', qty: 1 },
-  { id: '8', name: 'Product Alpha', sku: '#24239', gtin: '342345235329', qty: 1 },
-  { id: '9', name: 'Product Beta', sku: '#24240', gtin: '342345235330', qty: 1 },
+  { id: '3', name: 'Testproduct 3', sku: '#24235', gtin: '342345235325', qty: 1, deliveredQty: 0 },
+  { id: '4', name: 'Testproduct 4', sku: '#24236', gtin: '342345235326', qty: 1, deliveredQty: 0 },
+  { id: '5', name: 'Testproduct 5', sku: '#24237', gtin: '342345235327', qty: 1, deliveredQty: 0 },
+  { id: '6', name: 'Testproduct 6', sku: '#24238', gtin: '342345235328', qty: 1, deliveredQty: 0 },
+  { id: '7', name: 'Testproduct 7', sku: '#24234', gtin: '342345235324', qty: 1, deliveredQty: 0 },
+  { id: '8', name: 'Product Alpha', sku: '#24239', gtin: '342345235329', qty: 1, deliveredQty: 0 },
+  { id: '9', name: 'Product Beta', sku: '#24240', gtin: '342345235330', qty: 1, deliveredQty: 0 },
+];
+
+// Mock inbound images
+const mockInboundImages = [
+  '/women_in_return.jpg',
+  '/women_in_return.jpg',
+  '/women_in_return.jpg',
+  '/women_in_return.jpg',
 ];
 
 export default function EmployeeInboundDetailPage() {
@@ -414,7 +423,8 @@ export default function EmployeeInboundDetailPage() {
                     <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '12px', fontWeight: 500, color: '#6B7280', textTransform: 'uppercase' }}>{tOrders('productName')}</th>
                     <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '12px', fontWeight: 500, color: '#6B7280', textTransform: 'uppercase' }}>{tOrders('sku')}</th>
                     <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '12px', fontWeight: 500, color: '#6B7280', textTransform: 'uppercase' }}>{tOrders('gtin')}</th>
-                    <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '12px', fontWeight: 500, color: '#6B7280', textTransform: 'uppercase' }}>{tOrders('qty')}</th>
+                    <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '12px', fontWeight: 500, color: '#6B7280', textTransform: 'uppercase' }}>{tInbounds('announcedQty')}</th>
+                    <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '12px', fontWeight: 500, color: '#6B7280', textTransform: 'uppercase' }}>{tInbounds('deliveredQty')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -441,7 +451,7 @@ export default function EmployeeInboundDetailPage() {
                       )}
                       <td style={{ padding: '12px 16px', fontSize: '14px', color: '#111827' }}>{product.name}</td>
                       <td style={{ padding: '12px 16px', fontSize: '14px', color: '#6B7280' }}>{product.sku}</td>
-                      <td style={{ padding: '12px 16px', fontSize: '14px', color: '#6B7280' }}>{editMode ? product.gtin : `Merchant ${product.qty}`}</td>
+                      <td style={{ padding: '12px 16px', fontSize: '14px', color: '#6B7280' }}>{product.gtin}</td>
                       <td style={{ padding: '12px 16px' }}>
                         {editMode ? (
                           <input
@@ -461,6 +471,7 @@ export default function EmployeeInboundDetailPage() {
                           <span style={{ fontSize: '14px', color: '#111827' }}>{product.qty}</span>
                         )}
                       </td>
+                      <td style={{ padding: '12px 16px', fontSize: '14px', color: '#111827' }}>{product.deliveredQty}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -526,11 +537,12 @@ export default function EmployeeInboundDetailPage() {
                   <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                     <thead>
                       <tr style={{ backgroundColor: '#F9FAFB' }}>
+                        <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '12px', fontWeight: 500, color: '#6B7280', textTransform: 'uppercase' }}></th>
                         <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '12px', fontWeight: 500, color: '#6B7280', textTransform: 'uppercase' }}>{tOrders('productName')}</th>
                         <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '12px', fontWeight: 500, color: '#6B7280', textTransform: 'uppercase' }}>SKU</th>
                         <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '12px', fontWeight: 500, color: '#6B7280', textTransform: 'uppercase' }}>GTIN</th>
-                        <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '12px', fontWeight: 500, color: '#6B7280', textTransform: 'uppercase' }}>QTY</th>
-                        <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '12px', fontWeight: 500, color: '#6B7280', textTransform: 'uppercase' }}></th>
+                        <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '12px', fontWeight: 500, color: '#6B7280', textTransform: 'uppercase' }}>{tInbounds('announcedQty')}</th>
+                        <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '12px', fontWeight: 500, color: '#6B7280', textTransform: 'uppercase' }}>{tInbounds('deliveredQty')}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -572,6 +584,7 @@ export default function EmployeeInboundDetailPage() {
                               }}
                             />
                           </td>
+                          <td style={{ padding: '12px 16px', fontSize: '14px', color: '#111827' }}>{product.deliveredQty}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -953,6 +966,52 @@ export default function EmployeeInboundDetailPage() {
                     </div>
                   )}
                 </div>
+              </div>
+            </div>
+
+            {/* Inbound Images Section */}
+            <div style={{
+              backgroundColor: 'white',
+              borderRadius: '8px',
+              boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.06), 0px 1px 3px 0px rgba(0, 0, 0, 0.1)',
+              padding: 'clamp(16px, 1.5vw, 20px) clamp(12px, 1.2vw, 16px)'
+            }}>
+              <h3 style={{ 
+                fontFamily: 'Inter, sans-serif',
+                fontWeight: 500,
+                fontSize: 'clamp(16px, 1.3vw, 18px)',
+                lineHeight: '24px',
+                color: '#111827', 
+                marginBottom: '16px' 
+              }}>Inbound Images</h3>
+              
+              <div style={{
+                display: 'flex',
+                flexWrap: 'wrap',
+                gap: 'clamp(12px, 1.18vw, 16px)'
+              }}>
+                {mockInboundImages.map((imageSrc, index) => (
+                  <div
+                    key={index}
+                    style={{
+                      width: 'clamp(144px, 14.14vw, 192px)',
+                      height: 'clamp(144px, 14.14vw, 192px)',
+                      borderRadius: '8px',
+                      overflow: 'hidden',
+                      boxShadow: '0px 0px 0px 4px #FFFFFF',
+                      position: 'relative',
+                    }}
+                  >
+                    <Image
+                      src={imageSrc}
+                      alt={`Inbound image ${index + 1}`}
+                      fill
+                      style={{
+                        objectFit: 'cover',
+                      }}
+                    />
+                  </div>
+                ))}
               </div>
             </div>
 

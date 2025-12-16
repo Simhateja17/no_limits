@@ -229,6 +229,7 @@
     "inboundId": "Wareneingangs-ID",
     "deliveryType": "Lieferart",
     "announcedQty": "Angekündigte Menge",
+    "deliveredQty": "Gelieferte Menge",
     "numberOfProducts": "Anzahl Produkte",
     "expectedDate": "Erwartetes Lieferdatum",
     "status": "Status",

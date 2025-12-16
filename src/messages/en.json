@@ -228,6 +228,7 @@
     "inboundId": "Inbound ID",
     "deliveryType": "Delivery Type",
     "announcedQty": "Announced Qty",
+    "deliveredQty": "Delivered Qty",
     "numberOfProducts": "No. of Products",
     "expectedDate": "Expected Date",
     "status": "Status",

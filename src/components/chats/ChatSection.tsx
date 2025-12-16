@@ -236,7 +236,7 @@ export function ChatSection({
 
               {/* Message bubble */}
               <div
-                className={`max-w-[80%] ${isCurrentUser ? 'ml-auto' : ''}`}
+                className={`inline-block max-w-[80%] ${isCurrentUser ? 'ml-auto' : ''}`}
               >
                 <div
                   style={{
@@ -244,6 +244,7 @@ export function ChatSection({
                     borderRadius: '8px',
                     background: isCurrentUser ? '#FFFFFF' : '#003450',
                     border: isCurrentUser ? '1px solid #E4E9EE' : 'none',
+                    display: 'inline-block',
                   }}
                 >
                   <p

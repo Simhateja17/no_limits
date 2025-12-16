@@ -456,7 +456,31 @@ const mockTasks: Task[] = [
   { id: '10', taskId: '22222', client: 'Merchant 4', created: '05.10.2025', priority: 'High', status: 'Closed' },
 ];
 
-// Clients for filter (excluding 'All' which will be added dynamically with translation)
+// Channel interface for dropdown
+interface ChannelInfo {
+  name: string;
+  type: 'Shopify' | 'Woocommerce' | 'Amazon';
+  client: string; // The client/owner of this channel
+}
+
+// All channels (admin/employee can see all, clients see only their own)
+const allChannels: ChannelInfo[] = [
+  // Papercrush channels
+  { name: 'Papercrush B2C', type: 'Shopify', client: 'Papercrush' },
+  { name: 'Papercrush B2B', type: 'Shopify', client: 'Papercrush' },
+  // Caobali channels
+  { name: 'Caobali Store', type: 'Woocommerce', client: 'Caobali' },
+  { name: 'Caobali Wholesale', type: 'Amazon', client: 'Caobali' },
+  // Merchant channels
+  { name: 'Merchant 1 Shop', type: 'Shopify', client: 'Merchant 1' },
+  { name: 'Merchant 2 Store', type: 'Woocommerce', client: 'Merchant 2' },
+  { name: 'Merchant 3 Main', type: 'Amazon', client: 'Merchant 3' },
+  { name: 'Merchant 4 Shop', type: 'Shopify', client: 'Merchant 4' },
+  { name: 'Merchant 5 Store', type: 'Woocommerce', client: 'Merchant 5' },
+  { name: 'Warehouse Store', type: 'Amazon', client: 'Warehouse' },
+];
+
+// Clients for admin/employee filter (excluding 'All' which will be added dynamically with translation)
 const clients = ['Merchant 1', 'Merchant 2', 'Merchant 3', 'Merchant 4', 'Merchant 5', 'Warehouse'];
 
 interface TasksTableProps {
@@ -475,8 +499,15 @@ export function TasksTable({ showClientColumn, baseUrl }: TasksTableProps) {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const itemsPerPage = 10;
 
-  // Suppress unused variable warning
-  void showClientColumn;
+  // Mock current client for demo - in production this would come from auth context
+  const currentClient = 'Papercrush';
+  
+  // Filter channels based on user role
+  // showClientColumn = true means admin/employee view (can see all clients)
+  // showClientColumn = false means client view (can only see their own channels)
+  const channels = showClientColumn 
+    ? allChannels 
+    : allChannels.filter(ch => ch.client === currentClient);
 
   const handleTaskClick = (taskId: string) => {
     router.push(`${baseUrl}/${taskId}`);
@@ -751,7 +782,7 @@ export function TasksTable({ showClientColumn, baseUrl }: TasksTableProps) {
 
       {/* Filter and Search Row */}
       <div className="flex items-end gap-6 flex-wrap">
-        {/* Filter by Client */}
+        {/* Filter by Client (admin/employee) or Channels (client) */}
         <div className="flex flex-col gap-2">
           <label
             style={{
@@ -762,7 +793,7 @@ export function TasksTable({ showClientColumn, baseUrl }: TasksTableProps) {
               color: '#374151',
             }}
           >
-            {t('filterByCustomer')}
+            {showClientColumn ? t('filterByCustomer') : tCommon('channels')}
           </label>
           <div className="relative">
             <select
@@ -790,11 +821,18 @@ export function TasksTable({ showClientColumn, baseUrl }: TasksTableProps) {
               <option key="ALL" value="ALL">
                 {tCommon('all')}
               </option>
-              {clients.map((client) => (
-                <option key={client} value={client}>
-                  {client}
-                </option>
-              ))}
+              {showClientColumn
+                ? clients.map((client) => (
+                    <option key={client} value={client}>
+                      {client}
+                    </option>
+                  ))
+                : channels.map((channel) => (
+                    <option key={channel.name} value={channel.name}>
+                      {channel.name} - {channel.type}
+                    </option>
+                  ))
+              }
             </select>
             {/* Dropdown Arrow */}
             <div
