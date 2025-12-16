@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 
 type OrderStatus = 'Processing' | 'On Hold' | 'Shipped' | 'Cancelled';
 
@@ -58,11 +58,14 @@ const getStatusColor = (status: OrderStatus) => {
 
 export function CreateOrderPage({ basePath }: { basePath: string }) {
   const router = useRouter();
+  const locale = useLocale();
   const tCommon = useTranslations('common');
   const tOrders = useTranslations('orders');
   const tCountries = useTranslations('countries');
   const tMessages = useTranslations('messages');
   const tProducts = useTranslations('products');
+
+  const isGerman = locale?.toLowerCase().startsWith('de');
 
   const [orderStatus] = useState<OrderStatus>('Processing');
   const [orderId, setOrderId] = useState('934242');
@@ -222,50 +225,72 @@ export function CreateOrderPage({ basePath }: { basePath: string }) {
                 boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.06), 0px 1px 3px 0px rgba(0, 0, 0, 0.1)',
               }}
             >
-              <div className="flex items-center justify-between">
-                <span
-                  style={{
-                    fontFamily: 'Inter, sans-serif',
-                    fontWeight: 500,
-                    fontSize: 'clamp(16px, 1.3vw, 18px)',
-                    lineHeight: '24px',
-                    color: '#111827',
-                  }}
-                >
-                  {tOrders('orderId')}
-                </span>
-                <div
-                  style={{
-                    height: '26px',
-                    gap: '8px',
-                    padding: '3px 13px',
-                    borderRadius: '13px',
-                    border: '1px solid #D1D5DB',
-                    display: 'flex',
-                    alignItems: 'center',
-                  }}
-                >
+              {(() => {
+                const statusPill = (
                   <div
                     style={{
-                      width: '6px',
-                      height: '6px',
-                      borderRadius: '50%',
-                      backgroundColor: onHoldStatus ? '#F59E0B' : getStatusColor(orderStatus),
+                      height: '26px',
+                      gap: '8px',
+                      padding: '3px 13px',
+                      borderRadius: '13px',
+                      border: '1px solid #D1D5DB',
+                      display: 'flex',
+                      alignItems: 'center',
+                      width: 'fit-content',
                     }}
-                  />
+                  >
+                    <div
+                      style={{
+                        width: '6px',
+                        height: '6px',
+                        borderRadius: '50%',
+                        backgroundColor: onHoldStatus ? '#F59E0B' : getStatusColor(orderStatus),
+                      }}
+                    />
+                    <span
+                      style={{
+                        fontFamily: 'Inter, sans-serif',
+                        fontWeight: 500,
+                        fontSize: '15px',
+                        lineHeight: '20px',
+                        color: '#000000',
+                      }}
+                    >
+                      {onHoldStatus ? tOrders('onHold') : tOrders('processing')}
+                    </span>
+                  </div>
+                );
+
+                const orderIdLabel = (
                   <span
                     style={{
                       fontFamily: 'Inter, sans-serif',
                       fontWeight: 500,
-                      fontSize: '15px',
-                      lineHeight: '20px',
-                      color: '#000000',
+                      fontSize: 'clamp(16px, 1.3vw, 18px)',
+                      lineHeight: '24px',
+                      color: '#111827',
                     }}
                   >
-                    {onHoldStatus ? tOrders('onHold') : tOrders('processing')}
+                    {tOrders('orderId')}
                   </span>
-                </div>
-              </div>
+                );
+
+                if (isGerman) {
+                  return (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', alignItems: 'flex-start' }}>
+                      {statusPill}
+                      {orderIdLabel}
+                    </div>
+                  );
+                }
+
+                return (
+                  <div className="flex items-center justify-between">
+                    {orderIdLabel}
+                    {statusPill}
+                  </div>
+                );
+              })()}
               <input
                 value={orderId}
                 onChange={(e) => setOrderId(e.target.value)}
