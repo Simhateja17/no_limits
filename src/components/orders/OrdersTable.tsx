@@ -479,6 +479,7 @@ export function OrdersTable({ showClientColumn, basePath = '/admin/orders' }: Or
 
         {/* Create Order Button */}
         <button
+          onClick={() => router.push(`${basePath}/create`)}
           style={{
             height: 'clamp(32px, 2.8vw, 38px)',
             borderRadius: '6px',

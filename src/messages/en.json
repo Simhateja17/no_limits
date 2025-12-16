@@ -153,7 +153,10 @@
     "zipPostal": "ZIP / Postal",
     "country": "Country",
     "orderNotes": "Order Notes",
-    "orderNotesDescription": "This section displays additional information from the order of the respective channel - for example from Shopify, if the customer has left a note or special instructions for the order there. Additionally, the fulfillment customer can add their own information to further specify the process or leave internal notes for processing."
+    "orderNotesDescription": "This section displays additional information from the order of the respective channel - for example from Shopify, if the customer has left a note or special instructions for the order there. Additionally, the fulfillment customer can add their own information to further specify the process or leave internal notes for processing.",
+    "createOrderDescription": "By creating this order we will ship it out as soon as possible, would you like to keep it on hold please activate on-hold status..",
+    "noProducts": "No products added.",
+    "noAddressProvided": "No address provided."
   },
   "products": {
     "title": "Products",
