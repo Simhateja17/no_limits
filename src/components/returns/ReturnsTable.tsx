@@ -24,18 +24,18 @@ interface Return {
 
 // Mock data
 const mockReturns: Return[] = [
-  { id: '1', returnId: '24234', returnDate: new Date(), client: 'Papercrush', orderId: '24234', quantity: 3, reason: 'Damaged', status: 'pending' },
-  { id: '2', returnId: '24076', returnDate: new Date(Date.now() - 5 * 60 * 60 * 1000), client: 'Papercrush', orderId: '24076', quantity: 3, reason: 'Wrong Item', status: 'approved' },
+  { id: '1', returnId: '24234', returnDate: new Date(), client: 'Papercrush', orderId: '24234', quantity: 3, reason: 'Damaged', status: 'processing' },
+  { id: '2', returnId: '24076', returnDate: new Date(Date.now() - 5 * 60 * 60 * 1000), client: 'Papercrush', orderId: '24076', quantity: 3, reason: 'Wrong Item', status: 'completed' },
   { id: '3', returnId: '23974', returnDate: new Date(Date.now() - 24 * 60 * 60 * 1000), client: 'Caobali', orderId: '23974', quantity: 1, reason: 'Defective', status: 'processing' },
   { id: '4', returnId: '22421', returnDate: new Date('2022-05-16'), client: 'Terppens', orderId: '22421', quantity: 2, reason: 'Not as Described', status: 'completed' },
-  { id: '5', returnId: '22122', returnDate: new Date('2022-05-15'), client: 'Terppens', orderId: '22122', quantity: 2, reason: 'Damaged', status: 'rejected' },
-  { id: '6', returnId: '22063', returnDate: new Date('2022-05-15'), client: 'Protabo', orderId: '22063', quantity: 5, reason: 'Wrong Item', status: 'pending' },
-  { id: '7', returnId: '24235', returnDate: new Date(), client: 'Merchant 3', orderId: '24235', quantity: 3, reason: 'Defective', status: 'approved' },
+  { id: '5', returnId: '22122', returnDate: new Date('2022-05-15'), client: 'Terppens', orderId: '22122', quantity: 2, reason: 'Damaged', status: 'processing' },
+  { id: '6', returnId: '22063', returnDate: new Date('2022-05-15'), client: 'Protabo', orderId: '22063', quantity: 5, reason: 'Wrong Item', status: 'processing' },
+  { id: '7', returnId: '24235', returnDate: new Date(), client: 'Merchant 3', orderId: '24235', quantity: 3, reason: 'Defective', status: 'completed' },
   { id: '8', returnId: '24077', returnDate: new Date(Date.now() - 5 * 60 * 60 * 1000), client: 'Merchant 5', orderId: '24077', quantity: 3, reason: 'Damaged', status: 'processing' },
   { id: '9', returnId: '23975', returnDate: new Date(Date.now() - 24 * 60 * 60 * 1000), client: 'Merchant 7', orderId: '23975', quantity: 1, reason: 'Not as Described', status: 'completed' },
-  { id: '10', returnId: '22422', returnDate: new Date('2022-05-16'), client: 'Merchant 5', orderId: '22422', quantity: 2, reason: 'Wrong Item', status: 'pending' },
-  { id: '11', returnId: '22123', returnDate: new Date('2022-05-15'), client: 'Merchant 5', orderId: '22123', quantity: 2, reason: 'Damaged', status: 'approved' },
-  { id: '12', returnId: '22064', returnDate: new Date('2022-05-15'), client: 'Merchant 5', orderId: '22064', quantity: 5, reason: 'Defective', status: 'rejected' },
+  { id: '10', returnId: '22422', returnDate: new Date('2022-05-16'), client: 'Merchant 5', orderId: '22422', quantity: 2, reason: 'Wrong Item', status: 'processing' },
+  { id: '11', returnId: '22123', returnDate: new Date('2022-05-15'), client: 'Merchant 5', orderId: '22123', quantity: 2, reason: 'Damaged', status: 'completed' },
+  { id: '12', returnId: '22064', returnDate: new Date('2022-05-15'), client: 'Merchant 5', orderId: '22064', quantity: 5, reason: 'Defective', status: 'processing' },
 ];
 
 // Customers for filter (excluding 'All' which will be added dynamically with translation)
@@ -50,34 +50,15 @@ interface ReturnsTableProps {
 const StatusTag = ({ status, t }: { status: ReturnStatus; t: (key: string) => string }) => {
   const getStatusConfig = () => {
     switch (status) {
-      case 'pending':
-        return {
-          label: t('pending'),
-          dotColor: '#F59E0B',
-        };
-      case 'approved':
-        return {
-          label: t('approved'),
-          dotColor: '#22C55E',
-        };
-      case 'rejected':
-        return {
-          label: t('rejected'),
-          dotColor: '#EF4444',
-        };
-      case 'processing':
-        return {
-          label: t('processing'),
-          dotColor: '#3B82F6',
-        };
       case 'completed':
         return {
           label: t('completed'),
-          dotColor: '#6B7280',
+          dotColor: '#F59E0B',
         };
+      case 'processing':
       default:
         return {
-          label: 'Unknown',
+          label: t('processing'),
           dotColor: '#6B7280',
         };
     }
@@ -158,7 +139,7 @@ export function ReturnsTable({ showClientColumn, basePath = '/admin/returns' }: 
 
     // Filter by tab
     if (activeTab === 'pending') {
-      returns = returns.filter(r => r.status === 'pending');
+      returns = returns.filter(r => r.status === 'processing');
     } else if (activeTab === 'completed') {
       returns = returns.filter(r => r.status === 'completed');
     }
@@ -194,7 +175,7 @@ export function ReturnsTable({ showClientColumn, basePath = '/admin/returns' }: 
 
   // Count for tabs
   const allCount = mockReturns.length;
-  const pendingCount = mockReturns.filter(r => r.status === 'pending').length;
+  const pendingCount = mockReturns.filter(r => r.status === 'processing').length;
   const completedCount = mockReturns.filter(r => r.status === 'completed').length;
 
   const handlePrevious = () => {
@@ -279,7 +260,7 @@ export function ReturnsTable({ showClientColumn, basePath = '/admin/returns' }: 
                 color: activeTab === 'pending' ? '#003450' : '#6B7280',
               }}
             >
-              {t('pending')}
+              {t('processing')}
             </span>
             <span
               style={{
@@ -502,7 +483,7 @@ export function ReturnsTable({ showClientColumn, basePath = '/admin/returns' }: 
             {t('quantity')}
           </span>
           <span style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: 'clamp(10px, 0.9vw, 12px)', lineHeight: '16px', letterSpacing: '0.05em', textTransform: 'uppercase', color: '#6B7280' }}>
-            {t('reason')}
+            {t('condition')}
           </span>
           <span style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: 'clamp(10px, 0.9vw, 12px)', lineHeight: '16px', letterSpacing: '0.05em', textTransform: 'uppercase', color: '#6B7280' }}>
             {tCommon('status')}

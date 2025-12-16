@@ -256,7 +256,7 @@
   "returns": {
     "title": "Retouren",
     "allReturns": "Alle Retouren",
-    "pending": "Ausstehend",
+    "pending": "In Bearbeitung",
     "finished": "Abgeschlossen",
     "approved": "Genehmigt",
     "rejected": "Abgelehnt",

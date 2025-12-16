@@ -255,7 +255,7 @@
   "returns": {
     "title": "Returns",
     "allReturns": "All Returns",
-    "pending": "Pending",
+    "pending": "Processing",
     "finished": "Finished",
     "approved": "Approved",
     "rejected": "Rejected",
