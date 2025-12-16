@@ -11,23 +11,37 @@ interface Channel {
   type: 'Woocommerce' | 'Shopify' | 'Amazon';
   url: string;
   status: 'Active' | 'Inactive';
+  client: string; // The client/owner of this channel
 }
 
-// Mock data
+// Mock data - all channels for demo
+// In production, this would be filtered by the backend based on the logged-in client
 const mockChannels: Channel[] = [
+  // Papercrush channels (current demo client)
   {
     id: '1',
-    name: 'Woocommerce',
-    type: 'Woocommerce',
-    url: 'www.teststore.de',
+    name: 'Papercrush B2C',
+    type: 'Shopify',
+    url: 'www.papercrush-b2c.de',
     status: 'Active',
+    client: 'Papercrush',
   },
   {
     id: '2',
-    name: 'Shopify',
+    name: 'Papercrush B2B',
     type: 'Shopify',
-    url: 'www.testshopifystore.de',
+    url: 'www.papercrush-b2b.de',
     status: 'Inactive',
+    client: 'Papercrush',
+  },
+  // Other clients' channels (would not be visible to Papercrush client)
+  {
+    id: '3',
+    name: 'Caobali Store',
+    type: 'Woocommerce',
+    url: 'www.caobali.de',
+    status: 'Active',
+    client: 'Caobali',
   },
 ];
 
@@ -122,7 +136,7 @@ function ChannelCard({ channel, onSettingsClick, onNameClick, t }: { channel: Ch
               cursor: 'pointer',
             }}
           >
-            {channel.name}
+            {channel.name} - {channel.type}
           </span>
           <StatusBadge status={channel.status} t={t} />
         </div>
@@ -414,8 +428,12 @@ export function SalesChannels({ baseUrl }: SalesChannelsProps) {
   const tCommon = useTranslations('common');
   const [showChannelTypeModal, setShowChannelTypeModal] = useState(false);
 
-  // For demo purposes, you can toggle this to see empty state
-  const channels = mockChannels;
+  // Mock current client for demo - in production this would come from auth context
+  const currentClient = 'Papercrush';
+  
+  // Filter channels for the current client (SalesChannels is only used in client view)
+  // In production, this filtering would happen on the backend
+  const channels = mockChannels.filter(ch => ch.client === currentClient);
   const hasChannels = channels.length > 0;
 
   const handleBack = () => {

@@ -46,8 +46,28 @@ const mockInbounds: Inbound[] = [
   { id: '20', inboundId: '30303', deliveryType: 'Parcel service', anouncedQty: 40, noOfProducts: 6, expectDate: '05.05.2025', status: 'booked_in', client: 'Terppens' },
 ];
 
-// Customers for filter (for warehouse users - excluding 'All' which will be added dynamically)
-const customers = ['Papercrush', 'Caobali', 'Terppens', 'Protabo', 'TestClient'];
+// Channel interface for dropdown
+interface ChannelInfo {
+  name: string;
+  type: 'Shopify' | 'Woocommerce' | 'Amazon';
+  client: string; // The client/owner of this channel
+}
+
+// All channels (admin/employee can see all, clients see only their own)
+const allChannels: ChannelInfo[] = [
+  // Papercrush channels
+  { name: 'Papercrush B2C', type: 'Shopify', client: 'Papercrush' },
+  { name: 'Papercrush B2B', type: 'Shopify', client: 'Papercrush' },
+  // Caobali channels
+  { name: 'Caobali Store', type: 'Woocommerce', client: 'Caobali' },
+  { name: 'Caobali Wholesale', type: 'Amazon', client: 'Caobali' },
+  // Terppens channels
+  { name: 'Terppens Main', type: 'Amazon', client: 'Terppens' },
+  // Protabo channels
+  { name: 'Protabo Shop', type: 'Shopify', client: 'Protabo' },
+  // TestClient channels
+  { name: 'TestClient Store', type: 'Woocommerce', client: 'TestClient' },
+];
 
 // Freight forwarders for filter (for client view - excluding 'All' which will be added dynamically)
 const freightForwarders = ['Freight forwarder', 'Parcel service'];
@@ -71,8 +91,16 @@ export function InboundsTable({ showClientColumn, baseUrl, userRole }: InboundsT
   // Determine if this is a client view
   const isClientView = userRole === 'CLIENT';
   
-  // Get filter options based on role
-  const filterOptions = isClientView ? freightForwarders : customers;
+  // Mock current client for demo - in production this would come from auth context
+  const currentClient = 'Papercrush';
+  
+  // Filter channels based on user role
+  // For client view, only show their own channels
+  const channels = isClientView 
+    ? allChannels.filter(ch => ch.client === currentClient)
+    : allChannels;
+  
+  // Get filter label based on role
   const filterLabel = isClientView ? t('filterByFreightForwarder') : t('filterByCustomer');
 
   const handleInboundClick = (inboundId: string) => {
@@ -396,11 +424,18 @@ export function InboundsTable({ showClientColumn, baseUrl, userRole }: InboundsT
               <option key="ALL" value="ALL">
                 {tCommon('all')}
               </option>
-              {filterOptions.map((option) => (
-                <option key={option} value={option}>
-                  {option}
-                </option>
-              ))}
+              {isClientView
+                ? freightForwarders.map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
+                  ))
+                : channels.map((channel) => (
+                    <option key={channel.name} value={channel.name}>
+                      {channel.name} - {channel.type}
+                    </option>
+                  ))
+              }
             </select>
             {/* Dropdown Arrow */}
             <div

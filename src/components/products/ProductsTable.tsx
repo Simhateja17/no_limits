@@ -32,8 +32,28 @@ const mockProducts: Product[] = [
   { id: '10', productId: '22222', productName: 'Complete Product', available: 200, reserved: 15, announced: 30, client: '' },
 ];
 
-// Customers for filter (excluding 'All' which will be added dynamically with translation)
-const customers = ['Papercrush', 'Caobali', 'Terppens', 'Protabo', 'TestClient'];
+// Channel interface for dropdown
+interface ChannelInfo {
+  name: string;
+  type: 'Shopify' | 'Woocommerce' | 'Amazon';
+  client: string; // The client/owner of this channel
+}
+
+// All channels (admin/employee can see all, clients see only their own)
+const allChannels: ChannelInfo[] = [
+  // Papercrush channels
+  { name: 'Papercrush B2C', type: 'Shopify', client: 'Papercrush' },
+  { name: 'Papercrush B2B', type: 'Shopify', client: 'Papercrush' },
+  // Caobali channels
+  { name: 'Caobali Store', type: 'Woocommerce', client: 'Caobali' },
+  { name: 'Caobali Wholesale', type: 'Amazon', client: 'Caobali' },
+  // Terppens channels
+  { name: 'Terppens Main', type: 'Amazon', client: 'Terppens' },
+  // Protabo channels
+  { name: 'Protabo Shop', type: 'Shopify', client: 'Protabo' },
+  // TestClient channels
+  { name: 'TestClient Store', type: 'Woocommerce', client: 'TestClient' },
+];
 
 interface ProductsTableProps {
   showClientColumn: boolean; // Show client column only for superadmin and warehouse labor view
@@ -49,6 +69,16 @@ export function ProductsTable({ showClientColumn, baseUrl }: ProductsTableProps)
   const itemsPerPage = 10;
   const t = useTranslations('products');
   const tCommon = useTranslations('common');
+
+  // Mock current client for demo - in production this would come from auth context
+  const currentClient = 'Papercrush';
+  
+  // Filter channels based on user role
+  // showClientColumn = true means admin/employee view (can see all channels)
+  // showClientColumn = false means client view (can only see their own channels)
+  const channels = showClientColumn 
+    ? allChannels 
+    : allChannels.filter(ch => ch.client === currentClient);
 
   const handleProductClick = (productId: string) => {
     router.push(`${baseUrl}/${productId}`);
@@ -322,9 +352,9 @@ export function ProductsTable({ showClientColumn, baseUrl }: ProductsTableProps)
               <option key="ALL" value="ALL">
                 {tCommon('all')}
               </option>
-              {customers.map((customer) => (
-                <option key={customer} value={customer}>
-                  {customer}
+              {channels.map((channel) => (
+                <option key={channel.name} value={channel.name}>
+                  {channel.name} - {channel.type}
                 </option>
               ))}
             </select>
