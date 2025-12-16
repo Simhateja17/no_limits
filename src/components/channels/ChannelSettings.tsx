@@ -1052,7 +1052,7 @@ export function ChannelSettings({ channelId, baseUrl, initialChannelType = 'Wooc
                           >
                             <path
                               d="M13.3333 4L6 11.3333L2.66667 8"
-                              stroke="#6366F1"
+                              stroke="#003450"
                               strokeWidth="1.5"
                               strokeLinecap="round"
                               strokeLinejoin="round"
@@ -1346,7 +1346,7 @@ export function ChannelSettings({ channelId, baseUrl, initialChannelType = 'Wooc
                           >
                             <path
                               d="M13.3333 4L6 11.3333L2.66667 8"
-                              stroke="#6366F1"
+                              stroke="#003450"
                               strokeWidth="1.5"
                               strokeLinecap="round"
                               strokeLinejoin="round"

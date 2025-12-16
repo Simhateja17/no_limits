@@ -495,7 +495,7 @@ export function ChannelShippingSetup({ channelId, channelType, baseUrl }: Channe
                           >
                             <path
                               d="M13.3333 4L6 11.3333L2.66667 8"
-                              stroke="#6366F1"
+                              stroke="#003450"
                               strokeWidth="1.5"
                               strokeLinecap="round"
                               strokeLinejoin="round"
