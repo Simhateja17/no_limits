@@ -92,7 +92,7 @@ export default function ClientChatPage() {
       <div
         className="flex w-full"
         style={{
-          height: 'calc(100vh - 90px)',
+          height: 'calc(100vh - 64px)',
           background: '#FFFFFF',
         }}
       >

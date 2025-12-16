@@ -159,6 +159,7 @@ export function ChatSection({
         className="flex-1 overflow-y-auto p-4"
         style={{
           background: '#FAFBFC',
+          minHeight: 0,
         }}
       >
         {messages.map((message) => {
@@ -365,11 +366,12 @@ export function ChatSection({
 
       {/* Input Area */}
       <div
-        className="flex items-center px-4 py-4"
+        className="flex items-center px-4 py-3"
         style={{
           borderTop: '1px solid #E4E9EE',
           background: '#FFFFFF',
-          minHeight: 'clamp(80px, 10%, 159px)',
+          minHeight: '64px',
+          flexShrink: 0,
         }}
       >
         <input

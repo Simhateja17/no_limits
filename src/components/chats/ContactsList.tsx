@@ -73,11 +73,12 @@ export function ContactsList({ contacts, selectedContactId, onSelectContact }: C
 
   return (
     <div
-      className="flex flex-col h-full overflow-y-auto"
+      className="flex flex-col overflow-y-auto"
       style={{
         width: '100%',
         maxWidth: '441px',
         minWidth: '280px',
+        height: '100%',
         borderRight: '1px solid #E4E9EE',
         background: '#FFFFFF',
       }}
@@ -120,7 +121,7 @@ export function ContactsList({ contacts, selectedContactId, onSelectContact }: C
                   fontFamily: 'Poppins, sans-serif',
                   fontWeight: 500,
                   fontSize: 'clamp(14px, 1.3vw, 18px)',
-                  lineHeight: '100%',
+                  lineHeight: '1.4',
                   color: '#003450',
                 }}
                 className="truncate"
@@ -132,7 +133,7 @@ export function ContactsList({ contacts, selectedContactId, onSelectContact }: C
                   fontFamily: 'Poppins, sans-serif',
                   fontWeight: 400,
                   fontSize: 'clamp(10px, 0.95vw, 13px)',
-                  lineHeight: '100%',
+                  lineHeight: '1.4',
                   letterSpacing: '1%',
                   color: '#90A0B7',
                   textAlign: 'right',
@@ -151,7 +152,7 @@ export function ContactsList({ contacts, selectedContactId, onSelectContact }: C
                   fontFamily: 'Poppins, sans-serif',
                   fontWeight: 400,
                   fontSize: 'clamp(10px, 0.88vw, 12px)',
-                  lineHeight: '100%',
+                  lineHeight: '1.4',
                   letterSpacing: '1%',
                   color: '#192A3E',
                 }}
