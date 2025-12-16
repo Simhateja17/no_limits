@@ -1,11 +1,11 @@
-"use client";
+'use client';
 
 import { DashboardLayout } from '@/components/layout';
-
-import { useRouter, useParams } from 'next/navigation';
 import { useAuthStore } from '@/lib/store';
+import { useRouter, useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
+import Image from 'next/image';
 
 // Mock product data
 interface Product {
