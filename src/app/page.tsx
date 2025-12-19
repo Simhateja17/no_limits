@@ -6,6 +6,7 @@ import { useState } from "react";
 import { useAuthStore, getDashboardRoute, LoginType, UserRole } from "@/lib/store";
 import { useTranslations } from 'next-intl';
 import { LanguageSwitcher } from '@/components/ui';
+import { authApi } from '@/lib/auth-api';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -23,24 +24,48 @@ export default function LoginPage() {
     e.preventDefault();
     if (email && password) {
       setLoading(true);
+      console.log('🔐 Login attempt:', email, 'as', loginType);
       
-      // Map login type to user role
-      const roleMap: Record<LoginType, UserRole> = {
-        client: 'CLIENT',
-        employee: 'EMPLOYEE',
-        admin: 'ADMIN',
-      };
-      
-      // TODO: Replace with actual API call
-      const mockUser = {
-        id: '1',
-        email,
-        name: email.split('@')[0],
-        role: roleMap[loginType],
-      };
-      
-      login(mockUser, loginType);
-      router.push(getDashboardRoute(mockUser.role));
+      try {
+        // Call the real login API
+        const data = await authApi.login({ email, password });
+
+        console.log('✅ Login successful:', data.user);
+        
+        // Store the access token
+        if (data.accessToken) {
+          localStorage.setItem('accessToken', data.accessToken);
+          console.log('🔑 Access token stored');
+        }
+
+        // Verify the user role matches the selected login type
+        const roleToLoginType: Record<UserRole, LoginType> = {
+          CLIENT: 'client',
+          EMPLOYEE: 'employee',
+          ADMIN: 'admin',
+          SUPER_ADMIN: 'admin',
+        };
+
+        const expectedLoginType = roleToLoginType[data.user.role as UserRole];
+        if (expectedLoginType !== loginType) {
+          console.warn(`⚠️ User role ${data.user.role} doesn't match selected login type ${loginType}`);
+          alert(`This account is a ${expectedLoginType}, not ${loginType}. Please select the correct login type.`);
+          setLoading(false);
+          return;
+        }
+
+        // Update auth store
+        login(data.user as any, loginType);
+        
+        // Redirect to appropriate dashboard
+        const dashboardRoute = getDashboardRoute(data.user.role as UserRole);
+        console.log('🚀 Redirecting to:', dashboardRoute);
+        router.push(dashboardRoute);
+      } catch (error: any) {
+        console.error('❌ Login error:', error);
+        alert(error.message || 'Login failed. Please check your credentials.');
+        setLoading(false);
+      }
     }
   };
 

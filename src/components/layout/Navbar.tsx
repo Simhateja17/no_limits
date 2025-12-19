@@ -7,6 +7,7 @@ import { useAuthStore, UserRole, getDashboardRoute } from '@/lib/store';
 import { useState, useRef, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { LanguageSwitcher } from '@/components/ui';
+import { authApi } from '@/lib/auth-api';
 
 // Navigation items per role - using translation keys
 const navItemsByRole: Record<UserRole, { key: string; href: string }[]> = {
@@ -86,9 +87,17 @@ export function Navbar() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const handleLogout = () => {
-    logout();
-    router.push('/');
+  const handleLogout = async () => {
+    try {
+      await authApi.logout();
+      logout();
+      router.push('/');
+    } catch (error) {
+      console.error('Logout error:', error);
+      // Still logout locally even if API call fails
+      logout();
+      router.push('/');
+    }
   };
 
   // Get role display label

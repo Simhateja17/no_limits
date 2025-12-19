@@ -41,6 +41,7 @@ export const useAuthStore = create<AuthState & AuthActions>()(
       isLoading: false,
 
       login: (user: User, loginType: LoginType) => {
+        console.log('✅ User logged in:', user.email, `(${user.role})`, 'via', loginType);
         set({
           user,
           isAuthenticated: true,
@@ -50,6 +51,7 @@ export const useAuthStore = create<AuthState & AuthActions>()(
       },
 
       logout: () => {
+        console.log('👋 User logged out');
         set({
           user: null,
           isAuthenticated: false,
