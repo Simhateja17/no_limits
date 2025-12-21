@@ -6,6 +6,7 @@ import { useAuthStore } from '@/lib/store';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { api } from '@/lib/api';
+import { useSocket } from '@/lib/hooks/useSocket';
 import type { Contact } from '@/components/chats/ContactsList';
 import type { ChatMessage } from '@/components/chats/ChatSection';
 
@@ -26,6 +27,19 @@ export default function ClientChatPage() {
   const [roomId, setRoomId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isTyping, setIsTyping] = useState(false);
+  const [token, setToken] = useState<string | null>(null);
+
+  // Get token from localStorage
+  useEffect(() => {
+    const storedToken = localStorage.getItem('accessToken');
+    setToken(storedToken);
+  }, []);
+
+  // Initialize Socket.IO connection
+  const socket = useSocket({
+    token: token || undefined,
+    autoConnect: !!token,
+  });
 
   useEffect(() => {
     if (!isAuthenticated || user?.role !== 'CLIENT') {
@@ -61,6 +75,47 @@ export default function ClientChatPage() {
       initializeChatRoom();
     }
   }, [isAuthenticated, user]);
+
+  // Join/leave chat room when room ID is available
+  useEffect(() => {
+    if (!roomId || !socket.isConnected) return;
+
+    socket.joinRoom(roomId);
+
+    return () => {
+      socket.leaveRoom(roomId);
+    };
+  }, [roomId, socket]);
+
+  // Listen for new messages
+  useEffect(() => {
+    if (!socket.isConnected) return;
+
+    const unsubscribe = socket.onMessage((message: ChatMessage) => {
+      setMessages((prev) => {
+        // Check if message already exists to avoid duplicates
+        if (prev.some((msg) => msg.id === message.id)) {
+          return prev;
+        }
+        return [...prev, message];
+      });
+    });
+
+    return unsubscribe;
+  }, [socket]);
+
+  // Listen for typing indicators
+  useEffect(() => {
+    if (!socket.isConnected) return;
+
+    const unsubscribe = socket.onTypingUpdate((data) => {
+      if (data.roomId === roomId && data.userId !== user?.id) {
+        setIsTyping(data.isTyping);
+      }
+    });
+
+    return unsubscribe;
+  }, [socket, roomId, user]);
 
   const handleSendMessage = async (content: string) => {
     if (!roomId) return;
