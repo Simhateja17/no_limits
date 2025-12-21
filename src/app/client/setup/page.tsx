@@ -22,7 +22,8 @@ export default function ClientSetupPage() {
 
   // Shopify credentials
   const [shopDomain, setShopDomain] = useState('');
-  const [shopifyAccessToken, setShopifyAccessToken] = useState('');
+  const [shopifyClientId, setShopifyClientId] = useState('');
+  const [shopifyClientSecret, setShopifyClientSecret] = useState('');
 
   // WooCommerce credentials
   const [wooStoreUrl, setWooStoreUrl] = useState('');
@@ -82,7 +83,7 @@ export default function ClientSetupPage() {
 
     try {
       if (selectedPlatform === 'shopify') {
-        const result = await onboardingApi.testShopifyConnection(shopDomain, shopifyAccessToken);
+        const result = await onboardingApi.testShopifyConnection(shopDomain, shopifyClientId);
         setPlatformTestSuccess(result.success);
         if (!result.success) {
           setError(result.message);
@@ -120,7 +121,8 @@ export default function ClientSetupPage() {
         const result = await onboardingApi.addShopifyChannel({
           clientId,
           shopDomain,
-          accessToken: shopifyAccessToken,
+          accessToken: shopifyClientId,
+          clientSecret: shopifyClientSecret,
         });
 
         if (!result.success) {
@@ -473,7 +475,7 @@ export default function ClientSetupPage() {
                       marginBottom: '6px',
                     }}
                   >
-                    {t('shopDomain') || 'Shop Domain'}
+                    Shop Domain
                   </label>
                   <input
                     type="text"
@@ -501,13 +503,41 @@ export default function ClientSetupPage() {
                       marginBottom: '6px',
                     }}
                   >
-                    {t('accessToken') || 'Admin API Access Token'}
+                    Client ID
+                  </label>
+                  <input
+                    type="text"
+                    value={shopifyClientId}
+                    onChange={(e) => setShopifyClientId(e.target.value)}
+                    placeholder="Your Shopify Client ID"
+                    style={{
+                      width: '100%',
+                      padding: '12px',
+                      borderRadius: '8px',
+                      border: '1px solid #D1D5DB',
+                      fontSize: '14px',
+                      outline: 'none',
+                    }}
+                  />
+                </div>
+                <div>
+                  <label
+                    style={{
+                      display: 'block',
+                      fontFamily: 'Inter, sans-serif',
+                      fontWeight: 500,
+                      fontSize: '14px',
+                      color: '#374151',
+                      marginBottom: '6px',
+                    }}
+                  >
+                    Client Secret
                   </label>
                   <input
                     type="password"
-                    value={shopifyAccessToken}
-                    onChange={(e) => setShopifyAccessToken(e.target.value)}
-                    placeholder="shpat_..."
+                    value={shopifyClientSecret}
+                    onChange={(e) => setShopifyClientSecret(e.target.value)}
+                    placeholder="Your Shopify Client Secret"
                     style={{
                       width: '100%',
                       padding: '12px',
