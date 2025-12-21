@@ -11,58 +11,18 @@ import type { ChatMessage } from '@/components/chats/ChatSection';
 // Admin contact for employee chat
 const adminContact: Contact = {
   id: 'admin',
-  name: 'Admin',
+  name: 'Admin Support',
   avatar: '/imageofchat.png',
   lastMessage: '',
   lastMessageDate: new Date().toISOString(),
   isOnline: true,
 };
 
-// Mock messages for employee-admin chat
-const initialMessages: ChatMessage[] = [
-  {
-    id: '1',
-    senderId: 'admin',
-    senderName: 'Admin',
-    senderAvatar: '/imageofchat.png',
-    content: 'posuere lorem ipsum dolor sit amet consecteturg.',
-    timestamp: '2022-12-30T11:10:00',
-    isFromUser: false,
-  },
-  {
-    id: '2',
-    senderId: 'admin',
-    senderName: 'Admin',
-    senderAvatar: '/imageofchat.png',
-    content: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Nibh mauris cursus mattis molestie. Ligula ullamcorper malesuada proin libero nunc consequat interdum. A lacus vestibulum sed arcu non odio euismod lacinia.',
-    timestamp: '2022-12-30T11:12:00',
-    isFromUser: false,
-  },
-  {
-    id: '3',
-    senderId: 'employee',
-    senderName: 'You',
-    senderAvatar: '/imageofchat.png',
-    content: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Id aliquet lectus proin nibh nisl. Suspendisse faucibus interdum posuere lorem ipsum dolor sit amet consecteturg.',
-    timestamp: '2022-12-30T11:20:00',
-    isFromUser: true,
-  },
-  {
-    id: '4',
-    senderId: 'admin',
-    senderName: 'Admin',
-    senderAvatar: '/imageofchat.png',
-    content: 'Hey can you check 110-DA. How many pieces are in stocks? It might be wrong',
-    timestamp: '2022-12-30T11:25:00',
-    isFromUser: false,
-  },
-];
-
 export default function EmployeeChatPage() {
   const { user, isAuthenticated } = useAuthStore();
   const router = useRouter();
-  const [messages, setMessages] = useState<ChatMessage[]>(initialMessages);
-  const [isTyping, setIsTyping] = useState(true);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [isTyping, setIsTyping] = useState(false);
 
   useEffect(() => {
     if (!isAuthenticated || user?.role !== 'EMPLOYEE') {
@@ -70,17 +30,13 @@ export default function EmployeeChatPage() {
     }
   }, [isAuthenticated, user, router]);
 
+  // Note: Employee chat functionality is not fully implemented in the database schema
+  // Employees don't have Client records, so they can't use the same chat room system
+  // This page is kept for future implementation
+
   const handleSendMessage = (content: string) => {
-    const newMessage: ChatMessage = {
-      id: Date.now().toString(),
-      senderId: 'employee',
-      senderName: 'You',
-      senderAvatar: '/imageofchat.png',
-      content,
-      timestamp: new Date().toISOString(),
-      isFromUser: true,
-    };
-    setMessages((prev) => [...prev, newMessage]);
+    // Placeholder - employee chat not fully implemented
+    console.log('Employee chat not yet implemented:', content);
   };
 
   if (!isAuthenticated || user?.role !== 'EMPLOYEE') {
@@ -100,14 +56,14 @@ export default function EmployeeChatPage() {
         <ChatSection
           contact={adminContact}
           messages={messages}
-          currentUserId="employee"
-          currentUserName="You"
-          currentUserAvatar="/imageofchat.png"
+          currentUserId={user?.id || 'employee'}
+          currentUserName={user?.name || 'You'}
+          currentUserAvatar={user?.avatar || '/imageofchat.png'}
           onSendMessage={handleSendMessage}
           isTyping={isTyping}
           typingUser={
             isTyping
-              ? { name: 'Admin', avatar: '/imageofchat.png' }
+              ? { name: 'Admin Support', avatar: '/imageofchat.png' }
               : undefined
           }
           showCreateTask={false}
