@@ -5,64 +5,27 @@ import { ChatSection } from '@/components/chats';
 import { useAuthStore } from '@/lib/store';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { api } from '@/lib/api';
 import type { Contact } from '@/components/chats/ContactsList';
 import type { ChatMessage } from '@/components/chats/ChatSection';
 
 // Admin contact for client chat
 const adminContact: Contact = {
   id: 'admin',
-  name: 'Admin',
+  name: 'Admin Support',
   avatar: '/imageofchat.png',
   lastMessage: '',
   lastMessageDate: new Date().toISOString(),
   isOnline: true,
 };
 
-// Mock messages for client-admin chat
-const initialMessages: ChatMessage[] = [
-  {
-    id: '1',
-    senderId: 'admin',
-    senderName: 'Admin',
-    senderAvatar: '/imageofchat.png',
-    content: 'posuere lorem ipsum dolor sit amet consecteturg.',
-    timestamp: '2022-12-30T11:10:00',
-    isFromUser: false,
-  },
-  {
-    id: '2',
-    senderId: 'admin',
-    senderName: 'Admin',
-    senderAvatar: '/imageofchat.png',
-    content: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Nibh mauris cursus mattis molestie. Ligula ullamcorper malesuada proin libero nunc consequat interdum. A lacus vestibulum sed arcu non odio euismod lacinia.',
-    timestamp: '2022-12-30T11:12:00',
-    isFromUser: false,
-  },
-  {
-    id: '3',
-    senderId: 'client',
-    senderName: 'You',
-    senderAvatar: '/imageofchat.png',
-    content: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Id aliquet lectus proin nibh nisl. Suspendisse faucibus interdum posuere lorem ipsum dolor sit amet consecteturg.',
-    timestamp: '2022-12-30T11:20:00',
-    isFromUser: true,
-  },
-  {
-    id: '4',
-    senderId: 'admin',
-    senderName: 'Admin',
-    senderAvatar: '/imageofchat.png',
-    content: 'Hey can you check 110-DA. How many pieces are in stocks? It might be wrong',
-    timestamp: '2022-12-30T11:25:00',
-    isFromUser: false,
-  },
-];
-
 export default function ClientChatPage() {
   const { user, isAuthenticated } = useAuthStore();
   const router = useRouter();
-  const [messages, setMessages] = useState<ChatMessage[]>(initialMessages);
-  const [isTyping, setIsTyping] = useState(true);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [roomId, setRoomId] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isTyping, setIsTyping] = useState(false);
 
   useEffect(() => {
     if (!isAuthenticated || user?.role !== 'CLIENT') {
@@ -70,17 +33,49 @@ export default function ClientChatPage() {
     }
   }, [isAuthenticated, user, router]);
 
-  const handleSendMessage = (content: string) => {
-    const newMessage: ChatMessage = {
-      id: Date.now().toString(),
-      senderId: 'client',
-      senderName: 'You',
-      senderAvatar: '/imageofchat.png',
-      content,
-      timestamp: new Date().toISOString(),
-      isFromUser: true,
+  // Get or create chat room on mount
+  useEffect(() => {
+    const initializeChatRoom = async () => {
+      try {
+        setIsLoading(true);
+        // Get current user's chat room
+        const roomResponse = await api.get('/chat/my-room');
+        if (roomResponse.data.success) {
+          const { roomId: fetchedRoomId } = roomResponse.data.data;
+          setRoomId(fetchedRoomId);
+
+          // Fetch messages for this room
+          const messagesResponse = await api.get(`/chat/rooms/${fetchedRoomId}/messages`);
+          if (messagesResponse.data.success) {
+            setMessages(messagesResponse.data.data);
+          }
+        }
+      } catch (error) {
+        console.error('Error initializing chat room:', error);
+      } finally {
+        setIsLoading(false);
+      }
     };
-    setMessages((prev) => [...prev, newMessage]);
+
+    if (isAuthenticated && user?.role === 'CLIENT') {
+      initializeChatRoom();
+    }
+  }, [isAuthenticated, user]);
+
+  const handleSendMessage = async (content: string) => {
+    if (!roomId) return;
+
+    try {
+      const response = await api.post(`/chat/rooms/${roomId}/messages`, {
+        content,
+      });
+
+      if (response.data.success) {
+        setMessages((prev) => [...prev, response.data.data]);
+      }
+    } catch (error) {
+      console.error('Error sending message:', error);
+    }
   };
 
   if (!isAuthenticated || user?.role !== 'CLIENT') {
@@ -99,15 +94,15 @@ export default function ClientChatPage() {
         {/* Full width Chat Section with Admin */}
         <ChatSection
           contact={adminContact}
-          messages={messages}
-          currentUserId="client"
-          currentUserName="You"
-          currentUserAvatar="/imageofchat.png"
+          messages={isLoading ? [] : messages}
+          currentUserId={user?.id || 'client'}
+          currentUserName={user?.name || 'You'}
+          currentUserAvatar={user?.avatar || '/imageofchat.png'}
           onSendMessage={handleSendMessage}
           isTyping={isTyping}
           typingUser={
             isTyping
-              ? { name: 'Admin', avatar: '/imageofchat.png' }
+              ? { name: 'Admin Support', avatar: '/imageofchat.png' }
               : undefined
           }
           showCreateTask={false}

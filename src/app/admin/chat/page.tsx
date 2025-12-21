@@ -5,156 +5,18 @@ import { ContactsList, ChatSection } from '@/components/chats';
 import { useAuthStore } from '@/lib/store';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { api } from '@/lib/api';
 import type { Contact } from '@/components/chats/ContactsList';
 import type { ChatMessage } from '@/components/chats/ChatSection';
-
-// Mocked data for contacts - using  local avatar icon
-const mockContacts: Contact[] = [
-  {
-    id: '1',
-    name: 'Max Schmidt',
-    avatar: '/imageofchat.png',
-    lastMessage: 'Lorem ipsum dolor sit amet, consectetur...',
-    lastMessageDate: '2022-12-30T12:34:00',
-    unreadCount: 1,
-    isOnline: true,
-  },
-  {
-    id: '2',
-    name: 'Nicci Troiani',
-    avatar: '/imageofchat.png',
-    lastMessage: 'Nicci schreibt eine Nachricht...',
-    lastMessageDate: '2022-12-30T11:12:00',
-    unreadCount: 2,
-    isOnline: false,
-  },
-  {
-    id: '3',
-    name: 'Jasmin Gold',
-    avatar: '/imageofchat.png',
-    lastMessage: 'Du: Klar!',
-    lastMessageDate: '2022-12-29T18:05:00',
-    status: 'read',
-    isOnline: true,
-  },
-  {
-    id: '4',
-    name: 'Rebecca Moore',
-    avatar: '/imageofchat.png',
-    lastMessage: 'Du: Die Retoure wurde beschädigt',
-    lastMessageDate: '2022-12-29T18:05:00',
-    status: 'error',
-    isOnline: false,
-  },
-  {
-    id: '5',
-    name: 'Jane Doe',
-    avatar: '/imageofchat.png',
-    lastMessage: 'Du: Das Paket wurde heute morgen verschickt',
-    lastMessageDate: '2022-12-29T16:45:00',
-    status: 'delivered',
-    isOnline: false,
-  },
-  {
-    id: '6',
-    name: 'Jones Dermot',
-    avatar: '/imageofchat.png',
-    lastMessage: 'Ich möchte gerne Preise für UPS erfahren',
-    lastMessageDate: '2022-12-29T13:37:00',
-    isOnline: true,
-  },
-  {
-    id: '7',
-    name: 'Martin Merces',
-    avatar: '/imageofchat.png',
-    lastMessage: 'Martin schreibt eine Nachricht...',
-    lastMessageDate: '2022-12-29T12:48:00',
-    isOnline: false,
-  },
-  {
-    id: '8',
-    name: 'Franz Ferdinand',
-    avatar: '/imageofchat.png',
-    lastMessage: 'Können wir am Freitag um 15 Uhr telefonieren?',
-    lastMessageDate: '2022-12-28T15:27:00',
-    isOnline: false,
-  },
-  {
-    id: '9',
-    name: 'Judith Williams',
-    avatar: '/imageofchat.png',
-    lastMessage: 'Dankeschön, bis später',
-    lastMessageDate: '2022-12-28T13:19:00',
-    isOnline: true,
-  },
-  {
-    id: '10',
-    name: 'John Smith',
-    avatar: '/imageofchat.png',
-    lastMessage: 'Am 30. Dezember passt es sehr gut',
-    lastMessageDate: '2022-12-27T21:22:00',
-    isOnline: false,
-  },
-  {
-    id: '11',
-    name: 'John Smith',
-    avatar: '/imageofchat.png',
-    lastMessage: 'Passt, alles top! Die Sendung wurde zugestellt.',
-    lastMessageDate: '2022-12-27T21:22:00',
-    isOnline: false,
-  },
-];
-
-// Mock messages for selected chat
-const getMockMessages = (contactId: string): ChatMessage[] => {
-  if (contactId === '1') {
-    return [
-      {
-        id: '1',
-        senderId: '1',
-        senderName: 'Max Schmidt',
-        senderAvatar: '/imageofchat.png',
-        content: 'posuere lorem ipsum dolor sit amet consecteturg.',
-        timestamp: '2022-12-30T11:10:00',
-        isFromUser: false,
-      },
-      {
-        id: '2',
-        senderId: '1',
-        senderName: 'Max Schmidt',
-        senderAvatar: '/imageofchat.png',
-        content: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Nibh mauris cursus mattis molestie. Ligula ullamcorper malesuada proin libero nunc consequat interdum. A lacus vestibulum sed arcu non odio euismod lacinia.',
-        timestamp: '2022-12-30T11:12:00',
-        isFromUser: false,
-      },
-      {
-        id: '3',
-        senderId: 'admin',
-        senderName: 'Admin',
-        senderAvatar: '/imageofchat.png',
-        content: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Id aliquet lectus proin nibh nisl. Suspendisse faucibus interdum posuere lorem ipsum dolor sit amet consecteturg.',
-        timestamp: '2022-12-30T11:20:00',
-        isFromUser: true,
-      },
-      {
-        id: '4',
-        senderId: '1',
-        senderName: 'Max Schmidt',
-        senderAvatar: '/imageofchat.png',
-        content: 'Hey can you check 110-DA. How many pieces are in stocks? It might be wrong',
-        timestamp: '2022-12-30T11:25:00',
-        isFromUser: false,
-      },
-    ];
-  }
-  return [];
-};
 
 export default function AdminChatPage() {
   const { user, isAuthenticated } = useAuthStore();
   const router = useRouter();
+  const [contacts, setContacts] = useState<Contact[]>([]);
   const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingMessages, setIsLoadingMessages] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
 
   useEffect(() => {
@@ -163,36 +25,70 @@ export default function AdminChatPage() {
     }
   }, [isAuthenticated, user, router]);
 
-  // Set first contact as selected by default
+  // Fetch contacts on mount
   useEffect(() => {
-    if (mockContacts.length > 0 && !selectedContact) {
-      setSelectedContact(mockContacts[0]);
-      setMessages(getMockMessages(mockContacts[0].id));
+    const fetchContacts = async () => {
+      try {
+        setIsLoading(true);
+        const response = await api.get('/chat/rooms');
+        if (response.data.success) {
+          setContacts(response.data.data);
+          // Select first contact by default
+          if (response.data.data.length > 0 && !selectedContact) {
+            setSelectedContact(response.data.data[0]);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching chat rooms:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (isAuthenticated && (user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN')) {
+      fetchContacts();
     }
+  }, [isAuthenticated, user]);
+
+  // Fetch messages when contact is selected
+  useEffect(() => {
+    const fetchMessages = async () => {
+      if (!selectedContact) return;
+
+      try {
+        setIsLoadingMessages(true);
+        const response = await api.get(`/chat/rooms/${selectedContact.id}/messages`);
+        if (response.data.success) {
+          setMessages(response.data.data);
+        }
+      } catch (error) {
+        console.error('Error fetching messages:', error);
+      } finally {
+        setIsLoadingMessages(false);
+      }
+    };
+
+    fetchMessages();
   }, [selectedContact]);
 
   const handleSelectContact = (contact: Contact) => {
     setSelectedContact(contact);
-    setMessages(getMockMessages(contact.id));
-    // Simulate typing for demo
-    if (contact.id === '1') {
-      setIsTyping(true);
-    } else {
-      setIsTyping(false);
-    }
   };
 
-  const handleSendMessage = (content: string) => {
-    const newMessage: ChatMessage = {
-      id: Date.now().toString(),
-      senderId: 'admin',
-      senderName: 'Admin',
-      senderAvatar: '/imageofchat.png',
-      content,
-      timestamp: new Date().toISOString(),
-      isFromUser: true,
-    };
-    setMessages((prev) => [...prev, newMessage]);
+  const handleSendMessage = async (content: string) => {
+    if (!selectedContact) return;
+
+    try {
+      const response = await api.post(`/chat/rooms/${selectedContact.id}/messages`, {
+        content,
+      });
+
+      if (response.data.success) {
+        setMessages((prev) => [...prev, response.data.data]);
+      }
+    } catch (error) {
+      console.error('Error sending message:', error);
+    }
   };
 
   if (!isAuthenticated || (user?.role !== 'ADMIN' && user?.role !== 'SUPER_ADMIN')) {
@@ -210,7 +106,7 @@ export default function AdminChatPage() {
       >
         {/* Contacts List */}
         <ContactsList
-          contacts={mockContacts}
+          contacts={contacts}
           selectedContactId={selectedContact?.id}
           onSelectContact={handleSelectContact}
         />
@@ -218,10 +114,10 @@ export default function AdminChatPage() {
         {/* Chat Section */}
         <ChatSection
           contact={selectedContact}
-          messages={messages}
-          currentUserId="admin"
-          currentUserName="Admin"
-          currentUserAvatar="/imageofchat.png"
+          messages={isLoadingMessages ? [] : messages}
+          currentUserId={user?.id || 'admin'}
+          currentUserName={user?.name || 'Admin'}
+          currentUserAvatar={user?.avatar || '/imageofchat.png'}
           onSendMessage={handleSendMessage}
           isTyping={isTyping}
           typingUser={
