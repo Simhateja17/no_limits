@@ -122,7 +122,6 @@ export default function ClientSetupPage() {
           clientId,
           shopDomain,
           accessToken: shopifyClientId,
-          clientSecret: shopifyClientSecret,
         });
 
         if (!result.success) {

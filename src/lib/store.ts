@@ -12,6 +12,7 @@ export interface User {
   email: string;
   name: string | null;
   role: UserRole;
+  avatar?: string | null;
   clientId?: string;
   storeName?: string;
   storeUrl?: string;
