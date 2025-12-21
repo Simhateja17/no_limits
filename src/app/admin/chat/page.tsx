@@ -76,7 +76,7 @@ export default function AdminChatPage() {
         } else {
           console.log('❌ Response success is false:', response.data);
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error('❌ Error fetching chat rooms:', error);
         if (error.response) {
           console.error('Error response:', error.response.data);
