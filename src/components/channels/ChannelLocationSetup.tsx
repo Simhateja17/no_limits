@@ -1,26 +1,16 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
+import { useAuthStore } from '@/lib/store';
+import { channelsApi, Location } from '@/lib/channels-api';
 
 interface ChannelLocationSetupProps {
   channelId: string;
   channelType: string;
   baseUrl: string;
 }
-
-// Mock locations data
-const mockLocations = [
-  { id: '1', name: 'Location' },
-  { id: '2', name: 'Location' },
-  { id: '3', name: 'Location' },
-  { id: '4', name: 'Location' },
-  { id: '5', name: 'Location' },
-  { id: '6', name: 'Location' },
-  { id: '7', name: 'Location' },
-  { id: '8', name: 'Location' },
-];
 
 // Download Icon Component
 function DownloadIcon() {
@@ -47,12 +37,37 @@ export function ChannelLocationSetup({ channelId, channelType, baseUrl }: Channe
   const router = useRouter();
   const tCommon = useTranslations('common');
   const tChannels = useTranslations('channels');
+  const { user } = useAuthStore();
+
   const [selectedLocation, setSelectedLocation] = useState('');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [locations, setLocations] = useState<Location[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
 
   // Suppress unused variable warning
   void channelId;
   void baseUrl;
+
+  // Fetch locations on mount
+  useEffect(() => {
+    const fetchLocations = async () => {
+      if (!user?.clientId) return;
+
+      try {
+        setIsLoading(true);
+        const response = await channelsApi.getWarehouseLocations(user.clientId);
+        if (response.success) {
+          setLocations(response.locations);
+        }
+      } catch (err) {
+        console.error('Error fetching locations:', err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchLocations();
+  }, [user?.clientId]);
 
   const handleBack = () => {
     router.back();
@@ -64,9 +79,20 @@ export function ChannelLocationSetup({ channelId, channelType, baseUrl }: Channe
     router.push(`${baseUrl}/shipping-setup?type=${encodeURIComponent(channelType)}`);
   };
 
-  const handleReloadLocations = () => {
-    // TODO: Reload locations from API
-    console.log('Reloading locations...');
+  const handleReloadLocations = async () => {
+    if (!user?.clientId) return;
+
+    try {
+      setIsLoading(true);
+      const response = await channelsApi.getWarehouseLocations(user.clientId);
+      if (response.success) {
+        setLocations(response.locations);
+      }
+    } catch (err) {
+      console.error('Error reloading locations:', err);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleLocationSelect = (locationName: string) => {
@@ -356,7 +382,7 @@ export function ChannelLocationSetup({ channelId, channelType, baseUrl }: Channe
                       zIndex: 10,
                     }}
                   >
-                    {mockLocations.map((location, index) => (
+                    {locations.map((location, index) => (
                       <button
                         key={location.id}
                         onClick={() => handleLocationSelect(location.name)}
@@ -365,7 +391,7 @@ export function ChannelLocationSetup({ channelId, channelType, baseUrl }: Channe
                           padding: 'clamp(8px, 0.78vw, 10px) clamp(10px, 0.96vw, 13px)',
                           backgroundColor: selectedLocation === location.name ? '#F9FAFB' : '#FFFFFF',
                           border: 'none',
-                          borderBottom: index < mockLocations.length - 1 ? '1px solid #F3F4F6' : 'none',
+                          borderBottom: index < locations.length - 1 ? '1px solid #F3F4F6' : 'none',
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'space-between',

@@ -3,32 +3,13 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
+import { channelsApi, ShippingMethod } from '@/lib/channels-api';
 
 interface ChannelShippingSetupProps {
   channelId: string;
   channelType: string;
   baseUrl: string;
 }
-
-// Mock warehouse shipping methods
-const mockWarehouseMethods = [
-  { id: '1', name: 'DHL' },
-  { id: '2', name: 'DHL' },
-  { id: '3', name: 'DHL' },
-  { id: '4', name: 'DHL' },
-];
-
-// Mock channel shipping methods
-const mockChannelMethods = [
-  { id: '1', name: 'DHL Parcel' },
-  { id: '2', name: 'DHL Letter' },
-  { id: '3', name: 'UPS' },
-  { id: '4', name: 'Pickup' },
-  { id: '5', name: 'DHL' },
-  { id: '6', name: 'Letter Standard' },
-  { id: '7', name: 'Freight' },
-  { id: '8', name: 'Air' },
-];
 
 // Download Icon Component
 function DownloadIcon() {
@@ -138,6 +119,7 @@ export function ChannelShippingSetup({ channelId, channelType, baseUrl }: Channe
   const router = useRouter();
   const tCommon = useTranslations('common');
   const tChannels = useTranslations('channels');
+
   const [selectedMethods, setSelectedMethods] = useState<{ [key: string]: string }>({
     '1': 'DHL Parcel',
     '2': 'DHL Parcel',
@@ -146,10 +128,34 @@ export function ChannelShippingSetup({ channelId, channelType, baseUrl }: Channe
   });
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [warehouseMethods, setWarehouseMethods] = useState<ShippingMethod[]>([]);
+  const [channelMethods, setChannelMethods] = useState<ShippingMethod[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
 
   // Suppress unused variable warnings
-  void channelId;
   void baseUrl;
+
+  // Fetch shipping methods on mount
+  useEffect(() => {
+    const fetchShippingMethods = async () => {
+      if (!channelId || channelId === 'new') return;
+
+      try {
+        setIsLoading(true);
+        const response = await channelsApi.getShippingMethods(channelId);
+        if (response.success) {
+          setWarehouseMethods(response.warehouseMethods);
+          setChannelMethods(response.channelMethods);
+        }
+      } catch (err) {
+        console.error('Error fetching shipping methods:', err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchShippingMethods();
+  }, [channelId]);
 
   const handleBack = () => {
     router.back();
@@ -166,9 +172,21 @@ export function ChannelShippingSetup({ channelId, channelType, baseUrl }: Channe
     router.push('/client/channels');
   };
 
-  const handleReloadMethods = () => {
-    // TODO: Reload methods from API
-    console.log('Reloading methods...');
+  const handleReloadMethods = async () => {
+    if (!channelId || channelId === 'new') return;
+
+    try {
+      setIsLoading(true);
+      const response = await channelsApi.getShippingMethods(channelId);
+      if (response.success) {
+        setWarehouseMethods(response.warehouseMethods);
+        setChannelMethods(response.channelMethods);
+      }
+    } catch (err) {
+      console.error('Error reloading methods:', err);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleMethodSelect = (warehouseId: string, methodName: string) => {
@@ -352,7 +370,7 @@ export function ChannelShippingSetup({ channelId, channelType, baseUrl }: Channe
           </div>
 
           {/* Method Rows */}
-          {mockWarehouseMethods.map((warehouseMethod) => (
+          {warehouseMethods.map((warehouseMethod) => (
             <div
               key={warehouseMethod.id}
               style={{
@@ -455,7 +473,7 @@ export function ChannelShippingSetup({ channelId, channelType, baseUrl }: Channe
                       zIndex: 100,
                     }}
                   >
-                    {mockChannelMethods.map((method, index) => (
+                    {channelMethods.map((method, index) => (
                       <button
                         key={method.id}
                         onClick={() => handleMethodSelect(warehouseMethod.id, method.name)}
@@ -464,7 +482,7 @@ export function ChannelShippingSetup({ channelId, channelType, baseUrl }: Channe
                           padding: 'clamp(10px, 0.98vw, 14px) clamp(12px, 1.18vw, 16px)',
                           backgroundColor: selectedMethods[warehouseMethod.id] === method.name ? '#F9FAFB' : '#FFFFFF',
                           border: 'none',
-                          borderBottom: index < mockChannelMethods.length - 1 ? '1px solid #F3F4F6' : 'none',
+                          borderBottom: index < channelMethods.length - 1 ? '1px solid #F3F4F6' : 'none',
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'space-between',

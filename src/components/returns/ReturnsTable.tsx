@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations, useLocale } from 'next-intl';
+import { useClients, getClientNames } from '@/lib/hooks';
 
 // Tab type for returns
 type ReturnTabType = 'all' | 'pending' | 'approved' | 'rejected' | 'processing' | 'completed';
@@ -37,34 +38,6 @@ const mockReturns: Return[] = [
   { id: '11', returnId: '22123', returnDate: new Date('2022-05-15'), client: 'Merchant 5', orderId: '22123', quantity: 2, reason: 'Damaged', status: 'completed' },
   { id: '12', returnId: '22064', returnDate: new Date('2022-05-15'), client: 'Merchant 5', orderId: '22064', quantity: 5, reason: 'Defective', status: 'processing' },
 ];
-
-// Channel interface for dropdown
-interface ChannelInfo {
-  name: string;
-  type: 'Shopify' | 'Woocommerce' | 'Amazon';
-  client: string; // The client/owner of this channel
-}
-
-// All channels (admin/employee can see all, clients see only their own)
-const allChannels: ChannelInfo[] = [
-  // Papercrush channels
-  { name: 'Papercrush B2C', type: 'Shopify', client: 'Papercrush' },
-  { name: 'Papercrush B2B', type: 'Shopify', client: 'Papercrush' },
-  // Caobali channels
-  { name: 'Caobali Store', type: 'Woocommerce', client: 'Caobali' },
-  { name: 'Caobali Wholesale', type: 'Amazon', client: 'Caobali' },
-  // Terppens channels
-  { name: 'Terppens Main', type: 'Amazon', client: 'Terppens' },
-  // Protabo channels
-  { name: 'Protabo Shop', type: 'Shopify', client: 'Protabo' },
-  // Other merchants
-  { name: 'Merchant 3 Store', type: 'Woocommerce', client: 'Merchant 3' },
-  { name: 'Merchant 5 Shop', type: 'Amazon', client: 'Merchant 5' },
-  { name: 'Merchant 7 Online', type: 'Shopify', client: 'Merchant 7' },
-];
-
-// Customers for filter (excluding 'All' which will be added dynamically with translation)
-const customers = ['Papercrush', 'Caobali', 'Terppens', 'Protabo', 'Merchant 3', 'Merchant 5', 'Merchant 7'];
 
 interface ReturnsTableProps {
   showClientColumn: boolean;
@@ -132,15 +105,9 @@ export function ReturnsTable({ showClientColumn, basePath = '/admin/returns' }: 
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
-  // Mock current client for demo - in production this would come from auth context
-  const currentClient = 'Papercrush';
-  
-  // Filter channels based on user role
-  // showClientColumn = true means admin/employee view (can see all channels)
-  // showClientColumn = false means client view (can only see their own channels)
-  const channels = showClientColumn 
-    ? allChannels 
-    : allChannels.filter(ch => ch.client === currentClient);
+  // Fetch real clients for admin/employee filter
+  const { clients, loading: clientsLoading } = useClients();
+  const customerNames = getClientNames(clients);
 
   // Format date for display with locale awareness
   const formatReturnDate = (date: Date): string => {
@@ -379,7 +346,8 @@ export function ReturnsTable({ showClientColumn, basePath = '/admin/returns' }: 
 
       {/* Filter and Search Row */}
       <div className="flex items-end gap-6 flex-wrap">
-        {/* Filter by Customer */}
+        {/* Filter by Customer - Only show for admin/employee view */}
+        {showClientColumn && (
         <div className="flex flex-col gap-2">
           <label
             style={{
@@ -390,12 +358,13 @@ export function ReturnsTable({ showClientColumn, basePath = '/admin/returns' }: 
               color: '#374151',
             }}
           >
-            {showClientColumn ? t('filterByCustomer') : tCommon('channels')}
+            {t('filterByCustomer')}
           </label>
           <div className="relative">
             <select
               value={customerFilter}
               onChange={(e) => { setCustomerFilter(e.target.value); setCurrentPage(1); }}
+              disabled={clientsLoading}
               style={{
                 width: 'clamp(200px, 23.5vw, 320px)',
                 maxWidth: '100%',
@@ -412,15 +381,16 @@ export function ReturnsTable({ showClientColumn, basePath = '/admin/returns' }: 
                 lineHeight: '20px',
                 color: '#374151',
                 appearance: 'none',
-                cursor: 'pointer',
+                cursor: clientsLoading ? 'wait' : 'pointer',
+                opacity: clientsLoading ? 0.7 : 1,
               }}
             >
               <option key="ALL" value="ALL">
                 {tCommon('all')}
               </option>
-              {channels.map((channel) => (
-                <option key={channel.name} value={channel.name}>
-                  {channel.name} - {channel.type}
+              {customerNames.map((name) => (
+                <option key={name} value={name}>
+                  {name}
                 </option>
               ))}
             </select>
@@ -439,6 +409,7 @@ export function ReturnsTable({ showClientColumn, basePath = '/admin/returns' }: 
             </div>
           </div>
         </div>
+        )}
 
         {/* Search */}
         <div className="flex flex-col gap-2">

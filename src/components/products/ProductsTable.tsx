@@ -3,6 +3,7 @@
 import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
+import { useClients, getClientNames } from '@/lib/hooks';
 
 // Tab type
 type TabType = 'all' | 'outOfStock' | 'missingData';
@@ -32,27 +33,11 @@ const mockProducts: Product[] = [
   { id: '10', productId: '22222', productName: 'Complete Product', available: 200, reserved: 15, announced: 30, client: '' },
 ];
 
-// Channel interface for dropdown
-interface ChannelInfo {
-  name: string;
-  type: 'Shopify' | 'Woocommerce' | 'Amazon';
-  client: string; // The client/owner of this channel
-}
-
-// All channels (admin/employee can see all, clients see only their own)
-const allChannels: ChannelInfo[] = [
-  // Papercrush channels
-  { name: 'Papercrush B2C', type: 'Shopify', client: 'Papercrush' },
-  { name: 'Papercrush B2B', type: 'Shopify', client: 'Papercrush' },
-  // Caobali channels
-  { name: 'Caobali Store', type: 'Woocommerce', client: 'Caobali' },
-  { name: 'Caobali Wholesale', type: 'Amazon', client: 'Caobali' },
-  // Terppens channels
-  { name: 'Terppens Main', type: 'Amazon', client: 'Terppens' },
-  // Protabo channels
-  { name: 'Protabo Shop', type: 'Shopify', client: 'Protabo' },
-  // TestClient channels
-  { name: 'TestClient Store', type: 'Woocommerce', client: 'TestClient' },
+// Mock channels data - TODO: Replace with API call
+const allChannels = [
+  { id: '1', name: 'Shopify Store', client: 'Papercrush', type: 'Shopify' },
+  { id: '2', name: 'WooCommerce', client: 'Caobali', type: 'WooCommerce' },
+  { id: '3', name: 'Amazon', client: 'Terppens', type: 'Amazon' },
 ];
 
 interface ProductsTableProps {

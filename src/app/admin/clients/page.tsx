@@ -5,8 +5,9 @@ import { useAuthStore } from '@/lib/store';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
+import { api } from '@/lib/api';
 
-// Mock client data - for demonstration
+// Client interface matching API response
 interface Client {
   id: string;
   clientId: number;
@@ -17,118 +18,13 @@ interface Client {
   address: string;
   totalOrders: number;
   totalValue: string;
-  lastOrder: Date;
+  lastOrder: Date | null;
   lastBillingPeriod: string;
   status: 'active' | 'inactive';
-  billingStatus: 'paid' | 'unpaid';
+  billingStatus: string;
   systemLogin: string;
   emailAction: string;
 }
-
-const mockClients: Client[] = [
-  {
-    id: '1',
-    clientId: 1,
-    name: 'Max Schmidt',
-    email: 'max.schmidt@papercrush.de',
-    company: 'Hatstore24',
-    phone: '+49 30 12345678',
-    address: 'Berliner Str. 123, 10115 Berlin',
-    totalOrders: 24,
-    totalValue: '€12,450.00',
-    lastOrder: new Date('2024-12-10'),
-    lastBillingPeriod: '01.10.2025 - 30.10.2025',
-    status: 'active',
-    billingStatus: 'unpaid',
-    systemLogin: 'Login',
-    emailAction: 'Mailservice'
-  },
-  {
-    id: '2',
-    clientId: 2,
-    name: 'Sarah Mueller',
-    email: 'sarah@caobali.com',
-    company: 'Dogsupplys',
-    phone: '+49 40 87654321',
-    address: 'Hafenstr. 456, 20459 Hamburg',
-    totalOrders: 18,
-    totalValue: '€8,920.00',
-    lastOrder: new Date('2024-12-08'),
-    lastBillingPeriod: '01.10.2025 - 30.10.2025',
-    status: 'active',
-    billingStatus: 'paid',
-    systemLogin: 'Login',
-    emailAction: 'Mailservice'
-  },
-  {
-    id: '3',
-    clientId: 3,
-    name: 'Thomas Weber',
-    email: 'thomas@terppens.de',
-    company: 'Womenfashion',
-    phone: '+49 89 11223344',
-    address: 'Maximilianstr. 789, 80539 München',
-    totalOrders: 12,
-    totalValue: '€5,670.00',
-    lastOrder: new Date('2024-11-25'),
-    lastBillingPeriod: '01.10.2025 - 30.10.2025',
-    status: 'active',
-    billingStatus: 'paid',
-    systemLogin: 'Login',
-    emailAction: 'Mailservice'
-  },
-  {
-    id: '4',
-    clientId: 4,
-    name: 'Anna Johnson',
-    email: 'anna@lighthouse.com',
-    company: 'Lighthousestore',
-    phone: '+49 30 55667788',
-    address: 'Friedrichstr. 456, 10117 Berlin',
-    totalOrders: 35,
-    totalValue: '€18,320.00',
-    lastOrder: new Date('2024-12-12'),
-    lastBillingPeriod: '01.10.2025 - 30.10.2025',
-    status: 'active',
-    billingStatus: 'paid',
-    systemLogin: 'Login',
-    emailAction: 'Mailservice'
-  },
-  {
-    id: '5',
-    clientId: 5,
-    name: 'Mike Brown',
-    email: 'mike@sunglasses.com',
-    company: 'Sunglassesdoor',
-    phone: '+49 40 99887766',
-    address: 'Reeperbahn 123, 20359 Hamburg',
-    totalOrders: 28,
-    totalValue: '€14,750.00',
-    lastOrder: new Date('2024-12-11'),
-    lastBillingPeriod: '01.10.2025 - 30.10.2025',
-    status: 'active',
-    billingStatus: 'paid',
-    systemLogin: 'Login',
-    emailAction: 'Mailservice'
-  },
-  {
-    id: '6',
-    clientId: 6,
-    name: 'Lisa Garcia',
-    email: 'lisa@foodexpress.com',
-    company: 'Foodexpress',
-    phone: '+49 69 44556677',
-    address: 'Zeil 789, 60313 Frankfurt',
-    totalOrders: 42,
-    totalValue: '€22,890.00',
-    lastOrder: new Date('2024-12-09'),
-    lastBillingPeriod: '01.10.2025 - 30.10.2025',
-    status: 'active',
-    billingStatus: 'paid',
-    systemLogin: 'Login',
-    emailAction: 'Mailservice'
-  }
-];
 
 // Empty state component
 const EmptyState = ({ onCreateClient, onCreateQuotation, t }: { onCreateClient: () => void, onCreateQuotation: () => void, t: any }) => {
@@ -196,8 +92,35 @@ export default function AdminClientsPage() {
   const tCommon = useTranslations('common');
   const [activeTab, setActiveTab] = useState<'all' | 'active' | 'inactive' | 'quotations'>('all');
   
-  // For demonstration - toggle this to show empty state
-  const [showEmptyState, setShowEmptyState] = useState(false);
+  // State for clients data
+  const [clients, setClients] = useState<Client[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Fetch clients from API
+  useEffect(() => {
+    const fetchClients = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const response = await api.get('/clients');
+        if (response.data.success) {
+          setClients(response.data.data);
+        } else {
+          setError('Failed to fetch clients');
+        }
+      } catch (err: any) {
+        console.error('Error fetching clients:', err);
+        setError(err.response?.data?.error || 'Failed to fetch clients');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (isAuthenticated && (user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN')) {
+      fetchClients();
+    }
+  }, [isAuthenticated, user]);
 
   useEffect(() => {
     if (!isAuthenticated || (user?.role !== 'ADMIN' && user?.role !== 'SUPER_ADMIN')) {
@@ -226,21 +149,21 @@ export default function AdminClientsPage() {
   };
 
   // Filter clients based on active tab
-  const filteredClients = mockClients.filter(client => {
+  const filteredClients = clients.filter(client => {
     if (activeTab === 'active') return client.status === 'active';
     if (activeTab === 'inactive') return client.status === 'inactive';
-    if (activeTab === 'quotations') return false; // No quotations in mock data
+    if (activeTab === 'quotations') return false; // No quotations yet
     return true; // 'all' tab
   });
 
   // Count clients by status
-  const allClientsCount = mockClients.length;
-  const activeClientsCount = mockClients.filter(c => c.status === 'active').length;
-  const inactiveClientsCount = mockClients.filter(c => c.status === 'inactive').length;
-  const quotationsCount = 16; // Mock count
+  const allClientsCount = clients.length;
+  const activeClientsCount = clients.filter(c => c.status === 'active').length;
+  const inactiveClientsCount = clients.filter(c => c.status === 'inactive').length;
+  const quotationsCount = 0; // TODO: Implement quotations
 
-  // Display clients or empty state
-  const displayClients = showEmptyState ? [] : filteredClients;
+  // Display clients
+  const displayClients = filteredClients;
 
   return (
     <DashboardLayout>
@@ -381,7 +304,38 @@ export default function AdminClientsPage() {
           </div>
 
           {/* Content */}
-          {displayClients.length === 0 ? (
+          {loading ? (
+            <div 
+              className="flex items-center justify-center w-full"
+              style={{
+                minHeight: 'clamp(300px, 29.4vw, 400px)',
+                padding: 'clamp(32px, 3.53vw, 48px) clamp(16px, 1.76vw, 24px)',
+                backgroundColor: '#FFFFFF',
+                borderRadius: '8px',
+                border: '1px solid #E5E7EB',
+              }}
+            >
+              <div className="flex flex-col items-center gap-4">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+                <p style={{ color: '#6B7280', fontSize: '14px' }}>Loading clients...</p>
+              </div>
+            </div>
+          ) : error ? (
+            <div 
+              className="flex items-center justify-center w-full"
+              style={{
+                minHeight: 'clamp(300px, 29.4vw, 400px)',
+                padding: 'clamp(32px, 3.53vw, 48px) clamp(16px, 1.76vw, 24px)',
+                backgroundColor: '#FEF2F2',
+                borderRadius: '8px',
+                border: '1px solid #FECACA',
+              }}
+            >
+              <div className="flex flex-col items-center gap-4">
+                <p style={{ color: '#DC2626', fontSize: '14px' }}>{error}</p>
+              </div>
+            </div>
+          ) : displayClients.length === 0 ? (
             <EmptyState onCreateClient={handleCreateClient} onCreateQuotation={handleCreateQuotation} t={t} />
           ) : (
             <div 

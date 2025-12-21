@@ -49,8 +49,12 @@ export default function LoginPage() {
           return;
         }
 
-        // Update auth store
-        login(data.user as any, loginType);
+        // Update auth store with clientId
+        const userWithClient = {
+          ...data.user,
+          clientId: data.user.client?.id,
+        };
+        login(userWithClient as any, loginType);
         
         // Redirect to appropriate dashboard
         const dashboardRoute = getDashboardRoute(data.user.role as UserRole);

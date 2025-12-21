@@ -3,6 +3,7 @@
 import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations, useLocale } from 'next-intl';
+import { useClients, getClientNames } from '@/lib/hooks';
 
 // Tab type for orders
 type OrderTabType = 'all' | 'inStock' | 'outOfStock' | 'errors' | 'partiallyFulfilled' | 'cancelled' | 'sent';
@@ -46,31 +47,6 @@ const mockOrders: Order[] = [
   { id: '19', orderId: '21007', orderDate: new Date('2022-04-16'), client: 'Papercrush', weight: '0,6 kg', quantity: 2, method: 'Brief National', status: 'success' },
   { id: '20', orderId: '21008', orderDate: new Date('2022-04-17'), client: 'Caobali', weight: '1,8 kg', quantity: 4, method: 'DHL Paket', status: 'success' },
   { id: '21', orderId: '21009', orderDate: new Date('2022-04-18'), client: 'Terppens', weight: '1,2 kg', quantity: 3, method: 'DHL Paket', status: 'partiallyFulfilled' },
-];
-
-// Channel interface for dropdown
-interface ChannelInfo {
-  name: string;
-  type: 'Shopify' | 'Woocommerce' | 'Amazon';
-  client: string; // The client/owner of this channel
-}
-
-// All channels (admin/employee can see all, clients see only their own)
-const allChannels: ChannelInfo[] = [
-  // Papercrush channels
-  { name: 'Papercrush B2C', type: 'Shopify', client: 'Papercrush' },
-  { name: 'Papercrush B2B', type: 'Shopify', client: 'Papercrush' },
-  // Caobali channels
-  { name: 'Caobali Store', type: 'Woocommerce', client: 'Caobali' },
-  { name: 'Caobali Wholesale', type: 'Amazon', client: 'Caobali' },
-  // Terppens channels
-  { name: 'Terppens Main', type: 'Amazon', client: 'Terppens' },
-  // Protabo channels
-  { name: 'Protabo Shop', type: 'Shopify', client: 'Protabo' },
-  // Other merchants
-  { name: 'Merchant 3 Store', type: 'Woocommerce', client: 'Merchant 3' },
-  { name: 'Merchant 5 Shop', type: 'Amazon', client: 'Merchant 5' },
-  { name: 'Merchant 7 Online', type: 'Shopify', client: 'Merchant 7' },
 ];
 
 interface OrdersTableProps {
@@ -153,15 +129,9 @@ export function OrdersTable({ showClientColumn, basePath = '/admin/orders' }: Or
   const tCommon = useTranslations('common');
   const locale = useLocale();
 
-  // Mock current client for demo - in production this would come from auth context
-  const currentClient = 'Papercrush';
-  
-  // Filter channels based on user role
-  // showClientColumn = true means admin/employee view (can see all channels)
-  // showClientColumn = false means client view (can only see their own channels)
-  const channels = showClientColumn 
-    ? allChannels 
-    : allChannels.filter(ch => ch.client === currentClient);
+  // Fetch real clients for admin/employee filter
+  const { clients, loading: clientsLoading } = useClients();
+  const customerNames = getClientNames(clients);
 
   // Format date for display with locale support
   const formatOrderDate = (date: Date): string => {
@@ -558,7 +528,8 @@ export function OrdersTable({ showClientColumn, basePath = '/admin/orders' }: Or
 
       {/* Filter and Search Row */}
       <div className="flex items-end gap-6 flex-wrap">
-        {/* Filter by Customer (for admin/employee) or Channels (for client) */}
+        {/* Filter by Customer - Only show for admin/employee view */}
+        {showClientColumn && (
         <div className="flex flex-col gap-2">
           <label
             style={{
@@ -569,12 +540,13 @@ export function OrdersTable({ showClientColumn, basePath = '/admin/orders' }: Or
               color: '#374151',
             }}
           >
-            {showClientColumn ? t('filterByCustomer') : 'Channels'}
+            {t('filterByCustomer')}
           </label>
           <div className="relative">
             <select
               value={customerFilter}
               onChange={(e) => { setCustomerFilter(e.target.value); setCurrentPage(1); }}
+              disabled={clientsLoading}
               style={{
                 width: 'clamp(200px, 23.5vw, 320px)',
                 maxWidth: '100%',
@@ -591,15 +563,16 @@ export function OrdersTable({ showClientColumn, basePath = '/admin/orders' }: Or
                 lineHeight: '20px',
                 color: '#374151',
                 appearance: 'none',
-                cursor: 'pointer',
+                cursor: clientsLoading ? 'wait' : 'pointer',
+                opacity: clientsLoading ? 0.7 : 1,
               }}
             >
               <option key="ALL" value="ALL">
                 {tCommon('all')}
               </option>
-              {channels.map((channel) => (
-                <option key={channel.name} value={channel.name}>
-                  {channel.name} - {channel.type}
+              {customerNames.map((name) => (
+                <option key={name} value={name}>
+                  {name}
                 </option>
               ))}
             </select>
@@ -619,6 +592,7 @@ export function OrdersTable({ showClientColumn, basePath = '/admin/orders' }: Or
             </div>
           </div>
         </div>
+        )}
 
         {/* Search */}
         <div className="flex flex-col gap-2">

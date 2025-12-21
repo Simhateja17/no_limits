@@ -3,41 +3,11 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
+import { useAuthStore } from '@/lib/store';
+import { channelsApi, Location, ShippingMethod } from '@/lib/channels-api';
 
 // Channel types
 const channelTypes = ['Woocommerce', 'Shopify', 'Amazon'];
-
-// Mock locations data
-const mockLocations = [
-  { id: '1', name: 'Location' },
-  { id: '2', name: 'Location' },
-  { id: '3', name: 'Location' },
-  { id: '4', name: 'Location' },
-  { id: '5', name: 'Location' },
-  { id: '6', name: 'Location' },
-  { id: '7', name: 'Location' },
-  { id: '8', name: 'Location' },
-];
-
-// Mock warehouse shipping methods
-const mockWarehouseMethods = [
-  { id: '1', name: 'DHL' },
-  { id: '2', name: 'DHL' },
-  { id: '3', name: 'DHL' },
-  { id: '4', name: 'DHL' },
-];
-
-// Mock channel shipping methods
-const mockChannelMethods = [
-  { id: '1', name: 'DHL Parcel' },
-  { id: '2', name: 'DHL Letter' },
-  { id: '3', name: 'UPS' },
-  { id: '4', name: 'Pickup' },
-  { id: '5', name: 'DHL' },
-  { id: '6', name: 'Letter Standard' },
-  { id: '7', name: 'Freight' },
-  { id: '8', name: 'Air' },
-];
 
 interface ChannelSettingsProps {
   channelId: string;
@@ -189,22 +159,25 @@ export function ChannelSettings({ channelId, baseUrl, initialChannelType = 'Wooc
   const router = useRouter();
   const tCommon = useTranslations('common');
   const tChannels = useTranslations('channels');
-  
+  const { user } = useAuthStore();
+
   // Channel Information State
   const [channelName, setChannelName] = useState('');
   const [selectedChannel, setSelectedChannel] = useState(initialChannelType);
   const [isChannelOn, setIsChannelOn] = useState(true);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  
+
   // API Setup State
   const [clientId, setClientId] = useState('');
   const [clientSecret, setClientSecret] = useState('');
   const [storeUrl, setStoreUrl] = useState('');
-  
+
   // Location Setup State
   const [selectedLocation, setSelectedLocation] = useState('');
   const [isLocationDropdownOpen, setIsLocationDropdownOpen] = useState(false);
-  
+  const [locations, setLocations] = useState<Location[]>([]);
+  const [isLoadingLocations, setIsLoadingLocations] = useState(false);
+
   // Shipping Setup State
   const [selectedMethods, setSelectedMethods] = useState<{ [key: string]: string }>({
     '1': 'DHL Parcel',
@@ -214,10 +187,55 @@ export function ChannelSettings({ channelId, baseUrl, initialChannelType = 'Wooc
   });
   const [openShippingDropdown, setOpenShippingDropdown] = useState<string | null>(null);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [warehouseMethods, setWarehouseMethods] = useState<ShippingMethod[]>([]);
+  const [channelMethods, setChannelMethods] = useState<ShippingMethod[]>([]);
+  const [isLoadingMethods, setIsLoadingMethods] = useState(false);
 
   // Suppress unused variable warning
-  void channelId;
   void baseUrl;
+
+  // Fetch locations on mount
+  useEffect(() => {
+    const fetchLocations = async () => {
+      if (!user?.clientId) return;
+
+      try {
+        setIsLoadingLocations(true);
+        const response = await channelsApi.getWarehouseLocations(user.clientId);
+        if (response.success) {
+          setLocations(response.locations);
+        }
+      } catch (err) {
+        console.error('Error fetching locations:', err);
+      } finally {
+        setIsLoadingLocations(false);
+      }
+    };
+
+    fetchLocations();
+  }, [user?.clientId]);
+
+  // Fetch shipping methods when channelId changes
+  useEffect(() => {
+    const fetchShippingMethods = async () => {
+      if (!channelId || channelId === 'new') return;
+
+      try {
+        setIsLoadingMethods(true);
+        const response = await channelsApi.getShippingMethods(channelId);
+        if (response.success) {
+          setWarehouseMethods(response.warehouseMethods);
+          setChannelMethods(response.channelMethods);
+        }
+      } catch (err) {
+        console.error('Error fetching shipping methods:', err);
+      } finally {
+        setIsLoadingMethods(false);
+      }
+    };
+
+    fetchShippingMethods();
+  }, [channelId]);
 
   const handleBack = () => {
     router.back();
@@ -256,9 +274,20 @@ export function ChannelSettings({ channelId, baseUrl, initialChannelType = 'Wooc
     }
   };
 
-  const handleReloadLocations = () => {
-    // TODO: Reload locations from API
-    console.log('Reloading locations...');
+  const handleReloadLocations = async () => {
+    if (!user?.clientId) return;
+
+    try {
+      setIsLoadingLocations(true);
+      const response = await channelsApi.getWarehouseLocations(user.clientId);
+      if (response.success) {
+        setLocations(response.locations);
+      }
+    } catch (err) {
+      console.error('Error reloading locations:', err);
+    } finally {
+      setIsLoadingLocations(false);
+    }
   };
 
   const handleLocationSelect = (locationName: string) => {
@@ -266,9 +295,21 @@ export function ChannelSettings({ channelId, baseUrl, initialChannelType = 'Wooc
     setIsLocationDropdownOpen(false);
   };
 
-  const handleReloadMethods = () => {
-    // TODO: Reload methods from API
-    console.log('Reloading methods...');
+  const handleReloadMethods = async () => {
+    if (!channelId || channelId === 'new') return;
+
+    try {
+      setIsLoadingMethods(true);
+      const response = await channelsApi.getShippingMethods(channelId);
+      if (response.success) {
+        setWarehouseMethods(response.warehouseMethods);
+        setChannelMethods(response.channelMethods);
+      }
+    } catch (err) {
+      console.error('Error reloading methods:', err);
+    } finally {
+      setIsLoadingMethods(false);
+    }
   };
 
   const handleMethodSelect = (warehouseId: string, methodName: string) => {
@@ -1013,7 +1054,7 @@ export function ChannelSettings({ channelId, baseUrl, initialChannelType = 'Wooc
                       zIndex: 10,
                     }}
                   >
-                    {mockLocations.map((location, index) => (
+                    {locations.map((location, index) => (
                       <button
                         key={location.id}
                         onClick={() => handleLocationSelect(location.name)}
@@ -1022,7 +1063,7 @@ export function ChannelSettings({ channelId, baseUrl, initialChannelType = 'Wooc
                           padding: 'clamp(8px, 0.78vw, 10px) clamp(10px, 0.96vw, 13px)',
                           backgroundColor: selectedLocation === location.name ? '#F9FAFB' : '#FFFFFF',
                           border: 'none',
-                          borderBottom: index < mockLocations.length - 1 ? '1px solid #F3F4F6' : 'none',
+                          borderBottom: index < locations.length - 1 ? '1px solid #F3F4F6' : 'none',
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'space-between',
@@ -1203,7 +1244,7 @@ export function ChannelSettings({ channelId, baseUrl, initialChannelType = 'Wooc
           </div>
 
           {/* Method Rows */}
-          {mockWarehouseMethods.map((warehouseMethod) => (
+          {warehouseMethods.map((warehouseMethod) => (
             <div
               key={warehouseMethod.id}
               style={{
@@ -1306,7 +1347,7 @@ export function ChannelSettings({ channelId, baseUrl, initialChannelType = 'Wooc
                       zIndex: 100,
                     }}
                   >
-                    {mockChannelMethods.map((method, index) => (
+                    {channelMethods.map((method, index) => (
                       <button
                         key={method.id}
                         onClick={() => handleMethodSelect(warehouseMethod.id, method.name)}
@@ -1315,7 +1356,7 @@ export function ChannelSettings({ channelId, baseUrl, initialChannelType = 'Wooc
                           padding: 'clamp(10px, 0.98vw, 14px) clamp(12px, 1.18vw, 16px)',
                           backgroundColor: selectedMethods[warehouseMethod.id] === method.name ? '#F9FAFB' : '#FFFFFF',
                           border: 'none',
-                          borderBottom: index < mockChannelMethods.length - 1 ? '1px solid #F3F4F6' : 'none',
+                          borderBottom: index < channelMethods.length - 1 ? '1px solid #F3F4F6' : 'none',
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'space-between',

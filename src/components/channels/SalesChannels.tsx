@@ -1,8 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
+import { useAuthStore } from '@/lib/store';
+import { channelsApi, Channel as ApiChannel } from '@/lib/channels-api';
 
 // Channel interface
 interface Channel {
@@ -11,39 +13,7 @@ interface Channel {
   type: 'Woocommerce' | 'Shopify' | 'Amazon';
   url: string;
   status: 'Active' | 'Inactive';
-  client: string; // The client/owner of this channel
 }
-
-// Mock data - all channels for demo
-// In production, this would be filtered by the backend based on the logged-in client
-const mockChannels: Channel[] = [
-  // Papercrush channels (current demo client)
-  {
-    id: '1',
-    name: 'Papercrush B2C',
-    type: 'Shopify',
-    url: 'www.papercrush-b2c.de',
-    status: 'Active',
-    client: 'Papercrush',
-  },
-  {
-    id: '2',
-    name: 'Papercrush B2B',
-    type: 'Shopify',
-    url: 'www.papercrush-b2b.de',
-    status: 'Inactive',
-    client: 'Papercrush',
-  },
-  // Other clients' channels (would not be visible to Papercrush client)
-  {
-    id: '3',
-    name: 'Caobali Store',
-    type: 'Woocommerce',
-    url: 'www.caobali.de',
-    status: 'Active',
-    client: 'Caobali',
-  },
-];
 
 // Status Badge Component
 function StatusBadge({ status, t }: { status: 'Active' | 'Inactive'; t: (key: string) => string }) {
@@ -426,15 +396,56 @@ export function SalesChannels({ baseUrl }: SalesChannelsProps) {
   const router = useRouter();
   const t = useTranslations('channels');
   const tCommon = useTranslations('common');
-  const [showChannelTypeModal, setShowChannelTypeModal] = useState(false);
+  const { user } = useAuthStore();
 
-  // Mock current client for demo - in production this would come from auth context
-  const currentClient = 'Papercrush';
-  
-  // Filter channels for the current client (SalesChannels is only used in client view)
-  // In production, this filtering would happen on the backend
-  const channels = mockChannels.filter(ch => ch.client === currentClient);
+  const [showChannelTypeModal, setShowChannelTypeModal] = useState(false);
+  const [channels, setChannels] = useState<Channel[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
   const hasChannels = channels.length > 0;
+
+  // Fetch channels when component mounts
+  useEffect(() => {
+    const fetchChannels = async () => {
+      if (!user?.clientId) {
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        setIsLoading(true);
+        const response = await channelsApi.getChannels(user.clientId);
+
+        if (response.success) {
+          // Map API response to component Channel interface
+          const mappedChannels: Channel[] = response.channels.map(ch => ({
+            id: ch.id,
+            name: ch.name,
+            type: ch.type as 'Woocommerce' | 'Shopify' | 'Amazon',
+            url: ch.url || '',
+            status: ch.status as 'Active' | 'Inactive',
+          }));
+          setChannels(mappedChannels);
+          setError(null);
+        } else {
+          setError(response.error || 'Failed to load channels');
+        }
+      } catch (err) {
+        console.error('Error fetching channels:', err);
+        const errorMessage = err instanceof Error
+          ? err.message.includes('CORS') || err.message.includes('Network') || err.message.includes('fetch')
+            ? 'Unable to connect to server. Please ensure the backend is running on http://localhost:3001'
+            : err.message
+          : 'Failed to load channels';
+        setError(errorMessage);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchChannels();
+  }, [user?.clientId]);
 
   const handleBack = () => {
     router.back();
@@ -568,8 +579,51 @@ export function SalesChannels({ baseUrl }: SalesChannelsProps) {
         }}
       />
 
-      {/* Content - Either Channel Cards or Empty State */}
-      {hasChannels ? (
+      {/* Loading State */}
+      {isLoading ? (
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            padding: '40px',
+            color: '#6B7280',
+            fontSize: '14px',
+          }}
+        >
+          {tCommon('loading')}...
+        </div>
+      ) : error ? (
+        /* Error State */
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            padding: '40px',
+            color: '#DC2626',
+            fontSize: '14px',
+            gap: '16px',
+          }}
+        >
+          <div>{error}</div>
+          <button
+            onClick={() => window.location.reload()}
+            style={{
+              padding: '8px 16px',
+              backgroundColor: '#003450',
+              color: '#FFFFFF',
+              border: 'none',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              fontSize: '14px',
+            }}
+          >
+            {tCommon('retry')}
+          </button>
+        </div>
+      ) : /* Content - Either Channel Cards or Empty State */
+      hasChannels ? (
         <div
           style={{
             display: 'flex',
