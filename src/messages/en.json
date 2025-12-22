@@ -410,7 +410,22 @@
     "matchShippingDescription": "Here you will match your methods with our methods",
     "reloadMethods": "Reload methods",
     "finish": "Finish",
-    "channelSuccessfullyAdded": "Channel successfully added"
+    "channelSuccessfullyAdded": "Channel successfully added",
+    "sync": {
+      "inProgress": "Sync in progress",
+      "completed": "Sync completed",
+      "failed": "Sync failed",
+      "products": "Products",
+      "orders": "Orders",
+      "returns": "Returns",
+      "phases": {
+        "initializing": "Initializing sync...",
+        "products": "Syncing products...",
+        "orders": "Syncing orders...",
+        "returns": "Syncing returns...",
+        "done": "Completed"
+      }
+    }
   },
   "language": {
     "title": "Language",

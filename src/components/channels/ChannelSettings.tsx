@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { useAuthStore } from '@/lib/store';
 import { channelsApi, Location, ShippingMethod } from '@/lib/channels-api';
+import { SyncStatusBar } from './SyncStatusBar';
 
 // Channel types
 const channelTypes = ['Woocommerce', 'Shopify', 'Amazon'];
@@ -418,6 +419,19 @@ export function ChannelSettings({ channelId, baseUrl, initialChannelType = 'Wooc
           marginBottom: 'clamp(32px, 3.14vw, 48px)',
         }}
       />
+
+      {/* Sync Status Bar - Shows when channel exists and has active/recent sync */}
+      {channelId && channelId !== 'new' && (
+        <div style={{ marginBottom: 'clamp(24px, 2.36vw, 32px)', maxWidth: 'clamp(912px, 89.54vw, 1216px)' }}>
+          <SyncStatusBar 
+            channelId={channelId} 
+            onSyncComplete={() => {
+              // Refresh data when sync completes
+              console.log('Sync completed for channel:', channelId);
+            }} 
+          />
+        </div>
+      )}
 
       {/* Channel Information Section */}
       <div

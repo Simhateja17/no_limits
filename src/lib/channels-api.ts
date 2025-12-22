@@ -128,4 +128,61 @@ export const channelsApi = {
   },
 };
 
+// ============= SYNC JOB STATUS =============
+
+export interface SyncJob {
+  id: string;
+  channelId: string;
+  status: 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'FAILED';
+  type: string;
+  currentPhase: string | null;
+  totalProducts: number;
+  syncedProducts: number;
+  failedProducts: number;
+  totalOrders: number;
+  syncedOrders: number;
+  failedOrders: number;
+  totalReturns: number;
+  syncedReturns: number;
+  failedReturns: number;
+  errorMessage: string | null;
+  startedAt: string | null;
+  completedAt: string | null;
+  createdAt: string;
+  progress: number;
+}
+
+export interface SyncJobStatusResponse {
+  success: boolean;
+  syncJob: SyncJob | null;
+  error?: string;
+}
+
+export interface SyncJobHistoryResponse {
+  success: boolean;
+  syncJobs: SyncJob[];
+  error?: string;
+}
+
+/**
+ * Get the current/latest sync job status for a channel
+ */
+export const getSyncJobStatus = async (channelId: string): Promise<SyncJobStatusResponse> => {
+  const response = await api.get<SyncJobStatusResponse>(
+    `/integrations/sync-job/${channelId}`
+  );
+  return response.data;
+};
+
+/**
+ * Get sync job history for a channel
+ */
+export const getSyncJobHistory = async (channelId: string, limit: number = 10): Promise<SyncJobHistoryResponse> => {
+  const response = await api.get<SyncJobHistoryResponse>(
+    `/integrations/sync-jobs/${channelId}`,
+    { params: { limit } }
+  );
+  return response.data;
+};
+
 export default channelsApi;

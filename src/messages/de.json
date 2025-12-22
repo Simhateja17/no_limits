@@ -410,7 +410,22 @@
     "matchShippingDescription": "Hier ordnen Sie Ihre Methoden unseren Methoden zu",
     "reloadMethods": "Methoden neu laden",
     "finish": "Fertig",
-    "channelSuccessfullyAdded": "Kanal erfolgreich hinzugefügt"
+    "channelSuccessfullyAdded": "Kanal erfolgreich hinzugefügt",
+    "sync": {
+      "inProgress": "Synchronisierung läuft",
+      "completed": "Synchronisierung abgeschlossen",
+      "failed": "Synchronisierung fehlgeschlagen",
+      "products": "Produkte",
+      "orders": "Bestellungen",
+      "returns": "Retouren",
+      "phases": {
+        "initializing": "Synchronisierung wird initialisiert...",
+        "products": "Produkte werden synchronisiert...",
+        "orders": "Bestellungen werden synchronisiert...",
+        "returns": "Retouren werden synchronisiert...",
+        "done": "Abgeschlossen"
+      }
+    }
   },
   "language": {
     "title": "Sprache",
