@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { useAuthStore } from '@/lib/store';
 import { onboardingApi } from '@/lib/onboarding-api';
+import { SyncProgressModal } from '@/components/channels/SyncProgressModal';
 
 type SetupStep = 'platform' | 'credentials' | 'jtl' | 'complete';
 type PlatformType = 'shopify' | 'woocommerce' | null;
@@ -19,6 +20,10 @@ export default function ClientSetupPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [clientId, setClientId] = useState<string | null>(null);
+  
+  // Sync modal state
+  const [showSyncModal, setShowSyncModal] = useState(false);
+  const [syncChannelId, setSyncChannelId] = useState<string | null>(null);
 
   // Shopify credentials
   const [shopDomain, setShopDomain] = useState('');
@@ -117,6 +122,8 @@ export default function ClientSetupPage() {
     setError(null);
 
     try {
+      let channelId: string | null = null;
+      
       if (selectedPlatform === 'shopify') {
         const result = await onboardingApi.addShopifyChannel({
           clientId,
@@ -128,6 +135,7 @@ export default function ClientSetupPage() {
           setError(result.error || 'Failed to add Shopify channel');
           return;
         }
+        channelId = result.channelId || null;
       } else if (selectedPlatform === 'woocommerce') {
         const result = await onboardingApi.addWooCommerceChannel({
           clientId,
@@ -140,6 +148,12 @@ export default function ClientSetupPage() {
           setError(result.error || 'Failed to add WooCommerce channel');
           return;
         }
+        channelId = result.channelId || null;
+      }
+
+      // Save channel ID for sync modal
+      if (channelId) {
+        setSyncChannelId(channelId);
       }
 
       setCurrentStep('jtl');
@@ -174,12 +188,23 @@ export default function ClientSetupPage() {
         return;
       }
 
-      setCurrentStep('complete');
+      // Show sync progress modal if we have a channel ID
+      if (syncChannelId) {
+        setShowSyncModal(true);
+      } else {
+        // No channel to sync, go directly to complete
+        setCurrentStep('complete');
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to save JTL credentials');
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleSyncComplete = () => {
+    setShowSyncModal(false);
+    setCurrentStep('complete');
   };
 
   const handleComplete = () => {
@@ -195,16 +220,26 @@ export default function ClientSetupPage() {
   }
 
   return (
-    <div
-      style={{
-        minHeight: '100vh',
-        background: '#F8FAFC',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        padding: '40px 20px',
-      }}
-    >
+    <>
+      {/* Sync Progress Modal */}
+      {syncChannelId && (
+        <SyncProgressModal
+          channelId={syncChannelId}
+          isOpen={showSyncModal}
+          onComplete={handleSyncComplete}
+        />
+      )}
+
+      <div
+        style={{
+          minHeight: '100vh',
+          background: '#F8FAFC',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          padding: '40px 20px',
+        }}
+      >
       {/* Logo */}
       <div style={{ marginBottom: '40px' }}>
         <h1
@@ -1000,5 +1035,6 @@ export default function ClientSetupPage() {
         )}
       </div>
     </div>
+    </>
   );
 }
