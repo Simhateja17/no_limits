@@ -252,7 +252,8 @@
     "bookAll": "Book All",
     "extInboundId": "Ext. Inbound ID",
     "editInbound": "Edit Inbound",
-    "cancelInbound": "Cancel Inbound"
+    "cancelInbound": "Cancel Inbound",
+    "failedToLoadInbounds": "Failed to load inbounds"
   },
   "returns": {
     "title": "Returns",
@@ -276,6 +277,7 @@
     "defective": "Defective",
     "notAsDescribed": "Not as Described",
     "noReturnsFound": "No returns found",
+    "failedToLoadReturns": "Failed to load returns",
     "returnDetails": "Return Details",
     "returnReason": "Return Reason",
     "customerNotes": "Customer Notes",

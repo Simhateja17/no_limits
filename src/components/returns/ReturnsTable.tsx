@@ -3,7 +3,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations, useLocale } from 'next-intl';
-import { useClients, getClientNames } from '@/lib/hooks';
+import { useClients, getClientNames, useReturns, getReturnClientNames } from '@/lib/hooks';
 
 // Tab type for returns
 type ReturnTabType = 'all' | 'pending' | 'approved' | 'rejected' | 'processing' | 'completed';
@@ -22,22 +22,6 @@ interface Return {
   reason: string;
   status: ReturnStatus;
 }
-
-// Mock data
-const mockReturns: Return[] = [
-  { id: '1', returnId: '24234', returnDate: new Date(), client: 'Papercrush', orderId: '24234', quantity: 3, reason: 'Damaged', status: 'processing' },
-  { id: '2', returnId: '24076', returnDate: new Date(Date.now() - 5 * 60 * 60 * 1000), client: 'Papercrush', orderId: '24076', quantity: 3, reason: 'Wrong Item', status: 'completed' },
-  { id: '3', returnId: '23974', returnDate: new Date(Date.now() - 24 * 60 * 60 * 1000), client: 'Caobali', orderId: '23974', quantity: 1, reason: 'Defective', status: 'processing' },
-  { id: '4', returnId: '22421', returnDate: new Date('2022-05-16'), client: 'Terppens', orderId: '22421', quantity: 2, reason: 'Not as Described', status: 'completed' },
-  { id: '5', returnId: '22122', returnDate: new Date('2022-05-15'), client: 'Terppens', orderId: '22122', quantity: 2, reason: 'Damaged', status: 'processing' },
-  { id: '6', returnId: '22063', returnDate: new Date('2022-05-15'), client: 'Protabo', orderId: '22063', quantity: 5, reason: 'Wrong Item', status: 'processing' },
-  { id: '7', returnId: '24235', returnDate: new Date(), client: 'Merchant 3', orderId: '24235', quantity: 3, reason: 'Defective', status: 'completed' },
-  { id: '8', returnId: '24077', returnDate: new Date(Date.now() - 5 * 60 * 60 * 1000), client: 'Merchant 5', orderId: '24077', quantity: 3, reason: 'Damaged', status: 'processing' },
-  { id: '9', returnId: '23975', returnDate: new Date(Date.now() - 24 * 60 * 60 * 1000), client: 'Merchant 7', orderId: '23975', quantity: 1, reason: 'Not as Described', status: 'completed' },
-  { id: '10', returnId: '22422', returnDate: new Date('2022-05-16'), client: 'Merchant 5', orderId: '22422', quantity: 2, reason: 'Wrong Item', status: 'processing' },
-  { id: '11', returnId: '22123', returnDate: new Date('2022-05-15'), client: 'Merchant 5', orderId: '22123', quantity: 2, reason: 'Damaged', status: 'completed' },
-  { id: '12', returnId: '22064', returnDate: new Date('2022-05-15'), client: 'Merchant 5', orderId: '22064', quantity: 5, reason: 'Defective', status: 'processing' },
-];
 
 interface ReturnsTableProps {
   showClientColumn: boolean;
@@ -105,9 +89,14 @@ export function ReturnsTable({ showClientColumn, basePath = '/admin/returns' }: 
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
+  // Fetch real returns data from API
+  const { returns: apiReturns, loading: returnsLoading, error: returnsError, refetch: refetchReturns } = useReturns();
+
   // Fetch real clients for admin/employee filter
   const { clients, loading: clientsLoading } = useClients();
-  const customerNames = getClientNames(clients);
+  const customerNames = showClientColumn 
+    ? getClientNames(clients)
+    : getReturnClientNames(apiReturns);
 
   // Format date for display with locale awareness
   const formatReturnDate = (date: Date): string => {
@@ -135,13 +124,13 @@ export function ReturnsTable({ showClientColumn, basePath = '/admin/returns' }: 
     router.push(`${basePath}/${returnId}`);
   };
 
-  // Filter returns based on tab and search
+  // Filter returns based on tab and search - uses real API data
   const filteredReturns = useMemo(() => {
-    let returns = [...mockReturns];
+    let returns = [...apiReturns];
 
     // Filter by tab
     if (activeTab === 'pending') {
-      returns = returns.filter(r => r.status === 'processing');
+      returns = returns.filter(r => r.status === 'processing' || r.status === 'pending');
     } else if (activeTab === 'completed') {
       returns = returns.filter(r => r.status === 'completed');
     }
@@ -166,7 +155,7 @@ export function ReturnsTable({ showClientColumn, basePath = '/admin/returns' }: 
     returns.sort((a, b) => b.returnDate.getTime() - a.returnDate.getTime());
 
     return returns;
-  }, [activeTab, searchQuery, customerFilter]);
+  }, [activeTab, searchQuery, customerFilter, apiReturns]);
 
   // Pagination
   const totalPages = Math.ceil(filteredReturns.length / itemsPerPage);
@@ -175,10 +164,10 @@ export function ReturnsTable({ showClientColumn, basePath = '/admin/returns' }: 
     currentPage * itemsPerPage
   );
 
-  // Count for tabs
-  const allCount = mockReturns.length;
-  const pendingCount = mockReturns.filter(r => r.status === 'processing').length;
-  const completedCount = mockReturns.filter(r => r.status === 'completed').length;
+  // Count for tabs - uses real API data
+  const allCount = apiReturns.length;
+  const pendingCount = apiReturns.filter(r => r.status === 'processing' || r.status === 'pending').length;
+  const completedCount = apiReturns.filter(r => r.status === 'completed').length;
 
   const handlePrevious = () => {
     if (currentPage > 1) {
@@ -191,6 +180,47 @@ export function ReturnsTable({ showClientColumn, basePath = '/admin/returns' }: 
       setCurrentPage(currentPage + 1);
     }
   };
+
+  // Show loading state
+  if (returnsLoading) {
+    return (
+      <div className="w-full flex items-center justify-center py-12">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#003450] mx-auto mb-4"></div>
+          <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '14px', color: '#6B7280' }}>
+            {tCommon('loading')}...
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state
+  if (returnsError) {
+    return (
+      <div className="w-full flex items-center justify-center py-12">
+        <div className="text-center">
+          <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '14px', color: '#EF4444', marginBottom: '12px' }}>
+            {t('failedToLoadReturns') || 'Failed to load returns'}
+          </p>
+          <button
+            onClick={() => refetchReturns()}
+            style={{
+              padding: '8px 16px',
+              backgroundColor: '#003450',
+              color: 'white',
+              borderRadius: '6px',
+              fontFamily: 'Inter, sans-serif',
+              fontSize: '14px',
+              cursor: 'pointer',
+            }}
+          >
+            {tCommon('retry') || 'Retry'}
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full flex flex-col" style={{ gap: 'clamp(16px, 1.76vw, 24px)' }}>

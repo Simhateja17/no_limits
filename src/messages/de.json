@@ -253,7 +253,8 @@
     "bookAll": "Alle einbuchen",
     "extInboundId": "Ext. Wareneingangs-ID",
     "editInbound": "Wareneingang bearbeiten",
-    "cancelInbound": "Wareneingang stornieren"
+    "cancelInbound": "Wareneingang stornieren",
+    "failedToLoadInbounds": "Fehler beim Laden der Wareneingänge"
   },
   "returns": {
     "title": "Retouren",
@@ -277,6 +278,7 @@
     "defective": "Defekt",
     "notAsDescribed": "Nicht wie beschrieben",
     "noReturnsFound": "Keine Retouren gefunden",
+    "failedToLoadReturns": "Fehler beim Laden der Retouren",
     "returnDetails": "Retourendetails",
     "returnReason": "Retourengrund",
     "customerNotes": "Kundennotizen",

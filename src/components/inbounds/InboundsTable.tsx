@@ -3,6 +3,7 @@
 import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
+import { useInbounds, getInboundClientNames, getDeliveryTypes } from '@/lib/hooks';
 
 // Tab type
 type TabType = 'all' | 'booked_in' | 'partially_booked_in' | 'pending';
@@ -22,56 +23,6 @@ interface Inbound {
   client: string;
 }
 
-// Mock data matching reference image
-const mockInbounds: Inbound[] = [
-  { id: '1', inboundId: '23423', deliveryType: 'Freight forwarder', anouncedQty: 312, noOfProducts: 12, expectDate: '12.12.2020', status: 'booked_in', client: 'Papercrush' },
-  { id: '2', inboundId: '43642', deliveryType: 'Freight forwarder', anouncedQty: 5, noOfProducts: 3, expectDate: '05.06.2021', status: 'booked_in', client: 'Papercrush' },
-  { id: '3', inboundId: '34532', deliveryType: 'Freight forwarder', anouncedQty: 252, noOfProducts: 53, expectDate: '16.02.2025', status: 'booked_in', client: 'Caobali' },
-  { id: '4', inboundId: '43462', deliveryType: 'Parcel service', anouncedQty: 0, noOfProducts: -10, expectDate: '30.05.2020', status: 'booked_in', client: 'Terppens' },
-  { id: '5', inboundId: '34983', deliveryType: 'Parcel service', anouncedQty: 0, noOfProducts: 0, expectDate: '19.03.2021', status: 'booked_in', client: 'Terppens' },
-  { id: '6', inboundId: '43895', deliveryType: 'Parcel service', anouncedQty: 16, noOfProducts: 1, expectDate: '28.05.2023', status: 'booked_in', client: 'Protabo' },
-  { id: '7', inboundId: '12345', deliveryType: 'Freight forwarder', anouncedQty: 75, noOfProducts: 8, expectDate: '01.01.2024', status: 'pending', client: 'TestClient' },
-  { id: '8', inboundId: '67890', deliveryType: 'Parcel service', anouncedQty: 120, noOfProducts: 15, expectDate: '15.04.2024', status: 'booked_in', client: 'Papercrush' },
-  { id: '9', inboundId: '11111', deliveryType: 'Freight forwarder', anouncedQty: 100, noOfProducts: 20, expectDate: '20.06.2024', status: 'partially_booked_in', client: 'Caobali' },
-  { id: '10', inboundId: '22222', deliveryType: 'Parcel service', anouncedQty: 200, noOfProducts: 25, expectDate: '10.07.2024', status: 'booked_in', client: 'Protabo' },
-  { id: '11', inboundId: '33333', deliveryType: 'Freight forwarder', anouncedQty: 50, noOfProducts: 5, expectDate: '22.08.2024', status: 'booked_in', client: 'Papercrush' },
-  { id: '12', inboundId: '44444', deliveryType: 'Parcel service', anouncedQty: 30, noOfProducts: 3, expectDate: '05.09.2024', status: 'booked_in', client: 'Terppens' },
-  { id: '13', inboundId: '55555', deliveryType: 'Freight forwarder', anouncedQty: 80, noOfProducts: 10, expectDate: '18.10.2024', status: 'booked_in', client: 'Caobali' },
-  { id: '14', inboundId: '66666', deliveryType: 'Parcel service', anouncedQty: 45, noOfProducts: 6, expectDate: '25.11.2024', status: 'booked_in', client: 'Protabo' },
-  { id: '15', inboundId: '77777', deliveryType: 'Freight forwarder', anouncedQty: 90, noOfProducts: 12, expectDate: '03.12.2024', status: 'booked_in', client: 'Papercrush' },
-  { id: '16', inboundId: '88888', deliveryType: 'Parcel service', anouncedQty: 25, noOfProducts: 4, expectDate: '14.01.2025', status: 'booked_in', client: 'Terppens' },
-  { id: '17', inboundId: '99999', deliveryType: 'Freight forwarder', anouncedQty: 60, noOfProducts: 7, expectDate: '28.02.2025', status: 'booked_in', client: 'Caobali' },
-  { id: '18', inboundId: '10101', deliveryType: 'Parcel service', anouncedQty: 35, noOfProducts: 5, expectDate: '10.03.2025', status: 'booked_in', client: 'Protabo' },
-  { id: '19', inboundId: '20202', deliveryType: 'Freight forwarder', anouncedQty: 70, noOfProducts: 9, expectDate: '22.04.2025', status: 'booked_in', client: 'Papercrush' },
-  { id: '20', inboundId: '30303', deliveryType: 'Parcel service', anouncedQty: 40, noOfProducts: 6, expectDate: '05.05.2025', status: 'booked_in', client: 'Terppens' },
-];
-
-// Channel interface for dropdown
-interface ChannelInfo {
-  name: string;
-  type: 'Shopify' | 'Woocommerce' | 'Amazon';
-  client: string; // The client/owner of this channel
-}
-
-// All channels (admin/employee can see all, clients see only their own)
-const allChannels: ChannelInfo[] = [
-  // Papercrush channels
-  { name: 'Papercrush B2C', type: 'Shopify', client: 'Papercrush' },
-  { name: 'Papercrush B2B', type: 'Shopify', client: 'Papercrush' },
-  // Caobali channels
-  { name: 'Caobali Store', type: 'Woocommerce', client: 'Caobali' },
-  { name: 'Caobali Wholesale', type: 'Amazon', client: 'Caobali' },
-  // Terppens channels
-  { name: 'Terppens Main', type: 'Amazon', client: 'Terppens' },
-  // Protabo channels
-  { name: 'Protabo Shop', type: 'Shopify', client: 'Protabo' },
-  // TestClient channels
-  { name: 'TestClient Store', type: 'Woocommerce', client: 'TestClient' },
-];
-
-// Freight forwarders for filter (for client view - excluding 'All' which will be added dynamically)
-const freightForwarders = ['Freight forwarder', 'Parcel service'];
-
 interface InboundsTableProps {
   showClientColumn: boolean;
   baseUrl: string;
@@ -88,17 +39,16 @@ export function InboundsTable({ showClientColumn, baseUrl, userRole }: InboundsT
   const t = useTranslations('inbounds');
   const tCommon = useTranslations('common');
 
+  // Fetch real inbounds data from API
+  const { inbounds: apiInbounds, loading: inboundsLoading, error: inboundsError, refetch: refetchInbounds } = useInbounds();
+
   // Determine if this is a client view
   const isClientView = userRole === 'CLIENT';
   
-  // Mock current client for demo - in production this would come from auth context
-  const currentClient = 'Papercrush';
-  
-  // Filter channels based on user role
-  // For client view, only show their own channels
-  const channels = isClientView 
-    ? allChannels.filter(ch => ch.client === currentClient)
-    : allChannels;
+  // Get filter options from API data
+  const clientNames = getInboundClientNames(apiInbounds);
+  const deliveryTypes = getDeliveryTypes(apiInbounds);
+  const filterOptions = isClientView ? deliveryTypes : clientNames;
   
   // Get filter label based on role
   const filterLabel = isClientView ? t('filterByFreightForwarder') : t('filterByCustomer');
@@ -107,9 +57,9 @@ export function InboundsTable({ showClientColumn, baseUrl, userRole }: InboundsT
     router.push(`${baseUrl}/${inboundId}`);
   };
 
-  // Filter inbounds based on tab and search
+  // Filter inbounds based on tab and search - uses real API data
   const filteredInbounds = useMemo(() => {
-    let inbounds = [...mockInbounds];
+    let inbounds = [...apiInbounds];
 
     // Filter by tab
     if (activeTab === 'booked_in') {
@@ -142,7 +92,7 @@ export function InboundsTable({ showClientColumn, baseUrl, userRole }: InboundsT
     }
 
     return inbounds;
-  }, [activeTab, searchQuery, filterValue, isClientView]);
+  }, [activeTab, searchQuery, filterValue, isClientView, apiInbounds]);
 
   // Pagination
   const totalPages = Math.ceil(filteredInbounds.length / itemsPerPage);
@@ -151,11 +101,11 @@ export function InboundsTable({ showClientColumn, baseUrl, userRole }: InboundsT
     currentPage * itemsPerPage
   );
 
-  // Count for tabs
-  const allCount = mockInbounds.length;
-  const bookedInCount = mockInbounds.filter(i => i.status === 'booked_in').length;
-  const partiallyBookedInCount = mockInbounds.filter(i => i.status === 'partially_booked_in').length;
-  const pendingCount = mockInbounds.filter(i => i.status === 'pending').length;
+  // Count for tabs - uses real API data
+  const allCount = apiInbounds.length;
+  const bookedInCount = apiInbounds.filter(i => i.status === 'booked_in').length;
+  const partiallyBookedInCount = apiInbounds.filter(i => i.status === 'partially_booked_in').length;
+  const pendingCount = apiInbounds.filter(i => i.status === 'pending').length;
 
   const handlePrevious = () => {
     if (currentPage > 1) {
@@ -168,6 +118,47 @@ export function InboundsTable({ showClientColumn, baseUrl, userRole }: InboundsT
       setCurrentPage(currentPage + 1);
     }
   };
+
+  // Show loading state
+  if (inboundsLoading) {
+    return (
+      <div className="w-full flex items-center justify-center py-12">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#003450] mx-auto mb-4"></div>
+          <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '14px', color: '#6B7280' }}>
+            {tCommon('loading')}...
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state
+  if (inboundsError) {
+    return (
+      <div className="w-full flex items-center justify-center py-12">
+        <div className="text-center">
+          <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '14px', color: '#EF4444', marginBottom: '12px' }}>
+            {t('failedToLoadInbounds') || 'Failed to load inbounds'}
+          </p>
+          <button
+            onClick={() => refetchInbounds()}
+            style={{
+              padding: '8px 16px',
+              backgroundColor: '#003450',
+              color: 'white',
+              borderRadius: '6px',
+              fontFamily: 'Inter, sans-serif',
+              fontSize: '14px',
+              cursor: 'pointer',
+            }}
+          >
+            {tCommon('retry') || 'Retry'}
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   // Base width for proportional calculations (1358px reference)
   // Using clamp for proportional sizing
@@ -424,18 +415,11 @@ export function InboundsTable({ showClientColumn, baseUrl, userRole }: InboundsT
               <option key="ALL" value="ALL">
                 {tCommon('all')}
               </option>
-              {isClientView
-                ? freightForwarders.map((option) => (
-                    <option key={option} value={option}>
-                      {option}
-                    </option>
-                  ))
-                : channels.map((channel) => (
-                    <option key={channel.name} value={channel.name}>
-                      {channel.name} - {channel.type}
-                    </option>
-                  ))
-              }
+              {filterOptions.map((option) => (
+                <option key={option} value={option}>
+                  {option}
+                </option>
+              ))}
             </select>
             {/* Dropdown Arrow */}
             <div
