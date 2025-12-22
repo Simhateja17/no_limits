@@ -45,6 +45,10 @@ export default function ClientSetupPage() {
   // Connection test results
   const [platformTestSuccess, setPlatformTestSuccess] = useState<boolean | null>(null);
 
+  // JTL OAuth status
+  const [jtlOAuthStatus, setJtlOAuthStatus] = useState<'pending' | 'authorizing' | 'success' | 'error' | null>(null);
+  const [jtlOAuthError, setJtlOAuthError] = useState<string | null>(null);
+
   useEffect(() => {
     if (!isAuthenticated || user?.role !== 'CLIENT') {
       router.push('/');
@@ -177,6 +181,81 @@ export default function ClientSetupPage() {
     }
   };
 
+  const handleJTLOAuth = async () => {
+    if (!clientId) {
+      setJtlOAuthError('Client ID not found');
+      return;
+    }
+
+    console.log('[Setup] 🔐 Starting JTL OAuth flow...');
+    setJtlOAuthStatus('authorizing');
+    setJtlOAuthError(null);
+
+    try {
+      // Get OAuth authorization URL
+      const redirectUri = `${window.location.origin}/integrations/jtl/callback`;
+      const authUrlResponse = await onboardingApi.getJTLAuthUrl(
+        clientId,
+        redirectUri,
+        jtlEnvironment
+      );
+
+      console.log('[Setup] 🔗 Opening OAuth popup...');
+
+      // Open popup
+      const popup = window.open(
+        `${authUrlResponse.authUrl}&client_id=${clientId}&environment=${jtlEnvironment}`,
+        'jtl-oauth',
+        'width=500,height=700'
+      );
+
+      if (!popup) {
+        setJtlOAuthStatus('error');
+        setJtlOAuthError('Failed to open popup. Please allow popups for this site.');
+        return;
+      }
+
+      // Listen for messages from popup
+      const handleMessage = (event: MessageEvent) => {
+        if (event.origin !== window.location.origin) return;
+
+        if (event.data.type === 'jtl-oauth-success') {
+          console.log('[Setup] ✅ JTL OAuth completed successfully');
+          setJtlOAuthStatus('success');
+          window.removeEventListener('message', handleMessage);
+
+          // Show sync progress modal if we have a channel ID
+          if (syncChannelId) {
+            console.log('[Setup] 🔄 Opening sync modal for channel:', syncChannelId);
+            setShowSyncModal(true);
+          } else {
+            console.log('[Setup] ⚠️ No channel ID, skipping sync modal');
+            setCurrentStep('complete');
+          }
+        }
+      };
+
+      window.addEventListener('message', handleMessage);
+
+      // Check if popup was closed without completing
+      const popupCheck = setInterval(() => {
+        if (popup.closed) {
+          clearInterval(popupCheck);
+          window.removeEventListener('message', handleMessage);
+          if (jtlOAuthStatus !== 'success') {
+            console.log('[Setup] ⚠️ OAuth popup closed without completion');
+            setJtlOAuthStatus('error');
+            setJtlOAuthError('Authorization cancelled');
+          }
+        }
+      }, 500);
+    } catch (err) {
+      console.error('[Setup] ❌ Error starting OAuth flow:', err);
+      setJtlOAuthStatus('error');
+      setJtlOAuthError(err instanceof Error ? err.message : 'Failed to start OAuth flow');
+    }
+  };
+
   const handleJTLSubmit = async () => {
     if (!clientId) {
       setError('Client ID not found');
@@ -186,6 +265,7 @@ export default function ClientSetupPage() {
     console.log('[Setup] 🔐 Submitting JTL credentials...');
     setIsLoading(true);
     setError(null);
+    setJtlOAuthStatus('pending');
 
     try {
       const result = await onboardingApi.setupJTLCredentials({
@@ -205,19 +285,13 @@ export default function ClientSetupPage() {
         return;
       }
 
-      // Show sync progress modal if we have a channel ID
-      if (syncChannelId) {
-        console.log('[Setup] 🔄 Opening sync modal for channel:', syncChannelId);
-        setShowSyncModal(true);
-      } else {
-        console.log('[Setup] ⚠️ No channel ID, skipping sync modal');
-        // No channel to sync, go directly to complete
-        setCurrentStep('complete');
-      }
+      // Credentials saved, now trigger OAuth flow
+      console.log('[Setup] 🔓 Credentials saved, starting OAuth...');
+      setIsLoading(false);
+      await handleJTLOAuth();
     } catch (err) {
       console.error('[Setup] ❌ Error saving JTL credentials:', err);
       setError(err instanceof Error ? err.message : 'Failed to save JTL credentials');
-    } finally {
       setIsLoading(false);
     }
   };
@@ -939,6 +1013,62 @@ export default function ClientSetupPage() {
               </div>
             </div>
 
+            {jtlOAuthStatus === 'authorizing' && (
+              <div
+                style={{
+                  marginTop: '16px',
+                  padding: '12px',
+                  background: '#EFF6FF',
+                  borderRadius: '8px',
+                  color: '#1E40AF',
+                  fontSize: '14px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                }}
+              >
+                <div style={{
+                  width: '16px',
+                  height: '16px',
+                  border: '2px solid #3B82F6',
+                  borderTop: '2px solid transparent',
+                  borderRadius: '50%',
+                  animation: 'spin 1s linear infinite',
+                }} />
+                Authorizing with JTL FFN... Please complete authorization in the popup window.
+              </div>
+            )}
+
+            {jtlOAuthStatus === 'success' && (
+              <div
+                style={{
+                  marginTop: '16px',
+                  padding: '12px',
+                  background: '#F0FDF4',
+                  borderRadius: '8px',
+                  color: '#16A34A',
+                  fontSize: '14px',
+                }}
+              >
+                ✓ Authorization successful! JTL FFN is now connected.
+              </div>
+            )}
+
+            {jtlOAuthError && (
+              <div
+                style={{
+                  marginTop: '16px',
+                  padding: '12px',
+                  background: '#FEF2F2',
+                  borderRadius: '8px',
+                  color: '#DC2626',
+                  fontSize: '14px',
+                }}
+              >
+                {jtlOAuthError}
+              </div>
+            )}
+
             {error && (
               <div
                 style={{
@@ -973,26 +1103,26 @@ export default function ClientSetupPage() {
               </button>
               <button
                 onClick={handleJTLSubmit}
-                disabled={isLoading || !jtlClientId || !jtlClientSecret || !jtlFulfillerId || !jtlWarehouseId}
+                disabled={isLoading || jtlOAuthStatus === 'authorizing' || !jtlClientId || !jtlClientSecret || !jtlFulfillerId || !jtlWarehouseId}
                 style={{
                   flex: 1,
                   padding: '12px 24px',
                   borderRadius: '8px',
                   border: 'none',
                   background:
-                    jtlClientId && jtlClientSecret && jtlFulfillerId && jtlWarehouseId
+                    jtlClientId && jtlClientSecret && jtlFulfillerId && jtlWarehouseId && jtlOAuthStatus !== 'authorizing'
                       ? '#003450'
                       : '#9CA3AF',
                   color: 'white',
                   fontWeight: 500,
                   fontSize: '14px',
                   cursor:
-                    isLoading || !jtlClientId || !jtlClientSecret || !jtlFulfillerId || !jtlWarehouseId
+                    isLoading || jtlOAuthStatus === 'authorizing' || !jtlClientId || !jtlClientSecret || !jtlFulfillerId || !jtlWarehouseId
                       ? 'not-allowed'
                       : 'pointer',
                 }}
               >
-                {isLoading ? t('saving') || 'Saving...' : t('saveCredentials') || 'Save Credentials'}
+                {isLoading ? t('saving') || 'Saving...' : jtlOAuthStatus === 'authorizing' ? 'Authorizing...' : t('saveAndAuthorize') || 'Save & Authorize'}
               </button>
             </div>
           </>

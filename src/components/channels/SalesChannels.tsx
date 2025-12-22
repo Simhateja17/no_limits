@@ -424,7 +424,8 @@ export function SalesChannels({ baseUrl }: SalesChannelsProps) {
             name: ch.name,
             type: ch.type as 'Woocommerce' | 'Shopify' | 'Amazon',
             url: ch.url || '',
-            status: ch.status as 'Active' | 'Inactive',
+            // Convert backend status (ACTIVE/INACTIVE) to frontend format (Active/Inactive)
+            status: (ch.status === 'ACTIVE' ? 'Active' : 'Inactive') as 'Active' | 'Inactive',
           }));
           setChannels(mappedChannels);
           setError(null);

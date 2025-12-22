@@ -836,7 +836,7 @@ export function OrdersTable({ showClientColumn, basePath = '/admin/orders' }: Or
               cursor: 'pointer',
               transition: 'background-color 0.15s ease',
             }}
-            onClick={() => handleOrderClick(order.orderId)}
+            onClick={() => handleOrderClick(order.id)}
             onMouseEnter={(e) => {
               e.currentTarget.style.backgroundColor = '#F9FAFB';
             }}
