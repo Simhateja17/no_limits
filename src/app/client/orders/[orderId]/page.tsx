@@ -53,11 +53,15 @@ const transformApiOrderToDetails = (apiOrder: ApiOrder): OrderDetails => {
   return {
     orderId: apiOrder.orderNumber || apiOrder.orderId,
     status: mapStatus(apiOrder.status),
+    // Client orders API currently does not expose detailed shipping address
+    // information, so we fall back to client name and generic placeholders.
     deliveryMethod: {
-      name: `${apiOrder.shippingFirstName || ''} ${apiOrder.shippingLastName || ''}`.trim() || 'N/A',
-      street: apiOrder.shippingAddress1 || 'N/A',
-      city: `${apiOrder.shippingZip || ''} ${apiOrder.shippingCity || ''}`.trim() || 'N/A',
-      country: apiOrder.shippingCountry || 'N/A',
+      name:
+        (apiOrder.client?.name || apiOrder.client?.companyName || '').trim() ||
+        'N/A',
+      street: 'N/A',
+      city: 'N/A',
+      country: 'N/A',
     },
     shippingMethod: apiOrder.shippingMethod || 'Standard',
     trackingNumber: apiOrder.trackingNumber || 'N/A',
@@ -402,7 +406,9 @@ export default function ClientOrderDetailPage() {
                           width: '6px',
                           height: '6px',
                           borderRadius: '50%',
-                          backgroundColor: onHoldStatus ? '#F59E0B' : getStatusColor(mockOrderDetails.status),
+                          backgroundColor: onHoldStatus
+                            ? '#F59E0B'
+                            : getStatusColor(orderDetails?.status || 'Processing'),
                         }}
                       />
                       <span
@@ -414,7 +420,9 @@ export default function ClientOrderDetailPage() {
                           color: '#000000',
                         }}
                       >
-                        {onHoldStatus ? tOrders('onHold') : tOrders(mockOrderDetails.status.toLowerCase())}
+                        {onHoldStatus
+                          ? tOrders('onHold')
+                          : tOrders((orderDetails?.status || 'Processing').toLowerCase())}
                       </span>
                     </div>
 
@@ -464,7 +472,9 @@ export default function ClientOrderDetailPage() {
                           width: '6px',
                           height: '6px',
                           borderRadius: '50%',
-                          backgroundColor: onHoldStatus ? '#F59E0B' : getStatusColor(mockOrderDetails.status),
+                          backgroundColor: onHoldStatus
+                            ? '#F59E0B'
+                            : getStatusColor(orderDetails?.status || 'Processing'),
                         }}
                       />
                       <span
@@ -476,7 +486,9 @@ export default function ClientOrderDetailPage() {
                           color: '#000000',
                         }}
                       >
-                        {onHoldStatus ? tOrders('onHold') : tOrders(mockOrderDetails.status.toLowerCase())}
+                        {onHoldStatus
+                          ? tOrders('onHold')
+                          : tOrders((orderDetails?.status || 'Processing').toLowerCase())}
                       </span>
                     </div>
                   </div>
@@ -492,7 +504,7 @@ export default function ClientOrderDetailPage() {
                     display: 'block',
                   }}
                 >
-                  {orderId || mockOrderDetails.orderId}
+                  {orderId || orderDetails?.orderId}
                 </span>
               </div>
 
@@ -562,10 +574,10 @@ export default function ClientOrderDetailPage() {
                     color: '#111827',
                   }}
                 >
-                  <div>{mockOrderDetails.deliveryMethod.name}</div>
-                  <div>{mockOrderDetails.deliveryMethod.street}</div>
-                  <div>{mockOrderDetails.deliveryMethod.city}</div>
-                  <div>{mockOrderDetails.deliveryMethod.country}</div>
+                  <div>{orderDetails?.deliveryMethod.name}</div>
+                  <div>{orderDetails?.deliveryMethod.street}</div>
+                  <div>{orderDetails?.deliveryMethod.city}</div>
+                  <div>{orderDetails?.deliveryMethod.country}</div>
                 </div>
               </div>
 
@@ -746,7 +758,7 @@ export default function ClientOrderDetailPage() {
                         {selectedShippingMethod.name}
                       </span>
                     </div>
-                    {mockOrderDetails.trackingNumber && (
+                    {orderDetails?.trackingNumber && (
                       <div
                         style={{
                           fontFamily: 'Inter, sans-serif',
@@ -757,7 +769,7 @@ export default function ClientOrderDetailPage() {
                           paddingLeft: '32px',
                         }}
                       >
-                        {mockOrderDetails.trackingNumber}
+                        {orderDetails.trackingNumber}
                       </div>
                     )}
                   </div>
@@ -866,7 +878,7 @@ export default function ClientOrderDetailPage() {
                     color: '#111827',
                   }}
                 >
-                  {mockOrderDetails.shipmentWeight}
+                  {orderDetails?.shipmentWeight}
                 </div>
                 <div
                   style={{

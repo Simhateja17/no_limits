@@ -445,7 +445,7 @@ export function ProductDetails({ productId, backUrl }: ProductDetailsProps) {
               color: '#1F2937',
             }}
           >
-            {product.ordersCount}
+            {productDetails?.ordersCount ?? 0}
           </span>
         </button>
 
@@ -620,7 +620,8 @@ export function ProductDetails({ productId, backUrl }: ProductDetailsProps) {
                     margin: 0,
                   }}
                 >
-                  {tProducts('manufacture')}: {formData.manufacturer} &nbsp;&nbsp;&nbsp;&nbsp; {tProducts('productId')}: {product.productId}
+                  {tProducts('manufacture')}: {formData.manufacturer} &nbsp;&nbsp;&nbsp;&nbsp;{' '}
+                  {tProducts('productId')}: {productDetails?.productId}
                 </p>
               </div>
 
@@ -667,7 +668,7 @@ export function ProductDetails({ productId, backUrl }: ProductDetailsProps) {
                       color: '#111827',
                     }}
                   >
-                    {product.totalStock}
+                    {productDetails?.totalStock ?? 0}
                   </span>
                 </div>
 
@@ -706,7 +707,7 @@ export function ProductDetails({ productId, backUrl }: ProductDetailsProps) {
                       color: '#111827',
                     }}
                   >
-                    {product.available}
+                    {productDetails?.available ?? 0}
                   </span>
                 </div>
 
@@ -745,7 +746,7 @@ export function ProductDetails({ productId, backUrl }: ProductDetailsProps) {
                       color: '#111827',
                     }}
                   >
-                    {product.reserved}
+                    {productDetails?.reserved ?? 0}
                   </span>
                 </div>
 
@@ -784,7 +785,7 @@ export function ProductDetails({ productId, backUrl }: ProductDetailsProps) {
                       color: '#111827',
                     }}
                   >
-                    {product.announced}
+                    {productDetails?.announced ?? 0}
                   </span>
                 </div>
               </div>
