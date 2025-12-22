@@ -1,9 +1,11 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { useClients, getClientNames } from '@/lib/hooks';
+import { dataApi } from '@/lib/data-api';
+import type { Product as ApiProduct } from '@/lib/data-api';
 
 // Tab type
 type TabType = 'all' | 'outOfStock' | 'missingData';
@@ -18,20 +20,6 @@ interface Product {
   announced: number;
   client: string;
 }
-
-// Mock data
-const mockProducts: Product[] = [
-  { id: '1', productId: '23423', productName: 'Riesenrad', available: 312, reserved: 12, announced: 200, client: 'Papercrush' },
-  { id: '2', productId: '43642', productName: 'Skifahrer', available: 5, reserved: 3, announced: 0, client: 'Papercrush' },
-  { id: '3', productId: '34532', productName: 'Rohkakao', available: 252, reserved: 53, announced: 50, client: 'Caobali' },
-  { id: '4', productId: '43462', productName: 'Mellow 50%', available: 0, reserved: -10, announced: 250, client: 'Terppens' },
-  { id: '5', productId: '34983', productName: 'Energy 50%', available: 0, reserved: 0, announced: 250, client: 'Terppens' },
-  { id: '6', productId: '43895', productName: 'Verbandskasten', available: 16, reserved: 1, announced: 100, client: 'Protabo' },
-  { id: '7', productId: '12345', productName: 'Sample Product', available: 0, reserved: 5, announced: 10, client: 'TestClient' },
-  { id: '8', productId: '67890', productName: 'Test Item', available: 50, reserved: 2, announced: 0, client: 'Papercrush' },
-  { id: '9', productId: '11111', productName: '', available: 100, reserved: 10, announced: 20, client: 'Caobali' },
-  { id: '10', productId: '22222', productName: 'Complete Product', available: 200, reserved: 15, announced: 30, client: '' },
-];
 
 // Mock channels data - TODO: Replace with API call
 const allChannels = [
@@ -51,18 +39,50 @@ export function ProductsTable({ showClientColumn, baseUrl }: ProductsTableProps)
   const [searchQuery, setSearchQuery] = useState('');
   const [customerFilter, setCustomerFilter] = useState('ALL');
   const [currentPage, setCurrentPage] = useState(1);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const itemsPerPage = 10;
   const t = useTranslations('products');
   const tCommon = useTranslations('common');
 
+  // Fetch products from API
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        setLoading(true);
+        const data = await dataApi.getProducts();
+        // Transform API data to component format
+        const transformedProducts: Product[] = data.map(p => ({
+          id: p.id,
+          productId: p.productId,
+          productName: p.name,
+          available: p.available,
+          reserved: p.reserved,
+          announced: p.announced,
+          client: p.client.companyName || p.client.name,
+        }));
+        setProducts(transformedProducts);
+        setError(null);
+      } catch (err) {
+        console.error('Error fetching products:', err);
+        setError('Failed to load products');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProducts();
+  }, []);
+
   // Mock current client for demo - in production this would come from auth context
   const currentClient = 'Papercrush';
-  
+
   // Filter channels based on user role
   // showClientColumn = true means admin/employee view (can see all channels)
   // showClientColumn = false means client view (can only see their own channels)
-  const channels = showClientColumn 
-    ? allChannels 
+  const channels = showClientColumn
+    ? allChannels
     : allChannels.filter(ch => ch.client === currentClient);
 
   const handleProductClick = (productId: string) => {
@@ -71,32 +91,32 @@ export function ProductsTable({ showClientColumn, baseUrl }: ProductsTableProps)
 
   // Filter products based on tab and search
   const filteredProducts = useMemo(() => {
-    let products = [...mockProducts];
+    let filteredList = [...products];
 
     // Filter by tab
     if (activeTab === 'outOfStock') {
-      products = products.filter(p => p.available === 0);
+      filteredList = filteredList.filter(p => p.available === 0);
     } else if (activeTab === 'missingData') {
-      products = products.filter(p => !p.productName || !p.client);
+      filteredList = filteredList.filter(p => !p.productName || !p.client);
     }
 
     // Filter by customer
     if (customerFilter !== 'ALL') {
-      products = products.filter(p => p.client === customerFilter);
+      filteredList = filteredList.filter(p => p.client === customerFilter);
     }
 
     // Filter by search query
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
-      products = products.filter(p =>
+      filteredList = filteredList.filter(p =>
         p.productId.toLowerCase().includes(query) ||
         p.productName.toLowerCase().includes(query) ||
         p.client.toLowerCase().includes(query)
       );
     }
 
-    return products;
-  }, [activeTab, searchQuery, customerFilter]);
+    return filteredList;
+  }, [products, activeTab, searchQuery, customerFilter]);
 
   // Pagination
   const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
@@ -106,9 +126,9 @@ export function ProductsTable({ showClientColumn, baseUrl }: ProductsTableProps)
   );
 
   // Count for tabs
-  const allCount = mockProducts.length;
-  const outOfStockCount = mockProducts.filter(p => p.available === 0).length;
-  const missingDataCount = mockProducts.filter(p => !p.productName || !p.client).length;
+  const allCount = products.length;
+  const outOfStockCount = products.filter(p => p.available === 0).length;
+  const missingDataCount = products.filter(p => !p.productName || !p.client).length;
 
   const handlePrevious = () => {
     if (currentPage > 1) {
@@ -121,6 +141,24 @@ export function ProductsTable({ showClientColumn, baseUrl }: ProductsTableProps)
       setCurrentPage(currentPage + 1);
     }
   };
+
+  // Show loading state
+  if (loading) {
+    return (
+      <div className="w-full flex items-center justify-center p-8">
+        <p className="text-gray-500">Loading products...</p>
+      </div>
+    );
+  }
+
+  // Show error state
+  if (error) {
+    return (
+      <div className="w-full flex items-center justify-center p-8">
+        <p className="text-red-500">{error}</p>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full flex flex-col" style={{ gap: 'clamp(16px, 1.76vw, 24px)' }}>

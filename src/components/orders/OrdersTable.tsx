@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations, useLocale } from 'next-intl';
 import { useClients, getClientNames } from '@/lib/hooks';
+import { dataApi, type Order as ApiOrder } from '@/lib/data-api';
 
 // Tab type for orders
 type OrderTabType = 'all' | 'inStock' | 'outOfStock' | 'errors' | 'partiallyFulfilled' | 'cancelled' | 'sent';
@@ -23,31 +24,39 @@ interface Order {
   status: OrderStatus;
 }
 
-// Mock data
-const mockOrders: Order[] = [
-  { id: '1', orderId: '24234', orderDate: new Date(), client: 'Papercrush', weight: '0,35 kg', quantity: 3, method: 'Brief National', status: 'success' },
-  { id: '2', orderId: '24076', orderDate: new Date(Date.now() - 5 * 60 * 60 * 1000), client: 'Papercrush', weight: '0,35 kg', quantity: 3, method: 'Brief National', status: 'success' },
-  { id: '3', orderId: '23974', orderDate: new Date(Date.now() - 24 * 60 * 60 * 1000), client: 'Caobali', weight: '0,95 kg', quantity: 1, method: 'DHL Paket', status: 'success' },
-  { id: '4', orderId: '22421', orderDate: new Date('2022-05-16'), client: 'Terppens', weight: '0,55 kg', quantity: 2, method: 'DHL Paket', status: 'success' },
-  { id: '5', orderId: '22122', orderDate: new Date('2022-05-15'), client: 'Terppens', weight: '0,55 kg', quantity: 2, method: 'DHL Paket', status: 'success' },
-  { id: '6', orderId: '22063', orderDate: new Date('2022-05-15'), client: 'Protabo', weight: '3,25 kg', quantity: 5, method: 'DHL Paket', status: 'success' },
-  { id: '7', orderId: '24235', orderDate: new Date(), client: 'Merchant 3', weight: '0,35 kg', quantity: 3, method: 'Brief National', status: 'error' },
-  { id: '8', orderId: '24077', orderDate: new Date(Date.now() - 5 * 60 * 60 * 1000), client: 'Merchant 5', weight: '0,35 kg', quantity: 3, method: 'Brief National', status: 'error' },
-  { id: '9', orderId: '23975', orderDate: new Date(Date.now() - 24 * 60 * 60 * 1000), client: 'Merchant 7', weight: '0,95 kg', quantity: 1, method: 'DHL Paket', status: 'mildError' },
-  { id: '10', orderId: '22422', orderDate: new Date('2022-05-16'), client: 'Merchant 5', weight: '0,55 kg', quantity: 2, method: 'DHL Paket', status: 'mildError' },
-  { id: '11', orderId: '22123', orderDate: new Date('2022-05-15'), client: 'Merchant 5', weight: '0,55 kg', quantity: 2, method: 'DHL Paket', status: 'mildError' },
-  { id: '12', orderId: '22064', orderDate: new Date('2022-05-15'), client: 'Merchant 5', weight: '3,25 kg', quantity: 5, method: 'DHL Paket', status: 'mildError' },
-  // Additional mock data for counts
-  { id: '13', orderId: '21001', orderDate: new Date('2022-04-10'), client: 'Papercrush', weight: '1,2 kg', quantity: 4, method: 'DHL Paket', status: 'success' },
-  { id: '14', orderId: '21002', orderDate: new Date('2022-04-11'), client: 'Caobali', weight: '0,8 kg', quantity: 2, method: 'Brief National', status: 'success' },
-  { id: '15', orderId: '21003', orderDate: new Date('2022-04-12'), client: 'Terppens', weight: '2,1 kg', quantity: 6, method: 'DHL Paket', status: 'success' },
-  { id: '16', orderId: '21004', orderDate: new Date('2022-04-13'), client: 'Protabo', weight: '0,45 kg', quantity: 1, method: 'Brief National', status: 'success' },
-  { id: '17', orderId: '21005', orderDate: new Date('2022-04-14'), client: 'Merchant 3', weight: '1,5 kg', quantity: 3, method: 'DHL Paket', status: 'mildError' },
-  { id: '18', orderId: '21006', orderDate: new Date('2022-04-15'), client: 'Merchant 5', weight: '0,9 kg', quantity: 2, method: 'DHL Paket', status: 'success' },
-  { id: '19', orderId: '21007', orderDate: new Date('2022-04-16'), client: 'Papercrush', weight: '0,6 kg', quantity: 2, method: 'Brief National', status: 'success' },
-  { id: '20', orderId: '21008', orderDate: new Date('2022-04-17'), client: 'Caobali', weight: '1,8 kg', quantity: 4, method: 'DHL Paket', status: 'success' },
-  { id: '21', orderId: '21009', orderDate: new Date('2022-04-18'), client: 'Terppens', weight: '1,2 kg', quantity: 3, method: 'DHL Paket', status: 'partiallyFulfilled' },
-];
+// Helper function to map backend status to frontend status
+const mapBackendStatusToFrontend = (backendStatus: string): OrderStatus => {
+  switch (backendStatus) {
+    case 'PENDING':
+    case 'PROCESSING':
+    case 'IN_STOCK':
+    case 'SHIPPED':
+    case 'DELIVERED':
+      return 'success';
+    case 'CANCELLED':
+    case 'ERROR':
+      return 'error';
+    case 'ON_HOLD':
+    case 'OUT_OF_STOCK':
+      return 'mildError';
+    case 'PARTIALLY_FULFILLED':
+      return 'partiallyFulfilled';
+    default:
+      return 'success';
+  }
+};
+
+// Helper function to transform API order to component Order
+const transformApiOrder = (apiOrder: ApiOrder): Order => ({
+  id: apiOrder.id,
+  orderId: apiOrder.orderNumber || apiOrder.orderId,
+  orderDate: new Date(apiOrder.orderDate),
+  client: apiOrder.client.companyName || apiOrder.client.name,
+  weight: '0 kg', // Placeholder - can be calculated from items if needed
+  quantity: apiOrder.items.reduce((sum, item) => sum + item.quantity, 0),
+  method: apiOrder.shippingMethod || 'Standard',
+  status: mapBackendStatusToFrontend(apiOrder.status),
+});
 
 interface OrdersTableProps {
   showClientColumn: boolean; // Show client column only for superadmin and warehouse labor view
@@ -129,9 +138,34 @@ export function OrdersTable({ showClientColumn, basePath = '/admin/orders' }: Or
   const tCommon = useTranslations('common');
   const locale = useLocale();
 
+  // State for API data
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
   // Fetch real clients for admin/employee filter
   const { clients, loading: clientsLoading } = useClients();
   const customerNames = getClientNames(clients);
+
+  // Fetch orders from API
+  useEffect(() => {
+    const fetchOrders = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const data = await dataApi.getOrders();
+        const transformedOrders = data.map(transformApiOrder);
+        setOrders(transformedOrders);
+      } catch (err) {
+        console.error('Error fetching orders:', err);
+        setError(err instanceof Error ? err.message : 'Failed to load orders');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchOrders();
+  }, []);
 
   // Format date for display with locale support
   const formatOrderDate = (date: Date): string => {
@@ -161,34 +195,34 @@ export function OrdersTable({ showClientColumn, basePath = '/admin/orders' }: Or
 
   // Filter orders based on tab and search
   const filteredOrders = useMemo(() => {
-    let orders = [...mockOrders];
+    let filteredList = [...orders];
 
     // Filter by tab
     if (activeTab === 'inStock') {
-      orders = orders.filter(o => o.status === 'success');
+      filteredList = filteredList.filter(o => o.status === 'success');
     } else if (activeTab === 'outOfStock') {
-      orders = orders.filter(o => o.status === 'mildError');
+      filteredList = filteredList.filter(o => o.status === 'mildError');
     } else if (activeTab === 'errors') {
-      orders = orders.filter(o => o.status === 'error');
+      filteredList = filteredList.filter(o => o.status === 'error');
     } else if (activeTab === 'partiallyFulfilled') {
-      orders = orders.filter(o => o.status === 'partiallyFulfilled');
+      filteredList = filteredList.filter(o => o.status === 'partiallyFulfilled');
     } else if (activeTab === 'cancelled') {
       // For now, no cancelled orders in mock data
-      orders = [];
+      filteredList = [];
     } else if (activeTab === 'sent') {
       // For now, filter sent as success
-      orders = orders.filter(o => o.status === 'success');
+      filteredList = filteredList.filter(o => o.status === 'success');
     }
 
     // Filter by customer
     if (customerFilter !== 'ALL') {
-      orders = orders.filter(o => o.client === customerFilter);
+      filteredList = filteredList.filter(o => o.client === customerFilter);
     }
 
     // Filter by search query
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
-      orders = orders.filter(o =>
+      filteredList = filteredList.filter(o =>
         o.orderId.toLowerCase().includes(query) ||
         o.client.toLowerCase().includes(query) ||
         o.method.toLowerCase().includes(query)
@@ -196,10 +230,10 @@ export function OrdersTable({ showClientColumn, basePath = '/admin/orders' }: Or
     }
 
     // Sort by date descending (newest first)
-    orders.sort((a, b) => b.orderDate.getTime() - a.orderDate.getTime());
+    filteredList.sort((a, b) => b.orderDate.getTime() - a.orderDate.getTime());
 
-    return orders;
-  }, [activeTab, searchQuery, customerFilter]);
+    return filteredList;
+  }, [orders, activeTab, searchQuery, customerFilter]);
 
   // Pagination
   const totalPages = Math.ceil(filteredOrders.length / itemsPerPage);
@@ -209,11 +243,11 @@ export function OrdersTable({ showClientColumn, basePath = '/admin/orders' }: Or
   );
 
   // Count for tabs
-  const allCount = mockOrders.length;
-  const inStockCount = mockOrders.filter(o => o.status === 'success').length;
-  const outOfStockCount = mockOrders.filter(o => o.status === 'mildError').length;
-  const errorsCount = mockOrders.filter(o => o.status === 'error').length;
-  const partiallyFulfilledCount = mockOrders.filter(o => o.status === 'partiallyFulfilled').length;
+  const allCount = orders.length;
+  const inStockCount = orders.filter(o => o.status === 'success').length;
+  const outOfStockCount = orders.filter(o => o.status === 'mildError').length;
+  const errorsCount = orders.filter(o => o.status === 'error').length;
+  const partiallyFulfilledCount = orders.filter(o => o.status === 'partiallyFulfilled').length;
   // cancelledCount and sentCount not shown in tabs currently
 
   const handlePrevious = () => {
@@ -227,6 +261,44 @@ export function OrdersTable({ showClientColumn, basePath = '/admin/orders' }: Or
       setCurrentPage(currentPage + 1);
     }
   };
+
+  // Loading state
+  if (loading) {
+    return (
+      <div className="w-full flex justify-center items-center" style={{ padding: '40px' }}>
+        <div style={{ color: '#6B7280', fontSize: '14px', fontFamily: 'Inter, sans-serif' }}>
+          {t('loading') || 'Loading orders...'}
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div className="w-full flex flex-col items-center justify-center" style={{ padding: '40px', gap: '16px' }}>
+        <div style={{ color: '#EF4444', fontSize: '14px', fontFamily: 'Inter, sans-serif' }}>
+          {error}
+        </div>
+        <button
+          onClick={() => window.location.reload()}
+          style={{
+            padding: '8px 16px',
+            backgroundColor: '#003450',
+            color: '#FFFFFF',
+            borderRadius: '6px',
+            fontSize: '14px',
+            fontFamily: 'Inter, sans-serif',
+            fontWeight: 500,
+            cursor: 'pointer',
+            border: 'none',
+          }}
+        >
+          {t('retry') || 'Retry'}
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full flex flex-col" style={{ gap: 'clamp(16px, 1.76vw, 24px)' }}>

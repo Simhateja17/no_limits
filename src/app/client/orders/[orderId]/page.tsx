@@ -7,26 +7,72 @@ import { DashboardLayout } from '@/components/layout';
 import { useAuthStore } from '@/lib/store';
 import { useEffect } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
+import { dataApi, type Order as ApiOrder } from '@/lib/data-api';
 
-// Mock order data - in real app this would come from API
-const mockOrderDetails = {
-  orderId: '934242',
-  status: 'Processing' as 'Processing' | 'On Hold' | 'Shipped' | 'Cancelled',
+// Type for transformed order details
+interface OrderDetails {
+  orderId: string;
+  status: 'Processing' | 'On Hold' | 'Shipped' | 'Cancelled';
   deliveryMethod: {
-    name: 'Max Mustermann',
-    street: 'Musterstr. 10',
-    city: '12345 Musterstadt',
-    country: 'Deutschland',
-  },
-  shippingMethod: 'DHL Paket National',
-  trackingNumber: '00343553983589394',
-  shipmentWeight: '0,58 kg',
-  tags: ['b2b'],
-  onHoldStatus: false,
-  products: [
-    { id: '1', name: 'Testproduct 1', sku: '#24234', gtin: '342345235324', qty: 3, merchant: 'Merchant 3' },
-    { id: '2', name: 'Testproduct 2', sku: '#24076', gtin: '324343243242', qty: 1, merchant: 'Merchant 5' },
-  ],
+    name: string;
+    street: string;
+    city: string;
+    country: string;
+  };
+  shippingMethod: string;
+  trackingNumber: string;
+  shipmentWeight: string;
+  tags: string[];
+  onHoldStatus: boolean;
+  products: Array<{
+    id: string;
+    name: string;
+    sku: string;
+    gtin: string;
+    qty: number;
+    merchant: string;
+  }>;
+}
+
+// Transform API order to component format
+const transformApiOrderToDetails = (apiOrder: ApiOrder): OrderDetails => {
+  const mapStatus = (status: string): 'Processing' | 'On Hold' | 'Shipped' | 'Cancelled' => {
+    switch (status) {
+      case 'SHIPPED':
+      case 'DELIVERED':
+        return 'Shipped';
+      case 'ON_HOLD':
+        return 'On Hold';
+      case 'CANCELLED':
+        return 'Cancelled';
+      default:
+        return 'Processing';
+    }
+  };
+
+  return {
+    orderId: apiOrder.orderNumber || apiOrder.orderId,
+    status: mapStatus(apiOrder.status),
+    deliveryMethod: {
+      name: `${apiOrder.shippingFirstName || ''} ${apiOrder.shippingLastName || ''}`.trim() || 'N/A',
+      street: apiOrder.shippingAddress1 || 'N/A',
+      city: `${apiOrder.shippingZip || ''} ${apiOrder.shippingCity || ''}`.trim() || 'N/A',
+      country: apiOrder.shippingCountry || 'N/A',
+    },
+    shippingMethod: apiOrder.shippingMethod || 'Standard',
+    trackingNumber: apiOrder.trackingNumber || 'N/A',
+    shipmentWeight: '0 kg', // Placeholder
+    tags: [], // Placeholder
+    onHoldStatus: apiOrder.status === 'ON_HOLD',
+    products: apiOrder.items.map(item => ({
+      id: item.id,
+      name: item.product?.name || 'Unknown Product',
+      sku: item.product?.sku || 'N/A',
+      gtin: 'N/A', // Not in order items
+      qty: item.quantity,
+      merchant: apiOrder.client?.companyName || apiOrder.client?.name || 'N/A',
+    })),
+  };
 };
 
 // Mock available products to add
@@ -76,15 +122,21 @@ export default function ClientOrderDetailPage() {
   const tCountries = useTranslations('countries');
   const tStatus = useTranslations('status');
   const tMessages = useTranslations('messages');
+
+  // API state
+  const [orderDetails, setOrderDetails] = useState<OrderDetails | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
   const [editOrderEnabled, setEditOrderEnabled] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [showReplacementModal, setShowReplacementModal] = useState(false);
-  const [onHoldStatus, setOnHoldStatus] = useState(mockOrderDetails.onHoldStatus);
-  const [tags, setTags] = useState(mockOrderDetails.tags);
+  const [onHoldStatus, setOnHoldStatus] = useState(false);
+  const [tags, setTags] = useState<string[]>([]);
   const [newTag, setNewTag] = useState('');
   const [replacementCount, setReplacementCount] = useState(0);
-  const [orderProducts, setOrderProducts] = useState(mockOrderDetails.products);
+  const [orderProducts, setOrderProducts] = useState<OrderDetails['products']>([]);
   const [productSearchQuery, setProductSearchQuery] = useState('');
   const [productQuantities, setProductQuantities] = useState<Record<string, number>>({});
   const [showProductList, setShowProductList] = useState(false);
@@ -110,8 +162,76 @@ export default function ClientOrderDetailPage() {
     }
   }, [isAuthenticated, user, router]);
 
+  // Fetch order details from API
+  useEffect(() => {
+    const orderId = params.orderId as string;
+    if (!orderId) return;
+
+    const fetchOrder = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const data = await dataApi.getOrder(orderId);
+        const transformed = transformApiOrderToDetails(data as any);
+        setOrderDetails(transformed);
+        setOnHoldStatus(transformed.onHoldStatus);
+        setTags(transformed.tags);
+        setOrderProducts(transformed.products);
+      } catch (err) {
+        console.error('Error fetching order:', err);
+        setError(err instanceof Error ? err.message : 'Failed to load order details');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchOrder();
+  }, [params.orderId]);
+
   if (!isAuthenticated || user?.role !== 'CLIENT') {
     return null;
+  }
+
+  // Loading state
+  if (loading) {
+    return (
+      <DashboardLayout>
+        <div className="w-full flex justify-center items-center" style={{ padding: '40px' }}>
+          <div style={{ color: '#6B7280', fontSize: '14px', fontFamily: 'Inter, sans-serif' }}>
+            {tCommon('loading') || 'Loading order...'}
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  // Error state
+  if (error || !orderDetails) {
+    return (
+      <DashboardLayout>
+        <div className="w-full flex flex-col items-center justify-center" style={{ padding: '40px', gap: '16px' }}>
+          <div style={{ color: '#EF4444', fontSize: '14px', fontFamily: 'Inter, sans-serif' }}>
+            {error || 'Order not found'}
+          </div>
+          <button
+            onClick={() => router.back()}
+            style={{
+              padding: '8px 16px',
+              backgroundColor: '#003450',
+              color: '#FFFFFF',
+              borderRadius: '6px',
+              fontSize: '14px',
+              fontFamily: 'Inter, sans-serif',
+              fontWeight: 500,
+              cursor: 'pointer',
+              border: 'none',
+            }}
+          >
+            {tCommon('back') || 'Go Back'}
+          </button>
+        </div>
+      </DashboardLayout>
+    );
   }
 
   const orderId = params.orderId as string;

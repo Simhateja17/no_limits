@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
+import { dataApi, type Product as ApiProduct } from '@/lib/data-api';
 
 // Tab type for product details
 type ProductTab = 'productData' | 'stockMovements' | 'orders' | 'bundle';
@@ -42,36 +43,36 @@ interface ProductDetailsData {
   ordersCount: number;
 }
 
-// Mock product data
-const mockProductDetails: ProductDetailsData = {
-  id: '1',
-  productId: '23423',
-  productName: 'Duschtuch 70×100cm',
-  manufacturer: 'Herzbach Home',
-  imageUrl: '/product-image.jpg',
-  totalStock: 345,
-  available: 340,
-  reserved: 5,
-  announced: 0,
-  heightInCm: '10',
-  widthInCm: '12,5',
-  lengthInCm: '21,5',
-  weightInKg: '0,85',
-  sku: 'DT-70-100',
-  gtin: '2394823842342',
-  amazonAsin: '23YAC1328A',
+// Transform API product to component format
+const transformApiProduct = (apiProduct: ApiProduct): ProductDetailsData => ({
+  id: apiProduct.id,
+  productId: apiProduct.productId,
+  productName: apiProduct.name,
+  manufacturer: '-',
+  imageUrl: apiProduct.imageUrl || '/product-image.jpg',
+  totalStock: apiProduct.available + apiProduct.reserved + apiProduct.announced,
+  available: apiProduct.available,
+  reserved: apiProduct.reserved,
+  announced: apiProduct.announced,
+  heightInCm: '-',
+  widthInCm: '-',
+  lengthInCm: '-',
+  weightInKg: apiProduct.weightInKg ? String(apiProduct.weightInKg) : '-',
+  sku: apiProduct.sku,
+  gtin: apiProduct.gtin || '-',
+  amazonAsin: '-',
   amazonSku: '-',
   isbn: '-',
   han: '-',
-  mhd: 'Nein',
-  charge: 'Nein',
-  zolltarifnummer: '238539232',
+  mhd: '-',
+  charge: '-',
+  zolltarifnummer: '-',
   ursprung: '-',
-  nettoVerkaufspreis: '12,5',
-  manufacture: 'Herzbach Home',
-  qtyMastercarton: '10',
-  ordersCount: 6,
-};
+  nettoVerkaufspreis: '-',
+  manufacture: '-',
+  qtyMastercarton: '-',
+  ordersCount: 0,
+});
 
 interface ProductDetailsProps {
   productId: string;
@@ -152,31 +153,83 @@ export function ProductDetails({ productId, backUrl }: ProductDetailsProps) {
   const [barcodeType, setBarcodeType] = useState('GTIN');
   const [barcodeQuantity, setBarcodeQuantity] = useState('1');
 
+  // API state
+  const [productDetails, setProductDetails] = useState<ProductDetailsData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Fetch product details from API
+  useEffect(() => {
+    const fetchProduct = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const data = await dataApi.getProduct(productId);
+        const transformed = transformApiProduct(data);
+        setProductDetails(transformed);
+      } catch (err) {
+        console.error('Error fetching product:', err);
+        setError(err instanceof Error ? err.message : 'Failed to load product details');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProduct();
+  }, [productId]);
+
   // Editable product state
   const [formData, setFormData] = useState({
-    productName: mockProductDetails.productName,
-    manufacturer: mockProductDetails.manufacturer,
+    productName: productDetails?.productName || '',
+    manufacturer: productDetails?.manufacturer || '',
     // Geodaten
-    heightInCm: mockProductDetails.heightInCm,
-    widthInCm: mockProductDetails.widthInCm,
-    lengthInCm: mockProductDetails.lengthInCm,
-    weightInKg: mockProductDetails.weightInKg,
+    heightInCm: productDetails?.heightInCm || '',
+    widthInCm: productDetails?.widthInCm || '',
+    lengthInCm: productDetails?.lengthInCm || '',
+    weightInKg: productDetails?.weightInKg || '',
     // Identifizierung
-    sku: mockProductDetails.sku,
-    gtin: mockProductDetails.gtin,
-    amazonAsin: mockProductDetails.amazonAsin,
-    amazonSku: mockProductDetails.amazonSku,
-    isbn: mockProductDetails.isbn,
-    han: mockProductDetails.han,
+    sku: productDetails?.sku || '',
+    gtin: productDetails?.gtin || '',
+    amazonAsin: productDetails?.amazonAsin || '',
+    amazonSku: productDetails?.amazonSku || '',
+    isbn: productDetails?.isbn || '',
+    han: productDetails?.han || '',
     // Eigenschaften
-    mhd: mockProductDetails.mhd,
-    charge: mockProductDetails.charge,
-    zolltarifnummer: mockProductDetails.zolltarifnummer,
-    ursprung: mockProductDetails.ursprung,
-    nettoVerkaufspreis: mockProductDetails.nettoVerkaufspreis,
-    manufacture: mockProductDetails.manufacture,
-    qtyMastercarton: mockProductDetails.qtyMastercarton,
+    mhd: productDetails?.mhd || '',
+    charge: productDetails?.charge || '',
+    zolltarifnummer: productDetails?.zolltarifnummer || '',
+    ursprung: productDetails?.ursprung || '',
+    nettoVerkaufspreis: productDetails?.nettoVerkaufspreis || '',
+    manufacture: productDetails?.manufacture || '',
+    qtyMastercarton: productDetails?.qtyMastercarton || '',
   });
+
+  // Update formData when productDetails loads
+  useEffect(() => {
+    if (productDetails) {
+      setFormData({
+        productName: productDetails.productName,
+        manufacturer: productDetails.manufacturer,
+        heightInCm: productDetails.heightInCm,
+        widthInCm: productDetails.widthInCm,
+        lengthInCm: productDetails.lengthInCm,
+        weightInKg: productDetails.weightInKg,
+        sku: productDetails.sku,
+        gtin: productDetails.gtin,
+        amazonAsin: productDetails.amazonAsin,
+        amazonSku: productDetails.amazonSku,
+        isbn: productDetails.isbn,
+        han: productDetails.han,
+        mhd: productDetails.mhd,
+        charge: productDetails.charge,
+        zolltarifnummer: productDetails.zolltarifnummer,
+        ursprung: productDetails.ursprung,
+        nettoVerkaufspreis: productDetails.nettoVerkaufspreis,
+        manufacture: productDetails.manufacture,
+        qtyMastercarton: productDetails.qtyMastercarton,
+      });
+    }
+  }, [productDetails]);
 
   // Product image state
   const [productImage, setProductImage] = useState<string | null>(null);
@@ -210,10 +263,6 @@ export function ProductDetails({ productId, backUrl }: ProductDetailsProps) {
     }
   };
 
-  // In a real app, fetch product by productId from the API
-  console.log('Loading product:', productId);
-  const product = mockProductDetails;
-
   const handleBack = () => {
     router.push(backUrl);
   };
@@ -223,10 +272,47 @@ export function ProductDetails({ productId, backUrl }: ProductDetailsProps) {
   };
 
   const handleSave = () => {
-    // In a real app, save the product data to the API
     console.log('Saving product:', formData);
     setEditMode(false);
   };
+
+  // Loading state
+  if (loading) {
+    return (
+      <div className="w-full flex justify-center items-center" style={{ padding: '40px' }}>
+        <div style={{ color: '#6B7280', fontSize: '14px', fontFamily: 'Inter, sans-serif' }}>
+          {tCommon('loading') || 'Loading product...'}
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error || !productDetails) {
+    return (
+      <div className="w-full flex flex-col items-center justify-center" style={{ padding: '40px', gap: '16px' }}>
+        <div style={{ color: '#EF4444', fontSize: '14px', fontFamily: 'Inter, sans-serif' }}>
+          {error || 'Product not found'}
+        </div>
+        <button
+          onClick={() => router.push(backUrl)}
+          style={{
+            padding: '8px 16px',
+            backgroundColor: '#003450',
+            color: '#FFFFFF',
+            borderRadius: '6px',
+            fontSize: '14px',
+            fontFamily: 'Inter, sans-serif',
+            fontWeight: 500,
+            cursor: 'pointer',
+            border: 'none',
+          }}
+        >
+          {tCommon('back') || 'Go Back'}
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full flex flex-col gap-6">
