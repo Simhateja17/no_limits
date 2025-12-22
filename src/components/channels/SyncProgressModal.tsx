@@ -43,28 +43,51 @@ export function SyncProgressModal({ channelId, isOpen, onComplete }: SyncProgres
 
   const fetchSyncStatus = useCallback(async () => {
     try {
+      console.log('[SyncProgressModal] 📡 Fetching sync status for channel:', channelId);
       const response = await getSyncJobStatus(channelId);
+      
+      console.log('[SyncProgressModal] 📦 Received sync status:', {
+        hasJob: !!response.syncJob,
+        status: response.syncJob?.status,
+        progress: response.syncJob?.progress,
+        phase: response.syncJob?.currentPhase,
+        syncedProducts: response.syncJob?.syncedProducts,
+        totalProducts: response.syncJob?.totalProducts,
+        syncedOrders: response.syncJob?.syncedOrders,
+        totalOrders: response.syncJob?.totalOrders,
+      });
       
       if (response.syncJob) {
         setSyncJob(response.syncJob);
         setProgress(response.syncJob.progress || 0);
         setPhase(response.syncJob.currentPhase || 'initializing');
         
+        console.log('[SyncProgressModal] 📊 Updated state:', {
+          progress: response.syncJob.progress || 0,
+          phase: response.syncJob.currentPhase || 'initializing',
+        });
+        
         if (response.syncJob.status === 'COMPLETED') {
+          console.log('[SyncProgressModal] ✅ Sync completed successfully!');
           setIsComplete(true);
           setProgress(100);
         } else if (response.syncJob.status === 'FAILED') {
+          console.log('[SyncProgressModal] ❌ Sync failed:', response.syncJob.errorMessage);
           setIsFailed(true);
           setErrorMessage(response.syncJob.errorMessage);
         }
+      } else {
+        console.log('[SyncProgressModal] ⚠️ No sync job found');
       }
     } catch (err) {
-      console.error('Error fetching sync status:', err);
+      console.error('[SyncProgressModal] ❌ Error fetching sync status:', err);
     }
   }, [channelId]);
 
   useEffect(() => {
     if (!isOpen || !channelId) return;
+
+    console.log('[SyncProgressModal] 🚀 Modal opened, starting sync polling for channel:', channelId);
 
     let isMounted = true;
     let pollInterval: NodeJS.Timeout | null = null;
@@ -76,9 +99,13 @@ export function SyncProgressModal({ channelId, isOpen, onComplete }: SyncProgres
 
     // Start polling
     poll();
-    pollInterval = setInterval(poll, 2000); // Poll every 2 seconds
+    pollInterval = setInterval(() => {
+      console.log('[SyncProgressModal] 🔄 Polling sync status...');
+      poll();
+    }, 2000); // Poll every 2 seconds
 
     return () => {
+      console.log('[SyncProgressModal] 🛑 Stopping sync polling');
       isMounted = false;
       if (pollInterval) clearInterval(pollInterval);
     };
@@ -87,7 +114,9 @@ export function SyncProgressModal({ channelId, isOpen, onComplete }: SyncProgres
   // Auto-close after completion (with delay for user to see completion)
   useEffect(() => {
     if (isComplete) {
+      console.log('[SyncProgressModal] ⏱️ Sync complete, closing modal in 2 seconds...');
       const timer = setTimeout(() => {
+        console.log('[SyncProgressModal] 🔚 Closing modal and calling onComplete');
         onComplete();
       }, 2000); // 2 second delay to show completion
       return () => clearTimeout(timer);

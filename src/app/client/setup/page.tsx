@@ -125,18 +125,23 @@ export default function ClientSetupPage() {
       let channelId: string | null = null;
       
       if (selectedPlatform === 'shopify') {
+        console.log('[Setup] 🛍️ Adding Shopify channel...');
         const result = await onboardingApi.addShopifyChannel({
           clientId,
           shopDomain,
           accessToken: shopifyClientId,
         });
 
+        console.log('[Setup] 📦 Shopify channel result:', result);
+
         if (!result.success) {
+          console.error('[Setup] ❌ Failed to add Shopify channel:', result.error);
           setError(result.error || 'Failed to add Shopify channel');
           return;
         }
         channelId = result.channelId || null;
       } else if (selectedPlatform === 'woocommerce') {
+        console.log('[Setup] 🛒 Adding WooCommerce channel...');
         const result = await onboardingApi.addWooCommerceChannel({
           clientId,
           storeUrl: wooStoreUrl,
@@ -144,7 +149,10 @@ export default function ClientSetupPage() {
           consumerSecret: wooConsumerSecret,
         });
 
+        console.log('[Setup] 📦 WooCommerce channel result:', result);
+
         if (!result.success) {
+          console.error('[Setup] ❌ Failed to add WooCommerce channel:', result.error);
           setError(result.error || 'Failed to add WooCommerce channel');
           return;
         }
@@ -153,11 +161,16 @@ export default function ClientSetupPage() {
 
       // Save channel ID for sync modal
       if (channelId) {
+        console.log('[Setup] 💾 Saved channel ID for sync:', channelId);
         setSyncChannelId(channelId);
+      } else {
+        console.warn('[Setup] ⚠️ No channel ID returned from platform setup');
       }
 
+      console.log('[Setup] ➡️ Moving to JTL credentials step');
       setCurrentStep('jtl');
     } catch (err) {
+      console.error('[Setup] ❌ Error submitting credentials:', err);
       setError(err instanceof Error ? err.message : 'Failed to save credentials');
     } finally {
       setIsLoading(false);
@@ -170,6 +183,7 @@ export default function ClientSetupPage() {
       return;
     }
 
+    console.log('[Setup] 🔐 Submitting JTL credentials...');
     setIsLoading(true);
     setError(null);
 
@@ -183,19 +197,25 @@ export default function ClientSetupPage() {
         environment: jtlEnvironment,
       });
 
+      console.log('[Setup] 📦 JTL credentials result:', result);
+
       if (!result.success) {
+        console.error('[Setup] ❌ Failed to setup JTL credentials:', result.error);
         setError(result.error || 'Failed to setup JTL credentials');
         return;
       }
 
       // Show sync progress modal if we have a channel ID
       if (syncChannelId) {
+        console.log('[Setup] 🔄 Opening sync modal for channel:', syncChannelId);
         setShowSyncModal(true);
       } else {
+        console.log('[Setup] ⚠️ No channel ID, skipping sync modal');
         // No channel to sync, go directly to complete
         setCurrentStep('complete');
       }
     } catch (err) {
+      console.error('[Setup] ❌ Error saving JTL credentials:', err);
       setError(err instanceof Error ? err.message : 'Failed to save JTL credentials');
     } finally {
       setIsLoading(false);
@@ -203,15 +223,18 @@ export default function ClientSetupPage() {
   };
 
   const handleSyncComplete = () => {
+    console.log('[Setup] ✅ Sync completed, closing modal');
     setShowSyncModal(false);
     setCurrentStep('complete');
   };
 
   const handleComplete = () => {
+    console.log('[Setup] 🎉 Setup complete, redirecting to dashboard');
     router.push('/client/dashboard');
   };
 
   const handleSkipJTL = () => {
+    console.log('[Setup] ⏭️ Skipping JTL setup');
     setCurrentStep('complete');
   };
 
