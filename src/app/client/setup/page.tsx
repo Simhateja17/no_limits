@@ -25,8 +25,8 @@ export default function ClientSetupPage() {
   const [showSyncModal, setShowSyncModal] = useState(false);
   const [syncChannelId, setSyncChannelId] = useState<string | null>(null);
 
-  // Shopify connection type
-  const [shopifyConnectionType, setShopifyConnectionType] = useState<'access_token' | 'api_key'>('access_token');
+  // Shopify connection type - NOW WITH THREE OPTIONS
+  const [shopifyConnectionType, setShopifyConnectionType] = useState<'access_token' | 'api_key' | 'oauth'>('access_token');
 
   // Shopify credentials - Access Token method
   const [shopDomain, setShopDomain] = useState('');
@@ -35,6 +35,12 @@ export default function ClientSetupPage() {
   // Shopify credentials - API Key & Secret method
   const [shopifyApiKey, setShopifyApiKey] = useState('');
   const [shopifyApiSecret, setShopifyApiSecret] = useState('');
+
+  // Shopify credentials - OAuth method
+  const [shopifyOAuthClientId, setShopifyOAuthClientId] = useState('');
+  const [shopifyOAuthClientSecret, setShopifyOAuthClientSecret] = useState('');
+  const [shopifyOAuthStatus, setShopifyOAuthStatus] = useState<'pending' | 'authorizing' | 'success' | 'error' | null>(null);
+  const [shopifyOAuthError, setShopifyOAuthError] = useState<string | null>(null);
 
   // WooCommerce credentials
   const [wooStoreUrl, setWooStoreUrl] = useState('');
@@ -98,6 +104,14 @@ export default function ClientSetupPage() {
 
     try {
       if (selectedPlatform === 'shopify') {
+        // OAuth method cannot be tested without completing the full OAuth flow
+        if (shopifyConnectionType === 'oauth') {
+          setError('OAuth connection will be verified during authorization');
+          setPlatformTestSuccess(null);
+          setIsLoading(false);
+          return;
+        }
+
         const accessToken = shopifyConnectionType === 'access_token' ? shopifyAccessToken : shopifyApiKey;
         const result = await onboardingApi.testShopifyConnection(shopDomain, accessToken);
         setPlatformTestSuccess(result.success);
@@ -123,6 +137,108 @@ export default function ClientSetupPage() {
     }
   };
 
+  // NEW: Handle Shopify OAuth flow
+  const handleShopifyOAuth = async () => {
+    if (!clientId) {
+      setShopifyOAuthError('Client ID not found');
+      return;
+    }
+
+    console.log('[Setup] 🔐 Starting Shopify OAuth flow...');
+    setShopifyOAuthStatus('authorizing');
+    setShopifyOAuthError(null);
+    setIsLoading(true);
+
+    try {
+      // First, save OAuth client credentials to backend
+      const saveResult = await onboardingApi.saveShopifyOAuthCredentials({
+        clientId,
+        shopDomain,
+        oauthClientId: shopifyOAuthClientId,
+        oauthClientSecret: shopifyOAuthClientSecret,
+      });
+
+      if (!saveResult.success) {
+        setShopifyOAuthError(saveResult.error || 'Failed to save OAuth credentials');
+        setShopifyOAuthStatus('error');
+        setIsLoading(false);
+        return;
+      }
+
+      // Get OAuth authorization URL
+      const redirectUri = `${window.location.origin}/integrations/shopify/callback`;
+      const authUrlResponse = await onboardingApi.getShopifyAuthUrl({
+        clientId,
+        shopDomain,
+        redirectUri,
+        oauthClientId: shopifyOAuthClientId,
+      });
+
+      console.log('[Setup] 🔗 Opening OAuth popup...');
+
+      // Open popup for authorization
+      const popup = window.open(
+        authUrlResponse.authUrl,
+        'shopify-oauth',
+        'width=500,height=700'
+      );
+
+      if (!popup) {
+        setShopifyOAuthStatus('error');
+        setShopifyOAuthError('Failed to open popup. Please allow popups for this site.');
+        setIsLoading(false);
+        return;
+      }
+
+      // Listen for messages from popup
+      const handleMessage = (event: MessageEvent) => {
+        if (event.origin !== window.location.origin) return;
+
+        if (event.data.type === 'shopify-oauth-success') {
+          console.log('[Setup] ✅ Shopify OAuth completed successfully');
+          setShopifyOAuthStatus('success');
+          window.removeEventListener('message', handleMessage);
+          setIsLoading(false);
+
+          // Save the channel ID
+          if (event.data.channelId) {
+            setSyncChannelId(event.data.channelId);
+          }
+
+          // Move to JTL step
+          setCurrentStep('jtl');
+        } else if (event.data.type === 'shopify-oauth-error') {
+          console.error('[Setup] ❌ Shopify OAuth failed:', event.data.error);
+          setShopifyOAuthStatus('error');
+          setShopifyOAuthError(event.data.error || 'OAuth authorization failed');
+          window.removeEventListener('message', handleMessage);
+          setIsLoading(false);
+        }
+      };
+
+      window.addEventListener('message', handleMessage);
+
+      // Check if popup was closed without completing
+      const popupCheck = setInterval(() => {
+        if (popup.closed) {
+          clearInterval(popupCheck);
+          window.removeEventListener('message', handleMessage);
+          if (shopifyOAuthStatus !== 'success') {
+            console.log('[Setup] ⚠️ OAuth popup closed without completion');
+            setShopifyOAuthStatus('error');
+            setShopifyOAuthError('Authorization cancelled');
+            setIsLoading(false);
+          }
+        }
+      }, 500);
+    } catch (err) {
+      console.error('[Setup] ❌ Error starting Shopify OAuth:', err);
+      setShopifyOAuthStatus('error');
+      setShopifyOAuthError(err instanceof Error ? err.message : 'Failed to start OAuth flow');
+      setIsLoading(false);
+    }
+  };
+
   const handleCredentialsSubmit = async () => {
     if (!clientId) {
       setError('Client ID not found');
@@ -134,9 +250,17 @@ export default function ClientSetupPage() {
 
     try {
       let channelId: string | null = null;
-      
+
       if (selectedPlatform === 'shopify') {
         console.log('[Setup] 🛍️ Adding Shopify channel...');
+
+        // Handle OAuth flow differently
+        if (shopifyConnectionType === 'oauth') {
+          console.log('[Setup] 🔐 Triggering OAuth flow...');
+          await handleShopifyOAuth();
+          return; // Don't continue - OAuth flow will handle the rest
+        }
+
         const accessToken = shopifyConnectionType === 'access_token' ? shopifyAccessToken : shopifyApiKey;
         const result = await onboardingApi.addShopifyChannel({
           clientId,
@@ -618,42 +742,60 @@ export default function ClientSetupPage() {
                   >
                     Connection Method
                   </label>
-                  <div style={{ display: 'flex', gap: '12px' }}>
+                  <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                     <button
                       type="button"
                       onClick={() => setShopifyConnectionType('access_token')}
                       style={{
-                        flex: 1,
-                        padding: '12px',
+                        flex: '1 1 150px',
+                        padding: '10px 12px',
                         borderRadius: '8px',
                         border: shopifyConnectionType === 'access_token' ? '2px solid #003450' : '1px solid #D1D5DB',
                         background: shopifyConnectionType === 'access_token' ? '#F0F9FF' : 'white',
                         color: shopifyConnectionType === 'access_token' ? '#003450' : '#6B7280',
                         fontWeight: 500,
-                        fontSize: '14px',
+                        fontSize: '13px',
                         cursor: 'pointer',
                         transition: 'all 0.2s',
                       }}
                     >
-                      Admin API Access Token
+                      Access Token
                     </button>
                     <button
                       type="button"
                       onClick={() => setShopifyConnectionType('api_key')}
                       style={{
-                        flex: 1,
-                        padding: '12px',
+                        flex: '1 1 150px',
+                        padding: '10px 12px',
                         borderRadius: '8px',
                         border: shopifyConnectionType === 'api_key' ? '2px solid #003450' : '1px solid #D1D5DB',
                         background: shopifyConnectionType === 'api_key' ? '#F0F9FF' : 'white',
                         color: shopifyConnectionType === 'api_key' ? '#003450' : '#6B7280',
                         fontWeight: 500,
-                        fontSize: '14px',
+                        fontSize: '13px',
                         cursor: 'pointer',
                         transition: 'all 0.2s',
                       }}
                     >
                       API Key & Secret
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setShopifyConnectionType('oauth')}
+                      style={{
+                        flex: '1 1 150px',
+                        padding: '10px 12px',
+                        borderRadius: '8px',
+                        border: shopifyConnectionType === 'oauth' ? '2px solid #003450' : '1px solid #D1D5DB',
+                        background: shopifyConnectionType === 'oauth' ? '#F0F9FF' : 'white',
+                        color: shopifyConnectionType === 'oauth' ? '#003450' : '#6B7280',
+                        fontWeight: 500,
+                        fontSize: '13px',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s',
+                      }}
+                    >
+                      OAuth Flow
                     </button>
                   </div>
                 </div>
@@ -779,6 +921,142 @@ export default function ClientSetupPage() {
                         }}
                       />
                     </div>
+                  </>
+                )}
+
+                {/* OAuth Method */}
+                {shopifyConnectionType === 'oauth' && (
+                  <>
+                    <div>
+                      <label
+                        style={{
+                          display: 'block',
+                          fontFamily: 'Inter, sans-serif',
+                          fontWeight: 500,
+                          fontSize: '14px',
+                          color: '#374151',
+                          marginBottom: '6px',
+                        }}
+                      >
+                        OAuth Client ID
+                      </label>
+                      <input
+                        type="text"
+                        value={shopifyOAuthClientId}
+                        onChange={(e) => setShopifyOAuthClientId(e.target.value)}
+                        placeholder="Your Shopify App Client ID"
+                        style={{
+                          width: '100%',
+                          padding: '12px',
+                          borderRadius: '8px',
+                          border: '1px solid #D1D5DB',
+                          fontSize: '14px',
+                          outline: 'none',
+                        }}
+                      />
+                    </div>
+                    <div>
+                      <label
+                        style={{
+                          display: 'block',
+                          fontFamily: 'Inter, sans-serif',
+                          fontWeight: 500,
+                          fontSize: '14px',
+                          color: '#374151',
+                          marginBottom: '6px',
+                        }}
+                      >
+                        OAuth Client Secret
+                      </label>
+                      <input
+                        type="password"
+                        value={shopifyOAuthClientSecret}
+                        onChange={(e) => setShopifyOAuthClientSecret(e.target.value)}
+                        placeholder="Your Shopify App Client Secret"
+                        style={{
+                          width: '100%',
+                          padding: '12px',
+                          borderRadius: '8px',
+                          border: '1px solid #D1D5DB',
+                          fontSize: '14px',
+                          outline: 'none',
+                        }}
+                      />
+                    </div>
+                    <div
+                      style={{
+                        padding: '12px',
+                        background: '#EFF6FF',
+                        borderRadius: '8px',
+                        fontSize: '13px',
+                        color: '#1E40AF',
+                        lineHeight: '1.5',
+                      }}
+                    >
+                      <strong>Note:</strong> Create a Shopify App at{' '}
+                      <a
+                        href="https://partners.shopify.com"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{ color: '#2563EB', textDecoration: 'underline' }}
+                      >
+                        Shopify Partners
+                      </a>{' '}
+                      and add the redirect URL: <code style={{background: '#DBEAFE', padding: '2px 4px', borderRadius: '4px'}}>{typeof window !== 'undefined' ? `${window.location.origin}/integrations/shopify/callback` : '/integrations/shopify/callback'}</code>
+                    </div>
+
+                    {shopifyOAuthStatus === 'authorizing' && (
+                      <div
+                        style={{
+                          padding: '12px',
+                          background: '#EFF6FF',
+                          borderRadius: '8px',
+                          color: '#1E40AF',
+                          fontSize: '14px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '8px',
+                        }}
+                      >
+                        <div style={{
+                          width: '16px',
+                          height: '16px',
+                          border: '2px solid #3B82F6',
+                          borderTop: '2px solid transparent',
+                          borderRadius: '50%',
+                          animation: 'spin 1s linear infinite',
+                        }} />
+                        Authorizing with Shopify... Please complete authorization in the popup window.
+                      </div>
+                    )}
+
+                    {shopifyOAuthStatus === 'success' && (
+                      <div
+                        style={{
+                          padding: '12px',
+                          background: '#F0FDF4',
+                          borderRadius: '8px',
+                          color: '#16A34A',
+                          fontSize: '14px',
+                        }}
+                      >
+                        ✓ Authorization successful! Shopify store connected.
+                      </div>
+                    )}
+
+                    {shopifyOAuthError && (
+                      <div
+                        style={{
+                          padding: '12px',
+                          background: '#FEF2F2',
+                          borderRadius: '8px',
+                          color: '#DC2626',
+                          fontSize: '14px',
+                        }}
+                      >
+                        {shopifyOAuthError}
+                      </div>
+                    )}
                   </>
                 )}
               </div>

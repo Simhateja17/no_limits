@@ -37,6 +37,20 @@ export interface ShopifyChannelInput {
   channelName?: string;
 }
 
+export interface ShopifyOAuthCredentialsInput {
+  clientId: string;
+  shopDomain: string;
+  oauthClientId: string;
+  oauthClientSecret: string;
+}
+
+export interface ShopifyAuthUrlInput {
+  clientId: string;
+  shopDomain: string;
+  redirectUri: string;
+  oauthClientId: string;
+}
+
 export interface WooCommerceChannelInput {
   clientId: string;
   storeUrl: string;
@@ -196,6 +210,49 @@ export const onboardingApi = {
   triggerInitialSync: async (channelId: string): Promise<OnboardingResult> => {
     const response = await api.post<OnboardingResult>(
       `/integrations/onboarding/sync/${channelId}`
+    );
+    return response.data;
+  },
+
+  /**
+   * Save Shopify OAuth credentials (before starting OAuth flow)
+   */
+  saveShopifyOAuthCredentials: async (input: ShopifyOAuthCredentialsInput): Promise<OnboardingResult> => {
+    const response = await api.post<OnboardingResult>(
+      '/integrations/shopify/oauth/save-credentials',
+      input
+    );
+    return response.data;
+  },
+
+  /**
+   * Get Shopify OAuth authorization URL
+   */
+  getShopifyAuthUrl: async (input: ShopifyAuthUrlInput): Promise<{ success: boolean; authUrl: string }> => {
+    const response = await api.post<{ success: boolean; authUrl: string }>(
+      '/integrations/shopify/oauth/auth-url',
+      input
+    );
+    return response.data;
+  },
+
+  /**
+   * Complete Shopify OAuth flow (called by callback page)
+   */
+  completeShopifyOAuth: async (
+    clientId: string,
+    shopDomain: string,
+    code: string,
+    state: string
+  ): Promise<OnboardingResult> => {
+    const response = await api.post<OnboardingResult>(
+      '/integrations/shopify/oauth/complete',
+      {
+        clientId,
+        shopDomain,
+        code,
+        state,
+      }
     );
     return response.data;
   },
