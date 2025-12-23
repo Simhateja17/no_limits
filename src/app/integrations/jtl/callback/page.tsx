@@ -20,6 +20,16 @@ export default function JTLOAuthCallback() {
       try {
         const code = searchParams.get('code');
         const state = searchParams.get('state');
+        const error = searchParams.get('error');
+        const errorDescription = searchParams.get('error_description');
+
+        // Check if OAuth provider returned an error
+        if (error) {
+          setStatus('error');
+          setMessage(`OAuth Error: ${error}${errorDescription ? ` - ${errorDescription}` : ''}`);
+          console.error('[JTL OAuth] Provider returned error:', { error, errorDescription });
+          return;
+        }
 
         // The state parameter contains the clientId (set during auth URL generation)
         const clientId = state;
@@ -27,20 +37,26 @@ export default function JTLOAuthCallback() {
         if (!code) {
           setStatus('error');
           setMessage('Authorization code not found in callback');
+          console.error('[JTL OAuth] No authorization code in callback URL');
           return;
         }
 
         if (!clientId) {
           setStatus('error');
           setMessage('Client ID not found in state parameter');
+          console.error('[JTL OAuth] No client ID in state parameter');
           return;
         }
+
+        console.log('[JTL OAuth] Starting token exchange for client:', clientId);
+        console.log('[JTL OAuth] Code received (first 10 chars):', code.substring(0, 10) + '...');
 
         // Mark as exchanged before making the call to prevent duplicates
         hasExchangedRef.current = true;
 
         // Construct redirect URI (this same page)
         const redirectUri = `${window.location.origin}/integrations/jtl/callback`;
+        console.log('[JTL OAuth] Redirect URI:', redirectUri);
 
         // Exchange code for tokens using the configured API client
         const response = await api.post('/integrations/jtl/exchange-token', {
@@ -52,6 +68,7 @@ export default function JTLOAuthCallback() {
         const data = response.data;
 
         if (data.success) {
+          console.log('[JTL OAuth] ✅ Token exchange successful');
           setStatus('success');
           setMessage('JTL FFN authentication successful!');
 
@@ -65,13 +82,28 @@ export default function JTLOAuthCallback() {
             window.close();
           }, 2000);
         } else {
+          console.error('[JTL OAuth] ❌ Token exchange failed:', data.error);
           setStatus('error');
           setMessage(data.error || 'Failed to complete authentication');
         }
-      } catch (error) {
-        console.error('Error exchanging token:', error);
+      } catch (error: any) {
+        console.error('[JTL OAuth] ❌ Error exchanging token:', error);
+
+        // Extract more detailed error message
+        let errorMsg = 'An unexpected error occurred';
+        if (error?.response?.data?.error) {
+          errorMsg = error.response.data.error;
+        } else if (error instanceof Error) {
+          errorMsg = error.message;
+        }
+
+        // Check if it's a "revoked" error and provide helpful message
+        if (errorMsg.includes('revoked') || errorMsg.includes('invalid_request')) {
+          errorMsg += '\n\nTip: Each authorization code can only be used once. Please start the authorization process again.';
+        }
+
         setStatus('error');
-        setMessage(error instanceof Error ? error.message : 'An unexpected error occurred');
+        setMessage(errorMsg);
       }
     };
 
@@ -168,7 +200,7 @@ export default function JTLOAuthCallback() {
             <h2 style={{ fontSize: '1.25rem', fontWeight: '600', color: '#111827', marginBottom: '0.5rem' }}>
               Authentication Failed
             </h2>
-            <p style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '1rem' }}>
+            <p style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '1rem', whiteSpace: 'pre-line' }}>
               {message}
             </p>
             <button
