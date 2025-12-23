@@ -202,9 +202,9 @@ export default function ClientSetupPage() {
 
       console.log('[Setup] 🔗 Opening OAuth popup...');
 
-      // Open popup
+      // Open popup with the complete auth URL (don't append anything)
       const popup = window.open(
-        `${authUrlResponse.authUrl}&client_id=${clientId}&environment=${jtlEnvironment}`,
+        authUrlResponse.authUrl,
         'jtl-oauth',
         'width=500,height=700'
       );
