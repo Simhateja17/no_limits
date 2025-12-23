@@ -1200,17 +1200,17 @@ export default function ClientSetupPage() {
               </button>
               <button
                 onClick={handleCredentialsSubmit}
-                disabled={isLoading || platformTestSuccess !== true}
+                disabled={isLoading || (shopifyConnectionType !== 'oauth' && platformTestSuccess !== true)}
                 style={{
                   flex: 1,
                   padding: '12px 24px',
                   borderRadius: '8px',
                   border: 'none',
-                  background: platformTestSuccess === true ? '#003450' : '#9CA3AF',
+                  background: (platformTestSuccess === true || shopifyConnectionType === 'oauth') ? '#003450' : '#9CA3AF',
                   color: 'white',
                   fontWeight: 500,
                   fontSize: '14px',
-                  cursor: isLoading || platformTestSuccess !== true ? 'not-allowed' : 'pointer',
+                  cursor: isLoading || (shopifyConnectionType !== 'oauth' && platformTestSuccess !== true) ? 'not-allowed' : 'pointer',
                 }}
               >
                 {isLoading ? t('saving') || 'Saving...' : t('continue') || 'Continue'}
