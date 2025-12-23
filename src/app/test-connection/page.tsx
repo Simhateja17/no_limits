@@ -114,7 +114,7 @@ export default function TestConnectionPage() {
                 <h3 className="text-lg font-semibold text-yellow-800 mb-2">Troubleshooting Tips</h3>
                 <ul className="list-disc list-inside space-y-1 text-yellow-700">
                   <li>Check if backend is deployed and running on Render</li>
-                  <li>Verify CORS settings: FRONTEND_URL in Render should be https://no-limits-jade.vercel.app</li>
+                  <li>Verify CORS settings: FRONTEND_URL in Render should be https://no-limits-seven.vercel.app</li>
                   <li>Ensure DATABASE_URL is correctly set in Render</li>
                   <li>Check Render logs for errors</li>
                   <li>Verify JWT secrets are set in Render environment variables</li>

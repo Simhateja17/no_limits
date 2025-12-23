@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
+import { api } from '@/lib/api';
 
 export default function JTLOAuthCallback() {
   const searchParams = useSearchParams();
@@ -32,22 +33,16 @@ export default function JTLOAuthCallback() {
         // Construct redirect URI (this same page)
         const redirectUri = `${window.location.origin}/integrations/jtl/callback`;
 
-        // Exchange code for tokens
-        const response = await fetch('/api/integrations/jtl/exchange-token', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            clientId,
-            code,
-            redirectUri,
-          }),
+        // Exchange code for tokens using the configured API client
+        const response = await api.post('/integrations/jtl/exchange-token', {
+          clientId,
+          code,
+          redirectUri,
         });
 
-        const data = await response.json();
+        const data = response.data;
 
-        if (response.ok && data.success) {
+        if (data.success) {
           setStatus('success');
           setMessage('JTL FFN authentication successful!');
 
