@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { api } from '@/lib/api';
 
@@ -8,8 +8,14 @@ export default function JTLOAuthCallback() {
   const searchParams = useSearchParams();
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
   const [message, setMessage] = useState('');
+  const hasExchangedRef = useRef(false);
 
   useEffect(() => {
+    // Prevent multiple token exchanges (React StrictMode runs effects twice in dev)
+    if (hasExchangedRef.current) {
+      return;
+    }
+
     const exchangeToken = async () => {
       try {
         const code = searchParams.get('code');
@@ -29,6 +35,9 @@ export default function JTLOAuthCallback() {
           setMessage('Client ID not found in state parameter');
           return;
         }
+
+        // Mark as exchanged before making the call to prevent duplicates
+        hasExchangedRef.current = true;
 
         // Construct redirect URI (this same page)
         const redirectUri = `${window.location.origin}/integrations/jtl/callback`;
