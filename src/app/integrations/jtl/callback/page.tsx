@@ -13,8 +13,9 @@ export default function JTLOAuthCallback() {
       try {
         const code = searchParams.get('code');
         const state = searchParams.get('state');
-        const clientId = searchParams.get('client_id');
-        const environment = searchParams.get('environment') || 'sandbox';
+
+        // The state parameter contains the clientId (set during auth URL generation)
+        const clientId = state;
 
         if (!code) {
           setStatus('error');
@@ -24,7 +25,7 @@ export default function JTLOAuthCallback() {
 
         if (!clientId) {
           setStatus('error');
-          setMessage('Client ID not found in callback');
+          setMessage('Client ID not found in state parameter');
           return;
         }
 
@@ -41,7 +42,6 @@ export default function JTLOAuthCallback() {
             clientId,
             code,
             redirectUri,
-            environment,
           }),
         });
 
