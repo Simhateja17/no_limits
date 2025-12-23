@@ -13,8 +13,12 @@ export default function JTLOAuthCallback() {
   useEffect(() => {
     // Prevent multiple token exchanges (React StrictMode runs effects twice in dev)
     if (hasExchangedRef.current) {
+      console.log('[JTL OAuth] ⏭️ Skipping duplicate token exchange (already in progress)');
       return;
     }
+
+    // Mark as exchanging IMMEDIATELY to prevent race conditions
+    hasExchangedRef.current = true;
 
     const exchangeToken = async () => {
       try {
@@ -50,9 +54,6 @@ export default function JTLOAuthCallback() {
 
         console.log('[JTL OAuth] Starting token exchange for client:', clientId);
         console.log('[JTL OAuth] Code received (first 10 chars):', code.substring(0, 10) + '...');
-
-        // Mark as exchanged before making the call to prevent duplicates
-        hasExchangedRef.current = true;
 
         // Construct redirect URI (this same page)
         const redirectUri = `${window.location.origin}/integrations/jtl/callback`;
