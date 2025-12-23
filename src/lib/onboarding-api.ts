@@ -33,6 +33,7 @@ export interface ShopifyChannelInput {
   clientId: string;
   shopDomain: string;
   accessToken: string;
+  apiSecret?: string;
   channelName?: string;
 }
 

@@ -260,7 +260,7 @@ export default function AdminChatPage() {
           messages={isLoadingMessages ? [] : messages}
           currentUserId={user?.id || 'admin'}
           currentUserName={user?.name || 'Admin'}
-          currentUserAvatar={user?.avatar || '/imageofchat.png'}
+          currentUserAvatar={'/imageofchat.png'}
           onSendMessage={handleSendMessage}
           isTyping={isTyping}
           typingUser={

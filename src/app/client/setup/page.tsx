@@ -25,10 +25,16 @@ export default function ClientSetupPage() {
   const [showSyncModal, setShowSyncModal] = useState(false);
   const [syncChannelId, setSyncChannelId] = useState<string | null>(null);
 
-  // Shopify credentials
+  // Shopify connection type
+  const [shopifyConnectionType, setShopifyConnectionType] = useState<'access_token' | 'api_key'>('access_token');
+
+  // Shopify credentials - Access Token method
   const [shopDomain, setShopDomain] = useState('');
-  const [shopifyClientId, setShopifyClientId] = useState('');
-  const [shopifyClientSecret, setShopifyClientSecret] = useState('');
+  const [shopifyAccessToken, setShopifyAccessToken] = useState('');
+
+  // Shopify credentials - API Key & Secret method
+  const [shopifyApiKey, setShopifyApiKey] = useState('');
+  const [shopifyApiSecret, setShopifyApiSecret] = useState('');
 
   // WooCommerce credentials
   const [wooStoreUrl, setWooStoreUrl] = useState('');
@@ -92,7 +98,8 @@ export default function ClientSetupPage() {
 
     try {
       if (selectedPlatform === 'shopify') {
-        const result = await onboardingApi.testShopifyConnection(shopDomain, shopifyClientId);
+        const accessToken = shopifyConnectionType === 'access_token' ? shopifyAccessToken : shopifyApiKey;
+        const result = await onboardingApi.testShopifyConnection(shopDomain, accessToken);
         setPlatformTestSuccess(result.success);
         if (!result.success) {
           setError(result.message);
@@ -130,10 +137,12 @@ export default function ClientSetupPage() {
       
       if (selectedPlatform === 'shopify') {
         console.log('[Setup] 🛍️ Adding Shopify channel...');
+        const accessToken = shopifyConnectionType === 'access_token' ? shopifyAccessToken : shopifyApiKey;
         const result = await onboardingApi.addShopifyChannel({
           clientId,
           shopDomain,
-          accessToken: shopifyClientId,
+          accessToken: accessToken,
+          apiSecret: shopifyConnectionType === 'api_key' ? shopifyApiSecret : undefined,
         });
 
         console.log('[Setup] 📦 Shopify channel result:', result);
@@ -595,6 +604,61 @@ export default function ClientSetupPage() {
 
             {selectedPlatform === 'shopify' ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                {/* Connection Method Toggle */}
+                <div>
+                  <label
+                    style={{
+                      display: 'block',
+                      fontFamily: 'Inter, sans-serif',
+                      fontWeight: 500,
+                      fontSize: '14px',
+                      color: '#374151',
+                      marginBottom: '8px',
+                    }}
+                  >
+                    Connection Method
+                  </label>
+                  <div style={{ display: 'flex', gap: '12px' }}>
+                    <button
+                      type="button"
+                      onClick={() => setShopifyConnectionType('access_token')}
+                      style={{
+                        flex: 1,
+                        padding: '12px',
+                        borderRadius: '8px',
+                        border: shopifyConnectionType === 'access_token' ? '2px solid #003450' : '1px solid #D1D5DB',
+                        background: shopifyConnectionType === 'access_token' ? '#F0F9FF' : 'white',
+                        color: shopifyConnectionType === 'access_token' ? '#003450' : '#6B7280',
+                        fontWeight: 500,
+                        fontSize: '14px',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s',
+                      }}
+                    >
+                      Admin API Access Token
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setShopifyConnectionType('api_key')}
+                      style={{
+                        flex: 1,
+                        padding: '12px',
+                        borderRadius: '8px',
+                        border: shopifyConnectionType === 'api_key' ? '2px solid #003450' : '1px solid #D1D5DB',
+                        background: shopifyConnectionType === 'api_key' ? '#F0F9FF' : 'white',
+                        color: shopifyConnectionType === 'api_key' ? '#003450' : '#6B7280',
+                        fontWeight: 500,
+                        fontSize: '14px',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s',
+                      }}
+                    >
+                      API Key & Secret
+                    </button>
+                  </div>
+                </div>
+
+                {/* Shop Domain - Common for both methods */}
                 <div>
                   <label
                     style={{
@@ -623,62 +687,100 @@ export default function ClientSetupPage() {
                     }}
                   />
                 </div>
-                <div>
-                  <label
-                    style={{
-                      display: 'block',
-                      fontFamily: 'Inter, sans-serif',
-                      fontWeight: 500,
-                      fontSize: '14px',
-                      color: '#374151',
-                      marginBottom: '6px',
-                    }}
-                  >
-                    Client ID
-                  </label>
-                  <input
-                    type="text"
-                    value={shopifyClientId}
-                    onChange={(e) => setShopifyClientId(e.target.value)}
-                    placeholder="Your Shopify Client ID"
-                    style={{
-                      width: '100%',
-                      padding: '12px',
-                      borderRadius: '8px',
-                      border: '1px solid #D1D5DB',
-                      fontSize: '14px',
-                      outline: 'none',
-                    }}
-                  />
-                </div>
-                <div>
-                  <label
-                    style={{
-                      display: 'block',
-                      fontFamily: 'Inter, sans-serif',
-                      fontWeight: 500,
-                      fontSize: '14px',
-                      color: '#374151',
-                      marginBottom: '6px',
-                    }}
-                  >
-                    Client Secret
-                  </label>
-                  <input
-                    type="password"
-                    value={shopifyClientSecret}
-                    onChange={(e) => setShopifyClientSecret(e.target.value)}
-                    placeholder="Your Shopify Client Secret"
-                    style={{
-                      width: '100%',
-                      padding: '12px',
-                      borderRadius: '8px',
-                      border: '1px solid #D1D5DB',
-                      fontSize: '14px',
-                      outline: 'none',
-                    }}
-                  />
-                </div>
+
+                {/* Admin API Access Token Method */}
+                {shopifyConnectionType === 'access_token' && (
+                  <div>
+                    <label
+                      style={{
+                        display: 'block',
+                        fontFamily: 'Inter, sans-serif',
+                        fontWeight: 500,
+                        fontSize: '14px',
+                        color: '#374151',
+                        marginBottom: '6px',
+                      }}
+                    >
+                      Admin API Access Token
+                    </label>
+                    <input
+                      type="password"
+                      value={shopifyAccessToken}
+                      onChange={(e) => setShopifyAccessToken(e.target.value)}
+                      placeholder="shpat_..."
+                      style={{
+                        width: '100%',
+                        padding: '12px',
+                        borderRadius: '8px',
+                        border: '1px solid #D1D5DB',
+                        fontSize: '14px',
+                        outline: 'none',
+                      }}
+                    />
+                  </div>
+                )}
+
+                {/* API Key & Secret Method */}
+                {shopifyConnectionType === 'api_key' && (
+                  <>
+                    <div>
+                      <label
+                        style={{
+                          display: 'block',
+                          fontFamily: 'Inter, sans-serif',
+                          fontWeight: 500,
+                          fontSize: '14px',
+                          color: '#374151',
+                          marginBottom: '6px',
+                        }}
+                      >
+                        API Key
+                      </label>
+                      <input
+                        type="text"
+                        value={shopifyApiKey}
+                        onChange={(e) => setShopifyApiKey(e.target.value)}
+                        placeholder="Your Shopify API Key"
+                        style={{
+                          width: '100%',
+                          padding: '12px',
+                          borderRadius: '8px',
+                          border: '1px solid #D1D5DB',
+                          fontSize: '14px',
+                          outline: 'none',
+                        }}
+                      />
+                    </div>
+                    <div>
+                      <label
+                        style={{
+                          display: 'block',
+                          fontFamily: 'Inter, sans-serif',
+                          fontWeight: 500,
+                          fontSize: '14px',
+                          color: '#374151',
+                          marginBottom: '6px',
+                        }}
+                      >
+                        API Secret
+                      </label>
+                      <input
+                        type="password"
+                        value={shopifyApiSecret}
+                        onChange={(e) => setShopifyApiSecret(e.target.value)}
+                        placeholder="Your Shopify API Secret"
+                        style={{
+                          width: '100%',
+                          padding: '12px',
+                          borderRadius: '8px',
+                          border: '1px solid #D1D5DB',
+                          fontSize: '14px',
+                          outline: 'none',
+                        }}
+                      />
+                    </div>
+                  </>
+                )}
               </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
