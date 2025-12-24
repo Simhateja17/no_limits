@@ -12,16 +12,24 @@ export default function ShopifyOAuthCallback() {
 
   useEffect(() => {
     const handleCallback = async () => {
-      // Prevent duplicate calls using ref (survives React Strict Mode remounts)
-      if (hasProcessedRef.current) {
+      // Get OAuth parameters from URL first
+      const code = searchParams.get('code');
+      const state = searchParams.get('state');
+
+      // Create a unique key for this OAuth flow
+      const oauthKey = `shopify_oauth_${code}_${state}`;
+
+      // Prevent duplicate calls using sessionStorage (survives React Strict Mode remounts)
+      if (hasProcessedRef.current || sessionStorage.getItem(oauthKey)) {
         console.log('[Shopify OAuth] ⏭️ Already processed, skipping duplicate call');
         return;
       }
+
+      // Mark as processing immediately
       hasProcessedRef.current = true;
+      sessionStorage.setItem(oauthKey, 'processing');
+
       try {
-        // Get OAuth parameters from URL
-        const code = searchParams.get('code');
-        const state = searchParams.get('state');
         const shop = searchParams.get('shop');
         const error = searchParams.get('error');
         const errorDescription = searchParams.get('error_description');
@@ -68,38 +76,102 @@ export default function ShopifyOAuthCallback() {
           return;
         }
 
+        // Get additional security parameters from Shopify
+        const hmac = searchParams.get('hmac');
+        const timestamp = searchParams.get('timestamp');
+
         console.log('[Shopify OAuth] 📝 Received callback with code');
+        console.log('[Shopify OAuth] 📝 Shop:', shop);
+        console.log('[Shopify OAuth] 📝 State:', state);
         setMessage('Exchanging authorization code for access token...');
 
-        // Exchange code for access token
-        // State contains the clientId
+        // Extract clientId from state (format: clientId:nonce or just clientId for backwards compatibility)
+        const stateParts = state.split(':');
+        const clientId = stateParts[0];
+
+        // Save "pending" state to localStorage immediately so parent knows OAuth is in progress
+        try {
+          localStorage.setItem('shopify_oauth_pending', JSON.stringify({
+            clientId,
+            shop,
+            timestamp: Date.now()
+          }));
+          console.log('[Shopify OAuth] ⏳ Saved pending state to localStorage');
+        } catch (e) {
+          console.error('[Shopify OAuth] ❌ Failed to save pending state:', e);
+        }
+
+        // Exchange code for access token with security parameters
         const result = await onboardingApi.completeShopifyOAuth(
-          state, // clientId is passed as state
+          clientId,
           shop,
           code,
-          state
+          state,
+          hmac || undefined,
+          timestamp || undefined
         );
+
+        console.log('[Shopify OAuth] 📋 API Response:', result);
+        console.log('[Shopify OAuth] 📋 result.success:', result.success);
+        console.log('[Shopify OAuth] 📋 result.channelId:', result.channelId);
+
+        // Clean up pending state
+        localStorage.removeItem('shopify_oauth_pending');
 
         if (result.success) {
           console.log('[Shopify OAuth] ✅ OAuth completed successfully');
           setStatus('success');
-          setMessage('Authorization successful! Redirecting...');
+          setMessage('Authorization successful! Closing...');
+
+          // Clean up sessionStorage
+          sessionStorage.removeItem(oauthKey);
+
+          // Store success in localStorage FIRST (this is the most reliable method)
+          try {
+            const successData = {
+              channelId: result.channelId,
+              timestamp: Date.now()
+            };
+            console.log('[Shopify OAuth] 💾 About to save to localStorage:', successData);
+            localStorage.setItem('shopify_oauth_success', JSON.stringify(successData));
+            console.log('[Shopify OAuth] ✅ Saved success to localStorage');
+            
+            // Verify it was saved
+            const verification = localStorage.getItem('shopify_oauth_success');
+            console.log('[Shopify OAuth] 🔍 Verification - localStorage value:', verification);
+          } catch (e) {
+            console.error('[Shopify OAuth] ❌ Failed to save to localStorage:', e);
+          }
 
           // Notify parent window of success
-          if (window.opener) {
-            window.opener.postMessage(
-              {
-                type: 'shopify-oauth-success',
-                channelId: result.channelId,
-              },
-              window.location.origin
-            );
+          if (window.opener && !window.opener.closed) {
+            console.log('[Shopify OAuth] 📤 Sending success message to parent window...');
+            console.log('[Shopify OAuth] Channel ID:', result.channelId);
 
-            // Give enough time for message to be received by parent (increased from 1s to 2s)
-            setTimeout(() => window.close(), 2000);
+            // Send message to parent - try with '*' origin
+            try {
+              window.opener.postMessage(
+                {
+                  type: 'shopify-oauth-success',
+                  channelId: result.channelId,
+                },
+                '*' // Allow any origin to receive
+              );
+              console.log('[Shopify OAuth] ✅ Message sent to parent with * origin!');
+            } catch (e) {
+              console.error('[Shopify OAuth] ❌ Failed to send message:', e);
+            }
+
+            // Close popup after a short delay to ensure message is received
+            setTimeout(() => {
+              console.log('[Shopify OAuth] 🔒 Closing popup window...');
+              window.close();
+            }, 1000); // 1 second delay
           } else {
-            // No parent window, close immediately
-            setTimeout(() => window.close(), 1000);
+            console.error('[Shopify OAuth] ❌ No parent window or parent closed!');
+            setMessage('✅ Success! You can close this window and return to the setup page.');
+            // Try to close anyway
+            setTimeout(() => window.close(), 3000);
           }
         } else {
           console.error('[Shopify OAuth] ❌ Failed to complete OAuth:', result.error);

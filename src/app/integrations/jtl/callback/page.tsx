@@ -100,7 +100,7 @@ export default function JTLOAuthCallback() {
 
         // Check if it's a "revoked" error and provide helpful message
         if (errorMsg.includes('revoked') || errorMsg.includes('invalid_request')) {
-          errorMsg += '\n\nTip: Each authorization code can only be used once. Please start the authorization process again.';
+          errorMsg += '\n\nPossible causes:\n- Authorization code was already used (duplicate request)\n- Authorization code expired (took longer than 10 minutes)\n- Browser page was refreshed/reloaded\n\nPlease close this window and start the authorization process again.';
         }
 
         setStatus('error');

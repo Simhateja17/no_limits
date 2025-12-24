@@ -238,12 +238,15 @@ export const onboardingApi = {
 
   /**
    * Complete Shopify OAuth flow (called by callback page)
+   * Includes HMAC and timestamp for security validation
    */
   completeShopifyOAuth: async (
     clientId: string,
     shopDomain: string,
     code: string,
-    state: string
+    state: string,
+    hmac?: string,
+    timestamp?: string
   ): Promise<OnboardingResult> => {
     const response = await api.post<OnboardingResult>(
       '/integrations/shopify/oauth/complete',
@@ -252,6 +255,8 @@ export const onboardingApi = {
         shopDomain,
         code,
         state,
+        ...(hmac && { hmac }),
+        ...(timestamp && { timestamp }),
       }
     );
     return response.data;
