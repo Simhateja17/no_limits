@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { onboardingApi } from '@/lib/onboarding-api';
 
@@ -8,9 +8,16 @@ export default function ShopifyOAuthCallback() {
   const searchParams = useSearchParams();
   const [status, setStatus] = useState<'processing' | 'success' | 'error'>('processing');
   const [message, setMessage] = useState('Processing Shopify authorization...');
+  const hasProcessedRef = useRef(false);
 
   useEffect(() => {
     const handleCallback = async () => {
+      // Prevent duplicate calls using ref (survives React Strict Mode remounts)
+      if (hasProcessedRef.current) {
+        console.log('[Shopify OAuth] ⏭️ Already processed, skipping duplicate call');
+        return;
+      }
+      hasProcessedRef.current = true;
       try {
         // Get OAuth parameters from URL
         const code = searchParams.get('code');
@@ -87,10 +94,13 @@ export default function ShopifyOAuthCallback() {
               },
               window.location.origin
             );
-          }
 
-          // Close window after 1 second
-          setTimeout(() => window.close(), 1000);
+            // Give enough time for message to be received by parent (increased from 1s to 2s)
+            setTimeout(() => window.close(), 2000);
+          } else {
+            // No parent window, close immediately
+            setTimeout(() => window.close(), 1000);
+          }
         } else {
           console.error('[Shopify OAuth] ❌ Failed to complete OAuth:', result.error);
           setStatus('error');
@@ -128,7 +138,8 @@ export default function ShopifyOAuthCallback() {
     };
 
     handleCallback();
-  }, [searchParams]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Run only once on mount - searchParams don't change after initial load
 
   return (
     <div

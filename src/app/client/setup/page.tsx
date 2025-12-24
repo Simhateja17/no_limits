@@ -144,6 +144,12 @@ export default function ClientSetupPage() {
       return;
     }
 
+    // Prevent duplicate OAuth flows
+    if (shopifyOAuthStatus === 'authorizing') {
+      console.log('[Setup] ⏭️ OAuth already in progress, skipping');
+      return;
+    }
+
     console.log('[Setup] 🔐 Starting Shopify OAuth flow...');
     setShopifyOAuthStatus('authorizing');
     setShopifyOAuthError(null);
@@ -190,12 +196,16 @@ export default function ClientSetupPage() {
         return;
       }
 
+      // Use a flag to track if OAuth completed successfully (to avoid closure issues)
+      let oauthCompleted = false;
+
       // Listen for messages from popup
       const handleMessage = (event: MessageEvent) => {
         if (event.origin !== window.location.origin) return;
 
         if (event.data.type === 'shopify-oauth-success') {
           console.log('[Setup] ✅ Shopify OAuth completed successfully');
+          oauthCompleted = true;
           setShopifyOAuthStatus('success');
           window.removeEventListener('message', handleMessage);
           setIsLoading(false);
@@ -209,6 +219,7 @@ export default function ClientSetupPage() {
           setCurrentStep('jtl');
         } else if (event.data.type === 'shopify-oauth-error') {
           console.error('[Setup] ❌ Shopify OAuth failed:', event.data.error);
+          oauthCompleted = true;
           setShopifyOAuthStatus('error');
           setShopifyOAuthError(event.data.error || 'OAuth authorization failed');
           window.removeEventListener('message', handleMessage);
@@ -223,7 +234,8 @@ export default function ClientSetupPage() {
         if (popup.closed) {
           clearInterval(popupCheck);
           window.removeEventListener('message', handleMessage);
-          if (shopifyOAuthStatus !== 'success') {
+          // Only show error if OAuth wasn't completed (using flag, not state)
+          if (!oauthCompleted) {
             console.log('[Setup] ⚠️ OAuth popup closed without completion');
             setShopifyOAuthStatus('error');
             setShopifyOAuthError('Authorization cancelled');
