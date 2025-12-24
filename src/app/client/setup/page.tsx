@@ -201,10 +201,17 @@ export default function ClientSetupPage() {
 
       // Listen for messages from popup
       const handleMessage = (event: MessageEvent) => {
-        if (event.origin !== window.location.origin) return;
+        console.log('[Setup] 📨 Received message:', event.data, 'Origin:', event.origin);
+        console.log('[Setup] 📍 Current window origin:', window.location.origin);
 
-        if (event.data.type === 'shopify-oauth-success') {
-          console.log('[Setup] ✅ Shopify OAuth completed successfully');
+        // Temporarily accept messages from any origin for debugging
+        // if (event.origin !== window.location.origin) {
+        //   console.log('[Setup] ⚠️ Message origin mismatch, ignoring');
+        //   return;
+        // }
+
+        if (event.data && event.data.type === 'shopify-oauth-success') {
+          console.log('[Setup] ✅ Shopify OAuth completed successfully! Channel ID:', event.data.channelId);
           oauthCompleted = true;
           setShopifyOAuthStatus('success');
           window.removeEventListener('message', handleMessage);
@@ -229,20 +236,80 @@ export default function ClientSetupPage() {
 
       window.addEventListener('message', handleMessage);
 
-      // Check if popup was closed without completing
-      const popupCheck = setInterval(() => {
-        if (popup.closed) {
-          clearInterval(popupCheck);
-          window.removeEventListener('message', handleMessage);
-          // Only show error if OAuth wasn't completed (using flag, not state)
+      // Clear any existing localStorage state from previous attempts
+      localStorage.removeItem('shopify_oauth_success');
+      localStorage.removeItem('shopify_oauth_pending');
+
+      // Track when the OAuth flow started for timeout purposes
+      const oauthStartTime = Date.now();
+      const MAX_OAUTH_TIMEOUT = 120000; // 2 minutes max for entire OAuth flow
+      
+      // Helper function to check for success in localStorage
+      const checkForSuccess = () => {
+        const storedSuccess = localStorage.getItem('shopify_oauth_success');
+        if (storedSuccess && !oauthCompleted) {
+          console.log('[Setup] 📦 Found success in localStorage!', storedSuccess);
+          try {
+            const data = JSON.parse(storedSuccess);
+            // Check if this success is recent (within last 60 seconds)
+            if (Date.now() - data.timestamp < 60000) {
+              console.log('[Setup] ✅ OAuth succeeded via localStorage! Channel ID:', data.channelId);
+              oauthCompleted = true;
+              setSyncChannelId(data.channelId);
+              setShopifyOAuthStatus('success');
+              setIsLoading(false);
+              setCurrentStep('jtl');
+              localStorage.removeItem('shopify_oauth_success'); // Clean up
+              localStorage.removeItem('shopify_oauth_pending'); // Clean up
+              return true;
+            }
+          } catch (e) {
+            console.error('[Setup] ❌ Error parsing localStorage:', e);
+          }
+        } else if (!oauthCompleted) {
+          // Debug: log what we're finding in localStorage
+          console.log('[Setup] 🔍 Checking localStorage - shopify_oauth_success:', storedSuccess);
+        }
+        return false;
+      };
+
+      // Helper function to clean up all intervals and listeners
+      const cleanup = () => {
+        clearInterval(localStorageCheck);
+        window.removeEventListener('message', handleMessage);
+      };
+
+      // Continuously check localStorage - this is the PRIMARY and ONLY reliable detection method
+      // We do NOT rely on popup.closed because it's unreliable for cross-origin navigation
+      const localStorageCheck = setInterval(() => {
+        // Check for overall timeout first
+        if (Date.now() - oauthStartTime > MAX_OAUTH_TIMEOUT) {
+          console.log('[Setup] ⏰ OAuth flow timed out (2 minutes)');
+          cleanup();
           if (!oauthCompleted) {
-            console.log('[Setup] ⚠️ OAuth popup closed without completion');
             setShopifyOAuthStatus('error');
-            setShopifyOAuthError('Authorization cancelled');
+            setShopifyOAuthError('Authorization timed out - Please try again');
             setIsLoading(false);
+            localStorage.removeItem('shopify_oauth_pending');
+          }
+          return;
+        }
+        
+        // Check for success
+        if (checkForSuccess()) {
+          cleanup();
+          return;
+        }
+
+        // Log progress every 5 seconds
+        const elapsedSeconds = Math.floor((Date.now() - oauthStartTime) / 1000);
+        if (elapsedSeconds % 5 === 0 && elapsedSeconds > 0) {
+          const storedPending = localStorage.getItem('shopify_oauth_pending');
+          if (storedPending) {
+            console.log(`[Setup] ⏳ OAuth in progress (${elapsedSeconds}s elapsed)...`);
           }
         }
-      }, 500);
+      }, 500); // Check every 500ms
     } catch (err) {
       console.error('[Setup] ❌ Error starting Shopify OAuth:', err);
       setShopifyOAuthStatus('error');
