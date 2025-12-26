@@ -53,26 +53,26 @@ const transformApiOrderToDetails = (apiOrder: ApiOrder): OrderDetails => {
   return {
     orderId: apiOrder.orderNumber || apiOrder.orderId,
     status: mapStatus(apiOrder.status),
-    // Client orders API currently does not expose detailed shipping address
-    // information, so we fall back to client name and generic placeholders.
+    // Use actual shipping address from order
     deliveryMethod: {
-      name:
+      name: apiOrder.customerName ||
+        `${apiOrder.shippingFirstName || ''} ${apiOrder.shippingLastName || ''}`.trim() ||
         (apiOrder.client?.name || apiOrder.client?.companyName || '').trim() ||
         'N/A',
-      street: 'N/A',
-      city: 'N/A',
-      country: 'N/A',
+      street: apiOrder.shippingAddress1 || 'N/A',
+      city: apiOrder.shippingCity || 'N/A',
+      country: apiOrder.shippingCountry || 'N/A',
     },
     shippingMethod: apiOrder.shippingMethod || 'Standard',
     trackingNumber: apiOrder.trackingNumber || 'N/A',
-    shipmentWeight: '0 kg', // Placeholder
-    tags: [], // Placeholder
+    shipmentWeight: apiOrder.totalWeight ? `${apiOrder.totalWeight} kg` : '0 kg',
+    tags: apiOrder.tags || [],
     onHoldStatus: apiOrder.status === 'ON_HOLD',
     products: apiOrder.items.map(item => ({
       id: item.id,
-      name: item.product?.name || 'Unknown Product',
-      sku: item.product?.sku || 'N/A',
-      gtin: 'N/A', // Not in order items
+      name: item.product?.name || item.productName || 'Unknown Product',
+      sku: item.product?.sku || item.sku || 'N/A',
+      gtin: item.product?.gtin || 'N/A',
       qty: item.quantity,
       merchant: apiOrder.client?.companyName || apiOrder.client?.name || 'N/A',
     })),

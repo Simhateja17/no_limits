@@ -34,6 +34,25 @@ export interface Order {
   totalAmount: number | null;
   shippingMethod: string | null;
   trackingNumber: string | null;
+  totalWeight: number | null;
+  tags: string[];
+
+  // Customer information
+  customerName: string | null;
+  customerEmail: string | null;
+  customerPhone: string | null;
+
+  // Shipping address
+  shippingFirstName: string | null;
+  shippingLastName: string | null;
+  shippingCompany: string | null;
+  shippingAddress1: string | null;
+  shippingAddress2: string | null;
+  shippingCity: string | null;
+  shippingZip: string | null;
+  shippingCountry: string | null;
+  shippingCountryCode: string | null;
+
   client: {
     companyName: string;
     name: string;
@@ -45,10 +64,13 @@ export interface Order {
   items: Array<{
     id: string;
     quantity: number;
+    productName: string | null;
+    sku: string | null;
     product: {
       name: string;
       sku: string;
-    };
+      gtin: string | null;
+    } | null;
   }>;
 }
 
