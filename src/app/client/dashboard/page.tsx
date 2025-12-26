@@ -7,11 +7,20 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 
+interface DashboardStats {
+  openOrders: number;
+  errorOrders: number;
+  avgClickRate: string;
+  period: string;
+}
+
 export default function ClientDashboardPage() {
   const { user, isAuthenticated } = useAuthStore();
   const router = useRouter();
   const t = useTranslations('dashboard');
   const [isCheckingSetup, setIsCheckingSetup] = useState(true);
+  const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [isLoadingStats, setIsLoadingStats] = useState(true);
 
   useEffect(() => {
     if (!isAuthenticated || user?.role !== 'CLIENT') {
@@ -55,6 +64,43 @@ export default function ClientDashboardPage() {
 
     checkSetupStatus();
   }, [isAuthenticated, user, router]);
+
+  // Fetch dashboard stats
+  useEffect(() => {
+    const fetchDashboardStats = async () => {
+      if (!isAuthenticated || user?.role !== 'CLIENT' || isCheckingSetup) {
+        return;
+      }
+
+      try {
+        const token = localStorage.getItem('accessToken');
+        if (!token) {
+          setIsLoadingStats(false);
+          return;
+        }
+
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api'}/data/dashboard/stats`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+
+        if (response.ok) {
+          const data = await response.json();
+          setStats(data.data);
+        } else {
+          console.error('Failed to fetch dashboard stats');
+        }
+      } catch (err) {
+        console.error('Error fetching dashboard stats:', err);
+      } finally {
+        setIsLoadingStats(false);
+      }
+    };
+
+    fetchDashboardStats();
+  }, [isAuthenticated, user, isCheckingSetup]);
 
   if (!isAuthenticated || user?.role !== 'CLIENT') {
     return null;
@@ -102,9 +148,17 @@ export default function ClientDashboardPage() {
             gap: '20px',
           }}
         >
-          <StatCard label={t('openOrders')} value="897" />
-          <StatCard label={t('errorOrders')} value="4" />
-          <StatCard label={t('avgClickRate')} value="24.57%" />
+          {isLoadingStats ? (
+            <div className="text-gray-500">Loading stats...</div>
+          ) : stats ? (
+            <>
+              <StatCard label={t('openOrders')} value={stats.openOrders.toString()} />
+              <StatCard label={t('errorOrders')} value={stats.errorOrders.toString()} />
+              <StatCard label={t('avgClickRate')} value={stats.avgClickRate} />
+            </>
+          ) : (
+            <div className="text-gray-500">No stats available</div>
+          )}
         </div>
       </div>
     </DashboardLayout>
