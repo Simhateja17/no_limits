@@ -514,10 +514,10 @@ export function ProductDetails({ productId, backUrl }: ProductDetailsProps) {
                 style={{ display: 'none' }}
               />
               {/* Product image or placeholder */}
-              {productImage ? (
+              {productImage || productDetails?.imageUrl ? (
                 <img
-                  src={productImage}
-                  alt="Product"
+                  src={productImage || productDetails?.imageUrl || ''}
+                  alt={productDetails?.productName || 'Product'}
                   style={{
                     width: '100%',
                     height: '100%',
