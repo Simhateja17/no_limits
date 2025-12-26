@@ -185,4 +185,18 @@ export const getSyncJobHistory = async (channelId: string, limit: number = 10): 
   return response.data;
 };
 
+/**
+ * Start background sync with user-selected date
+ */
+export const startBackgroundSync = async (
+  channelId: string,
+  syncFromDate: string
+): Promise<{ success: boolean; syncJobId?: string; error?: string; details?: any }> => {
+  const response = await api.post(
+    `/integrations/sync/background/${channelId}`,
+    { syncFromDate }
+  );
+  return response.data;
+};
+
 export default channelsApi;

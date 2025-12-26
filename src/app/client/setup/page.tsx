@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { useAuthStore } from '@/lib/store';
 import { onboardingApi } from '@/lib/onboarding-api';
-import { SyncProgressModal } from '@/components/channels/SyncProgressModal';
+import SyncDatePickerModal from '@/components/channels/SyncDatePickerModal';
 
 type SetupStep = 'platform' | 'credentials' | 'jtl' | 'complete';
 type PlatformType = 'shopify' | 'woocommerce' | null;
@@ -20,7 +20,9 @@ export default function ClientSetupPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [clientId, setClientId] = useState<string | null>(null);
-  
+  const [hasJtlConfig, setHasJtlConfig] = useState<boolean>(false);
+  const [isCheckingJtl, setIsCheckingJtl] = useState<boolean>(true);
+
   // Sync modal state
   const [showSyncModal, setShowSyncModal] = useState(false);
   const [syncChannelId, setSyncChannelId] = useState<string | null>(null);
@@ -67,8 +69,8 @@ export default function ClientSetupPage() {
       return;
     }
 
-    // Get client ID
-    const fetchClientId = async () => {
+    // Get client ID and check for existing JTL config
+    const fetchClientData = async () => {
       try {
         const token = localStorage.getItem('accessToken');
         if (!token) return;
@@ -82,14 +84,34 @@ export default function ClientSetupPage() {
 
         if (response.ok) {
           const data = await response.json();
-          setClientId(data.user?.client?.id);
+          const fetchedClientId = data.user?.client?.id;
+          setClientId(fetchedClientId);
+
+          // Check if JTL config exists for this client
+          if (fetchedClientId) {
+            const jtlResponse = await fetch(
+              `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api'}/integrations/jtl/status/${fetchedClientId}`,
+              {
+                headers: { Authorization: `Bearer ${token}` },
+              }
+            );
+
+            if (jtlResponse.ok) {
+              const jtlData = await jtlResponse.json();
+              const hasConfig = jtlData.configured === true;
+              setHasJtlConfig(hasConfig);
+              console.log('[Setup] JTL config check:', hasConfig ? 'Configured' : 'Not configured');
+            }
+          }
         }
       } catch (err) {
-        console.error('Error fetching client ID:', err);
+        console.error('Error fetching client data:', err);
+      } finally {
+        setIsCheckingJtl(false);
       }
     };
 
-    fetchClientId();
+    fetchClientData();
   }, [isAuthenticated, user, router]);
 
   const handlePlatformSelect = (platform: PlatformType) => {
@@ -222,8 +244,14 @@ export default function ClientSetupPage() {
             setSyncChannelId(event.data.channelId);
           }
 
-          // Move to JTL step
-          setCurrentStep('jtl');
+          // Check if JTL config already exists
+          if (hasJtlConfig) {
+            console.log('[Setup] ✅ JTL already configured, showing sync date picker');
+            setShowSyncModal(true);
+          } else {
+            console.log('[Setup] ➡️ Moving to JTL credentials step');
+            setCurrentStep('jtl');
+          }
         } else if (event.data.type === 'shopify-oauth-error') {
           console.error('[Setup] ❌ Shopify OAuth failed:', event.data.error);
           oauthCompleted = true;
@@ -258,7 +286,16 @@ export default function ClientSetupPage() {
               setSyncChannelId(data.channelId);
               setShopifyOAuthStatus('success');
               setIsLoading(false);
-              setCurrentStep('jtl');
+
+              // Check if JTL config already exists
+              if (hasJtlConfig) {
+                console.log('[Setup] ✅ JTL already configured, showing sync date picker');
+                setShowSyncModal(true);
+              } else {
+                console.log('[Setup] ➡️ Moving to JTL credentials step');
+                setCurrentStep('jtl');
+              }
+
               localStorage.removeItem('shopify_oauth_success'); // Clean up
               localStorage.removeItem('shopify_oauth_pending'); // Clean up
               return true;
@@ -383,8 +420,14 @@ export default function ClientSetupPage() {
         console.warn('[Setup] ⚠️ No channel ID returned from platform setup');
       }
 
-      console.log('[Setup] ➡️ Moving to JTL credentials step');
-      setCurrentStep('jtl');
+      // Check if JTL config already exists
+      if (hasJtlConfig) {
+        console.log('[Setup] ✅ JTL already configured, showing sync date picker');
+        setShowSyncModal(true);
+      } else {
+        console.log('[Setup] ➡️ Moving to JTL credentials step');
+        setCurrentStep('jtl');
+      }
     } catch (err) {
       console.error('[Setup] ❌ Error submitting credentials:', err);
       setError(err instanceof Error ? err.message : 'Failed to save credentials');
@@ -509,9 +552,10 @@ export default function ClientSetupPage() {
   };
 
   const handleSyncComplete = () => {
-    console.log('[Setup] ✅ Sync completed, closing modal');
+    console.log('[Setup] ✅ Background sync started, redirecting to dashboard');
     setShowSyncModal(false);
-    setCurrentStep('complete');
+    // Redirect to dashboard where user can see sync progress
+    router.push('/client/dashboard');
   };
 
   const handleComplete = () => {
@@ -530,9 +574,9 @@ export default function ClientSetupPage() {
 
   return (
     <>
-      {/* Sync Progress Modal */}
+      {/* Sync Date Picker Modal */}
       {syncChannelId && (
-        <SyncProgressModal
+        <SyncDatePickerModal
           channelId={syncChannelId}
           isOpen={showSyncModal}
           onComplete={handleSyncComplete}
