@@ -472,9 +472,11 @@ export function SalesChannels({ baseUrl }: SalesChannelsProps) {
 
   const handleChannelTypeSelect = (type: 'Woocommerce' | 'Shopify' | 'Amazon') => {
     setShowChannelTypeModal(false);
-    // Generate a new channel ID (in real app, this would come from backend)
-    const newChannelId = 'new';
-    router.push(`${baseUrl}/${newChannelId}/settings?type=${encodeURIComponent(type)}&isNew=true`);
+
+    // Redirect to existing setup flow with pre-selected platform
+    // This will skip platform selection and JTL configuration
+    const platform = type === 'Woocommerce' ? 'woocommerce' : type === 'Shopify' ? 'shopify' : 'amazon';
+    router.push(`/client/setup?platform=${platform}&addChannel=true`);
   };
 
   return (

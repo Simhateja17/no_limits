@@ -50,6 +50,7 @@ export default function SyncDatePickerModal({
 
     try {
       const syncFromDate = new Date(selectedDate).toISOString();
+      console.log('[SyncDatePicker] Starting sync from:', syncFromDate, 'Selected date:', selectedDate);
 
       const response = await startBackgroundSync(channelId, syncFromDate);
 
@@ -57,7 +58,15 @@ export default function SyncDatePickerModal({
         console.log('[SyncDatePicker] Background sync started successfully:', response);
         onComplete();
       } else {
-        setError(response.error || 'Failed to start sync');
+        const errorMsg = response.error || 'Failed to start sync';
+        console.error('[SyncDatePicker] Error:', errorMsg);
+
+        // If JTL OAuth not completed, show a helpful message
+        if (errorMsg.includes('JTL OAuth not completed')) {
+          setError('JTL authorization required. Please complete JTL OAuth setup first to enable syncing.');
+        } else {
+          setError(errorMsg);
+        }
       }
     } catch (err) {
       console.error('[SyncDatePicker] Error starting background sync:', err);

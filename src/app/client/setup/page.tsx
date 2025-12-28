@@ -14,7 +14,7 @@ export default function ClientSetupPage() {
   const { user, isAuthenticated } = useAuthStore();
   const router = useRouter();
   const t = useTranslations('setup');
-  
+
   const [currentStep, setCurrentStep] = useState<SetupStep>('platform');
   const [selectedPlatform, setSelectedPlatform] = useState<PlatformType>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -22,6 +22,9 @@ export default function ClientSetupPage() {
   const [clientId, setClientId] = useState<string | null>(null);
   const [hasJtlConfig, setHasJtlConfig] = useState<boolean>(false);
   const [isCheckingJtl, setIsCheckingJtl] = useState<boolean>(true);
+
+  // Check if this is "add channel" mode (adding additional channel, not initial setup)
+  const [isAddChannelMode, setIsAddChannelMode] = useState(false);
 
   // Sync modal state
   const [showSyncModal, setShowSyncModal] = useState(false);
@@ -63,6 +66,19 @@ export default function ClientSetupPage() {
   const [jtlOAuthStatus, setJtlOAuthStatus] = useState<'pending' | 'authorizing' | 'success' | 'error' | null>(null);
   const [jtlOAuthError, setJtlOAuthError] = useState<string | null>(null);
 
+  // Check URL parameters for add channel mode
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const addChannel = params.get('addChannel') === 'true';
+    const platform = params.get('platform') as PlatformType;
+
+    if (addChannel && platform) {
+      setIsAddChannelMode(true);
+      setSelectedPlatform(platform);
+      setCurrentStep('credentials');
+    }
+  }, []);
+
   useEffect(() => {
     if (!isAuthenticated || user?.role !== 'CLIENT') {
       router.push('/');
@@ -98,9 +114,10 @@ export default function ClientSetupPage() {
 
             if (jtlResponse.ok) {
               const jtlData = await jtlResponse.json();
-              const hasConfig = jtlData.configured === true;
+              // Check if JTL is configured AND OAuth is complete
+              const hasConfig = jtlData.configured === true && jtlData.oauthComplete === true;
               setHasJtlConfig(hasConfig);
-              console.log('[Setup] JTL config check:', hasConfig ? 'Configured' : 'Not configured');
+              console.log('[Setup] JTL config check:', hasConfig ? 'Configured with OAuth' : 'Not configured or OAuth incomplete');
             }
           }
         }
@@ -552,10 +569,16 @@ export default function ClientSetupPage() {
   };
 
   const handleSyncComplete = () => {
-    console.log('[Setup] ✅ Background sync started, redirecting to dashboard');
+    console.log('[Setup] ✅ Background sync started, redirecting...');
     setShowSyncModal(false);
-    // Redirect to dashboard where user can see sync progress
-    router.push('/client/dashboard');
+
+    // If adding a channel, redirect back to channels page
+    // Otherwise, redirect to dashboard
+    if (isAddChannelMode) {
+      router.push('/client/channels');
+    } else {
+      router.push('/client/dashboard');
+    }
   };
 
   const handleComplete = () => {
@@ -616,7 +639,9 @@ export default function ClientSetupPage() {
           marginBottom: '40px',
         }}
       >
-        {['platform', 'credentials', 'jtl', 'complete'].map((step, index) => (
+        {/* Show only 2 steps when adding a channel: credentials and complete */}
+        {/* Show all 4 steps for initial setup */}
+        {(isAddChannelMode ? ['credentials', 'complete'] : ['platform', 'credentials', 'jtl', 'complete']).map((step, index, steps) => (
           <div key={step} style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
             <div
               style={{
@@ -626,7 +651,7 @@ export default function ClientSetupPage() {
                 background:
                   currentStep === step
                     ? '#003450'
-                    : ['platform', 'credentials', 'jtl', 'complete'].indexOf(currentStep) > index
+                    : steps.indexOf(currentStep) > index
                     ? '#10B981'
                     : '#E5E7EB',
                 color: 'white',
@@ -637,15 +662,15 @@ export default function ClientSetupPage() {
                 fontSize: '14px',
               }}
             >
-              {['platform', 'credentials', 'jtl', 'complete'].indexOf(currentStep) > index ? '✓' : index + 1}
+              {steps.indexOf(currentStep) > index ? '✓' : index + 1}
             </div>
-            {index < 3 && (
+            {index < steps.length - 1 && (
               <div
                 style={{
                   width: '40px',
                   height: '2px',
                   background:
-                    ['platform', 'credentials', 'jtl', 'complete'].indexOf(currentStep) > index
+                    steps.indexOf(currentStep) > index
                       ? '#10B981'
                       : '#E5E7EB',
                 }}
@@ -809,7 +834,13 @@ export default function ClientSetupPage() {
         {currentStep === 'credentials' && (
           <>
             <button
-              onClick={() => setCurrentStep('platform')}
+              onClick={() => {
+                if (isAddChannelMode) {
+                  router.push('/client/channels');
+                } else {
+                  setCurrentStep('platform');
+                }
+              }}
               style={{
                 display: 'flex',
                 alignItems: 'center',
