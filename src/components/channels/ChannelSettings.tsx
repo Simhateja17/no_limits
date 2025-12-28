@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { useAuthStore } from '@/lib/store';
 import { channelsApi, Location, ShippingMethod } from '@/lib/channels-api';
+import { onboardingApi } from '@/lib/onboarding-api';
 import { SyncStatusBar } from './SyncStatusBar';
 
 // Channel types
@@ -162,6 +163,21 @@ export function ChannelSettings({ channelId, baseUrl, initialChannelType = 'Wooc
   const tChannels = useTranslations('channels');
   const { user } = useAuthStore();
 
+  // Add CSS animation for spinner
+  useEffect(() => {
+    const style = document.createElement('style');
+    style.innerHTML = `
+      @keyframes spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+      }
+    `;
+    document.head.appendChild(style);
+    return () => {
+      document.head.removeChild(style);
+    };
+  }, []);
+
   // Channel Information State
   const [channelName, setChannelName] = useState('');
   const [selectedChannel, setSelectedChannel] = useState(initialChannelType);
@@ -192,8 +208,35 @@ export function ChannelSettings({ channelId, baseUrl, initialChannelType = 'Wooc
   const [channelMethods, setChannelMethods] = useState<ShippingMethod[]>([]);
   const [isLoadingMethods, setIsLoadingMethods] = useState(false);
 
+  // JTL Configuration State
+  const [hasJtlConfig, setHasJtlConfig] = useState(false);
+  const [isLoadingStatus, setIsLoadingStatus] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+
   // Suppress unused variable warning
   void baseUrl;
+
+  // Fetch onboarding status to check if JTL is configured
+  useEffect(() => {
+    const fetchOnboardingStatus = async () => {
+      if (!user?.clientId) return;
+
+      try {
+        setIsLoadingStatus(true);
+        const status = await onboardingApi.getOnboardingStatus(user.clientId);
+        setHasJtlConfig(status.jtlConfig && status.jtlOAuthComplete);
+      } catch (err) {
+        console.error('Error fetching onboarding status:', err);
+        // Assume JTL is not configured if there's an error
+        setHasJtlConfig(false);
+      } finally {
+        setIsLoadingStatus(false);
+      }
+    };
+
+    fetchOnboardingStatus();
+  }, [user?.clientId]);
 
   // Fetch locations on mount
   useEffect(() => {
@@ -242,18 +285,72 @@ export function ChannelSettings({ channelId, baseUrl, initialChannelType = 'Wooc
     router.back();
   };
 
-  const handleSave = () => {
-    // TODO: Save all channel configuration
-    console.log('Saving channel configuration:', {
-      channelName,
-      selectedChannel,
-      clientId,
-      clientSecret,
-      storeUrl,
-      selectedLocation,
-      selectedMethods,
-    });
-    setShowSuccessModal(true);
+  const handleSave = async () => {
+    if (!user?.clientId) {
+      setSaveError('User client ID not found');
+      return;
+    }
+
+    // Validate required fields
+    if (!channelName.trim()) {
+      setSaveError('Please enter a channel name');
+      return;
+    }
+
+    if (!clientId.trim() || !clientSecret.trim() || !storeUrl.trim()) {
+      setSaveError('Please fill in all API credentials');
+      return;
+    }
+
+    try {
+      setIsSaving(true);
+      setSaveError(null);
+
+      let result;
+
+      if (selectedChannel === 'Shopify') {
+        // Save Shopify channel
+        result = await onboardingApi.addShopifyChannel({
+          clientId: user.clientId,
+          shopDomain: storeUrl,
+          accessToken: clientSecret,
+          channelName: channelName,
+        });
+      } else if (selectedChannel === 'Woocommerce') {
+        // Save WooCommerce channel
+        result = await onboardingApi.addWooCommerceChannel({
+          clientId: user.clientId,
+          storeUrl: storeUrl,
+          consumerKey: clientId,
+          consumerSecret: clientSecret,
+          channelName: channelName,
+        });
+      } else {
+        setSaveError('Amazon channels are not yet supported');
+        setIsSaving(false);
+        return;
+      }
+
+      if (result.success) {
+        setShowSuccessModal(true);
+        // Trigger initial sync if channel was created
+        if (result.channelId) {
+          try {
+            await onboardingApi.triggerInitialSync(result.channelId);
+          } catch (syncErr) {
+            console.error('Error triggering initial sync:', syncErr);
+            // Don't show error to user as channel was created successfully
+          }
+        }
+      } else {
+        setSaveError(result.error || 'Failed to save channel');
+      }
+    } catch (err) {
+      console.error('Error saving channel:', err);
+      setSaveError(err instanceof Error ? err.message : 'An error occurred while saving the channel');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleModalClose = () => {
@@ -419,6 +516,131 @@ export function ChannelSettings({ channelId, baseUrl, initialChannelType = 'Wooc
           marginBottom: 'clamp(32px, 3.14vw, 48px)',
         }}
       />
+
+      {/* JTL Configuration Status Banner - Shows for new channels when JTL is already configured */}
+      {isNewChannel && hasJtlConfig && !isLoadingStatus && (
+        <div
+          style={{
+            width: '100%',
+            maxWidth: 'clamp(912px, 89.54vw, 1216px)',
+            borderRadius: '8px',
+            backgroundColor: '#D1FAE5',
+            border: '1px solid #A7F3D0',
+            padding: 'clamp(12px, 1.18vw, 16px) clamp(16px, 1.57vw, 24px)',
+            marginBottom: 'clamp(24px, 2.36vw, 32px)',
+            display: 'flex',
+            alignItems: 'flex-start',
+            gap: 'clamp(12px, 1.18vw, 16px)',
+          }}
+        >
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 20 20"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            style={{ flexShrink: 0, marginTop: '2px' }}
+          >
+            <circle cx="10" cy="10" r="9" stroke="#059669" strokeWidth="1.5" fill="none" />
+            <path
+              d="M6 10L9 13L14 7"
+              stroke="#059669"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+          <div style={{ flex: 1 }}>
+            <p
+              style={{
+                fontFamily: 'Inter, sans-serif',
+                fontWeight: 500,
+                fontSize: 'clamp(11px, 1.03vw, 14px)',
+                lineHeight: 'clamp(15px, 1.47vw, 20px)',
+                color: '#065F46',
+                margin: '0 0 clamp(4px, 0.39vw, 6px) 0',
+              }}
+            >
+              JTL Credentials Already Configured
+            </p>
+            <p
+              style={{
+                fontFamily: 'Inter, sans-serif',
+                fontWeight: 400,
+                fontSize: 'clamp(11px, 1.03vw, 14px)',
+                lineHeight: 'clamp(15px, 1.47vw, 20px)',
+                color: '#047857',
+                margin: 0,
+              }}
+            >
+              Your JTL connection is active. Simply enter your {selectedChannel} store credentials below to add this channel.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Error Banner - Shows save errors */}
+      {saveError && (
+        <div
+          style={{
+            width: '100%',
+            maxWidth: 'clamp(912px, 89.54vw, 1216px)',
+            borderRadius: '8px',
+            backgroundColor: '#FEE2E2',
+            border: '1px solid #FECACA',
+            padding: 'clamp(12px, 1.18vw, 16px) clamp(16px, 1.57vw, 24px)',
+            marginBottom: 'clamp(24px, 2.36vw, 32px)',
+            display: 'flex',
+            alignItems: 'flex-start',
+            gap: 'clamp(12px, 1.18vw, 16px)',
+          }}
+        >
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 20 20"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            style={{ flexShrink: 0, marginTop: '2px' }}
+          >
+            <circle cx="10" cy="10" r="9" stroke="#DC2626" strokeWidth="1.5" fill="none" />
+            <path
+              d="M10 6V10M10 14H10.01"
+              stroke="#DC2626"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+            />
+          </svg>
+          <div style={{ flex: 1 }}>
+            <p
+              style={{
+                fontFamily: 'Inter, sans-serif',
+                fontWeight: 500,
+                fontSize: 'clamp(11px, 1.03vw, 14px)',
+                lineHeight: 'clamp(15px, 1.47vw, 20px)',
+                color: '#991B1B',
+                margin: 0,
+              }}
+            >
+              {saveError}
+            </p>
+          </div>
+          <button
+            onClick={() => setSaveError(null)}
+            style={{
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              padding: 0,
+              color: '#991B1B',
+              fontSize: 'clamp(16px, 1.57vw, 20px)',
+              lineHeight: 1,
+            }}
+          >
+            ×
+          </button>
+        </div>
+      )}
 
       {/* Sync Status Bar - Shows when channel exists and has active/recent sync */}
       {channelId && channelId !== 'new' && (
@@ -1458,19 +1680,39 @@ export function ChannelSettings({ channelId, baseUrl, initialChannelType = 'Wooc
             {/* Save Button */}
             <button
               onClick={handleSave}
+              disabled={isSaving}
               style={{
                 height: 'clamp(29px, 2.80vw, 38px)',
                 borderRadius: '6px',
                 border: 'none',
                 padding: 'clamp(7px, 0.66vw, 9px) clamp(13px, 1.25vw, 17px)',
-                backgroundColor: '#003450',
+                backgroundColor: isSaving ? '#9CA3AF' : '#003450',
                 boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.05)',
-                cursor: 'pointer',
+                cursor: isSaving ? 'not-allowed' : 'pointer',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
+                gap: 'clamp(6px, 0.59vw, 8px)',
+                opacity: isSaving ? 0.7 : 1,
               }}
             >
+              {isSaving && (
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 14 14"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                  style={{ animation: 'spin 1s linear infinite' }}
+                >
+                  <path
+                    d="M7 1V3M7 11V13M3.5 3.5L4.91 4.91M9.09 9.09L10.5 10.5M1 7H3M11 7H13M3.5 10.5L4.91 9.09M9.09 4.91L10.5 3.5"
+                    stroke="#FFFFFF"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                  />
+                </svg>
+              )}
               <span
                 style={{
                   fontFamily: 'Inter, sans-serif',
@@ -1480,7 +1722,7 @@ export function ChannelSettings({ channelId, baseUrl, initialChannelType = 'Wooc
                   color: '#FFFFFF',
                 }}
               >
-                {tCommon('save')}
+                {isSaving ? 'Saving...' : tCommon('save')}
               </span>
             </button>
           </div>
