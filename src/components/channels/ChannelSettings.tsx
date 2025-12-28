@@ -214,6 +214,15 @@ export function ChannelSettings({ channelId, baseUrl, initialChannelType = 'Wooc
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
 
+  // Sync Settings State
+  const [enableHistoricalSync, setEnableHistoricalSync] = useState(true);
+  const [syncFromDate, setSyncFromDate] = useState<string>(() => {
+    // Default to 6 months ago
+    const date = new Date();
+    date.setMonth(date.getMonth() - 6);
+    return date.toISOString().split('T')[0];
+  });
+
   // Suppress unused variable warning
   void baseUrl;
 
@@ -309,13 +318,40 @@ export function ChannelSettings({ channelId, baseUrl, initialChannelType = 'Wooc
       let result;
 
       if (selectedChannel === 'Shopify') {
-        // Save Shopify channel
-        result = await onboardingApi.addShopifyChannel({
-          clientId: user.clientId,
-          shopDomain: storeUrl,
-          accessToken: clientSecret,
-          channelName: channelName,
+        // Start Shopify OAuth flow
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/integrations/onboarding/channel/shopify/start-oauth`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include',
+          body: JSON.stringify({
+            clientId: user.clientId,
+            shopDomain: storeUrl,
+            oauthClientId: clientId,           // Shopify App Client ID
+            oauthClientSecret: clientSecret,   // Shopify App Secret
+            redirectUri: `${window.location.origin}/client/channels/shopify/callback`,
+          }),
         });
+
+        const data = await response.json();
+
+        if (data.success && data.authUrl) {
+          // Store channel name and sync settings in sessionStorage for callback
+          sessionStorage.setItem('shopify_channel_name', channelName);
+          sessionStorage.setItem('shopify_client_id', user.clientId);
+          sessionStorage.setItem('shopify_shop_domain', storeUrl);
+          sessionStorage.setItem('shopify_sync_from_date', enableHistoricalSync ? syncFromDate : '');
+          sessionStorage.setItem('shopify_historical_sync', enableHistoricalSync.toString());
+
+          // Redirect to Shopify for authorization
+          window.location.href = data.authUrl;
+          return; // Don't continue execution
+        } else {
+          setSaveError(data.error || 'Failed to start OAuth flow');
+          setIsSaving(false);
+          return;
+        }
       } else if (selectedChannel === 'Woocommerce') {
         // Save WooCommerce channel
         result = await onboardingApi.addWooCommerceChannel({
@@ -324,6 +360,8 @@ export function ChannelSettings({ channelId, baseUrl, initialChannelType = 'Wooc
           consumerKey: clientId,
           consumerSecret: clientSecret,
           channelName: channelName,
+          enableHistoricalSync: enableHistoricalSync,
+          syncFromDate: enableHistoricalSync ? syncFromDate : undefined,
         });
       } else {
         setSaveError('Amazon channels are not yet supported');
@@ -336,7 +374,11 @@ export function ChannelSettings({ channelId, baseUrl, initialChannelType = 'Wooc
         // Trigger initial sync if channel was created
         if (result.channelId) {
           try {
-            await onboardingApi.triggerInitialSync(result.channelId);
+            await onboardingApi.triggerInitialSync(
+              result.channelId,
+              enableHistoricalSync ? syncFromDate : undefined,
+              enableHistoricalSync
+            );
           } catch (syncErr) {
             console.error('Error triggering initial sync:', syncErr);
             // Don't show error to user as channel was created successfully
@@ -831,6 +873,202 @@ export function ChannelSettings({ channelId, baseUrl, initialChannelType = 'Wooc
           </div>
         </div>
       </div>
+
+      {/* Sync Settings Section - Only show for new channels */}
+      {isNewChannel && (
+        <div
+          style={{
+            width: '100%',
+            maxWidth: 'clamp(912px, 89.54vw, 1216px)',
+            display: 'flex',
+            flexDirection: 'row',
+            gap: 'clamp(18px, 1.77vw, 24px)',
+            marginBottom: 'clamp(48px, 4.71vw, 64px)',
+          }}
+        >
+          {/* Left Side - Title and Description */}
+          <div
+            style={{
+              width: 'clamp(292px, 28.65vw, 389px)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 'clamp(3px, 0.29vw, 4px)',
+              flexShrink: 0,
+            }}
+          >
+            <h2
+              style={{
+                fontFamily: 'Inter, sans-serif',
+                fontWeight: 500,
+                fontSize: 'clamp(14px, 1.33vw, 18px)',
+                lineHeight: 'clamp(18px, 1.77vw, 24px)',
+                color: '#111827',
+                margin: 0,
+              }}
+            >
+              Sync Settings
+            </h2>
+            <p
+              style={{
+                fontFamily: 'Inter, sans-serif',
+                fontWeight: 400,
+                fontSize: 'clamp(11px, 1.03vw, 14px)',
+                lineHeight: 'clamp(15px, 1.47vw, 20px)',
+                color: '#6B7280',
+                margin: 0,
+              }}
+            >
+              Configure how historical data should be synchronized for this channel
+            </p>
+          </div>
+
+          {/* Right Side - Form Card */}
+          <div
+            style={{
+              flex: 1,
+              maxWidth: 'clamp(602px, 59.13vw, 803px)',
+              borderRadius: '6px',
+              backgroundColor: '#FFFFFF',
+              boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.06), 0px 1px 3px 0px rgba(0, 0, 0, 0.1)',
+              padding: 'clamp(18px, 1.77vw, 24px)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 'clamp(18px, 1.77vw, 24px)',
+            }}
+          >
+            {/* Historical Sync Toggle */}
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                paddingBottom: 'clamp(12px, 1.18vw, 16px)',
+                borderBottom: enableHistoricalSync ? '1px solid #E5E7EB' : 'none',
+              }}
+            >
+              <div style={{ flex: 1 }}>
+                <label
+                  style={{
+                    fontFamily: 'Inter, sans-serif',
+                    fontWeight: 500,
+                    fontSize: 'clamp(11px, 1.03vw, 14px)',
+                    lineHeight: 'clamp(15px, 1.47vw, 20px)',
+                    color: '#374151',
+                    display: 'block',
+                    marginBottom: 'clamp(4px, 0.39vw, 6px)',
+                  }}
+                >
+                  Enable Historical Sync
+                </label>
+                <p
+                  style={{
+                    fontFamily: 'Inter, sans-serif',
+                    fontWeight: 400,
+                    fontSize: 'clamp(10px, 0.96vw, 13px)',
+                    lineHeight: 'clamp(14px, 1.37vw, 18px)',
+                    color: '#6B7280',
+                    margin: 0,
+                  }}
+                >
+                  {enableHistoricalSync
+                    ? 'Sync historical data from a specific date'
+                    : 'Only sync recent data (last 7 days)'}
+                </p>
+              </div>
+
+              {/* Toggle Switch */}
+              <button
+                onClick={() => setEnableHistoricalSync(!enableHistoricalSync)}
+                style={{
+                  width: 'clamp(36px, 3.53vw, 48px)',
+                  height: 'clamp(20px, 1.96vw, 26px)',
+                  borderRadius: '999px',
+                  border: 'none',
+                  backgroundColor: enableHistoricalSync ? '#003450' : '#E5E7EB',
+                  cursor: 'pointer',
+                  position: 'relative',
+                  transition: 'background-color 0.2s ease',
+                  padding: 0,
+                  flexShrink: 0,
+                  marginLeft: 'clamp(16px, 1.57vw, 24px)',
+                }}
+              >
+                <div
+                  style={{
+                    width: 'clamp(16px, 1.57vw, 22px)',
+                    height: 'clamp(16px, 1.57vw, 22px)',
+                    borderRadius: '50%',
+                    backgroundColor: '#FFFFFF',
+                    boxShadow: '0px 1px 3px rgba(0, 0, 0, 0.1)',
+                    position: 'absolute',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    left: enableHistoricalSync ? 'calc(100% - clamp(18px, 1.77vw, 24px))' : 'clamp(2px, 0.20vw, 2px)',
+                    transition: 'left 0.2s ease',
+                  }}
+                />
+              </button>
+            </div>
+
+            {/* Date Picker - Only show if historical sync is enabled */}
+            {enableHistoricalSync && (
+              <div
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 'clamp(6px, 0.59vw, 8px)',
+                }}
+              >
+                <label
+                  style={{
+                    fontFamily: 'Inter, sans-serif',
+                    fontWeight: 500,
+                    fontSize: 'clamp(11px, 1.03vw, 14px)',
+                    lineHeight: 'clamp(15px, 1.47vw, 20px)',
+                    color: '#374151',
+                  }}
+                >
+                  Sync From Date
+                </label>
+                <p
+                  style={{
+                    fontFamily: 'Inter, sans-serif',
+                    fontWeight: 400,
+                    fontSize: 'clamp(10px, 0.96vw, 13px)',
+                    lineHeight: 'clamp(14px, 1.37vw, 18px)',
+                    color: '#6B7280',
+                    margin: '0 0 clamp(6px, 0.59vw, 8px) 0',
+                  }}
+                >
+                  All orders, products, and returns from this date onwards will be synchronized
+                </p>
+                <input
+                  type="date"
+                  value={syncFromDate}
+                  onChange={(e) => setSyncFromDate(e.target.value)}
+                  max={new Date().toISOString().split('T')[0]}
+                  style={{
+                    width: '100%',
+                    maxWidth: 'clamp(281px, 27.54vw, 374px)',
+                    height: 'clamp(29px, 2.80vw, 38px)',
+                    borderRadius: '6px',
+                    border: '1px solid #D1D5DB',
+                    padding: 'clamp(7px, 0.66vw, 9px) clamp(10px, 0.96vw, 13px)',
+                    backgroundColor: '#FFFFFF',
+                    boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.05)',
+                    fontFamily: 'Inter, sans-serif',
+                    fontWeight: 400,
+                    fontSize: 'clamp(11px, 1.03vw, 14px)',
+                    lineHeight: 'clamp(15px, 1.47vw, 20px)',
+                    color: '#111827',
+                    outline: 'none',
+                  }}
+                />
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* API Configuration Section */}
       <div

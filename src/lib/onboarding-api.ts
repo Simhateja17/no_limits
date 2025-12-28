@@ -35,6 +35,8 @@ export interface ShopifyChannelInput {
   accessToken: string;
   apiSecret?: string;
   channelName?: string;
+  syncFromDate?: string; // ISO date string for historical sync
+  enableHistoricalSync?: boolean;
 }
 
 export interface ShopifyOAuthCredentialsInput {
@@ -57,6 +59,8 @@ export interface WooCommerceChannelInput {
   consumerKey: string;
   consumerSecret: string;
   channelName?: string;
+  syncFromDate?: string; // ISO date string for historical sync
+  enableHistoricalSync?: boolean;
 }
 
 export interface OnboardingResult {
@@ -207,9 +211,17 @@ export const onboardingApi = {
   /**
    * Trigger initial sync for a channel
    */
-  triggerInitialSync: async (channelId: string): Promise<OnboardingResult> => {
+  triggerInitialSync: async (
+    channelId: string,
+    syncFromDate?: string,
+    enableHistoricalSync?: boolean
+  ): Promise<OnboardingResult> => {
     const response = await api.post<OnboardingResult>(
-      `/integrations/onboarding/sync/${channelId}`
+      `/integrations/onboarding/sync/${channelId}`,
+      {
+        syncFromDate,
+        enableHistoricalSync,
+      }
     );
     return response.data;
   },
