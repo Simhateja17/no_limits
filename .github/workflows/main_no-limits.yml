@@ -26,7 +26,6 @@ jobs:
       - name: npm install, build, and test
         env:
           NEXT_PUBLIC_API_URL: https://no-limits-backend-bub7gvhbbshufug0.germanywestcentral-01.azurewebsites.net/api
-        working-directory: ./frontend
         run: |
           npm install
           npm run build --if-present
@@ -36,7 +35,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: node-app
-          path: ./frontend
+          path: .
 
   deploy:
     runs-on: ubuntu-latest
