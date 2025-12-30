@@ -25,7 +25,7 @@ jobs:
 
       - name: npm install, build, and test
         env:
-          NEXT_PUBLIC_API_URL: https://no-limits-backend.azurewebsites.net/api
+          NEXT_PUBLIC_API_URL: https://no-limits-backend-bub7gvhbbshufug0.germanywestcentral-01.azurewebsites.net/api
         run: |
           npm install
           npm run build --if-present
