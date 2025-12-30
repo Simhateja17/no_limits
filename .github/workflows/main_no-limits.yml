@@ -34,12 +34,17 @@ jobs:
         run: |
           cp -r .next/static .next/standalone/.next/
           cp -r public .next/standalone/
+          echo "Contents of .next/standalone:"
+          ls -la .next/standalone/
+          echo "Contents of .next/standalone/.next:"
+          ls -la .next/standalone/.next/
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
         with:
           name: node-app
           path: .next/standalone
+          include-hidden-files: true
 
   deploy:
     runs-on: ubuntu-latest
