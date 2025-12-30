@@ -23,19 +23,23 @@ jobs:
         with:
           node-version: '22.x'
 
-      - name: npm install, build, and test
+      - name: npm install and build
         env:
           NEXT_PUBLIC_API_URL: https://no-limits-backend-bub7gvhbbshufug0.germanywestcentral-01.azurewebsites.net/api
         run: |
           npm install
-          npm run build --if-present
-          npm run test --if-present
+          npm run build
+
+      - name: Prepare standalone deployment
+        run: |
+          cp -r .next/static .next/standalone/.next/
+          cp -r public .next/standalone/
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
         with:
           name: node-app
-          path: .
+          path: .next/standalone
 
   deploy:
     runs-on: ubuntu-latest
