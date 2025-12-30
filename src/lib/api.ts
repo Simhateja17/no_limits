@@ -34,6 +34,19 @@ api.interceptors.response.use(
       if (error.response.status === 401) {
         // Clear invalid token
         localStorage.removeItem('accessToken');
+
+        // Only redirect if we're in a browser environment
+        if (typeof window !== 'undefined') {
+          // Import the auth store to trigger logout
+          import('./store').then(({ useAuthStore }) => {
+            useAuthStore.getState().logout();
+          });
+
+          // Redirect to login page if not already there
+          if (window.location.pathname !== '/') {
+            window.location.href = '/';
+          }
+        }
       }
     }
     return Promise.reject(error);
