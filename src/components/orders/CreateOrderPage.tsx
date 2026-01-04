@@ -1,9 +1,10 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { useLocale, useTranslations } from 'next-intl';
+import { dataApi, type Product, type CreateOrderInput } from '@/lib/data-api';
 
 type OrderStatus = 'Processing' | 'On Hold' | 'Shipped' | 'Cancelled';
 
@@ -14,21 +15,8 @@ type ProductRow = {
   gtin: string;
   qty: number;
   stock: number;
+  weightInKg: number | null;
 };
-
-const mockInitialProducts: ProductRow[] = [
-  { id: '1', name: 'Testproduct 1', sku: '#24234', gtin: '342345235324', qty: 3, stock: 42 },
-  { id: '2', name: 'Testproduct 2', sku: '#24076', gtin: '324343243242', qty: 1, stock: 15 },
-  { id: '8', name: 'Testproduct 8', sku: '#24111', gtin: '111222333444', qty: 2, stock: 7 },
-];
-
-const mockAvailableProducts: ProductRow[] = [
-  { id: '3', name: 'Testproduct 3', sku: '#24235', gtin: '342345235325', qty: 1, stock: 9 },
-  { id: '4', name: 'Testproduct 4', sku: '#24236', gtin: '342345235326', qty: 1, stock: 0 },
-  { id: '5', name: 'Testproduct 5', sku: '#24237', gtin: '342345235327', qty: 1, stock: 27 },
-  { id: '6', name: 'Testproduct 6', sku: '#24238', gtin: '342345235328', qty: 1, stock: 3 },
-  { id: '7', name: 'Testproduct 7', sku: '#24234', gtin: '342345235324', qty: 1, stock: 18 },
-];
 
 const shippingMethods = [
   { id: 'dhl', name: 'DHL Paket National', logo: '/dhl.png' },
@@ -40,6 +28,14 @@ const shippingMethods = [
   { id: 'dpd', name: 'DPD Classic', logo: '/DPD_logo(red)2015.png' },
   { id: 'hermes', name: 'Hermes Paket', logo: '/hermes.png' },
 ];
+
+// Map country codes
+const countryCodeMap: Record<string, string> = {
+  unitedStates: 'US',
+  germany: 'DE',
+  austria: 'AT',
+  switzerland: 'CH',
+};
 
 const getStatusColor = (status: OrderStatus) => {
   switch (status) {
@@ -68,19 +64,25 @@ export function CreateOrderPage({ basePath }: { basePath: string }) {
   const isGerman = locale?.toLowerCase().startsWith('de');
 
   const [orderStatus] = useState<OrderStatus>('Processing');
-  const [orderId, setOrderId] = useState('934242');
+  const [orderId, setOrderId] = useState('');
 
   const [showEditModal, setShowEditModal] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [showErrorModal, setShowErrorModal] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
   const [onHoldStatus, setOnHoldStatus] = useState(false);
   const [tags, setTags] = useState<string[]>([]);
   const [newTag, setNewTag] = useState('');
 
-  const [orderProducts, setOrderProducts] = useState<ProductRow[]>(mockInitialProducts);
+  // Products state
+  const [allProducts, setAllProducts] = useState<ProductRow[]>([]);
+  const [orderProducts, setOrderProducts] = useState<ProductRow[]>([]);
   const [productSearchQuery, setProductSearchQuery] = useState('');
   const [productQuantities, setProductQuantities] = useState<Record<string, number>>({});
   const [showProductList, setShowProductList] = useState(false);
+  const [productsLoading, setProductsLoading] = useState(true);
+  const [isCreating, setIsCreating] = useState(false);
 
   const [selectedShippingMethod, setSelectedShippingMethod] = useState(shippingMethods[0]);
   const [showShippingDropdown, setShowShippingDropdown] = useState(false);
@@ -105,13 +107,37 @@ export function CreateOrderPage({ basePath }: { basePath: string }) {
     country: 'unitedStates',
   });
 
+  // Fetch products on mount
+  const fetchProducts = useCallback(async () => {
+    try {
+      setProductsLoading(true);
+      const products = await dataApi.getProducts();
+      const mappedProducts: ProductRow[] = products.map((p: Product) => ({
+        id: p.id,
+        name: p.name,
+        sku: p.sku,
+        gtin: p.gtin || '',
+        qty: 1,
+        stock: p.available,
+        weightInKg: p.weightInKg,
+      }));
+      setAllProducts(mappedProducts);
+    } catch (error) {
+      console.error('Error fetching products:', error);
+    } finally {
+      setProductsLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
+    fetchProducts();
+
     // Close dropdowns when navigating away
     return () => {
       setShowShippingDropdown(false);
       setShowProductList(false);
     };
-  }, []);
+  }, [fetchProducts]);
 
   const handleBack = () => router.back();
 
@@ -137,11 +163,19 @@ export function CreateOrderPage({ basePath }: { basePath: string }) {
 
   const availableProducts = useMemo(() => {
     const query = productSearchQuery.toLowerCase();
-    return mockAvailableProducts.filter(p =>
+    return allProducts.filter(p =>
       (p.name.toLowerCase().includes(query) || p.sku.toLowerCase().includes(query)) &&
       !orderProducts.find(op => op.id === p.id)
     );
-  }, [productSearchQuery, orderProducts]);
+  }, [productSearchQuery, orderProducts, allProducts]);
+
+  // Calculate total shipment weight
+  const totalShipmentWeight = useMemo(() => {
+    return orderProducts.reduce((total, product) => {
+      const weight = product.weightInKg || 0;
+      return total + (weight * product.qty);
+    }, 0);
+  }, [orderProducts]);
 
   const handleAddProduct = (product: ProductRow) => {
     const qty = productQuantities[product.id] ?? 1;
@@ -169,12 +203,53 @@ export function CreateOrderPage({ basePath }: { basePath: string }) {
     setShowEditModal(false);
   };
 
-  const handleCreateOrder = () => {
-    setShowSuccessModal(true);
-    setTimeout(() => {
-      setShowSuccessModal(false);
-      router.push(basePath);
-    }, 2000);
+  const handleCreateOrder = async () => {
+    // Validate that there are products
+    if (orderProducts.length === 0) {
+      setErrorMessage('Please add at least one product to the order');
+      setShowErrorModal(true);
+      return;
+    }
+
+    setIsCreating(true);
+    try {
+      const orderInput: CreateOrderInput = {
+        orderId: orderId || undefined,
+        items: orderProducts.map(p => ({
+          productId: p.id,
+          quantity: p.qty,
+          sku: p.sku,
+          productName: p.name,
+        })),
+        shippingMethod: selectedShippingMethod.name,
+        shippingFirstName: formData.firstName || undefined,
+        shippingLastName: formData.lastName || undefined,
+        shippingCompany: formData.company || undefined,
+        shippingAddress1: formData.streetAddress || undefined,
+        shippingAddress2: formData.addressLine2 || undefined,
+        shippingCity: formData.city || undefined,
+        shippingZip: formData.zipPostal || undefined,
+        shippingCountry: tCountries(formData.country),
+        shippingCountryCode: countryCodeMap[formData.country],
+        notes: orderNotes || undefined,
+        tags: tags.length > 0 ? tags : undefined,
+        isOnHold: onHoldStatus,
+      };
+
+      await dataApi.createOrder(orderInput);
+
+      setShowSuccessModal(true);
+      setTimeout(() => {
+        setShowSuccessModal(false);
+        router.push(basePath);
+      }, 2000);
+    } catch (error) {
+      console.error('Error creating order:', error);
+      setErrorMessage(error instanceof Error ? error.message : 'Failed to create order');
+      setShowErrorModal(true);
+    } finally {
+      setIsCreating(false);
+    }
   };
 
   return (
@@ -527,7 +602,9 @@ export function CreateOrderPage({ basePath }: { basePath: string }) {
               <span style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: 'clamp(16px, 1.3vw, 18px)', lineHeight: '24px', color: '#111827' }}>
                 {tOrders('shipmentWeight')}
               </span>
-              <div style={{ marginTop: '8px', fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: 'clamp(13px, 1.1vw, 15px)', lineHeight: '20px', color: '#111827' }}>0,58 kg</div>
+              <div style={{ marginTop: '8px', fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: 'clamp(13px, 1.1vw, 15px)', lineHeight: '20px', color: '#111827' }}>
+                {totalShipmentWeight > 0 ? `${totalShipmentWeight.toFixed(2).replace('.', ',')} kg` : '0 kg'}
+              </div>
               <div style={{ marginTop: '24px', fontFamily: 'Inter, sans-serif', fontWeight: 400, fontSize: '14px', lineHeight: '20px', color: '#6B7280' }}>
                 {tOrders('shipmentWeightDescription')}
               </div>
@@ -802,9 +879,25 @@ export function CreateOrderPage({ basePath }: { basePath: string }) {
               <p style={{ marginTop: '12px', fontFamily: 'Inter, sans-serif', fontWeight: 400, fontSize: '14px', lineHeight: '20px', color: '#6B7280' }}>{tOrders('createOrderDescription')}</p>
               <button
                 onClick={handleCreateOrder}
-                style={{ marginTop: '20px', width: 'clamp(170px, 15.2vw, 206px)', height: 'clamp(34px, 2.8vw, 38px)', padding: 'clamp(7px, 0.66vw, 9px) clamp(13px, 1.25vw, 17px)', borderRadius: '6px', backgroundColor: '#D1FAE5', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                disabled={isCreating || orderProducts.length === 0}
+                style={{
+                  marginTop: '20px',
+                  width: 'clamp(170px, 15.2vw, 206px)',
+                  height: 'clamp(34px, 2.8vw, 38px)',
+                  padding: 'clamp(7px, 0.66vw, 9px) clamp(13px, 1.25vw, 17px)',
+                  borderRadius: '6px',
+                  backgroundColor: isCreating || orderProducts.length === 0 ? '#E5E7EB' : '#D1FAE5',
+                  border: 'none',
+                  cursor: isCreating || orderProducts.length === 0 ? 'not-allowed' : 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  opacity: isCreating || orderProducts.length === 0 ? 0.7 : 1,
+                }}
               >
-                <span style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: 'clamp(12px, 1.03vw, 14px)', lineHeight: '20px', color: '#059669', whiteSpace: 'nowrap', textAlign: 'center' }}>{tOrders('createOrder')}</span>
+                <span style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: 'clamp(12px, 1.03vw, 14px)', lineHeight: '20px', color: isCreating || orderProducts.length === 0 ? '#6B7280' : '#059669', whiteSpace: 'nowrap', textAlign: 'center' }}>
+                  {isCreating ? 'Creating...' : tOrders('createOrder')}
+                </span>
               </button>
             </div>
           </div>
@@ -913,6 +1006,55 @@ export function CreateOrderPage({ basePath }: { basePath: string }) {
               </svg>
             </div>
             <span style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '18px', lineHeight: '24px', textAlign: 'center', color: '#111827' }}>{tMessages('orderCreated')}</span>
+          </div>
+        </div>
+      )}
+
+      {/* Error Modal */}
+      {showErrorModal && (
+        <div
+          style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0, 0, 0, 0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}
+          onClick={() => setShowErrorModal(false)}
+        >
+          <div
+            style={{
+              width: 'clamp(320px, 40vw, 512px)',
+              maxWidth: '90vw',
+              gap: '16px',
+              borderRadius: '8px',
+              padding: 'clamp(16px, 1.8vw, 24px)',
+              backgroundColor: '#FFFFFF',
+              boxShadow: '0px 10px 10px -5px rgba(0, 0, 0, 0.04), 0px 20px 25px -5px rgba(0, 0, 0, 0.1)',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ width: '48px', height: '48px', borderRadius: '24px', backgroundColor: '#FEE2E2', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M6 18L18 6M6 6L18 18" stroke="#DC2626" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </div>
+            <span style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '18px', lineHeight: '24px', textAlign: 'center', color: '#111827' }}>Error</span>
+            <p style={{ fontFamily: 'Inter, sans-serif', fontWeight: 400, fontSize: '14px', lineHeight: '20px', textAlign: 'center', color: '#6B7280', margin: 0 }}>{errorMessage}</p>
+            <button
+              onClick={() => setShowErrorModal(false)}
+              style={{
+                marginTop: '8px',
+                padding: '8px 16px',
+                borderRadius: '6px',
+                backgroundColor: '#F3F4F6',
+                border: 'none',
+                cursor: 'pointer',
+                fontFamily: 'Inter, sans-serif',
+                fontWeight: 500,
+                fontSize: '14px',
+                color: '#374151',
+              }}
+            >
+              {tCommon('close')}
+            </button>
           </div>
         </div>
       )}

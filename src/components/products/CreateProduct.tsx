@@ -3,6 +3,7 @@
 import { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
+import { dataApi, CreateProductInput } from '@/lib/data-api';
 
 interface CreateProductProps {
   backUrl: string;
@@ -84,6 +85,10 @@ export function CreateProduct({ backUrl }: CreateProductProps) {
   const [productImage, setProductImage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Loading and error state
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
@@ -120,11 +125,50 @@ export function CreateProduct({ backUrl }: CreateProductProps) {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleSave = () => {
-    // In a real app, save the product data to the API
-    console.log('Creating product:', formData);
-    // Navigate back to products list after save
-    router.push(backUrl);
+  const handleSave = async () => {
+    // Validate required fields
+    if (!formData.productName.trim()) {
+      setError('Product name is required');
+      return;
+    }
+    if (!formData.sku.trim()) {
+      setError('SKU is required');
+      return;
+    }
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const productInput: CreateProductInput = {
+        name: formData.productName,
+        manufacturer: formData.manufacturer || undefined,
+        sku: formData.sku,
+        gtin: formData.gtin || undefined,
+        han: formData.han || undefined,
+        heightInCm: formData.heightInCm || undefined,
+        lengthInCm: formData.lengthInCm || undefined,
+        widthInCm: formData.widthInCm || undefined,
+        weightInKg: formData.weightInKg || undefined,
+        amazonAsin: formData.amazonAsin || undefined,
+        amazonSku: formData.amazonSku || undefined,
+        isbn: formData.isbn || undefined,
+        zolltarifnummer: formData.zolltarifnummer || undefined,
+        ursprung: formData.ursprung || undefined,
+        nettoVerkaufspreis: formData.nettoVerkaufspreis || undefined,
+        imageUrl: productImage || undefined,
+      };
+
+      await dataApi.createProduct(productInput);
+
+      // Navigate back to products list after successful save
+      router.push(backUrl);
+    } catch (err: any) {
+      console.error('Error creating product:', err);
+      setError(err.response?.data?.error || 'Failed to create product');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -407,6 +451,28 @@ export function CreateProduct({ backUrl }: CreateProductProps) {
           </div>
         </div>
 
+        {/* Error Message */}
+        {error && (
+          <div
+            style={{
+              borderRadius: '8px',
+              padding: '16px',
+              backgroundColor: '#FEF2F2',
+              border: '1px solid #FECACA',
+            }}
+          >
+            <span
+              style={{
+                fontFamily: 'Inter, sans-serif',
+                fontSize: '14px',
+                color: '#DC2626',
+              }}
+            >
+              {error}
+            </span>
+          </div>
+        )}
+
         {/* Save Product Box */}
         <div
           style={{
@@ -432,15 +498,16 @@ export function CreateProduct({ backUrl }: CreateProductProps) {
           </span>
           <button
             onClick={handleSave}
+            disabled={isLoading}
             style={{
               minWidth: '102px',
               height: '38px',
               borderRadius: '6px',
               padding: '9px 17px',
-              backgroundColor: '#003450',
+              backgroundColor: isLoading ? '#9CA3AF' : '#003450',
               boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.05)',
               border: 'none',
-              cursor: 'pointer',
+              cursor: isLoading ? 'not-allowed' : 'pointer',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -455,7 +522,7 @@ export function CreateProduct({ backUrl }: CreateProductProps) {
                 color: '#FFFFFF',
               }}
             >
-              {tCommon('save')}
+              {isLoading ? 'Saving...' : tCommon('save')}
             </span>
           </button>
         </div>

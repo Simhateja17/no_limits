@@ -125,6 +125,50 @@ export interface Inbound {
   createdAt: string;
 }
 
+export interface CreateOrderInput {
+  orderId?: string;
+  items: Array<{
+    productId: string;
+    quantity: number;
+    sku?: string;
+    productName?: string;
+  }>;
+  shippingMethod?: string;
+  shippingFirstName?: string;
+  shippingLastName?: string;
+  shippingCompany?: string;
+  shippingAddress1?: string;
+  shippingAddress2?: string;
+  shippingCity?: string;
+  shippingZip?: string;
+  shippingCountry?: string;
+  shippingCountryCode?: string;
+  notes?: string;
+  tags?: string[];
+  isOnHold?: boolean;
+}
+
+export interface CreateProductInput {
+  name: string;
+  manufacturer?: string;
+  sku: string;
+  gtin?: string;
+  han?: string;
+  heightInCm?: string;
+  lengthInCm?: string;
+  widthInCm?: string;
+  weightInKg?: string;
+  amazonAsin?: string;
+  amazonSku?: string;
+  isbn?: string;
+  mhd?: string;
+  charge?: string;
+  zolltarifnummer?: string;
+  ursprung?: string;
+  nettoVerkaufspreis?: string;
+  imageUrl?: string;
+}
+
 export const dataApi = {
   // Products
   async getProducts(): Promise<Product[]> {
@@ -137,6 +181,11 @@ export const dataApi = {
     return response.data.data;
   },
 
+  async createProduct(input: CreateProductInput): Promise<Product> {
+    const response = await api.post('/data/products', input);
+    return response.data.data;
+  },
+
   // Orders
   async getOrders(): Promise<Order[]> {
     const response = await api.get('/data/orders');
@@ -145,6 +194,11 @@ export const dataApi = {
 
   async getOrder(id: string): Promise<Order> {
     const response = await api.get(`/data/orders/${id}`);
+    return response.data.data;
+  },
+
+  async createOrder(input: CreateOrderInput): Promise<Order> {
+    const response = await api.post('/data/orders', input);
     return response.data.data;
   },
 
