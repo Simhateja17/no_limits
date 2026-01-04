@@ -129,8 +129,10 @@ export default function ClientOrderDetailPage() {
 
   // API state
   const [orderDetails, setOrderDetails] = useState<OrderDetails | null>(null);
+  const [rawOrder, setRawOrder] = useState<ApiOrder | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isCreatingReplacement, setIsCreatingReplacement] = useState(false);
 
   const [editOrderEnabled, setEditOrderEnabled] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -176,6 +178,7 @@ export default function ClientOrderDetailPage() {
         setLoading(true);
         setError(null);
         const data = await dataApi.getOrder(orderId);
+        setRawOrder(data as any);
         const transformed = transformApiOrderToDetails(data as any);
         setOrderDetails(transformed);
         setOnHoldStatus(transformed.onHoldStatus);
@@ -316,22 +319,41 @@ export default function ClientOrderDetailPage() {
   };
 
   // Handle create replacement order
-  const handleCreateReplacementOrder = () => {
-    const baseId = getBaseOrderId(orderId);
-    const currentNum = getCurrentReplacementNumber(orderId);
-    const newReplacementNum = currentNum > 0 ? currentNum + 1 : replacementCount + 1;
-    const newOrderId = `${baseId}-${newReplacementNum}`;
-    
-    // In a real app, this would call an API to create the replacement order
-    // For now, we'll just show the success modal and navigate
-    setReplacementCount(newReplacementNum);
-    setShowReplacementModal(true);
-    
-    setTimeout(() => {
-      setShowReplacementModal(false);
-      // Navigate to the new replacement order
-      router.push(`/client/orders/${newOrderId}`);
-    }, 2000);
+  const handleCreateReplacementOrder = async () => {
+    if (!rawOrder?.id) {
+      setError('Cannot create replacement: Order data not loaded');
+      return;
+    }
+
+    setIsCreatingReplacement(true);
+    setError(null);
+
+    try {
+      // Call the API to create the replacement order
+      const result = await dataApi.createReplacementOrder(rawOrder.id, {
+        reason: 'Customer requested replacement',
+        items: orderProducts.map(p => ({
+          sku: p.sku,
+          productName: p.name,
+          quantity: p.qty,
+        })),
+        notes: orderNotes || undefined,
+      });
+
+      // Show success modal
+      setShowReplacementModal(true);
+
+      // Navigate to the new replacement order after a delay
+      setTimeout(() => {
+        setShowReplacementModal(false);
+        router.push(`/client/orders/${result.replacementOrderId}`);
+      }, 2000);
+    } catch (err: any) {
+      console.error('Error creating replacement order:', err);
+      setError(err.response?.data?.error || 'Failed to create replacement order');
+    } finally {
+      setIsCreatingReplacement(false);
+    }
   };
 
   return (
@@ -1698,15 +1720,16 @@ export default function ClientOrderDetailPage() {
                 </p>
                 <button
                   onClick={handleCreateReplacementOrder}
+                  disabled={isCreatingReplacement}
                   style={{
                     marginTop: '20px',
                     width: 'clamp(170px, 15.2vw, 206px)',
                     height: 'clamp(34px, 2.8vw, 38px)',
                     padding: 'clamp(7px, 0.66vw, 9px) clamp(13px, 1.25vw, 17px)',
                     borderRadius: '6px',
-                    backgroundColor: '#003450',
+                    backgroundColor: isCreatingReplacement ? '#9CA3AF' : '#003450',
                     border: 'none',
-                    cursor: 'pointer',
+                    cursor: isCreatingReplacement ? 'not-allowed' : 'pointer',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -1723,7 +1746,7 @@ export default function ClientOrderDetailPage() {
                       textAlign: 'center',
                     }}
                   >
-                    {tOrders('createReplacementOrder')}
+                    {isCreatingReplacement ? 'Creating...' : tOrders('createReplacementOrder')}
                   </span>
                 </button>
               </div>

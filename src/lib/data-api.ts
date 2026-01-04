@@ -202,6 +202,29 @@ export const dataApi = {
     return response.data.data;
   },
 
+  async createReplacementOrder(orderId: string, data: {
+    reason: string;
+    returnId?: string;
+    items?: Array<{ sku: string; productName: string; quantity: number }>;
+    customAddress?: {
+      firstName?: string;
+      lastName?: string;
+      company?: string;
+      address1?: string;
+      address2?: string;
+      city?: string;
+      zip?: string;
+      country?: string;
+      countryCode?: string;
+      phone?: string;
+    };
+    notes?: string;
+    expedited?: boolean;
+  }): Promise<{ replacementOrderId: string; originalOrderId: string; details: any }> {
+    const response = await api.post(`/sync-admin/orders/${orderId}/replacement`, data);
+    return response.data.data;
+  },
+
   // Returns
   async getReturns(): Promise<Return[]> {
     const response = await api.get('/data/returns');

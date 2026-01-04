@@ -261,9 +261,9 @@ export default function ClientSetupPage() {
             setSyncChannelId(event.data.channelId);
           }
 
-          // Check if JTL config already exists
-          if (hasJtlConfig) {
-            console.log('[Setup] ✅ JTL already configured, showing sync date picker');
+          // Check if JTL config already exists OR if adding a channel (skip JTL step)
+          if (hasJtlConfig || isAddChannelMode) {
+            console.log('[Setup] ✅ JTL already configured or adding channel, showing sync date picker');
             setShowSyncModal(true);
           } else {
             console.log('[Setup] ➡️ Moving to JTL credentials step');
@@ -304,9 +304,9 @@ export default function ClientSetupPage() {
               setShopifyOAuthStatus('success');
               setIsLoading(false);
 
-              // Check if JTL config already exists
-              if (hasJtlConfig) {
-                console.log('[Setup] ✅ JTL already configured, showing sync date picker');
+              // Check if JTL config already exists OR if adding a channel (skip JTL step)
+              if (hasJtlConfig || isAddChannelMode) {
+                console.log('[Setup] ✅ JTL already configured or adding channel, showing sync date picker');
                 setShowSyncModal(true);
               } else {
                 console.log('[Setup] ➡️ Moving to JTL credentials step');
@@ -437,9 +437,9 @@ export default function ClientSetupPage() {
         console.warn('[Setup] ⚠️ No channel ID returned from platform setup');
       }
 
-      // Check if JTL config already exists
-      if (hasJtlConfig) {
-        console.log('[Setup] ✅ JTL already configured, showing sync date picker');
+      // Check if JTL config already exists OR if adding a channel (skip JTL step)
+      if (hasJtlConfig || isAddChannelMode) {
+        console.log('[Setup] ✅ JTL already configured or adding channel, showing sync date picker');
         setShowSyncModal(true);
       } else {
         console.log('[Setup] ➡️ Moving to JTL credentials step');

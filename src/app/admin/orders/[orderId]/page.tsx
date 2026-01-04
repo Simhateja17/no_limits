@@ -1,12 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { DashboardLayout } from '@/components/layout';
 import { useAuthStore } from '@/lib/store';
-import { useEffect } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
+import { dataApi, type Order as ApiOrder } from '@/lib/data-api';
 
 // Mock order data - in real app this would come from API
 const mockOrderDetails = {
@@ -76,6 +76,11 @@ export default function OrderDetailPage() {
   const tCountries = useTranslations('countries');
   const tStatus = useTranslations('status');
   const tMessages = useTranslations('messages');
+  // API state for replacement order
+  const [rawOrder, setRawOrder] = useState<ApiOrder | null>(null);
+  const [isCreatingReplacement, setIsCreatingReplacement] = useState(false);
+  const [replacementError, setReplacementError] = useState<string | null>(null);
+
   const [editOrderEnabled, setEditOrderEnabled] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
@@ -109,6 +114,23 @@ export default function OrderDetailPage() {
       router.push('/');
     }
   }, [isAuthenticated, user, router]);
+
+  // Fetch order data for replacement functionality
+  useEffect(() => {
+    const orderId = params.orderId as string;
+    if (!orderId) return;
+
+    const fetchOrder = async () => {
+      try {
+        const data = await dataApi.getOrder(orderId);
+        setRawOrder(data as any);
+      } catch (err) {
+        console.error('Error fetching order for replacement:', err);
+      }
+    };
+
+    fetchOrder();
+  }, [params.orderId]);
 
   if (!isAuthenticated || (user?.role !== 'ADMIN' && user?.role !== 'SUPER_ADMIN')) {
     return null;
@@ -192,22 +214,41 @@ export default function OrderDetailPage() {
   };
 
   // Handle create replacement order
-  const handleCreateReplacementOrder = () => {
-    const baseId = getBaseOrderId(orderId);
-    const currentNum = getCurrentReplacementNumber(orderId);
-    const newReplacementNum = currentNum > 0 ? currentNum + 1 : replacementCount + 1;
-    const newOrderId = `${baseId}-${newReplacementNum}`;
-    
-    // In a real app, this would call an API to create the replacement order
-    // For now, we'll just show the success modal and navigate
-    setReplacementCount(newReplacementNum);
-    setShowReplacementModal(true);
-    
-    setTimeout(() => {
-      setShowReplacementModal(false);
-      // Navigate to the new replacement order
-      router.push(`/admin/orders/${newOrderId}`);
-    }, 2000);
+  const handleCreateReplacementOrder = async () => {
+    if (!rawOrder?.id) {
+      setReplacementError('Cannot create replacement: Order data not loaded');
+      return;
+    }
+
+    setIsCreatingReplacement(true);
+    setReplacementError(null);
+
+    try {
+      // Call the API to create the replacement order
+      const result = await dataApi.createReplacementOrder(rawOrder.id, {
+        reason: 'Replacement requested',
+        items: orderProducts.map(p => ({
+          sku: p.sku,
+          productName: p.name,
+          quantity: p.qty,
+        })),
+        notes: orderNotes || undefined,
+      });
+
+      // Show success modal
+      setShowReplacementModal(true);
+
+      // Navigate to the new replacement order after a delay
+      setTimeout(() => {
+        setShowReplacementModal(false);
+        router.push(`/admin/orders/${result.replacementOrderId}`);
+      }, 2000);
+    } catch (err: any) {
+      console.error('Error creating replacement order:', err);
+      setReplacementError(err.response?.data?.error || 'Failed to create replacement order');
+    } finally {
+      setIsCreatingReplacement(false);
+    }
   };
 
   return (
@@ -1564,17 +1605,30 @@ export default function OrderDetailPage() {
                 >
                   {tOrders('createReplacementOrderDescription')}
                 </p>
+                {replacementError && (
+                  <p
+                    style={{
+                      marginTop: '8px',
+                      fontFamily: 'Inter, sans-serif',
+                      fontSize: '12px',
+                      color: '#DC2626',
+                    }}
+                  >
+                    {replacementError}
+                  </p>
+                )}
                 <button
                   onClick={handleCreateReplacementOrder}
+                  disabled={isCreatingReplacement}
                   style={{
                     marginTop: '20px',
                     width: 'clamp(170px, 15.2vw, 206px)',
                     height: 'clamp(34px, 2.8vw, 38px)',
                     padding: 'clamp(7px, 0.66vw, 9px) clamp(13px, 1.25vw, 17px)',
                     borderRadius: '6px',
-                    backgroundColor: '#003450',
+                    backgroundColor: isCreatingReplacement ? '#9CA3AF' : '#003450',
                     border: 'none',
-                    cursor: 'pointer',
+                    cursor: isCreatingReplacement ? 'not-allowed' : 'pointer',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -1591,7 +1645,7 @@ export default function OrderDetailPage() {
                       textAlign: 'center',
                     }}
                   >
-                    {tOrders('createReplacementOrder')}
+                    {isCreatingReplacement ? 'Creating...' : tOrders('createReplacementOrder')}
                   </span>
                 </button>
               </div>
