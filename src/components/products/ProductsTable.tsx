@@ -4,7 +4,9 @@ import { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { useClients, getClientNames } from '@/lib/hooks';
+import { useAuthStore } from '@/lib/store';
 import { dataApi } from '@/lib/data-api';
+import { channelsApi, Channel } from '@/lib/channels-api';
 import type { Product as ApiProduct } from '@/lib/data-api';
 
 // Tab type
@@ -21,12 +23,13 @@ interface Product {
   client: string;
 }
 
-// Mock channels data - TODO: Replace with API call
-const allChannels = [
-  { id: '1', name: 'Shopify Store', client: 'Papercrush', type: 'Shopify' },
-  { id: '2', name: 'WooCommerce', client: 'Caobali', type: 'WooCommerce' },
-  { id: '3', name: 'Amazon', client: 'Terppens', type: 'Amazon' },
-];
+// Channel interface for display
+interface DisplayChannel {
+  id: string;
+  name: string;
+  client: string;
+  type: string;
+}
 
 interface ProductsTableProps {
   showClientColumn: boolean; // Show client column only for superadmin and warehouse labor view
@@ -35,11 +38,13 @@ interface ProductsTableProps {
 
 export function ProductsTable({ showClientColumn, baseUrl }: ProductsTableProps) {
   const router = useRouter();
+  const { user } = useAuthStore();
   const [activeTab, setActiveTab] = useState<TabType>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [customerFilter, setCustomerFilter] = useState('ALL');
   const [currentPage, setCurrentPage] = useState(1);
   const [products, setProducts] = useState<Product[]>([]);
+  const [channels, setChannels] = useState<DisplayChannel[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const itemsPerPage = 10;
@@ -75,15 +80,41 @@ export function ProductsTable({ showClientColumn, baseUrl }: ProductsTableProps)
     fetchProducts();
   }, []);
 
-  // Mock current client for demo - in production this would come from auth context
-  const currentClient = 'Papercrush';
+  // Fetch channels from API
+  useEffect(() => {
+    const fetchChannels = async () => {
+      if (!user?.clientId) return;
+
+      try {
+        const response = await channelsApi.getChannels(user.clientId);
+        if (response.success) {
+          // Transform to display format
+          const displayChannels: DisplayChannel[] = response.channels.map(ch => ({
+            id: ch.id,
+            name: ch.name,
+            client: user.name || 'Client',
+            type: ch.type,
+          }));
+          setChannels(displayChannels);
+        }
+      } catch (err) {
+        console.error('Error fetching channels:', err);
+        // Keep empty channels array on error
+      }
+    };
+
+    fetchChannels();
+  }, [user?.clientId, user?.name]);
+
+  // Current client from auth context
+  const currentClient = user?.name || 'Client';
 
   // Filter channels based on user role
   // showClientColumn = true means admin/employee view (can see all channels)
   // showClientColumn = false means client view (can only see their own channels)
-  const channels = showClientColumn
-    ? allChannels
-    : allChannels.filter(ch => ch.client === currentClient);
+  const filteredChannels = showClientColumn
+    ? channels
+    : channels.filter(ch => ch.client === currentClient);
 
   const handleProductClick = (productId: string) => {
     router.push(`${baseUrl}/${productId}`);

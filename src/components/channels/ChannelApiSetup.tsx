@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
+import { channelsApi } from '@/lib/channels-api';
 
 interface ChannelApiSetupProps {
   channelId: string;
@@ -52,18 +53,40 @@ export function ChannelApiSetup({ channelId, channelType, baseUrl }: ChannelApiS
   const [clientId, setClientId] = useState('');
   const [clientSecret, setClientSecret] = useState('');
   const [storeUrl, setStoreUrl] = useState('');
-
-  // Suppress unused variable warning
-  void channelId;
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   const handleBack = () => {
     router.back();
   };
 
-  const handleNext = () => {
-    // TODO: Save API credentials and proceed to next step
-    console.log('Saving API credentials:', { clientId, clientSecret, storeUrl, channelType });
-    router.push(`${baseUrl}/location-setup?type=${encodeURIComponent(channelType)}`);
+  const handleNext = async () => {
+    // Skip saving if no channelId or it's 'new'
+    if (channelId && channelId !== 'new') {
+      try {
+        setIsSaving(true);
+        setSaveError(null);
+        
+        const result = await channelsApi.saveApiCredentials(channelId, {
+          storeUrl,
+          clientId: clientId || undefined,
+          clientSecret: clientSecret || undefined,
+        });
+
+        if (!result.success) {
+          setSaveError(result.error || 'Failed to save credentials');
+          return;
+        }
+      } catch (err) {
+        console.error('Error saving credentials:', err);
+        setSaveError(err instanceof Error ? err.message : 'An error occurred');
+        return;
+      } finally {
+        setIsSaving(false);
+      }
+    }
+
+    router.push(`${baseUrl}/location-setup?type=${encodeURIComponent(channelType)}&channelId=${channelId}`);
   };
 
   // Get channel-specific labels

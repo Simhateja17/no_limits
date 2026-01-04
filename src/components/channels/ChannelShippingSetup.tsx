@@ -131,8 +131,10 @@ export function ChannelShippingSetup({ channelId, channelType, baseUrl }: Channe
   const [warehouseMethods, setWarehouseMethods] = useState<ShippingMethod[]>([]);
   const [channelMethods, setChannelMethods] = useState<ShippingMethod[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
-  // Suppress unused variable warnings
+  // Suppress unused variable warning
   void baseUrl;
 
   // Fetch shipping methods on mount
@@ -161,9 +163,38 @@ export function ChannelShippingSetup({ channelId, channelType, baseUrl }: Channe
     router.back();
   };
 
-  const handleFinish = () => {
-    // TODO: Save shipping method mappings
-    console.log('Saving shipping method mappings:', selectedMethods);
+  const handleFinish = async () => {
+    // Save shipping method mappings
+    if (channelId && channelId !== 'new') {
+      try {
+        setIsSaving(true);
+        setSaveError(null);
+
+        // Convert selectedMethods to proper format (warehouseMethodId -> channelMethodName)
+        // We need to find the channel method ID from the name
+        const mappings: Record<string, string> = {};
+        for (const [warehouseMethodId, channelMethodName] of Object.entries(selectedMethods)) {
+          const channelMethod = channelMethods.find(m => m.name === channelMethodName);
+          if (channelMethod) {
+            mappings[warehouseMethodId] = channelMethod.id;
+          }
+        }
+
+        const result = await channelsApi.saveShippingMappings(channelId, mappings);
+        
+        if (!result.success) {
+          setSaveError(result.error || 'Failed to save shipping mappings');
+          return;
+        }
+      } catch (err) {
+        console.error('Error saving shipping mappings:', err);
+        setSaveError(err instanceof Error ? err.message : 'An error occurred');
+        return;
+      } finally {
+        setIsSaving(false);
+      }
+    }
+
     setShowSuccessModal(true);
   };
 

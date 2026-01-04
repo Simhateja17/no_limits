@@ -105,6 +105,60 @@ export const channelsApi = {
   },
 
   /**
+   * Save API credentials for a channel
+   */
+  saveApiCredentials: async (
+    channelId: string,
+    credentials: {
+      storeUrl: string;
+      clientId?: string;
+      clientSecret?: string;
+    }
+  ): Promise<{ success: boolean; error?: string }> => {
+    const response = await api.put(
+      `/integrations/channels/${channelId}/credentials`,
+      credentials
+    );
+    return response.data;
+  },
+
+  /**
+   * Save location selection for a channel
+   */
+  saveLocationSelection: async (
+    channelId: string,
+    locationId: string
+  ): Promise<{ success: boolean; error?: string }> => {
+    const response = await api.put(
+      `/integrations/channels/${channelId}/location`,
+      { locationId }
+    );
+    return response.data;
+  },
+
+  /**
+   * Save shipping method mappings for a channel
+   */
+  saveShippingMappings: async (
+    channelId: string,
+    mappings: Record<string, string> // warehouseMethodId -> channelMethodId
+  ): Promise<{ success: boolean; error?: string }> => {
+    const response = await api.put(
+      `/integrations/channels/${channelId}/shipping-mappings`,
+      { mappings }
+    );
+    return response.data;
+  },
+
+  /**
+   * Delete a channel
+   */
+  deleteChannel: async (channelId: string): Promise<{ success: boolean; error?: string }> => {
+    const response = await api.delete(`/integrations/channels/${channelId}`);
+    return response.data;
+  },
+
+  /**
    * Trigger historic data sync for a channel
    * Pulls orders, returns, and inbounds from the last N days (default 180)
    */

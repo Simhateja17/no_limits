@@ -404,11 +404,28 @@ export function ChannelSettings({ channelId, baseUrl, initialChannelType = 'Wooc
     setIsChannelOn(!isChannelOn);
   };
 
-  const handleDeleteChannel = () => {
+  const handleDeleteChannel = async () => {
     if (showDeleteConfirm) {
-      // TODO: Actually delete the channel
-      console.log('Deleting channel...');
-      router.push('/client/channels');
+      if (!channelId || channelId === 'new') {
+        router.push('/client/channels');
+        return;
+      }
+
+      try {
+        setIsSaving(true);
+        const result = await channelsApi.deleteChannel(channelId);
+        
+        if (result.success) {
+          router.push('/client/channels');
+        } else {
+          setSaveError(result.error || 'Failed to delete channel');
+        }
+      } catch (err) {
+        console.error('Error deleting channel:', err);
+        setSaveError(err instanceof Error ? err.message : 'Failed to delete channel');
+      } finally {
+        setIsSaving(false);
+      }
     } else {
       setShowDeleteConfirm(true);
     }

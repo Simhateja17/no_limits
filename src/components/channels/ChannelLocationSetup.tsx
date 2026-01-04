@@ -43,10 +43,8 @@ export function ChannelLocationSetup({ channelId, channelType, baseUrl }: Channe
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [locations, setLocations] = useState<Location[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-
-  // Suppress unused variable warning
-  void channelId;
-  void baseUrl;
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   // Fetch locations on mount
   useEffect(() => {
@@ -73,10 +71,41 @@ export function ChannelLocationSetup({ channelId, channelType, baseUrl }: Channe
     router.back();
   };
 
-  const handleNext = () => {
-    // TODO: Save location selection and proceed to shipping setup
-    console.log('Saving location:', selectedLocation);
-    router.push(`${baseUrl}/shipping-setup?type=${encodeURIComponent(channelType)}`);
+  const handleNext = async () => {
+    if (!selectedLocation) {
+      setSaveError('Please select a location');
+      return;
+    }
+
+    // Save location selection if we have a channelId
+    if (channelId && channelId !== 'new') {
+      try {
+        setIsSaving(true);
+        setSaveError(null);
+
+        // Find the location ID from the selected location name
+        const selectedLoc = locations.find(loc => loc.name === selectedLocation);
+        if (!selectedLoc) {
+          setSaveError('Selected location not found');
+          return;
+        }
+
+        const result = await channelsApi.saveLocationSelection(channelId, selectedLoc.id);
+        
+        if (!result.success) {
+          setSaveError(result.error || 'Failed to save location');
+          return;
+        }
+      } catch (err) {
+        console.error('Error saving location:', err);
+        setSaveError(err instanceof Error ? err.message : 'An error occurred');
+        return;
+      } finally {
+        setIsSaving(false);
+      }
+    }
+
+    router.push(`${baseUrl}/shipping-setup?type=${encodeURIComponent(channelType)}&channelId=${channelId}`);
   };
 
   const handleReloadLocations = async () => {

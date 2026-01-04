@@ -96,18 +96,29 @@ export default function AdminClientsPage() {
   const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [stats, setStats] = useState<{ total: number; active: number; inactive: number; quotations: number; totalOrders: number } | null>(null);
 
-  // Fetch clients from API
+  // Fetch clients and stats from API
   useEffect(() => {
-    const fetchClients = async () => {
+    const fetchData = async () => {
       try {
         setLoading(true);
         setError(null);
-        const response = await api.get('/clients');
-        if (response.data.success) {
-          setClients(response.data.data);
+        
+        // Fetch clients and stats in parallel
+        const [clientsResponse, statsResponse] = await Promise.all([
+          api.get('/clients'),
+          api.get('/clients/stats'),
+        ]);
+        
+        if (clientsResponse.data.success) {
+          setClients(clientsResponse.data.data);
         } else {
           setError('Failed to fetch clients');
+        }
+        
+        if (statsResponse.data.success) {
+          setStats(statsResponse.data.data);
         }
       } catch (err: any) {
         console.error('Error fetching clients:', err);
@@ -118,7 +129,7 @@ export default function AdminClientsPage() {
     };
 
     if (isAuthenticated && (user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN')) {
-      fetchClients();
+      fetchData();
     }
   }, [isAuthenticated, user]);
 
@@ -156,11 +167,11 @@ export default function AdminClientsPage() {
     return true; // 'all' tab
   });
 
-  // Count clients by status
-  const allClientsCount = clients.length;
-  const activeClientsCount = clients.filter(c => c.status === 'active').length;
-  const inactiveClientsCount = clients.filter(c => c.status === 'inactive').length;
-  const quotationsCount = 0; // TODO: Implement quotations
+  // Count clients by status (use stats from API if available, otherwise calculate)
+  const allClientsCount = stats?.total ?? clients.length;
+  const activeClientsCount = stats?.active ?? clients.filter(c => c.status === 'active').length;
+  const inactiveClientsCount = stats?.inactive ?? clients.filter(c => c.status === 'inactive').length;
+  const quotationsCount = stats?.quotations ?? 0;
 
   // Display clients
   const displayClients = filteredClients;

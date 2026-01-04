@@ -169,6 +169,48 @@ export interface CreateProductInput {
   imageUrl?: string;
 }
 
+export interface Task {
+  id: string;
+  taskId: string;
+  title: string;
+  description: string | null;
+  status: 'OPEN' | 'IN_PROGRESS' | 'COMPLETED' | 'CLOSED' | 'CANCELLED';
+  priority: 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
+  type: 'INTERNAL_WAREHOUSE' | 'CLIENT_COMMUNICATION' | 'ORDER_PROCESSING' | 'RETURNS' | 'INVENTORY_CHECK' | 'OTHER';
+  dueDate: string | null;
+  assignedToId: string | null;
+  assignedTo: {
+    id: string;
+    name: string;
+    email: string;
+  } | null;
+  client: {
+    companyName: string;
+    name: string;
+  };
+  order: {
+    orderId: string;
+  } | null;
+  return: {
+    returnId: string;
+  } | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateTaskInput {
+  title: string;
+  description?: string;
+  type: 'INTERNAL_WAREHOUSE' | 'CLIENT_COMMUNICATION' | 'ORDER_PROCESSING' | 'RETURNS' | 'INVENTORY_CHECK' | 'OTHER';
+  priority: 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
+  status?: 'OPEN' | 'IN_PROGRESS' | 'COMPLETED' | 'CLOSED' | 'CANCELLED';
+  dueDate?: string;
+  assignedToId?: string;
+  clientId?: string;
+  orderId?: string;
+  returnId?: string;
+}
+
 export const dataApi = {
   // Products
   async getProducts(): Promise<Product[]> {
@@ -244,6 +286,27 @@ export const dataApi = {
 
   async getInbound(id: string): Promise<Inbound> {
     const response = await api.get(`/data/inbounds/${id}`);
+    return response.data.data;
+  },
+
+  // Tasks
+  async getTasks(): Promise<Task[]> {
+    const response = await api.get('/data/tasks');
+    return response.data.data;
+  },
+
+  async getTask(id: string): Promise<Task> {
+    const response = await api.get(`/data/tasks/${id}`);
+    return response.data.data;
+  },
+
+  async createTask(input: CreateTaskInput): Promise<Task> {
+    const response = await api.post('/data/tasks', input);
+    return response.data.data;
+  },
+
+  async updateTask(id: string, input: Partial<CreateTaskInput>): Promise<Task> {
+    const response = await api.put(`/data/tasks/${id}`, input);
     return response.data.data;
   },
 };

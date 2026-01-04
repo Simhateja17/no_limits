@@ -4,6 +4,7 @@ import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { useTranslations } from 'next-intl';
+import { dataApi, CreateTaskInput } from '@/lib/data-api';
 
 // Tab type
 type TabType = 'all' | 'open' | 'closed';
@@ -513,11 +514,42 @@ export function TasksTable({ showClientColumn, baseUrl }: TasksTableProps) {
     router.push(`${baseUrl}/${taskId}`);
   };
 
-  const handleCreateTask = (taskData: TaskData) => {
-    // TODO: Integrate with API to create task
-    console.log('Creating task:', taskData);
-    // For now, just close the modal
-    setIsCreateModalOpen(false);
+  const handleCreateTask = async (taskData: TaskData) => {
+    try {
+      // Map task data to API format
+      const taskTypeMap: Record<string, CreateTaskInput['type']> = {
+        'internalWarehouse': 'INTERNAL_WAREHOUSE',
+        'clientCommunication': 'CLIENT_COMMUNICATION',
+        'orderProcessing': 'ORDER_PROCESSING',
+        'returns': 'RETURNS',
+        'inventoryCheck': 'INVENTORY_CHECK',
+        'other': 'OTHER',
+      };
+
+      const priorityMap: Record<string, CreateTaskInput['priority']> = {
+        'low': 'LOW',
+        'medium': 'MEDIUM',
+        'high': 'HIGH',
+        'urgent': 'URGENT',
+      };
+
+      const input: CreateTaskInput = {
+        title: taskData.description.slice(0, 100) || 'New Task',
+        description: taskData.description,
+        type: taskTypeMap[taskData.taskType] || 'OTHER',
+        priority: priorityMap[taskData.prioLevel.toLowerCase()] || 'MEDIUM',
+        status: 'OPEN',
+      };
+
+      await dataApi.createTask(input);
+      setIsCreateModalOpen(false);
+      
+      // Optionally refresh the tasks list here
+      // For now, the user can refresh or the page can be refreshed
+    } catch (error) {
+      console.error('Error creating task:', error);
+      // Could show an error toast here
+    }
   };
 
   // Filter tasks based on tab and search
