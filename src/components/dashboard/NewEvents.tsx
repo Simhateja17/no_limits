@@ -1,5 +1,7 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
+
 interface Event {
   id: string;
   title: string;
@@ -11,32 +13,34 @@ interface NewEventsProps {
   onViewAll?: () => void;
 }
 
-const defaultEvents: Event[] = [
-  {
-    id: '1',
-    title: 'Order #2343 has been returned',
-    description: 'All products are in good condition and have been booked back into stock.',
-  },
-  {
-    id: '2',
-    title: 'Inbound #4242 has been booked in',
-    description:
-      'All products are in good condition. In total, 540 units have been received and recorded in inbound inventory.',
-  },
-  {
-    id: '3',
-    title: 'Invoice #32423',
-    description: 'A new invoice has been issued for the period of December 2025.',
-  },
-  {
-    id: '4',
-    title: 'Order #32423',
-    description:
-      'Action required: An incorrect address has been identified. Please rectify this to ensure seamless processing.',
-  },
-];
+export function NewEvents({ events, onViewAll }: NewEventsProps) {
+  const t = useTranslations('dashboard');
 
-export function NewEvents({ events = defaultEvents, onViewAll }: NewEventsProps) {
+  const defaultEvents: Event[] = [
+    {
+      id: '1',
+      title: t('events.orderReturned', { id: '2343' }),
+      description: t('events.orderReturnedDesc'),
+    },
+    {
+      id: '2',
+      title: t('events.inboundBooked', { id: '4242' }),
+      description: t('events.inboundBookedDesc', { count: '540' }),
+    },
+    {
+      id: '3',
+      title: t('events.invoiceIssued', { id: '32423' }),
+      description: t('events.invoiceIssuedDesc', { period: 'December 2025' }),
+    },
+    {
+      id: '4',
+      title: t('events.orderAttention', { id: '32423' }),
+      description: t('events.orderAttentionDesc'),
+    },
+  ];
+
+  const displayEvents = events || defaultEvents;
+
   return (
     <div
       style={{
@@ -62,7 +66,7 @@ export function NewEvents({ events = defaultEvents, onViewAll }: NewEventsProps)
           color: '#6B7280',
         }}
       >
-        New events
+        {t('newEvents')}
       </span>
 
       {/* Events List */}
@@ -75,7 +79,7 @@ export function NewEvents({ events = defaultEvents, onViewAll }: NewEventsProps)
           overflowY: 'auto',
         }}
       >
-        {events.map((event) => (
+        {displayEvents.map((event) => (
           <div
             key={event.id}
             style={{
@@ -141,7 +145,7 @@ export function NewEvents({ events = defaultEvents, onViewAll }: NewEventsProps)
           e.currentTarget.style.background = '#FFFFFF';
         }}
       >
-        View all
+        {t('viewAll')}
       </button>
     </div>
   );

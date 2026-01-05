@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 
 interface ChatMessage {
   id: string;
@@ -37,6 +38,7 @@ const defaultMessages: ChatMessage[] = [
 ];
 
 export function QuickChat({ messages = defaultMessages }: QuickChatProps) {
+  const t = useTranslations('dashboard');
   const [inputValue, setInputValue] = useState('');
 
   return (
@@ -64,7 +66,7 @@ export function QuickChat({ messages = defaultMessages }: QuickChatProps) {
           color: '#6B7280',
         }}
       >
-        Quick Chat
+        {t('quickChat')}
       </span>
 
       {/* Messages Container */}
@@ -202,7 +204,7 @@ export function QuickChat({ messages = defaultMessages }: QuickChatProps) {
                       color: '#374151',
                     }}
                   >
-                    added tasks
+                    {t('addedTasks')}
                   </span>
                   {message.tasks.map((task) => (
                     <span
@@ -243,7 +245,7 @@ export function QuickChat({ messages = defaultMessages }: QuickChatProps) {
       >
         <input
           type="text"
-          placeholder="Type a message..."
+          placeholder={t('typeMessage')}
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
           style={{

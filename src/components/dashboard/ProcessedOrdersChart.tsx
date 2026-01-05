@@ -1,50 +1,65 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import { useTranslations } from 'next-intl';
 
 interface ProcessedOrdersChartProps {
   dateRange?: string;
 }
 
-const chartData = [
-  { month: 'Aug 2018', value: 1200 },
-  { month: 'Sep 2018', value: 1800 },
-  { month: 'Oct 2018', value: 1400 },
-  { month: 'Nov 2018', value: 2100 },
-  { month: 'Dec 2018', value: 2000 },
-  { month: 'Jan 2019', value: 2345 },
-  { month: 'Feb 2019', value: 1900 },
-  { month: 'Mar 2019', value: 2200 },
-  { month: 'Apr 2019', value: 2100 },
-  { month: 'May 2019', value: 1700 },
-];
-
-const referenceData = [
-  { month: 'Aug 2018', value: 1500 },
-  { month: 'Sep 2018', value: 1600 },
-  { month: 'Oct 2018', value: 1700 },
-  { month: 'Nov 2018', value: 1800 },
-  { month: 'Dec 2018', value: 1850 },
-  { month: 'Jan 2019', value: 1900 },
-  { month: 'Feb 2019', value: 1950 },
-  { month: 'Mar 2019', value: 2000 },
-  { month: 'Apr 2019', value: 2100 },
-  { month: 'May 2019', value: 2150 },
-];
-
 const GRID_LINES = 5;
 
 export function ProcessedOrdersChart({ dateRange }: ProcessedOrdersChartProps) {
+  const t = useTranslations('dashboard');
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(5);
-  const [fromDate, setFromDate] = useState('August 2018');
-  const [toDate, setToDate] = useState('May 2019');
+  const [fromDate, setFromDate] = useState('august2018');
+  const [toDate, setToDate] = useState('may2019');
   const containerRef = useRef<HTMLDivElement>(null);
   const [dimensions, setDimensions] = useState({ width: 800, height: 280 });
+
+  const chartData = [
+    { monthKey: 'august2018', value: 1200 },
+    { monthKey: 'september2018', value: 1800 },
+    { monthKey: 'october2018', value: 1400 },
+    { monthKey: 'november2018', value: 2100 },
+    { monthKey: 'december2018', value: 2000 },
+    { monthKey: 'january2019', value: 2345 },
+    { monthKey: 'february2019', value: 1900 },
+    { monthKey: 'march2019', value: 2200 },
+    { monthKey: 'april2019', value: 2100 },
+    { monthKey: 'may2019', value: 1700 },
+  ];
+
+  const referenceData = [
+    { monthKey: 'august2018', value: 1500 },
+    { monthKey: 'september2018', value: 1600 },
+    { monthKey: 'october2018', value: 1700 },
+    { monthKey: 'november2018', value: 1800 },
+    { monthKey: 'december2018', value: 1850 },
+    { monthKey: 'january2019', value: 1900 },
+    { monthKey: 'february2019', value: 1950 },
+    { monthKey: 'march2019', value: 2000 },
+    { monthKey: 'april2019', value: 2100 },
+    { monthKey: 'may2019', value: 2150 },
+  ];
+
+  const monthOptions = [
+    'august2018',
+    'september2018',
+    'october2018',
+    'november2018',
+    'december2018',
+    'january2019',
+    'february2019',
+    'march2019',
+    'april2019',
+    'may2019',
+  ];
 
   useEffect(() => {
     const updateDimensions = () => {
       if (containerRef.current) {
-        const width = containerRef.current.offsetWidth - 48; // Subtract padding
+        const width = containerRef.current.offsetWidth - 48;
         setDimensions({ width: Math.max(300, width), height: 280 });
       }
     };
@@ -93,7 +108,6 @@ export function ProcessedOrdersChart({ dateRange }: ProcessedOrdersChartProps) {
   const mainPath = createPath(chartData);
   const referencePath = createPath(referenceData);
 
-  // Generate grid line Y positions
   const gridLines = Array.from({ length: GRID_LINES }, (_, i) => {
     const y = padding.top + (i / (GRID_LINES - 1)) * chartHeight;
     return y;
@@ -132,7 +146,7 @@ export function ProcessedOrdersChart({ dateRange }: ProcessedOrdersChartProps) {
             color: '#6B7280',
           }}
         >
-          Processed orders
+          {t('processedOrders')}
         </span>
 
         {/* Date Range Selectors */}
@@ -146,7 +160,7 @@ export function ProcessedOrdersChart({ dateRange }: ProcessedOrdersChartProps) {
               color: '#6B7280',
             }}
           >
-            from
+            {t('from')}
           </span>
           <select
             value={fromDate}
@@ -163,9 +177,11 @@ export function ProcessedOrdersChart({ dateRange }: ProcessedOrdersChartProps) {
               outline: 'none',
             }}
           >
-            <option value="August 2018">August 2018</option>
-            <option value="September 2018">September 2018</option>
-            <option value="October 2018">October 2018</option>
+            {monthOptions.slice(0, 3).map((key) => (
+              <option key={key} value={key}>
+                {t(`months.${key}`)}
+              </option>
+            ))}
           </select>
           <span
             style={{
@@ -176,7 +192,7 @@ export function ProcessedOrdersChart({ dateRange }: ProcessedOrdersChartProps) {
               color: '#6B7280',
             }}
           >
-            to
+            {t('to')}
           </span>
           <select
             value={toDate}
@@ -193,9 +209,11 @@ export function ProcessedOrdersChart({ dateRange }: ProcessedOrdersChartProps) {
               outline: 'none',
             }}
           >
-            <option value="May 2019">May 2019</option>
-            <option value="April 2019">April 2019</option>
-            <option value="March 2019">March 2019</option>
+            {monthOptions.slice(-3).map((key) => (
+              <option key={key} value={key}>
+                {t(`months.${key}`)}
+              </option>
+            ))}
           </select>
         </div>
       </div>
@@ -324,7 +342,7 @@ export function ProcessedOrdersChart({ dateRange }: ProcessedOrdersChartProps) {
                 fill: '#6B7280',
               }}
             >
-              {point.month}
+              {t(`months.${point.monthKey}`)}
             </text>
           ))}
         </svg>
