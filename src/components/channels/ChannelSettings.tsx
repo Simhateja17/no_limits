@@ -214,6 +214,11 @@ export function ChannelSettings({ channelId, baseUrl, initialChannelType = 'Wooc
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
 
+  // Shipping Methods Save State
+  const [isSavingShipping, setIsSavingShipping] = useState(false);
+  const [shippingSaveError, setShippingSaveError] = useState<string | null>(null);
+  const [shippingSaveSuccess, setShippingSaveSuccess] = useState(false);
+
   // Sync Settings State
   const [enableHistoricalSync, setEnableHistoricalSync] = useState(true);
   const [syncFromDate, setSyncFromDate] = useState<string>(() => {
@@ -477,6 +482,43 @@ export function ChannelSettings({ channelId, baseUrl, initialChannelType = 'Wooc
     setOpenShippingDropdown(null);
   };
 
+  const handleSaveShippingMappings = async () => {
+    if (!channelId || channelId === 'new') {
+      setShippingSaveError('Please save the channel first before configuring shipping mappings');
+      return;
+    }
+
+    try {
+      setIsSavingShipping(true);
+      setShippingSaveError(null);
+      setShippingSaveSuccess(false);
+
+      // Convert selectedMethods to proper format (warehouseMethodId -> channelMethodName)
+      const mappings: Record<string, string> = {};
+      for (const [warehouseMethodId, channelMethodName] of Object.entries(selectedMethods)) {
+        if (channelMethodName) {
+          mappings[warehouseMethodId] = channelMethodName;
+        }
+      }
+
+      const result = await channelsApi.saveShippingMappings(channelId, mappings);
+
+      if (!result.success) {
+        setShippingSaveError(result.error || 'Failed to save shipping mappings');
+        return;
+      }
+
+      setShippingSaveSuccess(true);
+      // Hide success message after 3 seconds
+      setTimeout(() => setShippingSaveSuccess(false), 3000);
+    } catch (err) {
+      console.error('Error saving shipping mappings:', err);
+      setShippingSaveError(err instanceof Error ? err.message : 'An error occurred');
+    } finally {
+      setIsSavingShipping(false);
+    }
+  };
+
   // Get channel-specific labels
   const getUrlLabel = () => {
     switch (selectedChannel) {
@@ -698,19 +740,6 @@ export function ChannelSettings({ channelId, baseUrl, initialChannelType = 'Wooc
           >
             ×
           </button>
-        </div>
-      )}
-
-      {/* Sync Status Bar - Shows when channel exists and has active/recent sync */}
-      {channelId && channelId !== 'new' && (
-        <div style={{ marginBottom: 'clamp(24px, 2.36vw, 32px)', maxWidth: 'clamp(912px, 89.54vw, 1216px)' }}>
-          <SyncStatusBar 
-            channelId={channelId} 
-            onSyncComplete={() => {
-              // Refresh data when sync completes
-              console.log('Sync completed for channel:', channelId);
-            }} 
-          />
         </div>
       )}
 
@@ -1638,7 +1667,8 @@ export function ChannelSettings({ channelId, baseUrl, initialChannelType = 'Wooc
         </div>
       </div>
 
-      {/* Match Shipping Methods Section */}
+      {/* Match Shipping Methods Section - Only show for existing channels */}
+      {!isNewChannel && channelId && channelId !== 'new' && (
       <div
         style={{
           width: '100%',
@@ -1699,6 +1729,57 @@ export function ChannelSettings({ channelId, baseUrl, initialChannelType = 'Wooc
             gap: 'clamp(18px, 1.77vw, 24px)',
           }}
         >
+          {/* Success Message */}
+          {shippingSaveSuccess && (
+            <div
+              style={{
+                padding: 'clamp(12px, 1.18vw, 16px)',
+                backgroundColor: '#D1FAE5',
+                border: '1px solid #A7F3D0',
+                borderRadius: '6px',
+                color: '#065F46',
+                fontFamily: 'Inter, sans-serif',
+                fontSize: 'clamp(11px, 1.03vw, 14px)',
+              }}
+            >
+              Shipping mappings saved successfully!
+            </div>
+          )}
+
+          {/* Error Message */}
+          {shippingSaveError && (
+            <div
+              style={{
+                padding: 'clamp(12px, 1.18vw, 16px)',
+                backgroundColor: '#FEF2F2',
+                border: '1px solid #FECACA',
+                borderRadius: '6px',
+                color: '#DC2626',
+                fontFamily: 'Inter, sans-serif',
+                fontSize: 'clamp(11px, 1.03vw, 14px)',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+              }}
+            >
+              <span>{shippingSaveError}</span>
+              <button
+                onClick={() => setShippingSaveError(null)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  padding: 0,
+                  color: '#DC2626',
+                  fontSize: 'clamp(16px, 1.57vw, 20px)',
+                  lineHeight: 1,
+                }}
+              >
+                ×
+              </button>
+            </div>
+          )}
+
           {/* Header Row */}
           <div
             style={{
@@ -1734,8 +1815,55 @@ export function ChannelSettings({ channelId, baseUrl, initialChannelType = 'Wooc
             </div>
           </div>
 
+          {/* Loading State */}
+          {isLoadingMethods && (
+            <div
+              style={{
+                padding: 'clamp(24px, 2.36vw, 32px)',
+                textAlign: 'center',
+                color: '#6B7280',
+                fontFamily: 'Inter, sans-serif',
+                fontSize: 'clamp(11px, 1.03vw, 14px)',
+              }}
+            >
+              Loading shipping methods...
+            </div>
+          )}
+
+          {/* Empty State - No Warehouse Methods */}
+          {!isLoadingMethods && warehouseMethods.length === 0 && (
+            <div
+              style={{
+                padding: 'clamp(24px, 2.36vw, 32px)',
+                textAlign: 'center',
+                color: '#6B7280',
+                fontFamily: 'Inter, sans-serif',
+                fontSize: 'clamp(11px, 1.03vw, 14px)',
+              }}
+            >
+              No warehouse shipping methods available. Please contact support to configure shipping methods.
+            </div>
+          )}
+
+          {/* Empty State - No Channel Methods */}
+          {!isLoadingMethods && warehouseMethods.length > 0 && channelMethods.length === 0 && (
+            <div
+              style={{
+                padding: 'clamp(12px, 1.18vw, 16px)',
+                backgroundColor: '#FEF3C7',
+                border: '1px solid #FCD34D',
+                borderRadius: '6px',
+                color: '#92400E',
+                fontFamily: 'Inter, sans-serif',
+                fontSize: 'clamp(11px, 1.03vw, 14px)',
+              }}
+            >
+              No shipping methods found in your {getChannelLabel()} store. Please configure shipping zones in your store first, then click &quot;Reload methods&quot;.
+            </div>
+          )}
+
           {/* Method Rows */}
-          {warehouseMethods.map((warehouseMethod) => (
+          {!isLoadingMethods && warehouseMethods.map((warehouseMethod) => (
             <div
               key={warehouseMethod.id}
               style={{
@@ -1934,24 +2062,24 @@ export function ChannelSettings({ channelId, baseUrl, initialChannelType = 'Wooc
 
             {/* Save Button */}
             <button
-              onClick={handleSave}
-              disabled={isSaving}
+              onClick={handleSaveShippingMappings}
+              disabled={isSavingShipping || isLoadingMethods}
               style={{
                 height: 'clamp(29px, 2.80vw, 38px)',
                 borderRadius: '6px',
                 border: 'none',
                 padding: 'clamp(7px, 0.66vw, 9px) clamp(13px, 1.25vw, 17px)',
-                backgroundColor: isSaving ? '#9CA3AF' : '#003450',
+                backgroundColor: isSavingShipping || isLoadingMethods ? '#9CA3AF' : '#003450',
                 boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.05)',
-                cursor: isSaving ? 'not-allowed' : 'pointer',
+                cursor: isSavingShipping || isLoadingMethods ? 'not-allowed' : 'pointer',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 gap: 'clamp(6px, 0.59vw, 8px)',
-                opacity: isSaving ? 0.7 : 1,
+                opacity: isSavingShipping || isLoadingMethods ? 0.7 : 1,
               }}
             >
-              {isSaving && (
+              {isSavingShipping && (
                 <svg
                   width="14"
                   height="14"
@@ -1977,12 +2105,13 @@ export function ChannelSettings({ channelId, baseUrl, initialChannelType = 'Wooc
                   color: '#FFFFFF',
                 }}
               >
-                {isSaving ? 'Saving...' : tCommon('save')}
+                {isSavingShipping ? 'Saving...' : tCommon('save')}
               </span>
             </button>
           </div>
         </div>
       </div>
+      )}
 
       {/* Manage Channel Section */}
       {!isNewChannel && (

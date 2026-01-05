@@ -171,17 +171,16 @@ export function ChannelShippingSetup({ channelId, channelType, baseUrl }: Channe
         setSaveError(null);
 
         // Convert selectedMethods to proper format (warehouseMethodId -> channelMethodName)
-        // We need to find the channel method ID from the name
+        // The backend expects the channel method NAME for mapping resolution
         const mappings: Record<string, string> = {};
         for (const [warehouseMethodId, channelMethodName] of Object.entries(selectedMethods)) {
-          const channelMethod = channelMethods.find(m => m.name === channelMethodName);
-          if (channelMethod) {
-            mappings[warehouseMethodId] = channelMethod.id;
+          if (channelMethodName) {
+            mappings[warehouseMethodId] = channelMethodName;
           }
         }
 
         const result = await channelsApi.saveShippingMappings(channelId, mappings);
-        
+
         if (!result.success) {
           setSaveError(result.error || 'Failed to save shipping mappings');
           return;
@@ -400,8 +399,74 @@ export function ChannelShippingSetup({ channelId, channelType, baseUrl }: Channe
             </div>
           </div>
 
+          {/* Loading State */}
+          {isLoading && (
+            <div
+              style={{
+                padding: 'clamp(24px, 2.36vw, 32px)',
+                textAlign: 'center',
+                color: '#6B7280',
+                fontFamily: 'Inter, sans-serif',
+                fontSize: 'clamp(11px, 1.03vw, 14px)',
+              }}
+            >
+              Loading shipping methods...
+            </div>
+          )}
+
+          {/* Error State */}
+          {saveError && (
+            <div
+              style={{
+                padding: 'clamp(12px, 1.18vw, 16px)',
+                backgroundColor: '#FEF2F2',
+                border: '1px solid #FECACA',
+                borderRadius: '6px',
+                color: '#DC2626',
+                fontFamily: 'Inter, sans-serif',
+                fontSize: 'clamp(11px, 1.03vw, 14px)',
+                marginBottom: 'clamp(12px, 1.18vw, 16px)',
+              }}
+            >
+              {saveError}
+            </div>
+          )}
+
+          {/* Empty State - No Warehouse Methods */}
+          {!isLoading && warehouseMethods.length === 0 && (
+            <div
+              style={{
+                padding: 'clamp(24px, 2.36vw, 32px)',
+                textAlign: 'center',
+                color: '#6B7280',
+                fontFamily: 'Inter, sans-serif',
+                fontSize: 'clamp(11px, 1.03vw, 14px)',
+              }}
+            >
+              No warehouse shipping methods available. Please contact support to configure shipping methods.
+            </div>
+          )}
+
+          {/* Empty State - No Channel Methods */}
+          {!isLoading && warehouseMethods.length > 0 && channelMethods.length === 0 && (
+            <div
+              style={{
+                padding: 'clamp(12px, 1.18vw, 16px)',
+                backgroundColor: '#FEF3C7',
+                border: '1px solid #FCD34D',
+                borderRadius: '6px',
+                color: '#92400E',
+                fontFamily: 'Inter, sans-serif',
+                fontSize: 'clamp(11px, 1.03vw, 14px)',
+                marginBottom: 'clamp(12px, 1.18vw, 16px)',
+              }}
+            >
+              No shipping methods found in your {getChannelLabel()} store. Please configure shipping zones in your store first, then click &quot;Reload methods&quot;.
+            </div>
+          )}
+
           {/* Method Rows */}
-          {warehouseMethods.map((warehouseMethod) => (
+          {!isLoading && warehouseMethods.map((warehouseMethod) => (
             <div
               key={warehouseMethod.id}
               style={{
@@ -601,14 +666,15 @@ export function ChannelShippingSetup({ channelId, channelType, baseUrl }: Channe
             {/* Finish Button */}
             <button
               onClick={handleFinish}
+              disabled={isSaving || isLoading}
               style={{
                 height: 'clamp(29px, 2.80vw, 38px)',
                 borderRadius: '6px',
                 border: 'none',
                 padding: 'clamp(7px, 0.66vw, 9px) clamp(13px, 1.25vw, 17px)',
-                backgroundColor: '#003450',
+                backgroundColor: isSaving || isLoading ? '#9CA3AF' : '#003450',
                 boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.05)',
-                cursor: 'pointer',
+                cursor: isSaving || isLoading ? 'not-allowed' : 'pointer',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -623,7 +689,7 @@ export function ChannelShippingSetup({ channelId, channelType, baseUrl }: Channe
                   color: '#FFFFFF',
                 }}
               >
-                Finish
+                {isSaving ? 'Saving...' : 'Finish'}
               </span>
             </button>
           </div>

@@ -32,6 +32,13 @@ api.interceptors.response.use(
   (error) => {
     if (error.response) {
       if (error.response.status === 401) {
+        const errorMessage = error.response.data?.error;
+        
+        // Check if account was deleted
+        if (errorMessage?.includes('no longer exists') || errorMessage?.includes('Account deleted')) {
+          console.log('Account no longer exists:', errorMessage);
+        }
+        
         // Clear invalid token
         localStorage.removeItem('accessToken');
 

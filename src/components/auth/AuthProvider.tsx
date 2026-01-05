@@ -23,7 +23,7 @@ const routePermissions: Record<string, string[]> = {
 };
 
 export function AuthProvider({ children }: AuthProviderProps) {
-  const { user, isAuthenticated } = useAuthStore();
+  const { user, isAuthenticated, logout } = useAuthStore();
   const router = useRouter();
   const pathname = usePathname();
   const [isHydrated, setIsHydrated] = useState(false);
@@ -35,6 +35,43 @@ export function AuthProvider({ children }: AuthProviderProps) {
     const timeout = setTimeout(() => setIsHydrated(true), 0);
     return () => clearTimeout(timeout);
   }, []);
+
+  // Validate user still exists in database (check every 30 seconds)
+  useEffect(() => {
+    if (!isAuthenticated || !user) return;
+
+    const validateUser = async () => {
+      try {
+        const token = localStorage.getItem('accessToken');
+        if (!token) return;
+
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api'}/auth/me`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+
+        // If user no longer exists (401) or account deleted (404)
+        if (response.status === 401 || response.status === 404) {
+          console.log('Account no longer exists, logging out...');
+          logout();
+          router.push('/');
+        }
+      } catch (error) {
+        // Network errors - don't logout, just log
+        console.error('Error validating user:', error);
+      }
+    };
+
+    // Validate immediately on mount
+    validateUser();
+
+    // Then validate every 30 seconds
+    const interval = setInterval(validateUser, 30000);
+
+    return () => clearInterval(interval);
+  }, [isAuthenticated, user, logout, router]);
 
   // Check onboarding status for CLIENT users
   const checkOnboardingStatus = useCallback(async () => {
