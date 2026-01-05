@@ -19,18 +19,20 @@ const defaultEvents: Event[] = [
   },
   {
     id: '2',
-    title: 'Order #2341 has been shipped',
-    description: 'The package is on its way to the customer. Estimated delivery in 3-5 business days.',
+    title: 'Inbound #4242 has been booked in',
+    description:
+      'All products are in good condition. In total, 540 units have been received and recorded in inbound inventory.',
   },
   {
     id: '3',
-    title: 'New inventory arrived',
-    description: 'Stock for SKU-789 has been replenished. 500 units now available.',
+    title: 'Invoice #32423',
+    description: 'A new invoice has been issued for the period of December 2025.',
   },
   {
     id: '4',
-    title: 'Order #2340 requires attention',
-    description: 'Payment verification pending. Please review and approve.',
+    title: 'Order #32423',
+    description:
+      'Action required: An incorrect address has been identified. Please rectify this to ensure seamless processing.',
   },
 ];
 
@@ -47,7 +49,7 @@ export function NewEvents({ events = defaultEvents, onViewAll }: NewEventsProps)
         gap: '20px',
         width: '100%',
         height: '100%',
-        minHeight: '450px',
+        minHeight: '531px',
       }}
     >
       {/* Header */}
@@ -139,7 +141,7 @@ export function NewEvents({ events = defaultEvents, onViewAll }: NewEventsProps)
           e.currentTarget.style.background = '#FFFFFF';
         }}
       >
-        View All
+        View all
       </button>
     </div>
   );

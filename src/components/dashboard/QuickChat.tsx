@@ -6,6 +6,7 @@ interface ChatMessage {
   id: string;
   sender: string;
   avatar?: string;
+  avatarColor?: string;
   timestamp: string;
   content: string;
   tasks?: string[];
@@ -19,16 +20,19 @@ const defaultMessages: ChatMessage[] = [
   {
     id: '1',
     sender: 'Fulfillment employee',
+    avatarColor: '#E5E7EB',
     timestamp: '6d ago',
-    content: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Tincidunt nunc ipsum tempor purus vitae id. Morbi in vestibulum nec varius. Et diam cursus quis sed purus nam.',
+    content:
+      'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Tincidunt nunc ipsum tempor purus vitae id. Morbi in vestibulum nec varius. Et diam cursus quis sed purus nam.',
     tasks: ['Check stock'],
   },
   {
     id: '2',
-    sender: 'Fulfillment employee',
-    timestamp: '5d ago',
-    content: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Tincidunt nunc ipsum tempor purus vitae id.',
-    tasks: ['Verify shipment'],
+    sender: 'Fulfillment client',
+    avatar: '/avatars/client.jpg',
+    timestamp: '2h ago',
+    content:
+      'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Tincidunt nunc ipsum tempor purus vitae id. Morbi in vestibulum nec varius. Et diam cursus quis sed purus nam. Scelerisque amet elit non sit ut tincidunt condimentum. Nisi ultrices eu venenatis diam.',
   },
 ];
 
@@ -47,7 +51,7 @@ export function QuickChat({ messages = defaultMessages }: QuickChatProps) {
         gap: '20px',
         width: '100%',
         height: '100%',
-        minHeight: '450px',
+        minHeight: '531px',
       }}
     >
       {/* Header */}
@@ -81,7 +85,7 @@ export function QuickChat({ messages = defaultMessages }: QuickChatProps) {
                 width: '40px',
                 height: '40px',
                 borderRadius: '50%',
-                background: '#E5E7EB',
+                background: message.avatarColor || '#E5E7EB',
                 flexShrink: 0,
                 display: 'flex',
                 alignItems: 'center',
@@ -94,6 +98,15 @@ export function QuickChat({ messages = defaultMessages }: QuickChatProps) {
                   src={message.avatar}
                   alt={message.sender}
                   style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                    e.currentTarget.parentElement!.innerHTML = `
+                      <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M10 10C12.0711 10 13.75 8.32107 13.75 6.25C13.75 4.17893 12.0711 2.5 10 2.5C7.92893 2.5 6.25 4.17893 6.25 6.25C6.25 8.32107 7.92893 10 10 10Z" fill="#9CA3AF"/>
+                        <path d="M10 11.25C6.55375 11.25 3.75 14.0538 3.75 17.5H16.25C16.25 14.0538 13.4462 11.25 10 11.25Z" fill="#9CA3AF"/>
+                      </svg>
+                    `;
+                  }}
                 />
               ) : (
                 <svg
@@ -116,7 +129,7 @@ export function QuickChat({ messages = defaultMessages }: QuickChatProps) {
             </div>
 
             {/* Message Content */}
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '4px' }}>
               {/* Sender Name */}
               <span
                 style={{
@@ -152,6 +165,7 @@ export function QuickChat({ messages = defaultMessages }: QuickChatProps) {
                   lineHeight: '20px',
                   color: '#374151',
                   margin: '8px 0',
+                  wordBreak: 'break-word',
                 }}
               >
                 {message.content}
@@ -159,7 +173,15 @@ export function QuickChat({ messages = defaultMessages }: QuickChatProps) {
 
               {/* Tasks */}
               {message.tasks && message.tasks.length > 0 && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', marginTop: '4px' }}>
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    flexWrap: 'wrap',
+                    marginTop: '4px',
+                  }}
+                >
                   <span
                     style={{
                       fontFamily: 'Inter, sans-serif',
@@ -234,6 +256,7 @@ export function QuickChat({ messages = defaultMessages }: QuickChatProps) {
             lineHeight: '165%',
             letterSpacing: '0.01em',
             color: '#192A3E',
+            opacity: inputValue ? 1 : 0.4,
             outline: 'none',
           }}
         />
@@ -248,6 +271,7 @@ export function QuickChat({ messages = defaultMessages }: QuickChatProps) {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
+            flexShrink: 0,
           }}
         >
           <svg
