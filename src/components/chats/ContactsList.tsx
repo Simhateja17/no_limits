@@ -22,16 +22,22 @@ interface ContactsListProps {
 
 export function ContactsList({ contacts, selectedContactId, onSelectContact }: ContactsListProps) {
   const locale = useLocale();
-  
+
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    const localeCode = locale === 'de' ? 'de-DE' : 'en-US';
-    const day = date.getDate();
-    const month = date.toLocaleDateString(localeCode, { month: 'short' });
-    const year = date.getFullYear();
-    const hours = date.getHours().toString().padStart(2, '0');
-    const minutes = date.getMinutes().toString().padStart(2, '0');
-    return `${day} ${month} ${year}, ${hours}:${minutes}`;
+    if (!dateString) return '';
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return '';
+      const localeCode = locale === 'de' ? 'de-DE' : 'en-US';
+      const day = date.getDate();
+      const month = date.toLocaleDateString(localeCode, { month: 'short' });
+      const year = date.getFullYear();
+      const hours = date.getHours().toString().padStart(2, '0');
+      const minutes = date.getMinutes().toString().padStart(2, '0');
+      return `${day} ${month} ${year}, ${hours}:${minutes}`;
+    } catch {
+      return '';
+    }
   };
 
   const getStatusIcon = (status?: string) => {
@@ -83,6 +89,18 @@ export function ContactsList({ contacts, selectedContactId, onSelectContact }: C
         background: '#FFFFFF',
       }}
     >
+      {contacts.length === 0 && (
+        <div
+          className="flex items-center justify-center h-full"
+          style={{
+            fontFamily: 'Poppins, sans-serif',
+            fontSize: '14px',
+            color: '#90A0B7',
+          }}
+        >
+          No clients found
+        </div>
+      )}
       {contacts.map((contact) => (
         <div
           key={contact.id}
@@ -154,11 +172,12 @@ export function ContactsList({ contacts, selectedContactId, onSelectContact }: C
                   fontSize: 'clamp(10px, 0.88vw, 12px)',
                   lineHeight: '1.4',
                   letterSpacing: '1%',
-                  color: '#192A3E',
+                  color: contact.lastMessage ? '#192A3E' : '#90A0B7',
+                  fontStyle: contact.lastMessage ? 'normal' : 'italic',
                 }}
                 className="truncate flex-1"
               >
-                {contact.lastMessage}
+                {contact.lastMessage || 'No messages yet'}
               </span>
 
               <div className="flex items-center gap-2 ml-2">

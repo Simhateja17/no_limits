@@ -14,6 +14,7 @@ export interface ChatMessage {
   content: string;
   timestamp: string;
   isFromUser: boolean;
+  status?: 'pending' | 'sent' | 'delivered' | 'read' | 'error';
 }
 
 interface ChatSectionProps {
@@ -23,9 +24,68 @@ interface ChatSectionProps {
   currentUserName: string;
   currentUserAvatar: string;
   onSendMessage: (message: string) => void;
+  onTyping?: () => void;
+  onLoadMore?: () => void;
+  hasMoreMessages?: boolean;
+  isLoadingMore?: boolean;
   isTyping?: boolean;
   typingUser?: { name: string; avatar: string };
   showCreateTask?: boolean;
+}
+
+// Message status indicator component
+function MessageStatus({ status }: { status?: ChatMessage['status'] }) {
+  if (!status) return null;
+
+  switch (status) {
+    case 'pending':
+      return (
+        <span className="text-gray-400 ml-1" title="Sending...">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <circle cx="12" cy="12" r="10" strokeDasharray="32" strokeDashoffset="32" className="animate-spin" style={{ animationDuration: '1s' }}>
+              <animate attributeName="stroke-dashoffset" values="32;0" dur="1s" repeatCount="indefinite" />
+            </circle>
+          </svg>
+        </span>
+      );
+    case 'sent':
+      return (
+        <span className="text-gray-400 ml-1" title="Sent">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M5 12l5 5L20 7" />
+          </svg>
+        </span>
+      );
+    case 'delivered':
+      return (
+        <span className="text-gray-400 ml-1" title="Delivered">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M2 12l5 5L17 7" />
+            <path d="M7 12l5 5L22 7" />
+          </svg>
+        </span>
+      );
+    case 'read':
+      return (
+        <span className="text-blue-500 ml-1" title="Read">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M2 12l5 5L17 7" />
+            <path d="M7 12l5 5L22 7" />
+          </svg>
+        </span>
+      );
+    case 'error':
+      return (
+        <span className="text-red-500 ml-1" title="Failed to send">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <circle cx="12" cy="12" r="10" />
+            <path d="M12 8v4M12 16h.01" />
+          </svg>
+        </span>
+      );
+    default:
+      return null;
+  }
 }
 
 export function ChatSection({
@@ -35,6 +95,10 @@ export function ChatSection({
   currentUserName,
   currentUserAvatar,
   onSendMessage,
+  onTyping,
+  onLoadMore,
+  hasMoreMessages = false,
+  isLoadingMore = false,
   isTyping,
   typingUser,
   showCreateTask = true,
@@ -43,7 +107,9 @@ export function ChatSection({
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedMessageContent, setSelectedMessageContent] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const previousScrollHeightRef = useRef<number>(0);
   const t = useTranslations('chat');
   const tCommon = useTranslations('common');
 
@@ -51,9 +117,33 @@ export function ChatSection({
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
+  // Scroll to bottom on new messages (but not when loading older messages)
   useEffect(() => {
-    scrollToBottom();
+    const container = messagesContainerRef.current;
+    if (!container) return;
+
+    // If we loaded older messages, maintain scroll position
+    if (previousScrollHeightRef.current > 0) {
+      const scrollDiff = container.scrollHeight - previousScrollHeightRef.current;
+      container.scrollTop = scrollDiff;
+      previousScrollHeightRef.current = 0;
+    } else {
+      // New message - scroll to bottom
+      scrollToBottom();
+    }
   }, [messages]);
+
+  // Handle scroll for infinite loading
+  const handleScroll = () => {
+    const container = messagesContainerRef.current;
+    if (!container || isLoadingMore || !hasMoreMessages || !onLoadMore) return;
+
+    // Load more when scrolled near top (within 100px)
+    if (container.scrollTop < 100) {
+      previousScrollHeightRef.current = container.scrollHeight;
+      onLoadMore();
+    }
+  };
 
   const handleSend = () => {
     if (inputValue.trim()) {
@@ -66,6 +156,14 @@ export function ChatSection({
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSend();
+    }
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setInputValue(e.target.value);
+    // Trigger typing indicator
+    if (onTyping && e.target.value.length > 0) {
+      onTyping();
     }
   };
 
@@ -107,37 +205,37 @@ export function ChatSection({
         minWidth: '400px',
       }}
     >
-      {/* Chat Header - Removed as per request */}
-      {/* <div
+      {/* Chat Header with Client Name */}
+      <div
         className="flex items-center px-6 py-4"
         style={{
           borderBottom: '1px solid #E4E9EE',
+          background: '#FFFFFF',
         }}
       >
         <div
           className="relative flex-shrink-0"
           style={{
-            width: '24px',
-            height: '24px',
+            width: '40px',
+            height: '40px',
             marginRight: '12px',
           }}
         >
           <Image
             src={contact.avatar}
             alt={contact.name}
-            width={24}
-            height={24}
+            width={40}
+            height={40}
             className="rounded-full object-cover"
-            style={{ width: '24px', height: '24px' }}
+            style={{ width: '40px', height: '40px' }}
           />
         </div>
         <span
           style={{
             fontFamily: 'Poppins, sans-serif',
-            fontWeight: 500,
-            fontSize: 'clamp(14px, 1.3vw, 18px)',
+            fontWeight: 600,
+            fontSize: '18px',
             lineHeight: '100%',
-            letterSpacing: '1%',
             color: '#192A3E',
           }}
         >
@@ -151,17 +249,39 @@ export function ChatSection({
             borderRadius: '50%',
             background: contact.isOnline ? '#22C55E' : '#9CA3AF',
           }}
+          title={contact.isOnline ? 'Online' : 'Offline'}
         />
-      </div> */}
+      </div>
 
       {/* Messages Area */}
       <div
+        ref={messagesContainerRef}
+        onScroll={handleScroll}
         className="flex-1 overflow-y-auto p-4"
         style={{
           background: '#FAFBFC',
           minHeight: 0,
         }}
       >
+        {/* Loading indicator for older messages */}
+        {isLoadingMore && (
+          <div className="flex justify-center py-4">
+            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-500"></div>
+          </div>
+        )}
+        
+        {/* Load more button (alternative to infinite scroll) */}
+        {hasMoreMessages && !isLoadingMore && onLoadMore && (
+          <div className="flex justify-center py-2 mb-4">
+            <button
+              onClick={onLoadMore}
+              className="text-sm text-gray-500 hover:text-gray-700 underline"
+            >
+              Load older messages
+            </button>
+          </div>
+        )}
+
         {messages.map((message) => {
           const isCurrentUser = message.senderId === currentUserId;
           
@@ -213,6 +333,8 @@ export function ChatSection({
                 >
                   {formatTime(message.timestamp)}
                 </span>
+                {/* Message status indicator for sent messages */}
+                {isCurrentUser && <MessageStatus status={message.status} />}
                 {isCurrentUser && (
                   <div
                     className="relative flex-shrink-0"
@@ -245,6 +367,7 @@ export function ChatSection({
                     background: isCurrentUser ? '#FFFFFF' : '#003450',
                     border: isCurrentUser ? '1px solid #E4E9EE' : 'none',
                     display: 'inline-block',
+                    opacity: message.status === 'pending' ? 0.7 : 1,
                   }}
                 >
                   <p
@@ -379,7 +502,7 @@ export function ChatSection({
           type="text"
           placeholder={t('typeMessage')}
           value={inputValue}
-          onChange={(e) => setInputValue(e.target.value)}
+          onChange={handleInputChange}
           onKeyPress={handleKeyPress}
           className="flex-1 outline-none"
           style={{

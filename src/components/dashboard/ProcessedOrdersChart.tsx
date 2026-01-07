@@ -117,22 +117,13 @@ export function ProcessedOrdersChart({ dateRange }: ProcessedOrdersChartProps) {
     if (match) {
       const monthName = match[1].toLowerCase();
       const year = match[2];
-      // Short month names for cleaner display
-      const shortMonths: { [key: string]: string } = {
-        january: 'Jan',
-        february: 'Feb',
-        march: 'Mar',
-        april: 'Apr',
-        may: 'May',
-        june: 'Jun',
-        july: 'Jul',
-        august: 'Aug',
-        september: 'Sep',
-        october: 'Oct',
-        november: 'Nov',
-        december: 'Dec',
-      };
-      return `${shortMonths[monthName] || monthName} ${year}`;
+      // Try to get translation, fallback to capitalized month name
+      try {
+        const translatedMonth = t(`monthNames.${monthName}`);
+        return `${translatedMonth} ${year}`;
+      } catch {
+        return `${monthName.charAt(0).toUpperCase() + monthName.slice(1)} ${year}`;
+      }
     }
     return monthKey;
   };

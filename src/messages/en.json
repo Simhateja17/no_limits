@@ -90,6 +90,20 @@
     "viewAll": "View all",
     "typeMessage": "Type a message...",
     "addedTasks": "added tasks",
+    "monthNames": {
+      "january": "Jan",
+      "february": "Feb",
+      "march": "Mar",
+      "april": "Apr",
+      "may": "May",
+      "june": "Jun",
+      "july": "Jul",
+      "august": "Aug",
+      "september": "Sep",
+      "october": "Oct",
+      "november": "Nov",
+      "december": "Dec"
+    },
     "months": {
       "august2018": "August 2018",
       "september2018": "September 2018",
@@ -548,6 +562,7 @@
     "sendAgreementAndPricing": "Send agreement and pricing"
   },
   "setup": {
+    "logout": "Logout",
     "selectPlatform": "Select Your E-Commerce Platform",
     "selectPlatformDesc": "Choose the platform where your online store is hosted",
     "shopifyDesc": "Connect your Shopify store",

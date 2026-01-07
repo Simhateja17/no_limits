@@ -51,6 +51,10 @@ export function ProductsTable({ showClientColumn, baseUrl }: ProductsTableProps)
   const t = useTranslations('products');
   const tCommon = useTranslations('common');
 
+  // Fetch real clients for admin/employee filter
+  const { clients, loading: clientsLoading } = useClients();
+  const customerNames = getClientNames(clients);
+
   // Fetch products from API
   useEffect(() => {
     const fetchProducts = async () => {
@@ -384,6 +388,7 @@ export function ProductsTable({ showClientColumn, baseUrl }: ProductsTableProps)
             <select
               value={customerFilter}
               onChange={(e) => { setCustomerFilter(e.target.value); setCurrentPage(1); }}
+              disabled={showClientColumn ? clientsLoading : false}
               style={{
                 width: '320px',
                 maxWidth: '100%',
@@ -406,11 +411,19 @@ export function ProductsTable({ showClientColumn, baseUrl }: ProductsTableProps)
               <option key="ALL" value="ALL">
                 {tCommon('all')}
               </option>
-              {channels.map((channel) => (
-                <option key={channel.name} value={channel.name}>
-                  {channel.name} - {channel.type}
-                </option>
-              ))}
+              {/* Show clients for admin/employee, show channels for client view */}
+              {showClientColumn
+                ? customerNames.map((name) => (
+                    <option key={name} value={name}>
+                      {name}
+                    </option>
+                  ))
+                : channels.map((channel) => (
+                    <option key={channel.name} value={channel.name}>
+                      {channel.name} - {channel.type}
+                    </option>
+                  ))
+              }
             </select>
             {/* Dropdown Arrow */}
             <div

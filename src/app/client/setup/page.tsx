@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
+import Image from 'next/image';
 import { useAuthStore } from '@/lib/store';
 import { onboardingApi } from '@/lib/onboarding-api';
 import SyncDatePickerModal from '@/components/channels/SyncDatePickerModal';
@@ -11,7 +12,7 @@ type SetupStep = 'platform' | 'credentials' | 'jtl' | 'complete';
 type PlatformType = 'shopify' | 'woocommerce' | null;
 
 export default function ClientSetupPage() {
-  const { user, isAuthenticated } = useAuthStore();
+  const { user, isAuthenticated, logout } = useAuthStore();
   const router = useRouter();
   const t = useTranslations('setup');
 
@@ -67,6 +68,14 @@ export default function ClientSetupPage() {
   const [jtlOAuthError, setJtlOAuthError] = useState<string | null>(null);
 
   // Check URL parameters for add channel mode
+  // Logout handler
+  const handleLogout = () => {
+    logout();
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
+    router.push('/');
+  };
+
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const addChannel = params.get('addChannel') === 'true';
@@ -616,18 +625,49 @@ export default function ClientSetupPage() {
           padding: '40px 20px',
         }}
       >
-      {/* Logo */}
-      <div style={{ marginBottom: '40px' }}>
-        <h1
+      {/* Header with Logo and Logout */}
+      <div style={{ 
+        width: '100%', 
+        maxWidth: '680px',
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'center',
+        marginBottom: '40px' 
+      }}>
+        <Image
+          src="/no_limits.png"
+          alt="NoLimits Logo"
+          width={140}
+          height={45}
+          priority
+          className="h-auto w-auto"
+          style={{ maxHeight: '45px' }}
+        />
+        <button
+          onClick={handleLogout}
           style={{
+            padding: '8px 16px',
+            background: 'transparent',
+            border: '1px solid #D1D5DB',
+            borderRadius: '6px',
             fontFamily: 'Inter, sans-serif',
-            fontWeight: 700,
-            fontSize: '28px',
-            color: '#003450',
+            fontWeight: 500,
+            fontSize: '14px',
+            color: '#374151',
+            cursor: 'pointer',
+            transition: 'all 0.2s',
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = '#F3F4F6';
+            e.currentTarget.style.borderColor = '#9CA3AF';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = 'transparent';
+            e.currentTarget.style.borderColor = '#D1D5DB';
           }}
         >
-          NoLimits
-        </h1>
+          {t('logout') || 'Logout'}
+        </button>
       </div>
 
       {/* Progress Steps */}
