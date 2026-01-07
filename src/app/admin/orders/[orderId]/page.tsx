@@ -6,7 +6,7 @@ import Image from 'next/image';
 import { DashboardLayout } from '@/components/layout';
 import { useAuthStore } from '@/lib/store';
 import { useTranslations, useLocale } from 'next-intl';
-import { dataApi, type Order as ApiOrder } from '@/lib/data-api';
+import { dataApi, type Order as ApiOrder, type UpdateOrderInput } from '@/lib/data-api';
 
 // Mock order data - in real app this would come from API
 const mockOrderDetails = {
@@ -80,6 +80,9 @@ export default function OrderDetailPage() {
   const [rawOrder, setRawOrder] = useState<ApiOrder | null>(null);
   const [isCreatingReplacement, setIsCreatingReplacement] = useState(false);
   const [replacementError, setReplacementError] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [jtlSyncStatus, setJtlSyncStatus] = useState<{ success: boolean; error?: string } | null>(null);
 
   const [editOrderEnabled, setEditOrderEnabled] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -143,15 +146,109 @@ export default function OrderDetailPage() {
   };
 
   const handleEditClick = () => {
+    // Pre-populate form with current order data
+    if (rawOrder) {
+      setFormData({
+        firstName: rawOrder.shippingFirstName || '',
+        lastName: rawOrder.shippingLastName || '',
+        company: rawOrder.shippingCompany || '',
+        addressLine2: rawOrder.shippingAddress2 || '',
+        streetAddress: rawOrder.shippingAddress1 || '',
+        city: rawOrder.shippingCity || '',
+        zipPostal: rawOrder.shippingZip || '',
+        country: rawOrder.shippingCountryCode || 'United States',
+      });
+    }
     setShowEditModal(true);
   };
 
-  const handleSaveAddress = () => {
-    setShowEditModal(false);
-    setShowSuccessModal(true);
-    setTimeout(() => {
-      setShowSuccessModal(false);
-    }, 2000);
+  const handleSaveAddress = async () => {
+    if (!rawOrder?.id) {
+      setSaveError('Order data not loaded');
+      return;
+    }
+
+    setIsSaving(true);
+    setSaveError(null);
+    setJtlSyncStatus(null);
+
+    try {
+      const updateData: UpdateOrderInput = {
+        shippingFirstName: formData.firstName,
+        shippingLastName: formData.lastName,
+        shippingCompany: formData.company || undefined,
+        shippingAddress1: formData.streetAddress,
+        shippingAddress2: formData.addressLine2 || undefined,
+        shippingCity: formData.city,
+        shippingZip: formData.zipPostal,
+        shippingCountryCode: formData.country,
+      };
+
+      const result = await dataApi.updateOrder(rawOrder.id, updateData);
+      
+      // Update local state with new data
+      setRawOrder(result.data as any);
+      
+      // Track JTL sync status
+      if (result.jtlSync) {
+        setJtlSyncStatus(result.jtlSync);
+      }
+
+      setShowEditModal(false);
+      setShowSuccessModal(true);
+      setTimeout(() => {
+        setShowSuccessModal(false);
+      }, 2000);
+    } catch (err: any) {
+      console.error('Error updating order:', err);
+      setSaveError(err.response?.data?.error || 'Failed to update order');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // Handle saving operational fields (tags, on-hold, notes, shipping method)
+  const handleSaveOperationalChanges = async () => {
+    if (!rawOrder?.id) {
+      setSaveError('Order data not loaded');
+      return;
+    }
+
+    setIsSaving(true);
+    setSaveError(null);
+    setJtlSyncStatus(null);
+
+    try {
+      const updateData: UpdateOrderInput = {
+        tags,
+        isOnHold: onHoldStatus,
+        warehouseNotes: orderNotes,
+        jtlShippingMethodId: selectedShippingMethod?.id,
+      };
+
+      const result = await dataApi.updateOrder(rawOrder.id, updateData);
+      
+      // Update local state with new data
+      setRawOrder(result.data as any);
+      
+      // Track JTL sync status
+      if (result.jtlSync) {
+        setJtlSyncStatus(result.jtlSync);
+        if (!result.jtlSync.success) {
+          console.warn('JTL sync failed:', result.jtlSync.error);
+        }
+      }
+
+      setShowSuccessModal(true);
+      setTimeout(() => {
+        setShowSuccessModal(false);
+      }, 2000);
+    } catch (err: any) {
+      console.error('Error updating order:', err);
+      setSaveError(err.response?.data?.error || 'Failed to update order');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleAddTag = () => {

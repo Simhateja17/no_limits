@@ -266,6 +266,7 @@ export default function ClientChatPage() {
           onLoadMore={loadMoreMessages}
           hasMoreMessages={pagination.hasMore}
           isLoadingMore={pagination.isLoading}
+          isLoadingMessages={isLoading}
           isTyping={isTyping}
           typingUser={
             isTyping

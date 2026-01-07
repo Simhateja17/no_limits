@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { useAuthStore } from '@/lib/store';
 import { channelsApi, Channel as ApiChannel } from '@/lib/channels-api';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { FFNAccountDetails } from './FFNAccountDetails';
 
 // Channel interface
 interface Channel {
@@ -557,162 +559,210 @@ export function SalesChannels({ baseUrl }: SalesChannelsProps) {
         </button>
       </div>
 
-      {/* Sales-Channels Title */}
-      <h1
-        style={{
-          width: '100%',
-          fontFamily: 'Inter, sans-serif',
-          fontWeight: 500,
-          fontSize: 'clamp(14px, 1.33vw, 18px)',
-          lineHeight: 'clamp(18px, 1.77vw, 24px)',
-          color: '#111827',
-          margin: '0 0 clamp(15px, 1.47vw, 20px) 0',
-        }}
-      >
-        {t('title')}
-      </h1>
-
-      {/* Horizontal Line */}
-      <div
-        style={{
-          width: '100%',
-          height: '1px',
-          backgroundColor: '#E5E7EB',
-          marginBottom: 'clamp(24px, 2.36vw, 32px)',
-        }}
-      />
-
-      {/* Loading State */}
-      {isLoading ? (
+      {/* Tabs */}
+      <Tabs defaultValue="salesChannels">
         <div
           style={{
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            padding: '40px',
-            color: '#6B7280',
-            fontSize: '14px',
+            marginBottom: 'clamp(20px, 1.96vw, 28px)',
           }}
         >
-          {tCommon('loading')}...
-        </div>
-      ) : error ? (
-        /* Error State */
-        <div
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            padding: '40px',
-            color: '#DC2626',
-            fontSize: '14px',
-            gap: '16px',
-          }}
-        >
-          <div>{error}</div>
-          <button
-            onClick={() => window.location.reload()}
-            style={{
-              padding: '8px 16px',
-              backgroundColor: '#003450',
-              color: '#FFFFFF',
-              border: 'none',
-              borderRadius: '6px',
-              cursor: 'pointer',
-              fontSize: '14px',
-            }}
+          <TabsList
+            className="bg-gray-100 p-1 rounded-lg"
           >
-            {tCommon('retry')}
-          </button>
+          <TabsTrigger value="salesChannels">{t('tabs.salesChannels')}</TabsTrigger>
+          <TabsTrigger value="ffn">{t('tabs.ffn')}</TabsTrigger>
+        </TabsList>
         </div>
-      ) : /* Content - Either Channel Cards or Empty State */
-      hasChannels ? (
-        <div
-          style={{
-            display: 'flex',
-            flexWrap: 'wrap',
-            gap: 'clamp(18px, 1.77vw, 24px)',
-          }}
-        >
-          {channels.map((channel) => (
-            <ChannelCard
-              key={channel.id}
-              channel={channel}
-              onSettingsClick={handleSettingsClick}
-              onNameClick={handleNameClick}
-              t={t}
-            />
-          ))}
-        </div>
-      ) : (
-        /* Empty State */
-        <div
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            paddingTop: 'clamp(80px, 7.86vw, 120px)',
-            paddingBottom: 'clamp(80px, 7.86vw, 120px)',
-          }}
-        >
-          <EmptyStatePlusIcon />
-          <h2
+
+        <TabsContent value="salesChannels">
+          {/* Sales-Channels Title */}
+          <h1
             style={{
+              width: '100%',
               fontFamily: 'Inter, sans-serif',
               fontWeight: 500,
-              fontSize: 'clamp(12px, 1.03vw, 14px)',
-              lineHeight: 'clamp(16px, 1.47vw, 20px)',
+              fontSize: 'clamp(14px, 1.33vw, 18px)',
+              lineHeight: 'clamp(18px, 1.77vw, 24px)',
               color: '#111827',
-              margin: '0 0 clamp(6px, 0.59vw, 8px) 0',
-              textAlign: 'center',
+              margin: '0 0 clamp(15px, 1.47vw, 20px) 0',
             }}
           >
-            {t('noChannelsTitle')}
-          </h2>
-          <p
+            {t('title')}
+          </h1>
+
+          {/* Horizontal Line */}
+          <div
             style={{
-              fontFamily: 'Inter, sans-serif',
-              fontWeight: 400,
-              fontSize: 'clamp(11px, 1.03vw, 14px)',
-              lineHeight: 'clamp(16px, 1.47vw, 20px)',
-              color: '#6B7280',
-              margin: '0 0 clamp(18px, 1.77vw, 24px) 0',
-              textAlign: 'center',
+              width: '100%',
+              height: '1px',
+              backgroundColor: '#E5E7EB',
+              marginBottom: 'clamp(24px, 2.36vw, 32px)',
             }}
-          >
-            {t('noChannelsDescription')}
-          </p>
-          <button
-            onClick={handleNewChannel}
-            style={{
-              height: 'clamp(29px, 2.80vw, 38px)',
-              borderRadius: '6px',
-              border: 'none',
-              padding: 'clamp(7px, 0.66vw, 9px) clamp(13px, 1.25vw, 17px)',
-              gap: 'clamp(6px, 0.59vw, 8px)',
-              backgroundColor: '#003450',
-              boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.05)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              cursor: 'pointer',
-            }}
-          >
-            <span
+          />
+
+          {/* Loading State */}
+          {isLoading ? (
+            <div
               style={{
-                fontFamily: 'Inter, sans-serif',
-                fontWeight: 500,
-                fontSize: 'clamp(11px, 1.03vw, 14px)',
-                lineHeight: 'clamp(15px, 1.47vw, 20px)',
-                color: '#FFFFFF',
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                padding: '40px',
+                color: '#6B7280',
+                fontSize: '14px',
               }}
             >
-              {t('newChannel')}
-            </span>
-          </button>
-        </div>
-      )}
+              {tCommon('loading')}...
+            </div>
+          ) : error ? (
+            /* Error State */
+            <div
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                padding: '40px',
+                color: '#DC2626',
+                fontSize: '14px',
+                gap: '16px',
+              }}
+            >
+              <div>{error}</div>
+              <button
+                onClick={() => window.location.reload()}
+                style={{
+                  padding: '8px 16px',
+                  backgroundColor: '#003450',
+                  color: '#FFFFFF',
+                  border: 'none',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                }}
+              >
+                {tCommon('retry')}
+              </button>
+            </div>
+          ) : /* Content - Either Channel Cards or Empty State */
+          hasChannels ? (
+            <div
+              style={{
+                display: 'flex',
+                flexWrap: 'wrap',
+                gap: 'clamp(18px, 1.77vw, 24px)',
+              }}
+            >
+              {channels.map((channel) => (
+                <ChannelCard
+                  key={channel.id}
+                  channel={channel}
+                  onSettingsClick={handleSettingsClick}
+                  onNameClick={handleNameClick}
+                  t={t}
+                />
+              ))}
+            </div>
+          ) : (
+            /* Empty State */
+            <div
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                paddingTop: 'clamp(80px, 7.86vw, 120px)',
+                paddingBottom: 'clamp(80px, 7.86vw, 120px)',
+              }}
+            >
+              <EmptyStatePlusIcon />
+              <h2
+                style={{
+                  fontFamily: 'Inter, sans-serif',
+                  fontWeight: 500,
+                  fontSize: 'clamp(12px, 1.03vw, 14px)',
+                  lineHeight: 'clamp(16px, 1.47vw, 20px)',
+                  color: '#111827',
+                  margin: '0 0 clamp(6px, 0.59vw, 8px) 0',
+                  textAlign: 'center',
+                }}
+              >
+                {t('noChannelsTitle')}
+              </h2>
+              <p
+                style={{
+                  fontFamily: 'Inter, sans-serif',
+                  fontWeight: 400,
+                  fontSize: 'clamp(11px, 1.03vw, 14px)',
+                  lineHeight: 'clamp(16px, 1.47vw, 20px)',
+                  color: '#6B7280',
+                  margin: '0 0 clamp(18px, 1.77vw, 24px) 0',
+                  textAlign: 'center',
+                }}
+              >
+                {t('noChannelsDescription')}
+              </p>
+              <button
+                onClick={handleNewChannel}
+                style={{
+                  height: 'clamp(29px, 2.80vw, 38px)',
+                  borderRadius: '6px',
+                  border: 'none',
+                  padding: 'clamp(7px, 0.66vw, 9px) clamp(13px, 1.25vw, 17px)',
+                  gap: 'clamp(6px, 0.59vw, 8px)',
+                  backgroundColor: '#003450',
+                  boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.05)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                }}
+              >
+                <span
+                  style={{
+                    fontFamily: 'Inter, sans-serif',
+                    fontWeight: 500,
+                    fontSize: 'clamp(11px, 1.03vw, 14px)',
+                    lineHeight: 'clamp(15px, 1.47vw, 20px)',
+                    color: '#FFFFFF',
+                  }}
+                >
+                  {t('newChannel')}
+                </span>
+              </button>
+            </div>
+          )}
+        </TabsContent>
+
+        <TabsContent value="ffn">
+          {/* FFN Title */}
+          <h1
+            style={{
+              width: '100%',
+              fontFamily: 'Inter, sans-serif',
+              fontWeight: 500,
+              fontSize: 'clamp(14px, 1.33vw, 18px)',
+              lineHeight: 'clamp(18px, 1.77vw, 24px)',
+              color: '#111827',
+              margin: '0 0 clamp(15px, 1.47vw, 20px) 0',
+            }}
+          >
+            JTL FFN
+          </h1>
+
+          {/* Horizontal Line */}
+          <div
+            style={{
+              width: '100%',
+              height: '1px',
+              backgroundColor: '#E5E7EB',
+              marginBottom: 'clamp(24px, 2.36vw, 32px)',
+            }}
+          />
+
+          {/* FFN Account Details */}
+          <FFNAccountDetails />
+        </TabsContent>
+      </Tabs>
 
       {/* Channel Type Selection Modal */}
       <ChannelTypeModal

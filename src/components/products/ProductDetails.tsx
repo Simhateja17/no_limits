@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { dataApi, type Product as ApiProduct } from '@/lib/data-api';
+import { dataApi, type Product as ApiProduct, type UpdateProductInput } from '@/lib/data-api';
 
 // Tab type for product details
 type ProductTab = 'productData' | 'stockMovements' | 'orders' | 'bundle';
@@ -157,6 +157,10 @@ export function ProductDetails({ productId, backUrl }: ProductDetailsProps) {
   const [productDetails, setProductDetails] = useState<ProductDetailsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [jtlSyncStatus, setJtlSyncStatus] = useState<{ success: boolean; error?: string } | null>(null);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   // Fetch product details from API
   useEffect(() => {
@@ -271,9 +275,71 @@ export function ProductDetails({ productId, backUrl }: ProductDetailsProps) {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleSave = () => {
-    console.log('Saving product:', formData);
-    setEditMode(false);
+  const handleSave = async () => {
+    if (!productDetails?.id) {
+      setSaveError('Product data not loaded');
+      return;
+    }
+
+    setIsSaving(true);
+    setSaveError(null);
+    setJtlSyncStatus(null);
+
+    try {
+      const updateData: UpdateProductInput = {
+        name: formData.productName !== productDetails.productName ? formData.productName : undefined,
+        manufacturer: formData.manufacturer !== productDetails.manufacturer && formData.manufacturer !== '-' ? formData.manufacturer : undefined,
+        sku: formData.sku !== productDetails.sku ? formData.sku : undefined,
+        gtin: formData.gtin !== productDetails.gtin && formData.gtin !== '-' ? formData.gtin : undefined,
+        han: formData.han !== productDetails.han && formData.han !== '-' ? formData.han : undefined,
+        heightInCm: formData.heightInCm !== productDetails.heightInCm && formData.heightInCm !== '-' ? formData.heightInCm : undefined,
+        lengthInCm: formData.lengthInCm !== productDetails.lengthInCm && formData.lengthInCm !== '-' ? formData.lengthInCm : undefined,
+        widthInCm: formData.widthInCm !== productDetails.widthInCm && formData.widthInCm !== '-' ? formData.widthInCm : undefined,
+        weightInKg: formData.weightInKg !== productDetails.weightInKg && formData.weightInKg !== '-' ? formData.weightInKg : undefined,
+        amazonAsin: formData.amazonAsin !== productDetails.amazonAsin && formData.amazonAsin !== '-' ? formData.amazonAsin : undefined,
+        amazonSku: formData.amazonSku !== productDetails.amazonSku && formData.amazonSku !== '-' ? formData.amazonSku : undefined,
+        isbn: formData.isbn !== productDetails.isbn && formData.isbn !== '-' ? formData.isbn : undefined,
+        customsCode: formData.zolltarifnummer !== productDetails.zolltarifnummer && formData.zolltarifnummer !== '-' ? formData.zolltarifnummer : undefined,
+        countryOfOrigin: formData.ursprung !== productDetails.ursprung && formData.ursprung !== '-' ? formData.ursprung : undefined,
+        netSalesPrice: formData.nettoVerkaufspreis !== productDetails.nettoVerkaufspreis && formData.nettoVerkaufspreis !== '-' ? formData.nettoVerkaufspreis : undefined,
+      };
+
+      // Remove undefined values
+      const cleanedData = Object.fromEntries(
+        Object.entries(updateData).filter(([_, v]) => v !== undefined)
+      ) as UpdateProductInput;
+
+      if (Object.keys(cleanedData).length === 0) {
+        // No changes to save
+        setEditMode(false);
+        return;
+      }
+
+      const result = await dataApi.updateProduct(productDetails.id, cleanedData);
+      
+      // Update local state with transformed data
+      const updatedProduct = transformApiProduct(result.data);
+      setProductDetails(updatedProduct);
+      
+      // Track JTL sync status
+      if (result.jtlSync) {
+        setJtlSyncStatus(result.jtlSync);
+        if (!result.jtlSync.success) {
+          console.warn('JTL sync failed:', result.jtlSync.error);
+        }
+      }
+
+      setEditMode(false);
+      setShowSuccessModal(true);
+      setTimeout(() => {
+        setShowSuccessModal(false);
+      }, 2000);
+    } catch (err: any) {
+      console.error('Error updating product:', err);
+      setSaveError(err.response?.data?.error || 'Failed to update product');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   // Loading state

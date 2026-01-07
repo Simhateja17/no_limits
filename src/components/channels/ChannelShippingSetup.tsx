@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { channelsApi, ShippingMethod } from '@/lib/channels-api';
+import { shippingMethodsApi, ShippingMethod as FFNShippingMethod } from '@/lib/shipping-methods-api';
 
 interface ChannelShippingSetupProps {
   channelId: string;
@@ -119,13 +120,16 @@ export function ChannelShippingSetup({ channelId, channelType, baseUrl }: Channe
   const router = useRouter();
   const tCommon = useTranslations('common');
   const tChannels = useTranslations('channels');
+  const tShipping = useTranslations('channels.shipping');
 
-  const [selectedMethods, setSelectedMethods] = useState<{ [key: string]: string }>({
-    '1': 'DHL Parcel',
-    '2': 'DHL Parcel',
-    '3': 'DHL Parcel',
-    '4': 'DHL Parcel',
-  });
+  // Default shipping method state
+  const [ffnShippingMethods, setFFNShippingMethods] = useState<FFNShippingMethod[]>([]);
+  const [selectedDefaultMethod, setSelectedDefaultMethod] = useState<string>('');
+  const [defaultDropdownOpen, setDefaultDropdownOpen] = useState(false);
+  
+  // Advanced mapping state (optional)
+  const [showAdvancedMapping, setShowAdvancedMapping] = useState(false);
+  const [selectedMethods, setSelectedMethods] = useState<{ [key: string]: string }>({});
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [warehouseMethods, setWarehouseMethods] = useState<ShippingMethod[]>([]);
@@ -137,13 +141,27 @@ export function ChannelShippingSetup({ channelId, channelType, baseUrl }: Channe
   // Suppress unused variable warning
   void baseUrl;
 
-  // Fetch shipping methods on mount
+  // Fetch FFN shipping methods and current default on mount
   useEffect(() => {
-    const fetchShippingMethods = async () => {
+    const fetchData = async () => {
       if (!channelId || channelId === 'new') return;
 
       try {
         setIsLoading(true);
+        
+        // Fetch FFN shipping methods (for default selection)
+        const ffnResponse = await shippingMethodsApi.getAll(true);
+        if (ffnResponse.success && ffnResponse.data) {
+          setFFNShippingMethods(ffnResponse.data);
+        }
+        
+        // Fetch current channel default
+        const defaultResponse = await shippingMethodsApi.getChannelDefault(channelId);
+        if (defaultResponse.success && defaultResponse.data?.defaultShippingMethodId) {
+          setSelectedDefaultMethod(defaultResponse.data.defaultShippingMethodId);
+        }
+        
+        // Fetch channel shipping methods for advanced mapping
         const response = await channelsApi.getShippingMethods(channelId);
         if (response.success) {
           setWarehouseMethods(response.warehouseMethods);
@@ -156,7 +174,7 @@ export function ChannelShippingSetup({ channelId, channelType, baseUrl }: Channe
       }
     };
 
-    fetchShippingMethods();
+    fetchData();
   }, [channelId]);
 
   const handleBack = () => {
@@ -164,29 +182,39 @@ export function ChannelShippingSetup({ channelId, channelType, baseUrl }: Channe
   };
 
   const handleFinish = async () => {
-    // Save shipping method mappings
     if (channelId && channelId !== 'new') {
       try {
         setIsSaving(true);
         setSaveError(null);
 
-        // Convert selectedMethods to proper format (warehouseMethodId -> channelMethodName)
-        // The backend expects the channel method NAME for mapping resolution
-        const mappings: Record<string, string> = {};
-        for (const [warehouseMethodId, channelMethodName] of Object.entries(selectedMethods)) {
-          if (channelMethodName) {
-            mappings[warehouseMethodId] = channelMethodName;
+        // Save default shipping method for the channel
+        if (selectedDefaultMethod) {
+          const defaultResult = await shippingMethodsApi.setChannelDefault(channelId, selectedDefaultMethod);
+          if (!defaultResult.success) {
+            setSaveError(defaultResult.error || 'Failed to save default shipping method');
+            return;
           }
         }
 
-        const result = await channelsApi.saveShippingMappings(channelId, mappings);
+        // If advanced mapping is enabled and has mappings, save them
+        if (showAdvancedMapping && Object.keys(selectedMethods).length > 0) {
+          const mappings: Record<string, string> = {};
+          for (const [warehouseMethodId, channelMethodName] of Object.entries(selectedMethods)) {
+            if (channelMethodName) {
+              mappings[warehouseMethodId] = channelMethodName;
+            }
+          }
 
-        if (!result.success) {
-          setSaveError(result.error || 'Failed to save shipping mappings');
-          return;
+          if (Object.keys(mappings).length > 0) {
+            const result = await channelsApi.saveShippingMappings(channelId, mappings);
+            if (!result.success) {
+              setSaveError(result.error || 'Failed to save shipping mappings');
+              return;
+            }
+          }
         }
       } catch (err) {
-        console.error('Error saving shipping mappings:', err);
+        console.error('Error saving shipping settings:', err);
         setSaveError(err instanceof Error ? err.message : 'An error occurred');
         return;
       } finally {
@@ -334,7 +362,7 @@ export function ChannelShippingSetup({ channelId, channelType, baseUrl }: Channe
               margin: 0,
             }}
           >
-            Match Shipping Methods
+            {tShipping('defaultTitle')}
           </h2>
           <p
             style={{
@@ -346,7 +374,7 @@ export function ChannelShippingSetup({ channelId, channelType, baseUrl }: Channe
               margin: 0,
             }}
           >
-            Here you will match your methods with our methods
+            {tShipping('defaultDescription')}
           </p>
         </div>
 
@@ -364,41 +392,6 @@ export function ChannelShippingSetup({ channelId, channelType, baseUrl }: Channe
             gap: 'clamp(18px, 1.77vw, 24px)',
           }}
         >
-          {/* Header Row */}
-          <div
-            style={{
-              display: 'flex',
-              gap: 'clamp(18px, 1.77vw, 24px)',
-            }}
-          >
-            <div
-              style={{
-                flex: 1,
-                fontFamily: 'Inter, sans-serif',
-                fontWeight: 500,
-                fontSize: 'clamp(11px, 1.03vw, 14px)',
-                lineHeight: 'clamp(15px, 1.47vw, 20px)',
-                color: '#374151',
-                textAlign: 'center',
-              }}
-            >
-              Warehouse
-            </div>
-            <div
-              style={{
-                flex: 1,
-                fontFamily: 'Inter, sans-serif',
-                fontWeight: 500,
-                fontSize: 'clamp(11px, 1.03vw, 14px)',
-                lineHeight: 'clamp(15px, 1.47vw, 20px)',
-                color: '#374151',
-                textAlign: 'center',
-              }}
-            >
-              {getChannelLabel()}
-            </div>
-          </div>
-
           {/* Loading State */}
           {isLoading && (
             <div
@@ -410,7 +403,7 @@ export function ChannelShippingSetup({ channelId, channelType, baseUrl }: Channe
                 fontSize: 'clamp(11px, 1.03vw, 14px)',
               }}
             >
-              Loading shipping methods...
+              {tCommon('loading')}...
             </div>
           )}
 
@@ -425,111 +418,190 @@ export function ChannelShippingSetup({ channelId, channelType, baseUrl }: Channe
                 color: '#DC2626',
                 fontFamily: 'Inter, sans-serif',
                 fontSize: 'clamp(11px, 1.03vw, 14px)',
-                marginBottom: 'clamp(12px, 1.18vw, 16px)',
               }}
             >
               {saveError}
             </div>
           )}
 
-          {/* Empty State - No Warehouse Methods */}
-          {!isLoading && warehouseMethods.length === 0 && (
+          {/* No FFN Methods */}
+          {!isLoading && ffnShippingMethods.length === 0 && (
             <div
               style={{
-                padding: 'clamp(24px, 2.36vw, 32px)',
+                padding: 'clamp(20px, 1.96vw, 28px)',
                 textAlign: 'center',
                 color: '#6B7280',
                 fontFamily: 'Inter, sans-serif',
                 fontSize: 'clamp(11px, 1.03vw, 14px)',
-              }}
-            >
-              No warehouse shipping methods available. Please contact support to configure shipping methods.
-            </div>
-          )}
-
-          {/* Empty State - No Channel Methods */}
-          {!isLoading && warehouseMethods.length > 0 && channelMethods.length === 0 && (
-            <div
-              style={{
-                padding: 'clamp(12px, 1.18vw, 16px)',
                 backgroundColor: '#FEF3C7',
                 border: '1px solid #FCD34D',
                 borderRadius: '6px',
-                color: '#92400E',
-                fontFamily: 'Inter, sans-serif',
-                fontSize: 'clamp(11px, 1.03vw, 14px)',
-                marginBottom: 'clamp(12px, 1.18vw, 16px)',
               }}
             >
-              No shipping methods found in your {getChannelLabel()} store. Please configure shipping zones in your store first, then click &quot;Reload methods&quot;.
+              {tShipping('noFFNMethods')}
             </div>
           )}
 
-          {/* Method Rows */}
-          {!isLoading && warehouseMethods.map((warehouseMethod) => (
-            <div
-              key={warehouseMethod.id}
-              style={{
-                display: 'flex',
-                gap: 'clamp(18px, 1.77vw, 24px)',
-                alignItems: 'center',
-              }}
-            >
-              {/* Warehouse Method (Read-only) */}
-              <div
-                style={{
-                  flex: 1,
-                  height: 'clamp(36px, 3.53vw, 48px)',
-                  borderRadius: '6px',
-                  border: '1px solid #E5E7EB',
-                  padding: 'clamp(8px, 0.78vw, 12px) clamp(12px, 1.18vw, 16px)',
-                  backgroundColor: '#F9FAFB',
-                  display: 'flex',
-                  alignItems: 'center',
-                }}
-              >
-                <span
+          {/* Default Shipping Method Selection */}
+          {!isLoading && ffnShippingMethods.length > 0 && (
+            <>
+              <div>
+                <label
+                  style={{
+                    fontFamily: 'Inter, sans-serif',
+                    fontWeight: 500,
+                    fontSize: 'clamp(12px, 1.03vw, 14px)',
+                    lineHeight: 'clamp(16px, 1.47vw, 20px)',
+                    color: '#374151',
+                    marginBottom: 'clamp(6px, 0.59vw, 8px)',
+                    display: 'block',
+                  }}
+                >
+                  {tShipping('defaultLabel')}
+                </label>
+                <div style={{ position: 'relative' }}>
+                  <button
+                    onClick={() => setDefaultDropdownOpen(!defaultDropdownOpen)}
+                    style={{
+                      width: '100%',
+                      height: 'clamp(40px, 3.93vw, 52px)',
+                      borderRadius: '6px',
+                      border: '1px solid #D1D5DB',
+                      padding: 'clamp(10px, 0.98vw, 14px) clamp(14px, 1.37vw, 18px)',
+                      backgroundColor: '#FFFFFF',
+                      boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.05)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      cursor: 'pointer',
+                      fontFamily: 'Inter, sans-serif',
+                      fontWeight: 400,
+                      fontSize: 'clamp(12px, 1.03vw, 14px)',
+                      lineHeight: 'clamp(16px, 1.47vw, 20px)',
+                      color: selectedDefaultMethod ? '#111827' : '#9CA3AF',
+                      textAlign: 'left',
+                    }}
+                  >
+                    <span>
+                      {selectedDefaultMethod
+                        ? ffnShippingMethods.find(m => m.jtlShippingMethodId === selectedDefaultMethod)?.name || selectedDefaultMethod
+                        : tShipping('selectDefault')}
+                    </span>
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 16 16"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                      style={{
+                        transform: defaultDropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+                        transition: 'transform 0.2s ease',
+                      }}
+                    >
+                      <path
+                        d="M4 6L8 10L12 6"
+                        stroke="#9CA3AF"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </button>
+
+                  {defaultDropdownOpen && (
+                    <div
+                      style={{
+                        position: 'absolute',
+                        top: '100%',
+                        left: 0,
+                        right: 0,
+                        marginTop: '4px',
+                        backgroundColor: '#FFFFFF',
+                        border: '1px solid #E5E7EB',
+                        borderRadius: '6px',
+                        boxShadow: '0px 4px 6px -1px rgba(0, 0, 0, 0.1), 0px 2px 4px -1px rgba(0, 0, 0, 0.06)',
+                        maxHeight: 'clamp(200px, 19.61vw, 280px)',
+                        overflowY: 'auto',
+                        zIndex: 100,
+                      }}
+                    >
+                      {ffnShippingMethods.map((method, index) => (
+                        <button
+                          key={method.id}
+                          onClick={() => {
+                            setSelectedDefaultMethod(method.jtlShippingMethodId || '');
+                            setDefaultDropdownOpen(false);
+                          }}
+                          style={{
+                            width: '100%',
+                            padding: 'clamp(12px, 1.18vw, 16px) clamp(14px, 1.37vw, 18px)',
+                            backgroundColor: selectedDefaultMethod === method.jtlShippingMethodId ? '#F3F4F6' : '#FFFFFF',
+                            border: 'none',
+                            borderBottom: index < ffnShippingMethods.length - 1 ? '1px solid #F3F4F6' : 'none',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'flex-start',
+                            cursor: 'pointer',
+                            fontFamily: 'Inter, sans-serif',
+                            textAlign: 'left',
+                          }}
+                        >
+                          <span
+                            style={{
+                              fontWeight: selectedDefaultMethod === method.jtlShippingMethodId ? 500 : 400,
+                              fontSize: 'clamp(12px, 1.03vw, 14px)',
+                              color: '#111827',
+                            }}
+                          >
+                            {method.name}
+                          </span>
+                          <span
+                            style={{
+                              fontSize: 'clamp(10px, 0.88vw, 12px)',
+                              color: '#6B7280',
+                              marginTop: '2px',
+                            }}
+                          >
+                            {method.carrier} • {method.jtlShippingMethodId}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                <p
                   style={{
                     fontFamily: 'Inter, sans-serif',
                     fontWeight: 400,
-                    fontSize: 'clamp(11px, 1.03vw, 14px)',
-                    lineHeight: 'clamp(15px, 1.47vw, 20px)',
+                    fontSize: 'clamp(10px, 0.88vw, 12px)',
+                    lineHeight: 'clamp(14px, 1.27vw, 18px)',
                     color: '#6B7280',
+                    marginTop: 'clamp(6px, 0.59vw, 8px)',
+                    margin: 'clamp(6px, 0.59vw, 8px) 0 0 0',
                   }}
                 >
-                  {warehouseMethod.name}
-                </span>
+                  {tShipping('defaultHint')}
+                </p>
               </div>
 
-              {/* Channel Method Dropdown */}
-              <div
-                style={{
-                  flex: 1,
-                  position: 'relative',
-                }}
-              >
+              {/* Advanced Mapping Toggle */}
+              <div style={{ borderTop: '1px solid #E5E7EB', paddingTop: 'clamp(16px, 1.57vw, 22px)' }}>
                 <button
-                  onClick={() => setOpenDropdown(openDropdown === warehouseMethod.id ? null : warehouseMethod.id)}
+                  onClick={() => setShowAdvancedMapping(!showAdvancedMapping)}
                   style={{
-                    width: '100%',
-                    height: 'clamp(36px, 3.53vw, 48px)',
-                    borderRadius: '6px',
-                    border: '1px solid #D1D5DB',
-                    padding: 'clamp(8px, 0.78vw, 12px) clamp(12px, 1.18vw, 16px)',
-                    backgroundColor: '#FFFFFF',
-                    boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.05)',
                     display: 'flex',
                     alignItems: 'center',
-                    justifyContent: 'space-between',
+                    gap: 'clamp(8px, 0.78vw, 10px)',
+                    background: 'none',
+                    border: 'none',
                     cursor: 'pointer',
                     fontFamily: 'Inter, sans-serif',
-                    fontWeight: 400,
-                    fontSize: 'clamp(11px, 1.03vw, 14px)',
-                    lineHeight: 'clamp(15px, 1.47vw, 20px)',
-                    color: '#111827',
+                    fontWeight: 500,
+                    fontSize: 'clamp(12px, 1.03vw, 14px)',
+                    color: '#003450',
+                    padding: 0,
                   }}
                 >
-                  <span>{selectedMethods[warehouseMethod.id] || 'Select method'}</span>
                   <svg
                     width="16"
                     height="16"
@@ -537,144 +609,313 @@ export function ChannelShippingSetup({ channelId, channelType, baseUrl }: Channe
                     fill="none"
                     xmlns="http://www.w3.org/2000/svg"
                     style={{
-                      transform: openDropdown === warehouseMethod.id ? 'rotate(180deg)' : 'rotate(0deg)',
+                      transform: showAdvancedMapping ? 'rotate(90deg)' : 'rotate(0deg)',
                       transition: 'transform 0.2s ease',
                     }}
                   >
                     <path
-                      d="M4 6L8 10L12 6"
-                      stroke="#9CA3AF"
+                      d="M6 4L10 8L6 12"
+                      stroke="#003450"
                       strokeWidth="1.5"
                       strokeLinecap="round"
                       strokeLinejoin="round"
                     />
                   </svg>
+                  {tShipping('advancedMapping')}
                 </button>
+                <p
+                  style={{
+                    fontFamily: 'Inter, sans-serif',
+                    fontWeight: 400,
+                    fontSize: 'clamp(10px, 0.88vw, 12px)',
+                    lineHeight: 'clamp(14px, 1.27vw, 18px)',
+                    color: '#6B7280',
+                    marginTop: 'clamp(4px, 0.39vw, 6px)',
+                    margin: 'clamp(4px, 0.39vw, 6px) 0 0 0',
+                  }}
+                >
+                  {tShipping('advancedDescription')}
+                </p>
+              </div>
 
-                {/* Dropdown Menu */}
-                {openDropdown === warehouseMethod.id && (
+              {/* Advanced Mapping Section (collapsible) */}
+              {showAdvancedMapping && (
+                <div
+                  style={{
+                    backgroundColor: '#F9FAFB',
+                    borderRadius: '6px',
+                    padding: 'clamp(16px, 1.57vw, 22px)',
+                    border: '1px solid #E5E7EB',
+                  }}
+                >
+                  {/* Header Row */}
                   <div
                     style={{
-                      position: 'absolute',
-                      top: '100%',
-                      left: 0,
-                      right: 0,
-                      marginTop: '4px',
-                      backgroundColor: '#FFFFFF',
-                      border: '1px solid #E5E7EB',
-                      borderRadius: '6px',
-                      boxShadow: '0px 4px 6px -1px rgba(0, 0, 0, 0.1), 0px 2px 4px -1px rgba(0, 0, 0, 0.06)',
-                      maxHeight: 'clamp(160px, 15.69vw, 220px)',
-                      overflowY: 'auto',
-                      zIndex: 100,
+                      display: 'flex',
+                      gap: 'clamp(18px, 1.77vw, 24px)',
+                      marginBottom: 'clamp(12px, 1.18vw, 16px)',
                     }}
                   >
-                    {channelMethods.map((method, index) => (
-                      <button
-                        key={method.id}
-                        onClick={() => handleMethodSelect(warehouseMethod.id, method.name)}
+                    <div
+                      style={{
+                        flex: 1,
+                        fontFamily: 'Inter, sans-serif',
+                        fontWeight: 500,
+                        fontSize: 'clamp(11px, 1.03vw, 14px)',
+                        lineHeight: 'clamp(15px, 1.47vw, 20px)',
+                        color: '#374151',
+                        textAlign: 'center',
+                      }}
+                    >
+                      {getChannelLabel()} {tShipping('method')}
+                    </div>
+                    <div
+                      style={{
+                        flex: 1,
+                        fontFamily: 'Inter, sans-serif',
+                        fontWeight: 500,
+                        fontSize: 'clamp(11px, 1.03vw, 14px)',
+                        lineHeight: 'clamp(15px, 1.47vw, 20px)',
+                        color: '#374151',
+                        textAlign: 'center',
+                      }}
+                    >
+                      FFN {tShipping('method')}
+                    </div>
+                  </div>
+
+                  {/* No Channel Methods */}
+                  {channelMethods.length === 0 && (
+                    <div
+                      style={{
+                        padding: 'clamp(16px, 1.57vw, 22px)',
+                        textAlign: 'center',
+                        color: '#6B7280',
+                        fontFamily: 'Inter, sans-serif',
+                        fontSize: 'clamp(11px, 1.03vw, 14px)',
+                      }}
+                    >
+                      {tShipping('noChannelMethods', { channel: getChannelLabel() })}
+                    </div>
+                  )}
+
+                  {/* Method Rows */}
+                  {channelMethods.map((channelMethod) => (
+                    <div
+                      key={channelMethod.id}
+                      style={{
+                        display: 'flex',
+                        gap: 'clamp(18px, 1.77vw, 24px)',
+                        alignItems: 'center',
+                        marginBottom: 'clamp(10px, 0.98vw, 14px)',
+                      }}
+                    >
+                      {/* Channel Method (Read-only) */}
+                      <div
                         style={{
-                          width: '100%',
-                          padding: 'clamp(10px, 0.98vw, 14px) clamp(12px, 1.18vw, 16px)',
-                          backgroundColor: selectedMethods[warehouseMethod.id] === method.name ? '#F9FAFB' : '#FFFFFF',
-                          border: 'none',
-                          borderBottom: index < channelMethods.length - 1 ? '1px solid #F3F4F6' : 'none',
+                          flex: 1,
+                          height: 'clamp(36px, 3.53vw, 48px)',
+                          borderRadius: '6px',
+                          border: '1px solid #E5E7EB',
+                          padding: 'clamp(8px, 0.78vw, 12px) clamp(12px, 1.18vw, 16px)',
+                          backgroundColor: '#FFFFFF',
                           display: 'flex',
                           alignItems: 'center',
-                          justifyContent: 'space-between',
-                          cursor: 'pointer',
-                          fontFamily: 'Inter, sans-serif',
-                          fontWeight: selectedMethods[warehouseMethod.id] === method.name ? 500 : 400,
-                          fontSize: 'clamp(11px, 1.03vw, 14px)',
-                          lineHeight: 'clamp(15px, 1.47vw, 20px)',
-                          color: '#111827',
-                          textAlign: 'left',
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.backgroundColor = '#F9FAFB';
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.backgroundColor =
-                            selectedMethods[warehouseMethod.id] === method.name ? '#F9FAFB' : '#FFFFFF';
                         }}
                       >
-                        <span>{method.name}</span>
-                        {selectedMethods[warehouseMethod.id] === method.name && (
+                        <span
+                          style={{
+                            fontFamily: 'Inter, sans-serif',
+                            fontWeight: 400,
+                            fontSize: 'clamp(11px, 1.03vw, 14px)',
+                            lineHeight: 'clamp(15px, 1.47vw, 20px)',
+                            color: '#374151',
+                          }}
+                        >
+                          {channelMethod.name}
+                        </span>
+                      </div>
+
+                      {/* FFN Method Dropdown */}
+                      <div style={{ flex: 1, position: 'relative' }}>
+                        <button
+                          onClick={() => setOpenDropdown(openDropdown === channelMethod.id ? null : channelMethod.id)}
+                          style={{
+                            width: '100%',
+                            height: 'clamp(36px, 3.53vw, 48px)',
+                            borderRadius: '6px',
+                            border: '1px solid #D1D5DB',
+                            padding: 'clamp(8px, 0.78vw, 12px) clamp(12px, 1.18vw, 16px)',
+                            backgroundColor: '#FFFFFF',
+                            boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.05)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            cursor: 'pointer',
+                            fontFamily: 'Inter, sans-serif',
+                            fontWeight: 400,
+                            fontSize: 'clamp(11px, 1.03vw, 14px)',
+                            lineHeight: 'clamp(15px, 1.47vw, 20px)',
+                            color: selectedMethods[channelMethod.id] ? '#111827' : '#9CA3AF',
+                          }}
+                        >
+                          <span>
+                            {selectedMethods[channelMethod.id]
+                              ? ffnShippingMethods.find(m => m.jtlShippingMethodId === selectedMethods[channelMethod.id])?.name || selectedMethods[channelMethod.id]
+                              : tShipping('useDefault')}
+                          </span>
                           <svg
                             width="16"
                             height="16"
                             viewBox="0 0 16 16"
                             fill="none"
                             xmlns="http://www.w3.org/2000/svg"
+                            style={{
+                              transform: openDropdown === channelMethod.id ? 'rotate(180deg)' : 'rotate(0deg)',
+                              transition: 'transform 0.2s ease',
+                            }}
                           >
                             <path
-                              d="M13.3333 4L6 11.3333L2.66667 8"
-                              stroke="#003450"
+                              d="M4 6L8 10L12 6"
+                              stroke="#9CA3AF"
                               strokeWidth="1.5"
                               strokeLinecap="round"
                               strokeLinejoin="round"
                             />
                           </svg>
+                        </button>
+
+                        {openDropdown === channelMethod.id && (
+                          <div
+                            style={{
+                              position: 'absolute',
+                              top: '100%',
+                              left: 0,
+                              right: 0,
+                              marginTop: '4px',
+                              backgroundColor: '#FFFFFF',
+                              border: '1px solid #E5E7EB',
+                              borderRadius: '6px',
+                              boxShadow: '0px 4px 6px -1px rgba(0, 0, 0, 0.1)',
+                              maxHeight: 'clamp(160px, 15.69vw, 220px)',
+                              overflowY: 'auto',
+                              zIndex: 100,
+                            }}
+                          >
+                            {/* Use Default option */}
+                            <button
+                              onClick={() => {
+                                setSelectedMethods(prev => {
+                                  const newMethods = { ...prev };
+                                  delete newMethods[channelMethod.id];
+                                  return newMethods;
+                                });
+                                setOpenDropdown(null);
+                              }}
+                              style={{
+                                width: '100%',
+                                padding: 'clamp(10px, 0.98vw, 14px) clamp(12px, 1.18vw, 16px)',
+                                backgroundColor: !selectedMethods[channelMethod.id] ? '#F9FAFB' : '#FFFFFF',
+                                border: 'none',
+                                borderBottom: '1px solid #F3F4F6',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'space-between',
+                                cursor: 'pointer',
+                                fontFamily: 'Inter, sans-serif',
+                                fontWeight: !selectedMethods[channelMethod.id] ? 500 : 400,
+                                fontSize: 'clamp(11px, 1.03vw, 14px)',
+                                color: '#6B7280',
+                                fontStyle: 'italic',
+                                textAlign: 'left',
+                              }}
+                            >
+                              {tShipping('useDefault')}
+                            </button>
+                            {ffnShippingMethods.map((method, index) => (
+                              <button
+                                key={method.id}
+                                onClick={() => {
+                                  setSelectedMethods(prev => ({
+                                    ...prev,
+                                    [channelMethod.id]: method.jtlShippingMethodId || '',
+                                  }));
+                                  setOpenDropdown(null);
+                                }}
+                                style={{
+                                  width: '100%',
+                                  padding: 'clamp(10px, 0.98vw, 14px) clamp(12px, 1.18vw, 16px)',
+                                  backgroundColor: selectedMethods[channelMethod.id] === method.jtlShippingMethodId ? '#F9FAFB' : '#FFFFFF',
+                                  border: 'none',
+                                  borderBottom: index < ffnShippingMethods.length - 1 ? '1px solid #F3F4F6' : 'none',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'space-between',
+                                  cursor: 'pointer',
+                                  fontFamily: 'Inter, sans-serif',
+                                  fontWeight: selectedMethods[channelMethod.id] === method.jtlShippingMethodId ? 500 : 400,
+                                  fontSize: 'clamp(11px, 1.03vw, 14px)',
+                                  color: '#111827',
+                                  textAlign: 'left',
+                                }}
+                              >
+                                {method.name}
+                              </button>
+                            ))}
+                          </div>
                         )}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-          ))}
+                      </div>
+                    </div>
+                  ))}
 
-          {/* Action Buttons Row */}
-          <div
-            style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              marginTop: 'clamp(12px, 1.18vw, 16px)',
-            }}
-          >
-            {/* Reload Methods Button */}
-            <button
-              onClick={handleReloadMethods}
-              style={{
-                height: 'clamp(30px, 2.94vw, 40px)',
-                borderRadius: '100px',
-                border: 'none',
-                padding: 'clamp(8px, 0.78vw, 10px) clamp(12px, 1.18vw, 16px)',
-                backgroundColor: 'transparent',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: 'clamp(6px, 0.59vw, 8px)',
-                cursor: 'pointer',
-              }}
-            >
-              <DownloadIcon />
-              <span
-                style={{
-                  fontFamily: 'Inter, sans-serif',
-                  fontWeight: 500,
-                  fontSize: 'clamp(11px, 1.03vw, 14px)',
-                  lineHeight: '1',
-                  color: '#003450',
-                }}
-              >
-                Reload methods
-              </span>
-            </button>
+                  {/* Reload Methods Button */}
+                  <button
+                    onClick={handleReloadMethods}
+                    style={{
+                      height: 'clamp(30px, 2.94vw, 40px)',
+                      borderRadius: '100px',
+                      border: 'none',
+                      padding: 'clamp(8px, 0.78vw, 10px) clamp(12px, 1.18vw, 16px)',
+                      backgroundColor: 'transparent',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: 'clamp(6px, 0.59vw, 8px)',
+                      cursor: 'pointer',
+                      marginTop: 'clamp(8px, 0.78vw, 12px)',
+                    }}
+                  >
+                    <DownloadIcon />
+                    <span
+                      style={{
+                        fontFamily: 'Inter, sans-serif',
+                        fontWeight: 500,
+                        fontSize: 'clamp(11px, 1.03vw, 14px)',
+                        lineHeight: '1',
+                        color: '#003450',
+                      }}
+                    >
+                      {tShipping('reloadMethods')}
+                    </span>
+                  </button>
+                </div>
+              )}
+            </>
+          )}
 
-            {/* Finish Button */}
+          {/* Finish Button */}
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 'clamp(8px, 0.78vw, 12px)' }}>
             <button
               onClick={handleFinish}
-              disabled={isSaving || isLoading}
+              disabled={isSaving || isLoading || (!selectedDefaultMethod && ffnShippingMethods.length > 0)}
               style={{
-                height: 'clamp(29px, 2.80vw, 38px)',
+                height: 'clamp(36px, 3.53vw, 44px)',
                 borderRadius: '6px',
                 border: 'none',
-                padding: 'clamp(7px, 0.66vw, 9px) clamp(13px, 1.25vw, 17px)',
-                backgroundColor: isSaving || isLoading ? '#9CA3AF' : '#003450',
+                padding: 'clamp(10px, 0.98vw, 14px) clamp(24px, 2.36vw, 32px)',
+                backgroundColor: (isSaving || isLoading || (!selectedDefaultMethod && ffnShippingMethods.length > 0)) ? '#9CA3AF' : '#003450',
                 boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.05)',
-                cursor: isSaving || isLoading ? 'not-allowed' : 'pointer',
+                cursor: (isSaving || isLoading || (!selectedDefaultMethod && ffnShippingMethods.length > 0)) ? 'not-allowed' : 'pointer',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -684,12 +925,12 @@ export function ChannelShippingSetup({ channelId, channelType, baseUrl }: Channe
                 style={{
                   fontFamily: 'Inter, sans-serif',
                   fontWeight: 500,
-                  fontSize: 'clamp(11px, 1.03vw, 14px)',
+                  fontSize: 'clamp(12px, 1.03vw, 14px)',
                   lineHeight: '1',
                   color: '#FFFFFF',
                 }}
               >
-                {isSaving ? 'Saving...' : 'Finish'}
+                {isSaving ? `${tCommon('loading')}...` : tCommon('finish')}
               </span>
             </button>
           </div>

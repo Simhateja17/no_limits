@@ -135,16 +135,21 @@ export default function AdminChatPage() {
     const extContact = contact as ExtendedContact;
     console.log('=== SELECTING CONTACT ===', extContact);
 
-    // If this contact already has a valid room ID (not a client-* prefix), use it directly
+    // ✅ INSTANT SWITCH: Update UI immediately for WhatsApp-like experience
+    setSelectedContact(extContact);
+
+    // If this contact already has a valid room ID (not a client-* prefix), we're done
+    // The useEffect will handle fetching messages with cache check
     if (extContact.id && !extContact.id.startsWith('client-')) {
-      setSelectedContact(extContact);
       return;
     }
 
-    // Otherwise, we need to get or create the chat room
+    // Otherwise, we need to get or create the chat room first
     if (extContact.clientId) {
       try {
         console.log('Getting/creating chat room for client:', extContact.clientId);
+        setIsLoadingMessages(true);
+        
         const response = await api.post(`/chat/clients/${extContact.clientId}/room`);
 
         if (response.data.success) {
@@ -166,10 +171,12 @@ export default function AdminChatPage() {
             )
           );
 
+          // Update selected contact with room ID - this will trigger useEffect to fetch messages
           setSelectedContact(updatedContact);
         }
       } catch (error) {
         console.error('Error getting/creating chat room:', error);
+        setIsLoadingMessages(false);
       }
     }
   };
@@ -177,27 +184,34 @@ export default function AdminChatPage() {
   // Fetch messages when contact is selected (with caching for instant switching)
   useEffect(() => {
     const fetchMessages = async () => {
-      if (!selectedContact || selectedContact.id.startsWith('client-')) return;
+      if (!selectedContact || selectedContact.id.startsWith('client-')) {
+        // Clear messages when no contact is selected
+        setMessages([]);
+        setIsLoadingMessages(false);
+        return;
+      }
 
       const roomId = selectedContact.id;
       const cache = messageCacheRef.current.get(roomId);
       const CACHE_TTL = 30000; // 30 seconds cache validity
 
-      // If we have cached messages, show them immediately (instant switch!)
+      // ALWAYS check cache first and load immediately if available
       if (cache && cache.messages.length > 0) {
+        console.log('📦 Loading cached messages instantly for room:', roomId);
         setMessages(cache.messages);
         setPagination(cache.pagination);
+        setIsLoadingMessages(false);
         
         // If cache is fresh enough, don't refetch
         if (Date.now() - cache.lastFetched < CACHE_TTL) {
-          console.log('📦 Using cached messages for room:', roomId);
-          setIsLoadingMessages(false);
+          console.log('✅ Cache is fresh, no refetch needed');
           return;
         }
         // Cache exists but stale - refresh in background without showing loading
-        console.log('📦 Cache stale, refreshing in background...');
+        console.log('🔄 Cache stale, refreshing in background...');
       } else {
-        // No cache - show loading
+        // No cache - show loading but DON'T clear existing messages yet
+        console.log('❌ No cache found, fetching messages...');
         setIsLoadingMessages(true);
         setPagination({ nextCursor: null, hasMore: false, isLoading: false });
       }
@@ -228,7 +242,10 @@ export default function AdminChatPage() {
         }
       } catch (error) {
         console.error('❌ Error fetching messages:', error);
-        if (!cache) setMessages([]);
+        // Only clear messages if there was no cache
+        if (!cache) {
+          setMessages([]);
+        }
       } finally {
         setIsLoadingMessages(false);
       }
@@ -299,6 +316,12 @@ export default function AdminChatPage() {
     const unsubscribe = onMessage((message: ChatMessage) => {
       console.log('📨 New message received via Supabase:', message);
 
+      // Safety check: ensure we're still on the same room
+      // Messages are already filtered by room in the hook, so this is just a safety check
+      if (!selectedContact) {
+        return;
+      }
+
       const roomId = selectedContact.id;
       const newMessage: OptimisticMessage = { ...message, status: 'sent' };
 
@@ -314,11 +337,14 @@ export default function AdminChatPage() {
           // Replace optimistic message with real one
           updatedMessages = [...prev];
           updatedMessages[tempIndex] = newMessage;
+          console.log('✅ Replaced optimistic message with real one');
         } else if (prev.some((msg) => msg.id === message.id)) {
           // Message already exists
+          console.log('⚠️ Message already exists, skipping');
           return prev;
         } else {
           updatedMessages = [...prev, newMessage];
+          console.log('➕ Added new message to list');
         }
 
         // Update cache with new message
@@ -479,6 +505,7 @@ export default function AdminChatPage() {
           onLoadMore={loadMoreMessages}
           hasMoreMessages={pagination.hasMore}
           isLoadingMore={pagination.isLoading}
+          isLoadingMessages={isLoadingMessages}
           isTyping={isTyping}
           typingUser={
             isTyping && selectedContact

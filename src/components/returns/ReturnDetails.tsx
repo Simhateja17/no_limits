@@ -1,9 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Image from 'next/image';
 import { useTranslations } from 'next-intl';
+import { dataApi, type Return as ApiReturn, type UpdateReturnInput } from '@/lib/data-api';
 
 // Condition type
 type ConditionType = 'Damaged' | 'Good' | 'Acceptable';
@@ -113,6 +114,118 @@ export function ReturnDetails({ returnId }: ReturnDetailsProps) {
   const tOrders = useTranslations('orders');
   const [showReplacementModal, setShowReplacementModal] = useState(false);
   const [replacementCount, setReplacementCount] = useState(0);
+  
+  // API state
+  const [returnData, setReturnData] = useState<ApiReturn | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [jtlSyncStatus, setJtlSyncStatus] = useState<{ success: boolean; error?: string } | null>(null);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [editMode, setEditMode] = useState(false);
+  
+  // Editable form data
+  const [formData, setFormData] = useState({
+    notes: '',
+    warehouseNotes: '',
+    inspectionResult: 'PENDING' as 'PENDING' | 'PASSED' | 'FAILED' | 'PARTIAL',
+    restockEligible: false,
+    restockQuantity: 0,
+    restockReason: '',
+    hasDamage: false,
+    damageDescription: '',
+    hasDefect: false,
+    defectDescription: '',
+    status: '',
+  });
+
+  // Fetch return data
+  useEffect(() => {
+    const fetchReturn = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const data = await dataApi.getReturn(returnId);
+        setReturnData(data);
+        // Initialize form data from API response
+        setFormData({
+          notes: (data as any).notes || '',
+          warehouseNotes: (data as any).warehouseNotes || '',
+          inspectionResult: (data as any).inspectionResult || 'PENDING',
+          restockEligible: (data as any).restockEligible || false,
+          restockQuantity: (data as any).restockQuantity || 0,
+          restockReason: (data as any).restockReason || '',
+          hasDamage: (data as any).hasDamage || false,
+          damageDescription: (data as any).damageDescription || '',
+          hasDefect: (data as any).hasDefect || false,
+          defectDescription: (data as any).defectDescription || '',
+          status: data.status || '',
+        });
+      } catch (err) {
+        console.error('Error fetching return:', err);
+        setError(err instanceof Error ? err.message : 'Failed to load return details');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (returnId) {
+      fetchReturn();
+    }
+  }, [returnId]);
+
+  // Handle saving return updates
+  const handleSaveReturn = async () => {
+    if (!returnData?.id) {
+      setSaveError('Return data not loaded');
+      return;
+    }
+
+    setIsSaving(true);
+    setSaveError(null);
+    setJtlSyncStatus(null);
+
+    try {
+      const updateData: UpdateReturnInput = {
+        notes: formData.notes || undefined,
+        warehouseNotes: formData.warehouseNotes || undefined,
+        inspectionResult: formData.inspectionResult,
+        restockEligible: formData.restockEligible,
+        restockQuantity: formData.restockQuantity,
+        restockReason: formData.restockReason || undefined,
+        hasDamage: formData.hasDamage,
+        damageDescription: formData.damageDescription || undefined,
+        hasDefect: formData.hasDefect,
+        defectDescription: formData.defectDescription || undefined,
+        status: formData.status || undefined,
+      };
+
+      const result = await dataApi.updateReturn(returnData.id, updateData);
+      
+      // Update local state
+      setReturnData(result.data);
+      
+      // Track JTL sync status
+      if (result.jtlSync) {
+        setJtlSyncStatus(result.jtlSync);
+        if (!result.jtlSync.success) {
+          console.warn('JTL sync failed:', result.jtlSync.error);
+        }
+      }
+
+      setEditMode(false);
+      setShowSuccessModal(true);
+      setTimeout(() => {
+        setShowSuccessModal(false);
+      }, 2000);
+    } catch (err: any) {
+      console.error('Error updating return:', err);
+      setSaveError(err.response?.data?.error || 'Failed to update return');
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   // Determine base path based on current route
   const getOrdersBasePath = () => {

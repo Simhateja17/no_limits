@@ -28,6 +28,7 @@ interface ChatSectionProps {
   onLoadMore?: () => void;
   hasMoreMessages?: boolean;
   isLoadingMore?: boolean;
+  isLoadingMessages?: boolean;
   isTyping?: boolean;
   typingUser?: { name: string; avatar: string };
   showCreateTask?: boolean;
@@ -99,6 +100,7 @@ export function ChatSection({
   onLoadMore,
   hasMoreMessages = false,
   isLoadingMore = false,
+  isLoadingMessages = false,
   isTyping,
   typingUser,
   showCreateTask = true,
@@ -263,6 +265,13 @@ export function ChatSection({
           minHeight: 0,
         }}
       >
+        {/* Loading indicator for initial messages */}
+        {isLoadingMessages && messages.length === 0 && (
+          <div className="flex justify-center items-center h-full">
+            <div className="animate-spin rounded-full h-10 w-10 border-b-3 border-blue-500"></div>
+          </div>
+        )}
+
         {/* Loading indicator for older messages */}
         {isLoadingMore && (
           <div className="flex justify-center py-4">

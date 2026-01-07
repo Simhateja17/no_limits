@@ -211,6 +211,82 @@ export interface CreateTaskInput {
   returnId?: string;
 }
 
+// Update input types
+export interface UpdateOrderInput {
+  warehouseNotes?: string;
+  carrierSelection?: string;
+  carrierServiceLevel?: string;
+  priorityLevel?: number;
+  pickingInstructions?: string;
+  packingInstructions?: string;
+  isOnHold?: boolean;
+  tags?: string[];
+  shippingFirstName?: string;
+  shippingLastName?: string;
+  shippingCompany?: string;
+  shippingAddress1?: string;
+  shippingAddress2?: string;
+  shippingCity?: string;
+  shippingZip?: string;
+  shippingCountryCode?: string;
+  jtlShippingMethodId?: string;
+}
+
+export interface UpdateProductInput {
+  name?: string;
+  manufacturer?: string;
+  sku?: string;
+  gtin?: string;
+  han?: string;
+  heightInCm?: string;
+  lengthInCm?: string;
+  widthInCm?: string;
+  weightInKg?: string;
+  amazonAsin?: string;
+  amazonSku?: string;
+  isbn?: string;
+  customsCode?: string;
+  countryOfOrigin?: string;
+  netSalesPrice?: string;
+  warehouseNotes?: string;
+  storageLocation?: string;
+  minStockLevel?: number;
+  reorderPoint?: number;
+  imageUrl?: string;
+}
+
+export interface UpdateReturnInput {
+  inspectionResult?: 'PENDING' | 'PASSED' | 'FAILED' | 'PARTIAL';
+  notes?: string;
+  warehouseNotes?: string;
+  restockEligible?: boolean;
+  restockQuantity?: number;
+  restockReason?: string;
+  hasDamage?: boolean;
+  damageDescription?: string;
+  hasDefect?: boolean;
+  defectDescription?: string;
+  status?: string;
+  items?: Array<{
+    returnItemId: string;
+    condition?: 'GOOD' | 'ACCEPTABLE' | 'DAMAGED' | 'DEFECTIVE';
+    disposition?: 'DISPOSED' | 'BOOKED_IN_AGAIN' | 'PENDING_DECISION';
+    restockableQuantity?: number;
+    damagedQuantity?: number;
+    defectiveQuantity?: number;
+    notes?: string;
+  }>;
+}
+
+export interface UpdateResponse<T> {
+  data: T;
+  changedFields: string[];
+  jtlSync: {
+    success: boolean;
+    error?: string;
+  } | null;
+}
+
 // Dashboard types
 export interface ChartDataPoint {
   monthKey: string;
@@ -266,6 +342,15 @@ export const dataApi = {
     return response.data.data;
   },
 
+  async updateProduct(id: string, input: UpdateProductInput): Promise<UpdateResponse<Product>> {
+    const response = await api.patch(`/data/products/${id}`, input);
+    return {
+      data: response.data.data,
+      changedFields: response.data.changedFields || [],
+      jtlSync: response.data.jtlSync || null,
+    };
+  },
+
   // Orders
   async getOrders(): Promise<Order[]> {
     const response = await api.get('/data/orders');
@@ -280,6 +365,15 @@ export const dataApi = {
   async createOrder(input: CreateOrderInput): Promise<Order> {
     const response = await api.post('/data/orders', input);
     return response.data.data;
+  },
+
+  async updateOrder(id: string, input: UpdateOrderInput): Promise<UpdateResponse<Order>> {
+    const response = await api.patch(`/data/orders/${id}`, input);
+    return {
+      data: response.data.data,
+      changedFields: response.data.changedFields || [],
+      jtlSync: response.data.jtlSync || null,
+    };
   },
 
   async createReplacementOrder(orderId: string, data: {
@@ -314,6 +408,15 @@ export const dataApi = {
   async getReturn(id: string): Promise<Return> {
     const response = await api.get(`/data/returns/${id}`);
     return response.data.data;
+  },
+
+  async updateReturn(id: string, input: UpdateReturnInput): Promise<UpdateResponse<Return>> {
+    const response = await api.patch(`/data/returns/${id}`, input);
+    return {
+      data: response.data.data,
+      changedFields: response.data.changedFields || [],
+      jtlSync: response.data.jtlSync || null,
+    };
   },
 
   // Inbounds
