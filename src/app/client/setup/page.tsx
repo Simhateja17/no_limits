@@ -778,16 +778,19 @@ export default function ClientSetupPage() {
                     width: '48px',
                     height: '48px',
                     borderRadius: '8px',
-                    background: '#95BF47',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    color: 'white',
-                    fontWeight: 700,
-                    fontSize: '20px',
+                    overflow: 'hidden',
                   }}
                 >
-                  S
+                  <Image
+                    src="/shopify-logo-svg-vector.svg"
+                    alt="Shopify"
+                    width={48}
+                    height={48}
+                    style={{ objectFit: 'contain' }}
+                  />
                 </div>
                 <div style={{ textAlign: 'left' }}>
                   <div
@@ -833,16 +836,19 @@ export default function ClientSetupPage() {
                     width: '48px',
                     height: '48px',
                     borderRadius: '8px',
-                    background: '#96588A',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    color: 'white',
-                    fontWeight: 700,
-                    fontSize: '20px',
+                    overflow: 'hidden',
                   }}
                 >
-                  W
+                  <Image
+                    src="/WooCommerce-Symbol-1.png"
+                    alt="WooCommerce"
+                    width={48}
+                    height={48}
+                    style={{ objectFit: 'contain' }}
+                  />
                 </div>
                 <div style={{ textAlign: 'left' }}>
                   <div

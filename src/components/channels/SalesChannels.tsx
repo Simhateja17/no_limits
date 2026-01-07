@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
+import Image from 'next/image';
 import { useAuthStore } from '@/lib/store';
 import { channelsApi, Channel as ApiChannel } from '@/lib/channels-api';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
@@ -66,6 +67,19 @@ function AdjustmentsIcon() {
 
 // Channel Card Component
 function ChannelCard({ channel, onSettingsClick, onNameClick, t }: { channel: Channel; onSettingsClick: (id: string) => void; onNameClick: (id: string) => void; t: (key: string) => string }) {
+  const getChannelLogo = (type: string) => {
+    switch (type) {
+      case 'Shopify':
+        return '/shopify-logo-svg-vector.svg';
+      case 'Woocommerce':
+        return '/WooCommerce-Symbol-1.png';
+      default:
+        return null;
+    }
+  };
+
+  const channelLogo = getChannelLogo(channel.type);
+
   return (
     <div
       style={{
@@ -85,46 +99,79 @@ function ChannelCard({ channel, onSettingsClick, onNameClick, t }: { channel: Ch
           flex: 1,
           padding: 'clamp(12px, 1.18vw, 16px) clamp(18px, 1.77vw, 24px)',
           display: 'flex',
-          flexDirection: 'column',
-          gap: 'clamp(3px, 0.29vw, 4px)',
+          flexDirection: 'row',
+          gap: 'clamp(10px, 0.98vw, 12px)',
         }}
       >
-        {/* Name and Status Row */}
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 'clamp(8px, 0.74vw, 10px)',
-          }}
-        >
-          <span
-            onClick={() => onNameClick(channel.id)}
+        {/* Logo */}
+        {channelLogo && (
+          <div
             style={{
-              fontFamily: 'Inter, sans-serif',
-              fontWeight: 500,
-              fontSize: 'clamp(11px, 1.03vw, 14px)',
-              lineHeight: 'clamp(16px, 1.47vw, 20px)',
-              color: '#111827',
-              cursor: 'pointer',
+              width: 'clamp(32px, 3.14vw, 40px)',
+              height: 'clamp(32px, 3.14vw, 40px)',
+              flexShrink: 0,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              overflow: 'hidden',
             }}
           >
-            {channel.name} - {channel.type}
-          </span>
-          <StatusBadge status={channel.status} t={t} />
-        </div>
+            <Image
+              src={channelLogo}
+              alt={channel.type}
+              width={40}
+              height={40}
+              style={{ objectFit: 'contain' }}
+            />
+          </div>
+        )}
 
-        {/* URL */}
-        <span
+        {/* Channel Info */}
+        <div
           style={{
-            fontFamily: 'Inter, sans-serif',
-            fontWeight: 400,
-            fontSize: 'clamp(11px, 1.03vw, 14px)',
-            lineHeight: 'clamp(16px, 1.47vw, 20px)',
-            color: '#6B7280',
+            flex: 1,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 'clamp(3px, 0.29vw, 4px)',
           }}
         >
-          {channel.url}
-        </span>
+          {/* Name and Status Row */}
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 'clamp(8px, 0.74vw, 10px)',
+            }}
+          >
+            <span
+              onClick={() => onNameClick(channel.id)}
+              style={{
+                fontFamily: 'Inter, sans-serif',
+                fontWeight: 500,
+                fontSize: 'clamp(11px, 1.03vw, 14px)',
+                lineHeight: 'clamp(16px, 1.47vw, 20px)',
+                color: '#111827',
+                cursor: 'pointer',
+              }}
+            >
+              {channel.name} - {channel.type}
+            </span>
+            <StatusBadge status={channel.status} t={t} />
+          </div>
+
+          {/* URL */}
+          <span
+            style={{
+              fontFamily: 'Inter, sans-serif',
+              fontWeight: 400,
+              fontSize: 'clamp(11px, 1.03vw, 14px)',
+              lineHeight: 'clamp(16px, 1.47vw, 20px)',
+              color: '#6B7280',
+            }}
+          >
+            {channel.url}
+          </span>
+        </div>
       </div>
 
       {/* Settings Button */}
@@ -243,9 +290,9 @@ function ChannelTypeModal({
 }) {
   if (!isOpen) return null;
 
-  const channelTypes: { type: 'Woocommerce' | 'Shopify' | 'Amazon'; label: string; descriptionKey: string }[] = [
-    { type: 'Woocommerce', label: 'Woocommerce', descriptionKey: 'woocommerceDescription' },
-    { type: 'Shopify', label: 'Shopify', descriptionKey: 'shopifyDescription' },
+  const channelTypes: { type: 'Woocommerce' | 'Shopify' | 'Amazon'; label: string; descriptionKey: string; logo?: string }[] = [
+    { type: 'Woocommerce', label: 'Woocommerce', descriptionKey: 'woocommerceDescription', logo: '/WooCommerce-Symbol-1.png' },
+    { type: 'Shopify', label: 'Shopify', descriptionKey: 'shopifyDescription', logo: '/shopify-logo-svg-vector.svg' },
     { type: 'Amazon', label: 'Amazon', descriptionKey: 'amazonDescription' },
   ];
 
@@ -349,9 +396,9 @@ function ChannelTypeModal({
                 border: '1px solid #E5E7EB',
                 backgroundColor: '#FFFFFF',
                 display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'flex-start',
-                gap: 'clamp(4px, 0.39vw, 6px)',
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 'clamp(12px, 1.18vw, 16px)',
                 cursor: 'pointer',
                 transition: 'all 0.15s ease',
               }}
@@ -364,28 +411,59 @@ function ChannelTypeModal({
                 e.currentTarget.style.borderColor = '#E5E7EB';
               }}
             >
-              <span
+              {channel.logo && (
+                <div
+                  style={{
+                    width: 'clamp(32px, 3.14vw, 40px)',
+                    height: 'clamp(32px, 3.14vw, 40px)',
+                    flexShrink: 0,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    overflow: 'hidden',
+                  }}
+                >
+                  <Image
+                    src={channel.logo}
+                    alt={channel.label}
+                    width={40}
+                    height={40}
+                    style={{ objectFit: 'contain' }}
+                  />
+                </div>
+              )}
+              <div
                 style={{
-                  fontFamily: 'Inter, sans-serif',
-                  fontWeight: 500,
-                  fontSize: 'clamp(13px, 1.18vw, 16px)',
-                  lineHeight: 'clamp(16px, 1.47vw, 20px)',
-                  color: '#111827',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'flex-start',
+                  gap: 'clamp(2px, 0.20vw, 4px)',
+                  flex: 1,
                 }}
               >
-                {channel.label}
-              </span>
-              <span
-                style={{
-                  fontFamily: 'Inter, sans-serif',
-                  fontWeight: 400,
-                  fontSize: 'clamp(11px, 1.03vw, 14px)',
-                  lineHeight: 'clamp(14px, 1.37vw, 18px)',
-                  color: '#6B7280',
-                }}
-              >
-                {t(channel.descriptionKey)}
-              </span>
+                <span
+                  style={{
+                    fontFamily: 'Inter, sans-serif',
+                    fontWeight: 500,
+                    fontSize: 'clamp(13px, 1.18vw, 16px)',
+                    lineHeight: 'clamp(16px, 1.47vw, 20px)',
+                    color: '#111827',
+                  }}
+                >
+                  {channel.label}
+                </span>
+                <span
+                  style={{
+                    fontFamily: 'Inter, sans-serif',
+                    fontWeight: 400,
+                    fontSize: 'clamp(11px, 1.03vw, 14px)',
+                    lineHeight: 'clamp(14px, 1.37vw, 18px)',
+                    color: '#6B7280',
+                  }}
+                >
+                  {t(channel.descriptionKey)}
+                </span>
+              </div>
             </button>
           ))}
         </div>
