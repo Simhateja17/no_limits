@@ -693,7 +693,7 @@ export function CreateClient({ backUrl }: CreateClientProps) {
       </div>
 
       {/* Create Client Button */}
-      <div className="flex justify-center mt-12 mb-8">
+      <div className="flex justify-end mt-12 mb-8">
         <button
           onClick={handleSave}
           disabled={loading || !companyName.trim() || !email.trim()}

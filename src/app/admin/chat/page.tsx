@@ -28,6 +28,13 @@ interface PaginationState {
   isLoading: boolean;
 }
 
+// Message cache per room (WhatsApp-like instant switching)
+interface MessageCache {
+  messages: OptimisticMessage[];
+  pagination: PaginationState;
+  lastFetched: number;
+}
+
 export default function AdminChatPage() {
   const { user, isAuthenticated } = useAuthStore();
   const router = useRouter();
@@ -42,6 +49,9 @@ export default function AdminChatPage() {
     isLoading: false,
   });
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  
+  // Message cache - stores messages per room for instant switching
+  const messageCacheRef = useRef<Map<string, MessageCache>>(new Map());
 
   // Initialize Supabase Realtime for selected room
   const { isConnected, typingUsers, sendTypingIndicator, onMessage, onlineUsers } =
@@ -164,38 +174,61 @@ export default function AdminChatPage() {
     }
   };
 
-  // Fetch messages when contact is selected
+  // Fetch messages when contact is selected (with caching for instant switching)
   useEffect(() => {
     const fetchMessages = async () => {
       if (!selectedContact || selectedContact.id.startsWith('client-')) return;
 
-      try {
-        console.log('=== FETCHING MESSAGES ===');
-        console.log('Selected contact:', selectedContact);
+      const roomId = selectedContact.id;
+      const cache = messageCacheRef.current.get(roomId);
+      const CACHE_TTL = 30000; // 30 seconds cache validity
 
+      // If we have cached messages, show them immediately (instant switch!)
+      if (cache && cache.messages.length > 0) {
+        setMessages(cache.messages);
+        setPagination(cache.pagination);
+        
+        // If cache is fresh enough, don't refetch
+        if (Date.now() - cache.lastFetched < CACHE_TTL) {
+          console.log('📦 Using cached messages for room:', roomId);
+          setIsLoadingMessages(false);
+          return;
+        }
+        // Cache exists but stale - refresh in background without showing loading
+        console.log('📦 Cache stale, refreshing in background...');
+      } else {
+        // No cache - show loading
         setIsLoadingMessages(true);
         setPagination({ nextCursor: null, hasMore: false, isLoading: false });
-        
-        const response = await api.get(`/chat/rooms/${selectedContact.id}/messages?limit=50`);
+      }
 
-        console.log('Messages response:', response.data);
+      try {
+        const response = await api.get(`/chat/rooms/${roomId}/messages?limit=50`);
 
         if (response.data.success) {
-          console.log(`Loaded ${response.data.data.length} messages`);
-          setMessages(response.data.data.map((msg: ChatMessage) => ({ ...msg, status: 'sent' })));
-          
-          // Set pagination info
-          if (response.data.pagination) {
-            setPagination({
-              nextCursor: response.data.pagination.nextCursor,
-              hasMore: response.data.pagination.hasMore,
-              isLoading: false,
-            });
+          const newMessages = response.data.data.map((msg: ChatMessage) => ({ ...msg, status: 'sent' }));
+          const newPagination = {
+            nextCursor: response.data.pagination?.nextCursor || null,
+            hasMore: response.data.pagination?.hasMore || false,
+            isLoading: false,
+          };
+
+          // Update cache
+          messageCacheRef.current.set(roomId, {
+            messages: newMessages,
+            pagination: newPagination,
+            lastFetched: Date.now(),
+          });
+
+          // Only update state if this room is still selected
+          if (selectedContact?.id === roomId) {
+            setMessages(newMessages);
+            setPagination(newPagination);
           }
         }
       } catch (error) {
         console.error('❌ Error fetching messages:', error);
-        setMessages([]);
+        if (!cache) setMessages([]);
       } finally {
         setIsLoadingMessages(false);
       }
@@ -208,25 +241,36 @@ export default function AdminChatPage() {
   const loadMoreMessages = useCallback(async () => {
     if (!selectedContact || !pagination.nextCursor || pagination.isLoading) return;
 
+    const roomId = selectedContact.id;
+
     try {
       setPagination(prev => ({ ...prev, isLoading: true }));
       
       const response = await api.get(
-        `/chat/rooms/${selectedContact.id}/messages?cursor=${pagination.nextCursor}&limit=50`
+        `/chat/rooms/${roomId}/messages?cursor=${pagination.nextCursor}&limit=50`
       );
 
       if (response.data.success) {
-        // Prepend older messages to the beginning
-        setMessages(prev => [
-          ...response.data.data.map((msg: ChatMessage) => ({ ...msg, status: 'sent' })),
-          ...prev,
-        ]);
-        
-        setPagination({
+        const olderMessages = response.data.data.map((msg: ChatMessage) => ({ ...msg, status: 'sent' }));
+        const newPagination = {
           nextCursor: response.data.pagination?.nextCursor || null,
           hasMore: response.data.pagination?.hasMore || false,
           isLoading: false,
-        });
+        };
+
+        // Update state
+        setMessages(prev => [...olderMessages, ...prev]);
+        setPagination(newPagination);
+
+        // Update cache with all messages
+        const cache = messageCacheRef.current.get(roomId);
+        if (cache) {
+          messageCacheRef.current.set(roomId, {
+            messages: [...olderMessages, ...cache.messages],
+            pagination: newPagination,
+            lastFetched: Date.now(),
+          });
+        }
       }
     } catch (error) {
       console.error('Error loading more messages:', error);
@@ -255,25 +299,39 @@ export default function AdminChatPage() {
     const unsubscribe = onMessage((message: ChatMessage) => {
       console.log('📨 New message received via Supabase:', message);
 
+      const roomId = selectedContact.id;
+      const newMessage: OptimisticMessage = { ...message, status: 'sent' };
+
       setMessages((prev) => {
         // Check if this is our optimistic message being confirmed
         const tempIndex = prev.findIndex(
           (msg) => msg.tempId && msg.content === message.content && msg.senderId === message.senderId
         );
 
+        let updatedMessages: OptimisticMessage[];
+
         if (tempIndex !== -1) {
           // Replace optimistic message with real one
-          const updated = [...prev];
-          updated[tempIndex] = { ...message, status: 'sent' };
-          return updated;
-        }
-
-        // Check if message already exists to avoid duplicates
-        if (prev.some((msg) => msg.id === message.id)) {
+          updatedMessages = [...prev];
+          updatedMessages[tempIndex] = newMessage;
+        } else if (prev.some((msg) => msg.id === message.id)) {
+          // Message already exists
           return prev;
+        } else {
+          updatedMessages = [...prev, newMessage];
         }
 
-        return [...prev, { ...message, status: 'sent' }];
+        // Update cache with new message
+        const cache = messageCacheRef.current.get(roomId);
+        if (cache) {
+          messageCacheRef.current.set(roomId, {
+            ...cache,
+            messages: updatedMessages,
+            lastFetched: Date.now(),
+          });
+        }
+
+        return updatedMessages;
       });
 
       // Update contact list to show latest message
@@ -328,7 +386,21 @@ export default function AdminChatPage() {
     };
 
     // Immediately add message to UI (optimistic update)
-    setMessages((prev) => [...prev, optimisticMessage]);
+    setMessages((prev) => {
+      const updated = [...prev, optimisticMessage];
+      
+      // Update cache with optimistic message
+      const cache = messageCacheRef.current.get(selectedContact.id);
+      if (cache) {
+        messageCacheRef.current.set(selectedContact.id, {
+          ...cache,
+          messages: updated,
+          lastFetched: Date.now(),
+        });
+      }
+      
+      return updated;
+    });
 
     // Stop typing indicator
     sendTypingIndicator(false);
