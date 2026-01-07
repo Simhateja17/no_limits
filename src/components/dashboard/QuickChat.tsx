@@ -1,7 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
+import { useRouter } from 'next/navigation';
+import { dataApi, QuickChatMessage } from '@/lib/data-api';
 
 interface ChatMessage {
   id: string;
@@ -11,35 +13,66 @@ interface ChatMessage {
   timestamp: string;
   content: string;
   tasks?: string[];
+  roomId?: string;
+  clientName?: string;
 }
 
 interface QuickChatProps {
   messages?: ChatMessage[];
 }
 
-const defaultMessages: ChatMessage[] = [
-  {
-    id: '1',
-    sender: 'Fulfillment employee',
-    avatarColor: '#E5E7EB',
-    timestamp: '6d ago',
-    content:
-      'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Tincidunt nunc ipsum tempor purus vitae id. Morbi in vestibulum nec varius. Et diam cursus quis sed purus nam.',
-    tasks: ['Check stock'],
-  },
-  {
-    id: '2',
-    sender: 'Fulfillment client',
-    avatar: '/avatars/client.jpg',
-    timestamp: '2h ago',
-    content:
-      'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Tincidunt nunc ipsum tempor purus vitae id. Morbi in vestibulum nec varius. Et diam cursus quis sed purus nam. Scelerisque amet elit non sit ut tincidunt condimentum. Nisi ultrices eu venenatis diam.',
-  },
-];
-
-export function QuickChat({ messages = defaultMessages }: QuickChatProps) {
+export function QuickChat({ messages: propMessages }: QuickChatProps) {
   const t = useTranslations('dashboard');
+  const router = useRouter();
   const [inputValue, setInputValue] = useState('');
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Fetch recent messages from API
+  useEffect(() => {
+    // If messages are provided as props, use them instead
+    if (propMessages && propMessages.length > 0) {
+      setMessages(propMessages);
+      setLoading(false);
+      return;
+    }
+
+    const fetchMessages = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const data = await dataApi.getRecentChatMessages(5);
+        const transformedMessages: ChatMessage[] = data.map((msg: QuickChatMessage) => ({
+          id: msg.id,
+          sender: msg.sender,
+          avatar: msg.avatar || undefined,
+          avatarColor: msg.avatarColor,
+          timestamp: msg.timestamp,
+          content: msg.content,
+          tasks: msg.tasks,
+          roomId: msg.roomId,
+          clientName: msg.clientName,
+        }));
+        setMessages(transformedMessages);
+      } catch (err) {
+        console.error('Error fetching chat messages:', err);
+        setError('Failed to load messages');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchMessages();
+  }, [propMessages]);
+
+  const handleMessageClick = (roomId?: string) => {
+    if (roomId) {
+      router.push(`/admin/chat?room=${roomId}`);
+    } else {
+      router.push('/admin/chat');
+    }
+  };
 
   return (
     <div
@@ -79,8 +112,58 @@ export function QuickChat({ messages = defaultMessages }: QuickChatProps) {
           overflowY: 'auto',
         }}
       >
-        {messages.map((message) => (
-          <div key={message.id} style={{ display: 'flex', gap: '12px' }}>
+        {/* Loading State */}
+        {loading && (
+          <div
+            style={{
+              flex: 1,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: '#6B7280',
+            }}
+          >
+            Loading messages...
+          </div>
+        )}
+
+        {/* Error State */}
+        {error && !loading && (
+          <div
+            style={{
+              flex: 1,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: '#EF4444',
+            }}
+          >
+            {error}
+          </div>
+        )}
+
+        {/* Empty State */}
+        {!loading && !error && messages.length === 0 && (
+          <div
+            style={{
+              flex: 1,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: '#6B7280',
+            }}
+          >
+            No recent messages
+          </div>
+        )}
+
+        {/* Messages List */}
+        {!loading && !error && messages.map((message) => (
+          <div
+            key={message.id}
+            style={{ display: 'flex', gap: '12px', cursor: 'pointer' }}
+            onClick={() => handleMessageClick(message.roomId)}
+          >
             {/* Avatar */}
             <div
               style={{

@@ -1,11 +1,16 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
+import { useRouter } from 'next/navigation';
+import { dataApi, DashboardEvent } from '@/lib/data-api';
 
 interface Event {
   id: string;
   title: string;
   description: string;
+  type?: 'return' | 'inbound' | 'order_attention';
+  entityId?: string;
 }
 
 interface NewEventsProps {
@@ -13,33 +18,65 @@ interface NewEventsProps {
   onViewAll?: () => void;
 }
 
-export function NewEvents({ events, onViewAll }: NewEventsProps) {
+export function NewEvents({ events: propEvents, onViewAll }: NewEventsProps) {
   const t = useTranslations('dashboard');
+  const router = useRouter();
+  const [events, setEvents] = useState<Event[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const defaultEvents: Event[] = [
-    {
-      id: '1',
-      title: t('events.orderReturned', { id: '2343' }),
-      description: t('events.orderReturnedDesc'),
-    },
-    {
-      id: '2',
-      title: t('events.inboundBooked', { id: '4242' }),
-      description: t('events.inboundBookedDesc', { count: '540' }),
-    },
-    {
-      id: '3',
-      title: t('events.invoiceIssued', { id: '32423' }),
-      description: t('events.invoiceIssuedDesc', { period: 'December 2025' }),
-    },
-    {
-      id: '4',
-      title: t('events.orderAttention', { id: '32423' }),
-      description: t('events.orderAttentionDesc'),
-    },
-  ];
+  // Fetch events from API
+  useEffect(() => {
+    // If events are provided as props, use them instead
+    if (propEvents && propEvents.length > 0) {
+      setEvents(propEvents);
+      setLoading(false);
+      return;
+    }
 
-  const displayEvents = events || defaultEvents;
+    const fetchEvents = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const data = await dataApi.getDashboardEvents(10);
+        const transformedEvents: Event[] = data.map((event: DashboardEvent) => ({
+          id: event.id,
+          title: event.title,
+          description: event.description,
+          type: event.type,
+          entityId: event.entityId,
+        }));
+        setEvents(transformedEvents);
+      } catch (err) {
+        console.error('Error fetching events:', err);
+        setError('Failed to load events');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchEvents();
+  }, [propEvents]);
+
+  const handleEventClick = (event: Event) => {
+    // Navigate to the appropriate page based on event type
+    if (event.type === 'return') {
+      router.push('/admin/returns');
+    } else if (event.type === 'inbound') {
+      router.push('/admin/inbounds');
+    } else if (event.type === 'order_attention') {
+      router.push('/admin/orders');
+    }
+  };
+
+  const handleViewAll = () => {
+    if (onViewAll) {
+      onViewAll();
+    } else {
+      // Default: navigate to notifications or activity page
+      router.push('/admin/orders');
+    }
+  };
 
   return (
     <div
@@ -79,7 +116,53 @@ export function NewEvents({ events, onViewAll }: NewEventsProps) {
           overflowY: 'auto',
         }}
       >
-        {displayEvents.map((event) => (
+        {/* Loading State */}
+        {loading && (
+          <div
+            style={{
+              flex: 1,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: '#6B7280',
+            }}
+          >
+            Loading events...
+          </div>
+        )}
+
+        {/* Error State */}
+        {error && !loading && (
+          <div
+            style={{
+              flex: 1,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: '#EF4444',
+            }}
+          >
+            {error}
+          </div>
+        )}
+
+        {/* Empty State */}
+        {!loading && !error && events.length === 0 && (
+          <div
+            style={{
+              flex: 1,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: '#6B7280',
+            }}
+          >
+            No recent events
+          </div>
+        )}
+
+        {/* Events */}
+        {!loading && !error && events.map((event) => (
           <div
             key={event.id}
             style={{
@@ -88,7 +171,9 @@ export function NewEvents({ events, onViewAll }: NewEventsProps) {
               gap: '4px',
               paddingBottom: '16px',
               borderBottom: '1px solid #F3F4F6',
+              cursor: 'pointer',
             }}
+            onClick={() => handleEventClick(event)}
           >
             {/* Event Title */}
             <span
@@ -122,7 +207,7 @@ export function NewEvents({ events, onViewAll }: NewEventsProps) {
 
       {/* View All Button */}
       <button
-        onClick={onViewAll}
+        onClick={handleViewAll}
         style={{
           width: '100%',
           padding: '9px 17px',

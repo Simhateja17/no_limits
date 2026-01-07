@@ -5,10 +5,12 @@ import { ProcessedOrdersChart, QuickChat, NewEvents } from '@/components/dashboa
 import { useAuthStore } from '@/lib/store';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
+import { useTranslations } from 'next-intl';
 
 export default function AdminDashboardPage() {
   const { user, isAuthenticated } = useAuthStore();
   const router = useRouter();
+  const t = useTranslations('dashboard');
 
   useEffect(() => {
     if (!isAuthenticated || (user?.role !== 'ADMIN' && user?.role !== 'SUPER_ADMIN')) {
@@ -42,7 +44,7 @@ export default function AdminDashboardPage() {
             margin: 0,
           }}
         >
-          Übersicht
+          {t('title')}
         </h1>
 
         {/* Divider */}

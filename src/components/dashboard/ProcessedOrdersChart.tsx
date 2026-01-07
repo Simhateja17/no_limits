@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
+import { dataApi, ChartDataPoint } from '@/lib/data-api';
 
 interface ProcessedOrdersChartProps {
   dateRange?: string;
@@ -11,50 +12,42 @@ const GRID_LINES = 5;
 
 export function ProcessedOrdersChart({ dateRange }: ProcessedOrdersChartProps) {
   const t = useTranslations('dashboard');
-  const [hoveredIndex, setHoveredIndex] = useState<number | null>(5);
-  const [fromDate, setFromDate] = useState('august2018');
-  const [toDate, setToDate] = useState('may2019');
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+  const [fromDate, setFromDate] = useState('');
+  const [toDate, setToDate] = useState('');
   const containerRef = useRef<HTMLDivElement>(null);
   const [dimensions, setDimensions] = useState({ width: 800, height: 280 });
+  const [chartData, setChartData] = useState<ChartDataPoint[]>([]);
+  const [referenceData, setReferenceData] = useState<ChartDataPoint[]>([]);
+  const [monthOptions, setMonthOptions] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const chartData = [
-    { monthKey: 'august2018', value: 1200 },
-    { monthKey: 'september2018', value: 1800 },
-    { monthKey: 'october2018', value: 1400 },
-    { monthKey: 'november2018', value: 2100 },
-    { monthKey: 'december2018', value: 2000 },
-    { monthKey: 'january2019', value: 2345 },
-    { monthKey: 'february2019', value: 1900 },
-    { monthKey: 'march2019', value: 2200 },
-    { monthKey: 'april2019', value: 2100 },
-    { monthKey: 'may2019', value: 1700 },
-  ];
+  // Fetch chart data from API
+  useEffect(() => {
+    const fetchChartData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const data = await dataApi.getDashboardChart();
+        setChartData(data.chartData);
+        setReferenceData(data.referenceData);
+        setMonthOptions(data.monthOptions);
+        // Set default date range values
+        if (data.monthOptions.length > 0) {
+          setFromDate(data.monthOptions[0]);
+          setToDate(data.monthOptions[data.monthOptions.length - 1]);
+        }
+      } catch (err) {
+        console.error('Error fetching chart data:', err);
+        setError('Failed to load chart data');
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const referenceData = [
-    { monthKey: 'august2018', value: 1500 },
-    { monthKey: 'september2018', value: 1600 },
-    { monthKey: 'october2018', value: 1700 },
-    { monthKey: 'november2018', value: 1800 },
-    { monthKey: 'december2018', value: 1850 },
-    { monthKey: 'january2019', value: 1900 },
-    { monthKey: 'february2019', value: 1950 },
-    { monthKey: 'march2019', value: 2000 },
-    { monthKey: 'april2019', value: 2100 },
-    { monthKey: 'may2019', value: 2150 },
-  ];
-
-  const monthOptions = [
-    'august2018',
-    'september2018',
-    'october2018',
-    'november2018',
-    'december2018',
-    'january2019',
-    'february2019',
-    'march2019',
-    'april2019',
-    'may2019',
-  ];
+    fetchChartData();
+  }, []);
 
   useEffect(() => {
     const updateDimensions = () => {
@@ -73,11 +66,16 @@ export function ProcessedOrdersChart({ dateRange }: ProcessedOrdersChartProps) {
   const chartWidth = dimensions.width - padding.left - padding.right;
   const chartHeight = dimensions.height - padding.top - padding.bottom;
 
-  const maxValue = Math.max(...chartData.map((d) => d.value), ...referenceData.map((d) => d.value));
-  const minValue = Math.min(...chartData.map((d) => d.value), ...referenceData.map((d) => d.value));
-  const valueRange = maxValue - minValue;
+  // Handle empty data
+  const allValues = [...chartData.map((d) => d.value), ...referenceData.map((d) => d.value)];
+  const maxValue = allValues.length > 0 ? Math.max(...allValues) : 100;
+  const minValue = allValues.length > 0 ? Math.min(...allValues) : 0;
+  const valueRange = maxValue - minValue || 1;
 
-  const getX = (index: number) => padding.left + (index / (chartData.length - 1)) * chartWidth;
+  const getX = (index: number) => {
+    if (chartData.length <= 1) return padding.left + chartWidth / 2;
+    return padding.left + (index / (chartData.length - 1)) * chartWidth;
+  };
   const getY = (value: number) =>
     padding.top + chartHeight - ((value - minValue) / valueRange) * chartHeight;
 
@@ -112,6 +110,32 @@ export function ProcessedOrdersChart({ dateRange }: ProcessedOrdersChartProps) {
     const y = padding.top + (i / (GRID_LINES - 1)) * chartHeight;
     return y;
   });
+
+  // Format month key for display - parse "january2026" into "Jan 2026"
+  const formatMonthKey = (monthKey: string) => {
+    const match = monthKey.match(/^([a-z]+)(\d{4})$/i);
+    if (match) {
+      const monthName = match[1].toLowerCase();
+      const year = match[2];
+      // Short month names for cleaner display
+      const shortMonths: { [key: string]: string } = {
+        january: 'Jan',
+        february: 'Feb',
+        march: 'Mar',
+        april: 'Apr',
+        may: 'May',
+        june: 'Jun',
+        july: 'Jul',
+        august: 'Aug',
+        september: 'Sep',
+        october: 'Oct',
+        november: 'Nov',
+        december: 'Dec',
+      };
+      return `${shortMonths[monthName] || monthName} ${year}`;
+    }
+    return monthKey;
+  };
 
   return (
     <div
@@ -150,76 +174,124 @@ export function ProcessedOrdersChart({ dateRange }: ProcessedOrdersChartProps) {
         </span>
 
         {/* Date Range Selectors */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <span
-            style={{
-              fontFamily: 'Roboto, sans-serif',
-              fontWeight: 400,
-              fontSize: '14px',
-              lineHeight: '100%',
-              color: '#6B7280',
-            }}
-          >
-            {t('from')}
-          </span>
-          <select
-            value={fromDate}
-            onChange={(e) => setFromDate(e.target.value)}
-            style={{
-              fontFamily: 'Roboto, sans-serif',
-              fontWeight: 400,
-              fontSize: '14px',
-              lineHeight: '100%',
-              color: '#111827',
-              border: 'none',
-              background: 'transparent',
-              cursor: 'pointer',
-              outline: 'none',
-            }}
-          >
-            {monthOptions.slice(0, 3).map((key) => (
-              <option key={key} value={key}>
-                {t(`months.${key}`)}
-              </option>
-            ))}
-          </select>
-          <span
-            style={{
-              fontFamily: 'Roboto, sans-serif',
-              fontWeight: 400,
-              fontSize: '14px',
-              lineHeight: '100%',
-              color: '#6B7280',
-            }}
-          >
-            {t('to')}
-          </span>
-          <select
-            value={toDate}
-            onChange={(e) => setToDate(e.target.value)}
-            style={{
-              fontFamily: 'Roboto, sans-serif',
-              fontWeight: 400,
-              fontSize: '14px',
-              lineHeight: '100%',
-              color: '#111827',
-              border: 'none',
-              background: 'transparent',
-              cursor: 'pointer',
-              outline: 'none',
-            }}
-          >
-            {monthOptions.slice(-3).map((key) => (
-              <option key={key} value={key}>
-                {t(`months.${key}`)}
-              </option>
-            ))}
-          </select>
-        </div>
+        {!loading && monthOptions.length > 0 && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span
+              style={{
+                fontFamily: 'Roboto, sans-serif',
+                fontWeight: 400,
+                fontSize: '14px',
+                lineHeight: '100%',
+                color: '#6B7280',
+              }}
+            >
+              {t('from')}
+            </span>
+            <select
+              value={fromDate}
+              onChange={(e) => setFromDate(e.target.value)}
+              style={{
+                fontFamily: 'Roboto, sans-serif',
+                fontWeight: 400,
+                fontSize: '14px',
+                lineHeight: '100%',
+                color: '#111827',
+                border: 'none',
+                background: 'transparent',
+                cursor: 'pointer',
+                outline: 'none',
+              }}
+            >
+              {monthOptions.slice(0, Math.min(3, monthOptions.length)).map((key) => (
+                <option key={key} value={key}>
+                  {formatMonthKey(key)}
+                </option>
+              ))}
+            </select>
+            <span
+              style={{
+                fontFamily: 'Roboto, sans-serif',
+                fontWeight: 400,
+                fontSize: '14px',
+                lineHeight: '100%',
+                color: '#6B7280',
+              }}
+            >
+              {t('to')}
+            </span>
+            <select
+              value={toDate}
+              onChange={(e) => setToDate(e.target.value)}
+              style={{
+                fontFamily: 'Roboto, sans-serif',
+                fontWeight: 400,
+                fontSize: '14px',
+                lineHeight: '100%',
+                color: '#111827',
+                border: 'none',
+                background: 'transparent',
+                cursor: 'pointer',
+                outline: 'none',
+              }}
+            >
+              {monthOptions.slice(-Math.min(3, monthOptions.length)).map((key) => (
+                <option key={key} value={key}>
+                  {formatMonthKey(key)}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
       </div>
 
+      {/* Loading State */}
+      {loading && (
+        <div
+          style={{
+            height: dimensions.height,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: '#6B7280',
+          }}
+        >
+          Loading chart data...
+        </div>
+      )}
+
+      {/* Error State */}
+      {error && !loading && (
+        <div
+          style={{
+            height: dimensions.height,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: '#EF4444',
+          }}
+        >
+          {error}
+        </div>
+      )}
+
+      {/* Empty State */}
+      {!loading && !error && chartData.length === 0 && (
+        <div
+          style={{
+            height: dimensions.height,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: '#6B7280',
+          }}
+        >
+          No order data available
+        </div>
+      )}
+
       {/* Chart */}
-      <div style={{ width: '100%', position: 'relative' }}>
+      {!loading && !error && chartData.length > 0 && (
+        <div style={{ width: '100%', position: 'relative' }}>
         <svg
           width="100%"
           height={dimensions.height}
@@ -342,11 +414,12 @@ export function ProcessedOrdersChart({ dateRange }: ProcessedOrdersChartProps) {
                 fill: '#6B7280',
               }}
             >
-              {t(`months.${point.monthKey}`)}
+              {formatMonthKey(point.monthKey)}
             </text>
           ))}
         </svg>
       </div>
+      )}
     </div>
   );
 }

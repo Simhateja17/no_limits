@@ -211,6 +211,44 @@ export interface CreateTaskInput {
   returnId?: string;
 }
 
+// Dashboard types
+export interface ChartDataPoint {
+  monthKey: string;
+  value: number;
+}
+
+export interface DashboardChartData {
+  chartData: ChartDataPoint[];
+  referenceData: ChartDataPoint[];
+  monthOptions: string[];
+  dateRange: {
+    from: string;
+    to: string;
+  };
+}
+
+export interface DashboardEvent {
+  id: string;
+  type: 'return' | 'inbound' | 'order_attention';
+  entityId: string;
+  title: string;
+  description: string;
+  createdAt: string;
+}
+
+export interface QuickChatMessage {
+  id: string;
+  roomId: string;
+  sender: string;
+  senderRole: string;
+  avatar: string | null;
+  avatarColor: string;
+  timestamp: string;
+  content: string;
+  clientName: string;
+  tasks: string[];
+}
+
 export const dataApi = {
   // Products
   async getProducts(): Promise<Product[]> {
@@ -307,6 +345,26 @@ export const dataApi = {
 
   async updateTask(id: string, input: Partial<CreateTaskInput>): Promise<Task> {
     const response = await api.put(`/data/tasks/${id}`, input);
+    return response.data.data;
+  },
+
+  // Dashboard
+  async getDashboardChart(fromDate?: string, toDate?: string): Promise<DashboardChartData> {
+    const params = new URLSearchParams();
+    if (fromDate) params.append('fromDate', fromDate);
+    if (toDate) params.append('toDate', toDate);
+    const queryString = params.toString();
+    const response = await api.get(`/data/dashboard/chart${queryString ? `?${queryString}` : ''}`);
+    return response.data.data;
+  },
+
+  async getDashboardEvents(limit?: number): Promise<DashboardEvent[]> {
+    const response = await api.get(`/data/dashboard/events${limit ? `?limit=${limit}` : ''}`);
+    return response.data.data;
+  },
+
+  async getRecentChatMessages(limit?: number): Promise<QuickChatMessage[]> {
+    const response = await api.get(`/chat/recent${limit ? `?limit=${limit}` : ''}`);
     return response.data.data;
   },
 };
