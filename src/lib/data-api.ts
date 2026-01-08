@@ -230,6 +230,15 @@ export interface UpdateOrderInput {
   shippingZip?: string;
   shippingCountryCode?: string;
   jtlShippingMethodId?: string;
+  items?: Array<{
+    id?: string;
+    productId?: string;
+    sku?: string;
+    productName?: string;
+    quantity: number;
+    unitPrice?: number;
+    totalPrice?: number;
+  }>;
 }
 
 export interface UpdateProductInput {

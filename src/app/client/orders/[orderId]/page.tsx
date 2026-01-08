@@ -148,7 +148,7 @@ export default function ClientOrderDetailPage() {
   const [showProductList, setShowProductList] = useState(false);
   const [selectedShippingMethod, setSelectedShippingMethod] = useState(shippingMethods[0]);
   const [showShippingDropdown, setShowShippingDropdown] = useState(false);
-  const [orderNotes, setOrderNotes] = useState('Please double check condition of the products before you send it out');
+  const [orderNotes, setOrderNotes] = useState('');
 
   // Save state
   const [isSaving, setIsSaving] = useState(false);
@@ -281,58 +281,31 @@ export default function ClientOrderDetailPage() {
     setJtlSyncStatus(null);
 
     try {
-      // Build update data - only include changed fields
-      const updateData: UpdateOrderInput = {};
+      // Build update data - send all current values, backend will determine what changed
+      const updateData: UpdateOrderInput = {
+        warehouseNotes: orderNotes || undefined,
+        isOnHold: onHoldStatus,
+        tags: tags,
+        shippingFirstName: formData.firstName || undefined,
+        shippingLastName: formData.lastName || undefined,
+        shippingCompany: formData.company || undefined,
+        shippingAddress1: formData.streetAddress || undefined,
+        shippingAddress2: formData.addressLine2 || undefined,
+        shippingCity: formData.city || undefined,
+        shippingZip: formData.zipPostal || undefined,
+        items: orderProducts.map(p => ({
+          id: p.id,
+          sku: p.sku,
+          productName: p.name,
+          quantity: p.qty,
+        })),
+      };
 
-      // Check warehouse notes
-      if (orderNotes !== (rawOrder as any).warehouseNotes) {
-        updateData.warehouseNotes = orderNotes;
-      }
-
-      // Check on hold status
-      const currentIsOnHold = (rawOrder as any).status === 'ON_HOLD';
-      if (onHoldStatus !== currentIsOnHold) {
-        updateData.isOnHold = onHoldStatus;
-      }
-
-      // Check tags
-      const currentTags = (rawOrder as any).tags || [];
-      if (JSON.stringify(tags.sort()) !== JSON.stringify(currentTags.sort())) {
-        updateData.tags = tags;
-      }
-
-      // Check shipping address changes
-      if (formData.firstName !== ((rawOrder as any).shippingFirstName || '')) {
-        updateData.shippingFirstName = formData.firstName;
-      }
-      if (formData.lastName !== ((rawOrder as any).shippingLastName || '')) {
-        updateData.shippingLastName = formData.lastName;
-      }
-      if (formData.company !== ((rawOrder as any).shippingCompany || '')) {
-        updateData.shippingCompany = formData.company;
-      }
-      if (formData.streetAddress !== ((rawOrder as any).shippingAddress1 || '')) {
-        updateData.shippingAddress1 = formData.streetAddress;
-      }
-      if (formData.addressLine2 !== ((rawOrder as any).shippingAddress2 || '')) {
-        updateData.shippingAddress2 = formData.addressLine2;
-      }
-      if (formData.city !== ((rawOrder as any).shippingCity || '')) {
-        updateData.shippingCity = formData.city;
-      }
-      if (formData.zipPostal !== ((rawOrder as any).shippingZip || '')) {
-        updateData.shippingZip = formData.zipPostal;
-      }
-
-      // Check if there are any changes
-      if (Object.keys(updateData).length === 0) {
-        // No changes to save
-        setEditOrderEnabled(false);
-        setIsSaving(false);
-        return;
-      }
+      console.log('[Order Save] Saving order:', rawOrder.id, updateData);
 
       const result = await dataApi.updateOrder(rawOrder.id, updateData);
+
+      console.log('[Order Save] Save result:', result);
 
       // Update local state with new data
       setRawOrder(result.data as any);
