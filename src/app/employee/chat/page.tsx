@@ -4,10 +4,13 @@ import { DashboardLayout } from '@/components/layout';
 import { useAuthStore } from '@/lib/store';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
+import { useTranslations } from 'next-intl';
 
 export default function EmployeeChatPage() {
   const { user, isAuthenticated } = useAuthStore();
   const router = useRouter();
+  const t = useTranslations('employee');
+  const tPlaceholders = useTranslations('placeholders');
 
   useEffect(() => {
     if (!isAuthenticated || user?.role !== 'EMPLOYEE') {
@@ -31,11 +34,10 @@ export default function EmployeeChatPage() {
         <div className="text-center">
           <div className="text-6xl mb-4">💬</div>
           <h2 className="text-2xl font-semibold text-gray-800 mb-2">
-            Employee Chat Coming Soon
+            {t('chatComingSoon')}
           </h2>
           <p className="text-gray-500 max-w-md">
-            Employee messaging functionality is being developed. 
-            Please contact your admin directly for now.
+            {t('chatComingSoonDesc')} {tPlaceholders('contactAdmin')}
           </p>
         </div>
       </div>

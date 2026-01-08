@@ -19,6 +19,7 @@ export default function LoginPage() {
   const [clickCount, setClickCount] = useState(0);
   const [clickTimer, setClickTimer] = useState<NodeJS.Timeout | null>(null);
   const t = useTranslations('login');
+  const tErrors = useTranslations('errors');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -60,7 +61,7 @@ export default function LoginPage() {
         const dashboardRoute = getDashboardRoute(data.user.role as UserRole);
         router.push(dashboardRoute);
       } catch (error: any) {
-        alert(error.message || 'Login failed. Please check your credentials.');
+        alert(error.message || tErrors('loginFailed'));
         setLoading(false);
       }
     }

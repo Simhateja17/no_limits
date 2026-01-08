@@ -15,6 +15,7 @@ export default function ClientSetupPage() {
   const { user, isAuthenticated, logout } = useAuthStore();
   const router = useRouter();
   const t = useTranslations('setup');
+  const tErrors = useTranslations('errors');
 
   const [currentStep, setCurrentStep] = useState<SetupStep>('platform');
   const [selectedPlatform, setSelectedPlatform] = useState<PlatformType>(null);
@@ -188,7 +189,7 @@ export default function ClientSetupPage() {
   // NEW: Handle Shopify OAuth flow
   const handleShopifyOAuth = async () => {
     if (!clientId) {
-      setShopifyOAuthError('Client ID not found');
+      setShopifyOAuthError(tErrors('clientIdNotFound'));
       return;
     }
 
@@ -383,7 +384,7 @@ export default function ClientSetupPage() {
 
   const handleCredentialsSubmit = async () => {
     if (!clientId) {
-      setError('Client ID not found');
+      setError(tErrors('clientIdNotFound'));
       return;
     }
 
@@ -464,7 +465,7 @@ export default function ClientSetupPage() {
 
   const handleJTLOAuth = async () => {
     if (!clientId) {
-      setJtlOAuthError('Client ID not found');
+      setJtlOAuthError(tErrors('clientIdNotFound'));
       return;
     }
 
@@ -539,7 +540,7 @@ export default function ClientSetupPage() {
 
   const handleJTLSubmit = async () => {
     if (!clientId) {
-      setError('Client ID not found');
+      setError(tErrors('clientIdNotFound'));
       return;
     }
 

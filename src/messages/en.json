@@ -654,5 +654,52 @@
     "setupComplete": "Setup Complete!",
     "setupCompleteDesc": "Your store is now connected. We will sync your products and orders automatically.",
     "goToDashboard": "Go to Dashboard"
+  },
+  "placeholders": {
+    "comingSoon": "Coming Soon",
+    "underDevelopment": "Under Development",
+    "contactAdmin": "Please contact your admin directly for now."
+  },
+  "employee": {
+    "chatComingSoon": "Employee Chat Coming Soon",
+    "chatComingSoonDesc": "Employee messaging functionality is being developed."
+  },
+  "errors": {
+    "clientIdNotFound": "Client ID not found",
+    "orderNotFound": "Order not found",
+    "productNotFound": "Product not found",
+    "returnNotFound": "Return not found",
+    "inboundNotFound": "Inbound not found",
+    "taskNotFound": "Task not found",
+    "channelNotFound": "Channel not found",
+    "pageNotFound": "Page not found",
+    "authCodeNotFound": "Authorization code not found in callback",
+    "clientIdNotInState": "Client ID not found in state parameter",
+    "connectionTestFailed": "Connection test failed",
+    "failedToStartOAuth": "Failed to start OAuth flow",
+    "failedToSaveCredentials": "Failed to save credentials",
+    "failedToFetchDetails": "Failed to fetch details",
+    "loginFailed": "Login failed. Please check your credentials."
+  },
+  "integrations": {
+    "jtlAuthSuccess": "JTL FFN authentication successful!",
+    "shopifyAuthSuccess": "Shopify authentication successful!",
+    "woocommerceAuthSuccess": "WooCommerce authentication successful!",
+    "authFailed": "Authentication Failed",
+    "processingAuth": "Processing authentication...",
+    "redirecting": "Redirecting...",
+    "authenticating": "Authenticating...",
+    "pleaseWaitJtl": "Please wait while we complete your JTL FFN authentication",
+    "success": "Success!",
+    "windowWillClose": "This window will close automatically...",
+    "closeWindow": "Close Window",
+    "connectingShopify": "Connecting your Shopify store...",
+    "pleaseWaitSetup": "Please wait while we complete the setup.",
+    "successfullyConnected": "Successfully connected!",
+    "redirectingToChannels": "Redirecting to your channels...",
+    "connectionFailed": "Connection failed",
+    "tryAgain": "Try Again",
+    "missingOAuthParams": "Missing required OAuth parameters",
+    "failedToCreateChannel": "Failed to create channel"
   }
 }

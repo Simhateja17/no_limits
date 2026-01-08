@@ -652,5 +652,52 @@
     "setupComplete": "Einrichtung abgeschlossen!",
     "setupCompleteDesc": "Ihr Shop ist jetzt verbunden. Wir synchronisieren Ihre Produkte und Bestellungen automatisch.",
     "goToDashboard": "Zum Dashboard"
+  },
+  "placeholders": {
+    "comingSoon": "Demnächst verfügbar",
+    "underDevelopment": "In Entwicklung",
+    "contactAdmin": "Bitte kontaktieren Sie Ihren Administrator direkt."
+  },
+  "employee": {
+    "chatComingSoon": "Mitarbeiter-Chat kommt bald",
+    "chatComingSoonDesc": "Die Mitarbeiter-Messaging-Funktion wird derzeit entwickelt."
+  },
+  "errors": {
+    "clientIdNotFound": "Client-ID nicht gefunden",
+    "orderNotFound": "Bestellung nicht gefunden",
+    "productNotFound": "Produkt nicht gefunden",
+    "returnNotFound": "Retoure nicht gefunden",
+    "inboundNotFound": "Wareneingang nicht gefunden",
+    "taskNotFound": "Aufgabe nicht gefunden",
+    "channelNotFound": "Kanal nicht gefunden",
+    "pageNotFound": "Seite nicht gefunden",
+    "authCodeNotFound": "Autorisierungscode nicht im Callback gefunden",
+    "clientIdNotInState": "Client-ID nicht im State-Parameter gefunden",
+    "connectionTestFailed": "Verbindungstest fehlgeschlagen",
+    "failedToStartOAuth": "OAuth-Flow konnte nicht gestartet werden",
+    "failedToSaveCredentials": "Anmeldedaten konnten nicht gespeichert werden",
+    "failedToFetchDetails": "Details konnten nicht abgerufen werden",
+    "loginFailed": "Anmeldung fehlgeschlagen. Bitte überprüfen Sie Ihre Anmeldedaten."
+  },
+  "integrations": {
+    "jtlAuthSuccess": "JTL FFN Authentifizierung erfolgreich!",
+    "shopifyAuthSuccess": "Shopify Authentifizierung erfolgreich!",
+    "woocommerceAuthSuccess": "WooCommerce Authentifizierung erfolgreich!",
+    "authFailed": "Authentifizierung fehlgeschlagen",
+    "processingAuth": "Authentifizierung wird verarbeitet...",
+    "redirecting": "Weiterleitung...",
+    "authenticating": "Authentifizierung...",
+    "pleaseWaitJtl": "Bitte warten Sie, während wir Ihre JTL FFN Authentifizierung abschließen",
+    "success": "Erfolg!",
+    "windowWillClose": "Dieses Fenster wird automatisch geschlossen...",
+    "closeWindow": "Fenster schließen",
+    "connectingShopify": "Verbindung mit Ihrem Shopify-Shop wird hergestellt...",
+    "pleaseWaitSetup": "Bitte warten Sie, während wir die Einrichtung abschließen.",
+    "successfullyConnected": "Erfolgreich verbunden!",
+    "redirectingToChannels": "Weiterleitung zu Ihren Kanälen...",
+    "connectionFailed": "Verbindung fehlgeschlagen",
+    "tryAgain": "Erneut versuchen",
+    "missingOAuthParams": "Erforderliche OAuth-Parameter fehlen",
+    "failedToCreateChannel": "Kanal konnte nicht erstellt werden"
   }
 }

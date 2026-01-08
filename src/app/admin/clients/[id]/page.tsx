@@ -58,6 +58,7 @@ export default function ClientDetailPage() {
   const params = useParams();
   const t = useTranslations('clients');
   const tCommon = useTranslations('common');
+  const tErrors = useTranslations('errors');
   
   const [client, setClient] = useState<Client | null>(null);
   const [loading, setLoading] = useState(true);
@@ -74,11 +75,11 @@ export default function ClientDetailPage() {
         if (response.data.success) {
           setClient(response.data.data);
         } else {
-          setError('Failed to fetch client details');
+          setError(tErrors('failedToFetchDetails'));
         }
       } catch (err: any) {
         console.error('Error fetching client:', err);
-        setError(err.response?.data?.error || 'Failed to fetch client details');
+        setError(err.response?.data?.error || tErrors('failedToFetchDetails'));
       } finally {
         setLoading(false);
       }
@@ -107,7 +108,7 @@ export default function ClientDetailPage() {
     return (
       <DashboardLayout>
         <div className="w-full min-h-screen flex items-center justify-center" style={{ backgroundColor: '#F9FAFB' }}>
-          <div className="text-gray-600">Loading...</div>
+          <div className="text-gray-600">{tCommon('loading')}</div>
         </div>
       </DashboardLayout>
     );
@@ -117,7 +118,7 @@ export default function ClientDetailPage() {
     return (
       <DashboardLayout>
         <div className="w-full min-h-screen flex items-center justify-center" style={{ backgroundColor: '#F9FAFB' }}>
-          <div className="text-red-600">{error || 'Client not found'}</div>
+          <div className="text-red-600">{error || tErrors('clientIdNotFound')}</div>
         </div>
       </DashboardLayout>
     );

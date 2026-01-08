@@ -2,12 +2,15 @@
 
 import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 
 function ShopifyCallbackContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [status, setStatus] = useState<'processing' | 'success' | 'error'>('processing');
   const [errorMessage, setErrorMessage] = useState<string>('');
+  const tIntegrations = useTranslations('integrations');
+  const tCommon = useTranslations('common');
 
   useEffect(() => {
     const handleCallback = async () => {
@@ -27,7 +30,7 @@ function ShopifyCallbackContent() {
         const enableHistoricalSync = sessionStorage.getItem('shopify_historical_sync') === 'true';
 
         if (!code || !state || !clientId) {
-          setErrorMessage('Missing required OAuth parameters');
+          setErrorMessage(tIntegrations('missingOAuthParams'));
           setStatus('error');
           return;
         }
@@ -91,7 +94,7 @@ function ShopifyCallbackContent() {
             router.push('/client/channels');
           }, 1500);
         } else {
-          setErrorMessage(data.error || 'Failed to create channel');
+          setErrorMessage(data.error || tIntegrations('failedToCreateChannel'));
           setStatus('error');
         }
       } catch (error) {
@@ -163,7 +166,7 @@ function ShopifyCallbackContent() {
                 textAlign: 'center',
               }}
             >
-              Connecting your Shopify store...
+              {tIntegrations('connectingShopify')}
             </h2>
             <p
               style={{
@@ -175,7 +178,7 @@ function ShopifyCallbackContent() {
                 textAlign: 'center',
               }}
             >
-              Please wait while we complete the setup.
+              {tIntegrations('pleaseWaitSetup')}
             </p>
           </>
         )}
@@ -208,7 +211,7 @@ function ShopifyCallbackContent() {
                 textAlign: 'center',
               }}
             >
-              Successfully connected!
+              {tIntegrations('successfullyConnected')}
             </h2>
             <p
               style={{
@@ -220,7 +223,7 @@ function ShopifyCallbackContent() {
                 textAlign: 'center',
               }}
             >
-              Redirecting to your channels...
+              {tIntegrations('redirectingToChannels')}
             </p>
           </>
         )}
@@ -252,7 +255,7 @@ function ShopifyCallbackContent() {
                 textAlign: 'center',
               }}
             >
-              Connection failed
+              {tIntegrations('connectionFailed')}
             </h2>
             <p
               style={{
@@ -281,7 +284,7 @@ function ShopifyCallbackContent() {
                 cursor: 'pointer',
               }}
             >
-              Try Again
+              {tIntegrations('tryAgain')}
             </button>
           </>
         )}

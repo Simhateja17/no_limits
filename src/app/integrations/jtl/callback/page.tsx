@@ -1,14 +1,110 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { api } from '@/lib/api';
+import { useTranslations } from 'next-intl';
 
 export default function JTLOAuthCallback() {
   const searchParams = useSearchParams();
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
   const [message, setMessage] = useState('');
   const hasExchangedRef = useRef(false);
+  const tErrors = useTranslations('errors');
+  const tIntegrations = useTranslations('integrations');
+
+  // Get translated messages
+  const authCodeNotFound = tErrors('authCodeNotFound');
+  const clientIdNotInState = tErrors('clientIdNotInState');
+  const jtlAuthSuccess = tIntegrations('jtlAuthSuccess');
+
+  const exchangeToken = useCallback(async () => {
+    try {
+      const code = searchParams.get('code');
+      const state = searchParams.get('state');
+      const error = searchParams.get('error');
+      const errorDescription = searchParams.get('error_description');
+
+      // Check if OAuth provider returned an error
+      if (error) {
+        setStatus('error');
+        setMessage(`OAuth Error: ${error}${errorDescription ? ` - ${errorDescription}` : ''}`);
+        console.error('[JTL OAuth] Provider returned error:', { error, errorDescription });
+        return;
+      }
+
+      // The state parameter contains the clientId (set during auth URL generation)
+      const clientId = state;
+
+      if (!code) {
+        setStatus('error');
+        setMessage(authCodeNotFound);
+        console.error('[JTL OAuth] No authorization code in callback URL');
+        return;
+      }
+
+      if (!clientId) {
+        setStatus('error');
+        setMessage(clientIdNotInState);
+        console.error('[JTL OAuth] No client ID in state parameter');
+        return;
+      }
+
+      console.log('[JTL OAuth] Starting token exchange for client:', clientId);
+      console.log('[JTL OAuth] Code received (first 10 chars):', code.substring(0, 10) + '...');
+
+      // Construct redirect URI (this same page)
+      const redirectUri = `${window.location.origin}/integrations/jtl/callback`;
+      console.log('[JTL OAuth] Redirect URI:', redirectUri);
+
+      // Exchange code for tokens using the configured API client
+      const response = await api.post('/integrations/jtl/exchange-token', {
+        clientId,
+        code,
+        redirectUri,
+      });
+
+      const data = response.data;
+
+      if (data.success) {
+        console.log('[JTL OAuth] ✅ Token exchange successful');
+        setStatus('success');
+        setMessage(jtlAuthSuccess);
+
+        // Notify parent window (if opened in popup)
+        if (window.opener) {
+          window.opener.postMessage({ type: 'jtl-oauth-success', clientId }, window.location.origin);
+        }
+
+        // Close popup after 2 seconds
+        setTimeout(() => {
+          window.close();
+        }, 2000);
+      } else {
+        console.error('[JTL OAuth] ❌ Token exchange failed:', data.error);
+        setStatus('error');
+        setMessage(data.error || 'Failed to complete authentication');
+      }
+    } catch (error: any) {
+      console.error('[JTL OAuth] ❌ Error exchanging token:', error);
+
+      // Extract more detailed error message
+      let errorMsg = 'An unexpected error occurred';
+      if (error?.response?.data?.error) {
+        errorMsg = error.response.data.error;
+      } else if (error instanceof Error) {
+        errorMsg = error.message;
+      }
+
+      // Check if it's a "revoked" error and provide helpful message
+      if (errorMsg.includes('revoked') || errorMsg.includes('invalid_request')) {
+        errorMsg += '\n\nPossible causes:\n- Authorization code was already used (duplicate request)\n- Authorization code expired (took longer than 10 minutes)\n- Browser page was refreshed/reloaded\n\nPlease close this window and start the authorization process again.';
+      }
+
+      setStatus('error');
+      setMessage(errorMsg);
+    }
+  }, [searchParams, authCodeNotFound, clientIdNotInState, jtlAuthSuccess]);
 
   useEffect(() => {
     // Prevent multiple token exchanges (React StrictMode runs effects twice in dev)
@@ -20,96 +116,8 @@ export default function JTLOAuthCallback() {
     // Mark as exchanging IMMEDIATELY to prevent race conditions
     hasExchangedRef.current = true;
 
-    const exchangeToken = async () => {
-      try {
-        const code = searchParams.get('code');
-        const state = searchParams.get('state');
-        const error = searchParams.get('error');
-        const errorDescription = searchParams.get('error_description');
-
-        // Check if OAuth provider returned an error
-        if (error) {
-          setStatus('error');
-          setMessage(`OAuth Error: ${error}${errorDescription ? ` - ${errorDescription}` : ''}`);
-          console.error('[JTL OAuth] Provider returned error:', { error, errorDescription });
-          return;
-        }
-
-        // The state parameter contains the clientId (set during auth URL generation)
-        const clientId = state;
-
-        if (!code) {
-          setStatus('error');
-          setMessage('Authorization code not found in callback');
-          console.error('[JTL OAuth] No authorization code in callback URL');
-          return;
-        }
-
-        if (!clientId) {
-          setStatus('error');
-          setMessage('Client ID not found in state parameter');
-          console.error('[JTL OAuth] No client ID in state parameter');
-          return;
-        }
-
-        console.log('[JTL OAuth] Starting token exchange for client:', clientId);
-        console.log('[JTL OAuth] Code received (first 10 chars):', code.substring(0, 10) + '...');
-
-        // Construct redirect URI (this same page)
-        const redirectUri = `${window.location.origin}/integrations/jtl/callback`;
-        console.log('[JTL OAuth] Redirect URI:', redirectUri);
-
-        // Exchange code for tokens using the configured API client
-        const response = await api.post('/integrations/jtl/exchange-token', {
-          clientId,
-          code,
-          redirectUri,
-        });
-
-        const data = response.data;
-
-        if (data.success) {
-          console.log('[JTL OAuth] ✅ Token exchange successful');
-          setStatus('success');
-          setMessage('JTL FFN authentication successful!');
-
-          // Notify parent window (if opened in popup)
-          if (window.opener) {
-            window.opener.postMessage({ type: 'jtl-oauth-success', clientId }, window.location.origin);
-          }
-
-          // Close popup after 2 seconds
-          setTimeout(() => {
-            window.close();
-          }, 2000);
-        } else {
-          console.error('[JTL OAuth] ❌ Token exchange failed:', data.error);
-          setStatus('error');
-          setMessage(data.error || 'Failed to complete authentication');
-        }
-      } catch (error: any) {
-        console.error('[JTL OAuth] ❌ Error exchanging token:', error);
-
-        // Extract more detailed error message
-        let errorMsg = 'An unexpected error occurred';
-        if (error?.response?.data?.error) {
-          errorMsg = error.response.data.error;
-        } else if (error instanceof Error) {
-          errorMsg = error.message;
-        }
-
-        // Check if it's a "revoked" error and provide helpful message
-        if (errorMsg.includes('revoked') || errorMsg.includes('invalid_request')) {
-          errorMsg += '\n\nPossible causes:\n- Authorization code was already used (duplicate request)\n- Authorization code expired (took longer than 10 minutes)\n- Browser page was refreshed/reloaded\n\nPlease close this window and start the authorization process again.';
-        }
-
-        setStatus('error');
-        setMessage(errorMsg);
-      }
-    };
-
     exchangeToken();
-  }, [searchParams]);
+  }, [exchangeToken]);
 
   return (
     <div style={{
@@ -146,10 +154,10 @@ export default function JTLOAuthCallback() {
               }
             `}</style>
             <h2 style={{ fontSize: '1.25rem', fontWeight: '600', color: '#111827', marginBottom: '0.5rem' }}>
-              Authenticating...
+              {tIntegrations('authenticating')}
             </h2>
             <p style={{ fontSize: '0.875rem', color: '#6b7280' }}>
-              Please wait while we complete your JTL FFN authentication
+              {tIntegrations('pleaseWaitJtl')}
             </p>
           </>
         )}
@@ -171,13 +179,13 @@ export default function JTLOAuthCallback() {
               </svg>
             </div>
             <h2 style={{ fontSize: '1.25rem', fontWeight: '600', color: '#111827', marginBottom: '0.5rem' }}>
-              Success!
+              {tIntegrations('success')}
             </h2>
             <p style={{ fontSize: '0.875rem', color: '#6b7280' }}>
               {message}
             </p>
             <p style={{ fontSize: '0.75rem', color: '#9ca3af', marginTop: '1rem' }}>
-              This window will close automatically...
+              {tIntegrations('windowWillClose')}
             </p>
           </>
         )}
@@ -199,7 +207,7 @@ export default function JTLOAuthCallback() {
               </svg>
             </div>
             <h2 style={{ fontSize: '1.25rem', fontWeight: '600', color: '#111827', marginBottom: '0.5rem' }}>
-              Authentication Failed
+              {tIntegrations('authFailed')}
             </h2>
             <p style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '1rem', whiteSpace: 'pre-line' }}>
               {message}
@@ -217,7 +225,7 @@ export default function JTLOAuthCallback() {
                 cursor: 'pointer',
               }}
             >
-              Close Window
+              {tIntegrations('closeWindow')}
             </button>
           </>
         )}

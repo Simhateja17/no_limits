@@ -126,6 +126,7 @@ export default function ClientOrderDetailPage() {
   const tCountries = useTranslations('countries');
   const tStatus = useTranslations('status');
   const tMessages = useTranslations('messages');
+  const tErrors = useTranslations('errors');
 
   // API state
   const [orderDetails, setOrderDetails] = useState<OrderDetails | null>(null);
@@ -236,7 +237,7 @@ export default function ClientOrderDetailPage() {
       <DashboardLayout>
         <div className="w-full flex flex-col items-center justify-center" style={{ padding: '40px', gap: '16px' }}>
           <div style={{ color: '#EF4444', fontSize: '14px', fontFamily: 'Inter, sans-serif' }}>
-            {error || 'Order not found'}
+            {error || tErrors('orderNotFound')}
           </div>
           <button
             onClick={() => router.back()}
