@@ -204,7 +204,7 @@ export function FFNAccountDetails() {
   };
 
   const handleConfigure = () => {
-    router.push('/client/onboarding?step=jtl');
+    router.push('/client/setup?step=jtl');
   };
 
   const handleReauthenticate = async () => {

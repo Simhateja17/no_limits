@@ -57,7 +57,7 @@ export default function AdminChatPage() {
           const contactsData = response.data.data;
           console.log(`Success! Loaded ${contactsData.length} contacts`);
 
-          // Update online status from Supabase Realtime
+          // Update online status from Supabase-Realtime
           const updatedContacts = contactsData.map((contact: Contact) => ({
             ...contact,
             isOnline: onlineUsers.includes(contact.id),
