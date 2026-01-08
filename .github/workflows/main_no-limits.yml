@@ -26,6 +26,8 @@ jobs:
       - name: npm install and build
         env:
           NEXT_PUBLIC_API_URL: https://no-limits-backend-bub7gvhbbshufug0.germanywestcentral-01.azurewebsites.net/api
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
         run: |
           npm install
           npm run build
