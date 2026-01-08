@@ -99,6 +99,9 @@ export default function OrderDetailPage() {
   const [selectedShippingMethod, setSelectedShippingMethod] = useState(shippingMethods[0]);
   const [showShippingDropdown, setShowShippingDropdown] = useState(false);
   const [orderNotes, setOrderNotes] = useState('Please double check condition of the products before you send it out');
+  const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   // Form state for edit modal
   const [formData, setFormData] = useState({
@@ -345,6 +348,29 @@ export default function OrderDetailPage() {
       setReplacementError(err.response?.data?.error || 'Failed to create replacement order');
     } finally {
       setIsCreatingReplacement(false);
+    }
+  };
+
+  // Handle delete order
+  const handleDeleteOrder = async () => {
+    if (!rawOrder?.id) {
+      setDeleteError('Cannot delete: Order data not loaded');
+      return;
+    }
+
+    setIsDeleting(true);
+    setDeleteError(null);
+
+    try {
+      await dataApi.deleteOrder(rawOrder.id);
+      // Navigate back to orders list after successful deletion
+      router.push('/admin/orders');
+    } catch (err: any) {
+      console.error('Error deleting order:', err);
+      setDeleteError(err.response?.data?.error || 'Failed to delete order');
+      setShowDeleteConfirmModal(false);
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -1636,7 +1662,20 @@ export default function OrderDetailPage() {
                 >
                   {tOrders('deleteOrderWarning')}
                 </p>
+                {deleteError && (
+                  <p
+                    style={{
+                      fontFamily: 'Inter, sans-serif',
+                      fontSize: '12px',
+                      color: '#DC2626',
+                      marginBottom: '12px',
+                    }}
+                  >
+                    {deleteError}
+                  </p>
+                )}
                 <button
+                  onClick={() => setShowDeleteConfirmModal(true)}
                   style={{
                     minWidth: '120px',
                     height: '38px',
@@ -2230,6 +2269,134 @@ export default function OrderDetailPage() {
               >
                 {tOrders('replacementOrderCreated')}
               </span>
+            </div>
+          </div>
+        )}
+
+        {/* Delete Confirmation Modal */}
+        {showDeleteConfirmModal && (
+          <div
+            style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: 'rgba(0, 0, 0, 0.5)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              zIndex: 1000,
+            }}
+            onClick={() => !isDeleting && setShowDeleteConfirmModal(false)}
+          >
+            <div
+              style={{
+                width: '400px',
+                maxWidth: '90vw',
+                borderRadius: '8px',
+                padding: '24px',
+                backgroundColor: '#FFFFFF',
+                boxShadow: '0px 10px 10px -5px rgba(0, 0, 0, 0.04), 0px 20px 25px -5px rgba(0, 0, 0, 0.1)',
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Warning Icon */}
+              <div
+                style={{
+                  width: '48px',
+                  height: '48px',
+                  borderRadius: '24px',
+                  backgroundColor: '#FEE2E2',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  margin: '0 auto 16px',
+                }}
+              >
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M12 9V13M12 17H12.01M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="#DC2626" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </div>
+              <h3
+                style={{
+                  fontFamily: 'Inter, sans-serif',
+                  fontWeight: 600,
+                  fontSize: '18px',
+                  lineHeight: '24px',
+                  textAlign: 'center',
+                  color: '#111827',
+                  marginBottom: '8px',
+                }}
+              >
+                {tOrders('deleteOrder')}
+              </h3>
+              <p
+                style={{
+                  fontFamily: 'Inter, sans-serif',
+                  fontWeight: 400,
+                  fontSize: '14px',
+                  lineHeight: '20px',
+                  textAlign: 'center',
+                  color: '#6B7280',
+                  marginBottom: '24px',
+                }}
+              >
+                {tMessages('confirmDeleteOrder')}
+              </p>
+              <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+                <button
+                  onClick={() => setShowDeleteConfirmModal(false)}
+                  disabled={isDeleting}
+                  style={{
+                    minWidth: '100px',
+                    height: '38px',
+                    borderRadius: '6px',
+                    padding: '9px 17px',
+                    backgroundColor: '#FFFFFF',
+                    border: '1px solid #D1D5DB',
+                    cursor: isDeleting ? 'not-allowed' : 'pointer',
+                    opacity: isDeleting ? 0.5 : 1,
+                  }}
+                >
+                  <span
+                    style={{
+                      fontFamily: 'Inter, sans-serif',
+                      fontWeight: 500,
+                      fontSize: '14px',
+                      lineHeight: '20px',
+                      color: '#374151',
+                    }}
+                  >
+                    {tCommon('cancel')}
+                  </span>
+                </button>
+                <button
+                  onClick={handleDeleteOrder}
+                  disabled={isDeleting}
+                  style={{
+                    minWidth: '100px',
+                    height: '38px',
+                    borderRadius: '6px',
+                    padding: '9px 17px',
+                    backgroundColor: isDeleting ? '#9CA3AF' : '#DC2626',
+                    border: 'none',
+                    cursor: isDeleting ? 'not-allowed' : 'pointer',
+                  }}
+                >
+                  <span
+                    style={{
+                      fontFamily: 'Inter, sans-serif',
+                      fontWeight: 500,
+                      fontSize: '14px',
+                      lineHeight: '20px',
+                      color: '#FFFFFF',
+                    }}
+                  >
+                    {isDeleting ? tCommon('deleting') : tOrders('deleteOrder')}
+                  </span>
+                </button>
+              </div>
             </div>
           </div>
         )}

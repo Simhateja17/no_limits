@@ -12,6 +12,7 @@
     "close": "Schließen",
     "submit": "Absenden",
     "loading": "Lädt",
+    "deleting": "Wird gelöscht...",
     "retry": "Erneut versuchen",
     "noResults": "Keine Ergebnisse gefunden",
     "all": "Alle",
@@ -581,7 +582,10 @@
     "here": "hier",
     "activatePresale": "Vorverkauf aktivieren",
     "activatePresaleDescription": "Durch Aktivieren dieser Funktion können Sie alle Bestände dieses Wareneingangs an Ihre Vertriebskanäle übertragen. Dadurch können Sie verkaufen, bevor wir die Bestände setzen. Nach dem Setzen der Bestände wird diese Funktion zurückgesetzt.",
-    "presaleDescription": "Vorverkauf aktivieren, um Produkte vor Lagerverfügbarkeit zu verkaufen."
+    "presaleDescription": "Vorverkauf aktivieren, um Produkte vor Lagerverfügbarkeit zu verkaufen.",
+    "confirmDeleteOrder": "Sind Sie sicher, dass Sie diese Bestellung löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden.",
+    "confirmDeleteProduct": "Sind Sie sicher, dass Sie dieses Produkt löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden.",
+    "confirmDeleteReturn": "Sind Sie sicher, dass Sie diese Retoure löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden."
   },
   "clients": {
     "title": "Kunden",

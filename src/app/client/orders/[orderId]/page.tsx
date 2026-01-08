@@ -7,7 +7,7 @@ import { DashboardLayout } from '@/components/layout';
 import { useAuthStore } from '@/lib/store';
 import { useEffect } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
-import { dataApi, type Order as ApiOrder } from '@/lib/data-api';
+import { dataApi, type Order as ApiOrder, type UpdateOrderInput } from '@/lib/data-api';
 
 // Type for transformed order details
 interface OrderDetails {
@@ -150,6 +150,11 @@ export default function ClientOrderDetailPage() {
   const [showShippingDropdown, setShowShippingDropdown] = useState(false);
   const [orderNotes, setOrderNotes] = useState('Please double check condition of the products before you send it out');
 
+  // Save state
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [jtlSyncStatus, setJtlSyncStatus] = useState<{ success: boolean; error?: string } | null>(null);
+
   // Form state for edit modal
   const [formData, setFormData] = useState({
     firstName: '',
@@ -184,6 +189,19 @@ export default function ClientOrderDetailPage() {
         setOnHoldStatus(transformed.onHoldStatus);
         setTags(transformed.tags);
         setOrderProducts(transformed.products);
+        // Initialize form data from raw order
+        setFormData({
+          firstName: (data as any).shippingFirstName || '',
+          lastName: (data as any).shippingLastName || '',
+          company: (data as any).shippingCompany || '',
+          addressLine2: (data as any).shippingAddress2 || '',
+          streetAddress: (data as any).shippingAddress1 || '',
+          city: (data as any).shippingCity || '',
+          zipPostal: (data as any).shippingZip || '',
+          country: (data as any).shippingCountry || 'Deutschland',
+        });
+        // Initialize order notes
+        setOrderNotes((data as any).warehouseNotes || '');
       } catch (err) {
         console.error('Error fetching order:', err);
         setError(err instanceof Error ? err.message : 'Failed to load order details');
@@ -251,12 +269,102 @@ export default function ClientOrderDetailPage() {
     setShowEditModal(true);
   };
 
-  const handleSaveAddress = () => {
+  // Save all order changes to DB and sync to JTL
+  const handleSaveOrder = async () => {
+    if (!rawOrder?.id) {
+      setSaveError('Order data not loaded');
+      return;
+    }
+
+    setIsSaving(true);
+    setSaveError(null);
+    setJtlSyncStatus(null);
+
+    try {
+      // Build update data - only include changed fields
+      const updateData: UpdateOrderInput = {};
+
+      // Check warehouse notes
+      if (orderNotes !== (rawOrder as any).warehouseNotes) {
+        updateData.warehouseNotes = orderNotes;
+      }
+
+      // Check on hold status
+      const currentIsOnHold = (rawOrder as any).status === 'ON_HOLD';
+      if (onHoldStatus !== currentIsOnHold) {
+        updateData.isOnHold = onHoldStatus;
+      }
+
+      // Check tags
+      const currentTags = (rawOrder as any).tags || [];
+      if (JSON.stringify(tags.sort()) !== JSON.stringify(currentTags.sort())) {
+        updateData.tags = tags;
+      }
+
+      // Check shipping address changes
+      if (formData.firstName !== ((rawOrder as any).shippingFirstName || '')) {
+        updateData.shippingFirstName = formData.firstName;
+      }
+      if (formData.lastName !== ((rawOrder as any).shippingLastName || '')) {
+        updateData.shippingLastName = formData.lastName;
+      }
+      if (formData.company !== ((rawOrder as any).shippingCompany || '')) {
+        updateData.shippingCompany = formData.company;
+      }
+      if (formData.streetAddress !== ((rawOrder as any).shippingAddress1 || '')) {
+        updateData.shippingAddress1 = formData.streetAddress;
+      }
+      if (formData.addressLine2 !== ((rawOrder as any).shippingAddress2 || '')) {
+        updateData.shippingAddress2 = formData.addressLine2;
+      }
+      if (formData.city !== ((rawOrder as any).shippingCity || '')) {
+        updateData.shippingCity = formData.city;
+      }
+      if (formData.zipPostal !== ((rawOrder as any).shippingZip || '')) {
+        updateData.shippingZip = formData.zipPostal;
+      }
+
+      // Check if there are any changes
+      if (Object.keys(updateData).length === 0) {
+        // No changes to save
+        setEditOrderEnabled(false);
+        setIsSaving(false);
+        return;
+      }
+
+      const result = await dataApi.updateOrder(rawOrder.id, updateData);
+
+      // Update local state with new data
+      setRawOrder(result.data as any);
+      const transformed = transformApiOrderToDetails(result.data as any);
+      setOrderDetails(transformed);
+
+      // Track JTL sync status
+      if (result.jtlSync) {
+        setJtlSyncStatus(result.jtlSync);
+        if (!result.jtlSync.success) {
+          console.warn('JTL sync failed:', result.jtlSync.error);
+        }
+      }
+
+      setEditOrderEnabled(false);
+      setShowSuccessModal(true);
+      setTimeout(() => {
+        setShowSuccessModal(false);
+      }, 2000);
+    } catch (err: any) {
+      console.error('Error updating order:', err);
+      setSaveError(err.response?.data?.error || 'Failed to update order');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // Save address from modal and close it
+  const handleSaveAddress = async () => {
     setShowEditModal(false);
-    setShowSuccessModal(true);
-    setTimeout(() => {
-      setShowSuccessModal(false);
-    }, 2000);
+    // The actual save happens when the user clicks the main Save button
+    // This just closes the address edit modal
   };
 
   const handleAddTag = () => {
@@ -1506,54 +1614,100 @@ export default function ClientOrderDetailPage() {
               <div
                 style={{
                   width: '100%',
-                  height: '72px',
                   borderRadius: '8px',
                   padding: 'clamp(16px, 1.8vw, 24px)',
                   backgroundColor: '#FFFFFF',
                   boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.06), 0px 1px 3px 0px rgba(0, 0, 0, 0.1)',
                   display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
+                  flexDirection: 'column',
+                  gap: '16px',
                 }}
               >
-                <span
-                  style={{
-                    fontFamily: 'Inter, sans-serif',
-                    fontWeight: 500,
-                    fontSize: 'clamp(16px, 1.3vw, 18px)',
-                    lineHeight: '24px',
-                    color: '#111827',
-                  }}
-                >
-                  {tOrders('editOrder')}
-                </span>
-                {/* Toggle */}
-                <button
-                  onClick={() => setEditOrderEnabled(!editOrderEnabled)}
-                  style={{
-                    width: '44px',
-                    height: '24px',
-                    borderRadius: '12px',
-                    padding: '2px',
-                    backgroundColor: editOrderEnabled ? '#003450' : '#E5E7EB',
-                    border: 'none',
-                    cursor: 'pointer',
-                    position: 'relative',
-                    transition: 'background-color 0.2s ease',
-                  }}
-                >
-                  <div
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <span
                     style={{
-                      width: '20px',
-                      height: '20px',
-                      borderRadius: '50%',
-                      backgroundColor: '#FFFFFF',
-                      boxShadow: '0px 1px 2px rgba(0, 0, 0, 0.1)',
-                      transform: editOrderEnabled ? 'translateX(20px)' : 'translateX(0)',
-                      transition: 'transform 0.2s ease',
+                      fontFamily: 'Inter, sans-serif',
+                      fontWeight: 500,
+                      fontSize: 'clamp(16px, 1.3vw, 18px)',
+                      lineHeight: '24px',
+                      color: '#111827',
                     }}
-                  />
-                </button>
+                  >
+                    {tOrders('editOrder')}
+                  </span>
+                  {/* Toggle */}
+                  <button
+                    onClick={() => setEditOrderEnabled(!editOrderEnabled)}
+                    style={{
+                      width: '44px',
+                      height: '24px',
+                      borderRadius: '12px',
+                      padding: '2px',
+                      backgroundColor: editOrderEnabled ? '#003450' : '#E5E7EB',
+                      border: 'none',
+                      cursor: 'pointer',
+                      position: 'relative',
+                      transition: 'background-color 0.2s ease',
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: '20px',
+                        height: '20px',
+                        borderRadius: '50%',
+                        backgroundColor: '#FFFFFF',
+                        boxShadow: '0px 1px 2px rgba(0, 0, 0, 0.1)',
+                        transform: editOrderEnabled ? 'translateX(20px)' : 'translateX(0)',
+                        transition: 'transform 0.2s ease',
+                      }}
+                    />
+                  </button>
+                </div>
+
+                {/* Save Button - appears when edit mode is enabled */}
+                {editOrderEnabled && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    {saveError && (
+                      <div style={{ color: '#EF4444', fontSize: '14px', fontFamily: 'Inter, sans-serif' }}>
+                        {saveError}
+                      </div>
+                    )}
+                    {jtlSyncStatus && !jtlSyncStatus.success && (
+                      <div style={{ color: '#F59E0B', fontSize: '12px', fontFamily: 'Inter, sans-serif' }}>
+                        JTL Sync Warning: {jtlSyncStatus.error}
+                      </div>
+                    )}
+                    <button
+                      onClick={handleSaveOrder}
+                      disabled={isSaving}
+                      style={{
+                        width: '100%',
+                        height: '42px',
+                        borderRadius: '6px',
+                        padding: '10px 20px',
+                        backgroundColor: isSaving ? '#6B7280' : '#003450',
+                        border: 'none',
+                        cursor: isSaving ? 'not-allowed' : 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '8px',
+                      }}
+                    >
+                      <span
+                        style={{
+                          fontFamily: 'Inter, sans-serif',
+                          fontWeight: 500,
+                          fontSize: 'clamp(13px, 1.03vw, 14px)',
+                          lineHeight: '20px',
+                          color: '#FFFFFF',
+                        }}
+                      >
+                        {isSaving ? (tCommon('saving') || 'Saving...') : (tCommon('saveChanges') || 'Save Changes')}
+                      </span>
+                    </button>
+                  </div>
+                )}
               </div>
 
               {/* Order Notes Box */}

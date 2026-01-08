@@ -419,6 +419,21 @@ export const dataApi = {
     };
   },
 
+  async deleteOrder(id: string): Promise<{ message: string }> {
+    const response = await api.delete(`/data/orders/${id}`);
+    return response.data;
+  },
+
+  async deleteProduct(id: string): Promise<{ message: string }> {
+    const response = await api.delete(`/data/products/${id}`);
+    return response.data;
+  },
+
+  async deleteReturn(id: string): Promise<{ message: string }> {
+    const response = await api.delete(`/data/returns/${id}`);
+    return response.data;
+  },
+
   // Inbounds
   async getInbounds(): Promise<Inbound[]> {
     const response = await api.get('/data/inbounds');

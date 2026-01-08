@@ -12,6 +12,7 @@
     "close": "Close",
     "submit": "Submit",
     "loading": "Loading",
+    "deleting": "Deleting...",
     "retry": "Retry",
     "noResults": "No results found",
     "all": "All",
@@ -583,7 +584,10 @@
     "here": "here",
     "activatePresale": "Activate presale",
     "activatePresaleDescription": "By activating this function you can push all stocks of this inbound to your sales channels, this will allow you to sell before we set the stocks. After we set the stock it will reset this function.",
-    "presaleDescription": "Activate presale to make products available for purchase before they arrive in the warehouse"
+    "presaleDescription": "Activate presale to make products available for purchase before they arrive in the warehouse",
+    "confirmDeleteOrder": "Are you sure you want to delete this order? This action cannot be undone.",
+    "confirmDeleteProduct": "Are you sure you want to delete this product? This action cannot be undone.",
+    "confirmDeleteReturn": "Are you sure you want to delete this return? This action cannot be undone."
   },
   "clients": {
     "title": "Clients",
