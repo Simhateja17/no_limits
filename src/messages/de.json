@@ -47,7 +47,8 @@
     "detailsOfReturn": "Details der Retoure",
     "add": "Hinzufügen",
     "remove": "Entfernen",
-    "finish": "Fertig"
+    "finish": "Fertig",
+    "saveChanges": "Änderungen speichern"
   },
   "login": {
     "storeOwner": "Fulfillment Kunde",
@@ -206,7 +207,8 @@
     "orderNotesDescription": "In diesem Bereich werden zusätzliche Informationen aus dem Auftrag des jeweiligen Channels angezeigt – zum Beispiel aus Shopify, wenn der Kunde dort eine Notiz oder besondere Hinweise zum Auftrag hinterlegt hat. Darüber hinaus können hier weitere Informationen übermittelt werden, um den Vorgang weiter zu präzisieren oder interne Hinweise für die Bearbeitung zu hinterlegen.",
     "createOrderDescription": "Hinweis: Klicken Sie auf \"Auftrag erstellen\", um den neuen Auftrag mit den eingegebenen Daten anzulegen.",
     "noProducts": "Keine Produkte hinzugefügt.",
-    "noAddressProvided": "Keine Adresse angegeben."
+    "noAddressProvided": "Keine Adresse angegeben.",
+    "editOrder": "Auftrag bearbeiten"
   },
   "products": {
     "title": "Produkte",

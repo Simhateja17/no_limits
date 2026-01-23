@@ -653,9 +653,9 @@ export function ReturnsTable({ showClientColumn, basePath = '/admin/returns' }: 
       {/* Pagination */}
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4" style={{ paddingTop: '12px' }}>
         <span className="text-sm text-gray-700 order-2 sm:order-1" style={{ fontFamily: 'Inter, sans-serif' }}>
-          Showing <span style={{ fontWeight: 500 }}>{filteredReturns.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0}</span> to{' '}
-          <span style={{ fontWeight: 500 }}>{Math.min(currentPage * itemsPerPage, filteredReturns.length)}</span> of{' '}
-          <span style={{ fontWeight: 500 }}>{filteredReturns.length}</span> results
+          {tCommon('showing')} <span style={{ fontWeight: 500 }}>{filteredReturns.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0}</span> {tCommon('to')}{' '}
+          <span style={{ fontWeight: 500 }}>{Math.min(currentPage * itemsPerPage, filteredReturns.length)}</span> {tCommon('of')}{' '}
+          <span style={{ fontWeight: 500 }}>{filteredReturns.length}</span> {tCommon('results')}
         </span>
 
         <div className="flex items-center gap-3 order-1 sm:order-2">

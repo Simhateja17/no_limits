@@ -215,28 +215,30 @@ export function ChatSection({
           background: '#FFFFFF',
         }}
       >
-        <div
-          className="relative flex-shrink-0"
-          style={{
-            width: '36px',
-            height: '36px',
-            marginRight: '10px',
-          }}
-        >
-          <Image
-            src={contact.avatar}
-            alt={contact.name}
-            width={36}
-            height={36}
-            className="rounded-full object-cover w-9 h-9 md:w-10 md:h-10"
-          />
-        </div>
+        {contact.avatar && (
+          <div
+            className="relative flex-shrink-0"
+            style={{
+              width: '36px',
+              height: '36px',
+              marginRight: '10px',
+            }}
+          >
+            <Image
+              src={contact.avatar}
+              alt={contact.name}
+              width={36}
+              height={36}
+              className="rounded-full object-cover w-9 h-9 md:w-10 md:h-10"
+            />
+          </div>
+        )}
         <span
           className="truncate"
           style={{
             fontFamily: 'Poppins, sans-serif',
             fontWeight: 600,
-            fontSize: 'clamp(14px, 1.3vw, 18px)',
+            fontSize: 'clamp(12px, 1.1vw, 14px)',
             lineHeight: '100%',
             color: '#192A3E',
           }}
@@ -455,23 +457,25 @@ export function ChatSection({
             background: '#FAFBFC',
           }}
         >
-          <div
-            className="relative flex-shrink-0"
-            style={{
-              width: '16px',
-              height: '16px',
-              marginRight: '8px',
-            }}
-          >
-            <Image
-              src={typingUser.avatar}
-              alt={typingUser.name}
-              width={16}
-              height={16}
-              className="rounded-full object-cover"
-              style={{ width: '16px', height: '16px' }}
-            />
-          </div>
+          {typingUser.avatar && (
+            <div
+              className="relative flex-shrink-0"
+              style={{
+                width: '16px',
+                height: '16px',
+                marginRight: '8px',
+              }}
+            >
+              <Image
+                src={typingUser.avatar}
+                alt={typingUser.name}
+                width={16}
+                height={16}
+                className="rounded-full object-cover"
+                style={{ width: '16px', height: '16px' }}
+              />
+            </div>
+          )}
           <span
             style={{
               fontFamily: 'Poppins, sans-serif',

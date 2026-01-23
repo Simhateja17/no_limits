@@ -47,7 +47,8 @@
     "detailsOfReturn": "Details of return",
     "add": "Add",
     "remove": "Remove",
-    "finish": "Finish"
+    "finish": "Finish",
+    "saveChanges": "Save changes"
   },
   "login": {
     "storeOwner": "Fulfillment Client",

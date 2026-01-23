@@ -1724,7 +1724,6 @@ export default function ClientOrderDetailPage() {
                   value={orderNotes}
                   onChange={(e) => setOrderNotes(e.target.value)}
                   disabled={!editOrderEnabled}
-                  placeholder="Please double check condition of the products before you send it out"
                   style={{
                     width: '100%',
                     minHeight: 'clamp(70px, 5.9vw, 80px)',
