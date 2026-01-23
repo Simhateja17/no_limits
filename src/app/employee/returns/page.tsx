@@ -26,7 +26,7 @@ export default function EmployeeReturnsPage() {
   return (
     <DashboardLayout>
       <div className="w-full px-[5.2%] py-8">
-        <ReturnsTable showClientColumn={showClientColumn} basePath="/employee/returns" />
+        <ReturnsTable showClientColumn={showClientColumn} basePath="/employee/returns" canCreateReturn={true} />
       </div>
     </DashboardLayout>
   );

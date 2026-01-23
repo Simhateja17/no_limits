@@ -5,6 +5,17 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { useTranslations } from 'next-intl';
 import { dataApi, CreateTaskInput } from '@/lib/data-api';
+import { TaskDetailSidebar } from './TaskDetailSidebar';
+
+// Chat context interface for sidebar
+interface ChatContext {
+  id: string;
+  senderName: string;
+  senderAvatar?: string;
+  content: string;
+  timestamp: string;
+  isFromClient: boolean;
+}
 
 // Hook to detect mobile viewport
 function useIsMobile() {
@@ -31,6 +42,9 @@ interface Task {
   created: string;
   priority: 'Low' | 'High';
   status: 'Open' | 'Closed';
+  title?: string;
+  description?: string;
+  type?: string;
 }
 
 // Task data for creation
@@ -457,18 +471,50 @@ function CreateTaskModal({
   );
 }
 
+// Mock chat context data for tasks
+const mockChatContexts: Record<string, ChatContext> = {
+  '23423': {
+    id: 'msg-1',
+    senderName: 'Merchant 3',
+    content: 'Wir haben ein Problem mit der Bestellung #1234. Der Kunde hat die falsche Farbe erhalten. Könnten Sie bitte eine Ersatzlieferung veranlassen?',
+    timestamp: '14:30',
+    isFromClient: true,
+  },
+  '43642': {
+    id: 'msg-2',
+    senderName: 'Merchant 4',
+    content: 'Die Lieferung für Bestellung #5678 wurde beschädigt empfangen. Bitte prüfen Sie den Lagerbestand.',
+    timestamp: '09:15',
+    isFromClient: true,
+  },
+  '67890': {
+    id: 'msg-3',
+    senderName: 'Support Team',
+    content: 'Bestellung #9999 benötigt besondere Aufmerksamkeit. Der Kunde hat eine dringende Lieferung angefordert.',
+    timestamp: '11:45',
+    isFromClient: false,
+  },
+  '12345': {
+    id: 'msg-4',
+    senderName: 'Merchant 1',
+    content: 'Können Sie bitte den Status meiner Retoure #RET-123 überprüfen? Der Kunde wartet auf die Gutschrift.',
+    timestamp: '16:20',
+    isFromClient: true,
+  },
+};
+
 // Mock data matching the image
 const mockTasks: Task[] = [
-  { id: '1', taskId: '23423', client: 'Merchant 3', created: '1 hour ago', priority: 'High', status: 'Open' },
-  { id: '2', taskId: '43642', client: 'Merchant 4', created: '5 hours ago', priority: 'Low', status: 'Open' },
-  { id: '3', taskId: '34532', client: 'Merchant 5', created: '2 days ago', priority: 'Low', status: 'Closed' },
-  { id: '4', taskId: '43462', client: 'Warehouse', created: '5 days ago', priority: 'Low', status: 'Closed' },
-  { id: '5', taskId: '34983', client: 'Warehouse', created: '22.10.2025', priority: 'Low', status: 'Closed' },
-  { id: '6', taskId: '43895', client: 'Merchant 3', created: '20.10.2025', priority: 'High', status: 'Closed' },
-  { id: '7', taskId: '12345', client: 'Merchant 1', created: '18.10.2025', priority: 'Low', status: 'Open' },
-  { id: '8', taskId: '67890', client: 'Merchant 2', created: '15.10.2025', priority: 'High', status: 'Open' },
-  { id: '9', taskId: '11111', client: 'Warehouse', created: '10.10.2025', priority: 'Low', status: 'Closed' },
-  { id: '10', taskId: '22222', client: 'Merchant 4', created: '05.10.2025', priority: 'High', status: 'Closed' },
+  { id: '1', taskId: '23423', client: 'Merchant 3', created: '1 hour ago', priority: 'High', status: 'Open', description: 'Ersatzlieferung für falsche Produktfarbe veranlassen', type: 'Order Processing' },
+  { id: '2', taskId: '43642', client: 'Merchant 4', created: '5 hours ago', priority: 'Low', status: 'Open', description: 'Beschädigte Lieferung prüfen und Lagerbestand aktualisieren', type: 'Internal Warehouse' },
+  { id: '3', taskId: '34532', client: 'Merchant 5', created: '2 days ago', priority: 'Low', status: 'Closed', type: 'Returns' },
+  { id: '4', taskId: '43462', client: 'Warehouse', created: '5 days ago', priority: 'Low', status: 'Closed', type: 'Inventory Check' },
+  { id: '5', taskId: '34983', client: 'Warehouse', created: '22.10.2025', priority: 'Low', status: 'Closed', type: 'Internal Warehouse' },
+  { id: '6', taskId: '43895', client: 'Merchant 3', created: '20.10.2025', priority: 'High', status: 'Closed', type: 'Client Communication' },
+  { id: '7', taskId: '12345', client: 'Merchant 1', created: '18.10.2025', priority: 'Low', status: 'Open', description: 'Retoure Status prüfen und Gutschrift veranlassen', type: 'Returns' },
+  { id: '8', taskId: '67890', client: 'Merchant 2', created: '15.10.2025', priority: 'High', status: 'Open', description: 'Dringende Lieferung für Kunde bearbeiten', type: 'Order Processing' },
+  { id: '9', taskId: '11111', client: 'Warehouse', created: '10.10.2025', priority: 'Low', status: 'Closed', type: 'Inventory Check' },
+  { id: '10', taskId: '22222', client: 'Merchant 4', created: '05.10.2025', priority: 'High', status: 'Closed', type: 'Client Communication' },
 ];
 
 // Channel interface for dropdown
@@ -512,6 +558,9 @@ export function TasksTable({ showClientColumn, baseUrl }: TasksTableProps) {
   const [clientFilter, setClientFilter] = useState('ALL');
   const [currentPage, setCurrentPage] = useState(1);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [tasks, setTasks] = useState<Task[]>(mockTasks);
   const itemsPerPage = 10;
 
   // Mock current client for demo - in production this would come from auth context
@@ -525,8 +574,33 @@ export function TasksTable({ showClientColumn, baseUrl }: TasksTableProps) {
     : allChannels.filter(ch => ch.client === currentClient);
 
   const handleTaskClick = (taskId: string) => {
-    router.push(`${baseUrl}/${taskId}`);
+    const task = tasks.find(t => t.taskId === taskId);
+    if (task) {
+      setSelectedTask(task);
+      setIsSidebarOpen(true);
+    }
   };
+
+  const handleCloseSidebar = () => {
+    setIsSidebarOpen(false);
+    // Delay clearing selected task to allow animation to complete
+    setTimeout(() => {
+      setSelectedTask(null);
+    }, 300);
+  };
+
+  const handleStatusChange = (taskId: string, newStatus: 'Open' | 'Closed') => {
+    setTasks(prev => prev.map(task =>
+      task.taskId === taskId ? { ...task, status: newStatus } : task
+    ));
+    // Update selected task if it's the one being changed
+    if (selectedTask?.taskId === taskId) {
+      setSelectedTask(prev => prev ? { ...prev, status: newStatus } : null);
+    }
+  };
+
+  // Get chat context for selected task
+  const selectedChatContext = selectedTask ? mockChatContexts[selectedTask.taskId] : undefined;
 
   const handleCreateTask = async (taskData: TaskData) => {
     try {
@@ -568,31 +642,31 @@ export function TasksTable({ showClientColumn, baseUrl }: TasksTableProps) {
 
   // Filter tasks based on tab and search
   const filteredTasks = useMemo(() => {
-    let tasks = [...mockTasks];
+    let filteredList = [...tasks];
 
     // Filter by tab
     if (activeTab === 'open') {
-      tasks = tasks.filter(t => t.status === 'Open');
+      filteredList = filteredList.filter(t => t.status === 'Open');
     } else if (activeTab === 'closed') {
-      tasks = tasks.filter(t => t.status === 'Closed');
+      filteredList = filteredList.filter(t => t.status === 'Closed');
     }
 
     // Filter by client
     if (clientFilter !== 'ALL') {
-      tasks = tasks.filter(t => t.client === clientFilter);
+      filteredList = filteredList.filter(t => t.client === clientFilter);
     }
 
     // Filter by search query
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
-      tasks = tasks.filter(t =>
+      filteredList = filteredList.filter(t =>
         t.taskId.toLowerCase().includes(query) ||
         t.client.toLowerCase().includes(query)
       );
     }
 
-    return tasks;
-  }, [activeTab, searchQuery, clientFilter]);
+    return filteredList;
+  }, [activeTab, searchQuery, clientFilter, tasks]);
 
   // Pagination
   const totalPages = Math.ceil(filteredTasks.length / itemsPerPage);
@@ -602,9 +676,9 @@ export function TasksTable({ showClientColumn, baseUrl }: TasksTableProps) {
   );
 
   // Count for tabs
-  const allCount = mockTasks.length;
-  const openCount = mockTasks.filter(t => t.status === 'Open').length;
-  const closedCount = mockTasks.filter(t => t.status === 'Closed').length;
+  const allCount = tasks.length;
+  const openCount = tasks.filter(t => t.status === 'Open').length;
+  const closedCount = tasks.filter(t => t.status === 'Closed').length;
 
   const handlePrevious = () => {
     if (currentPage > 1) {
@@ -1334,6 +1408,15 @@ export function TasksTable({ showClientColumn, baseUrl }: TasksTableProps) {
         onClose={() => setIsCreateModalOpen(false)}
         onSubmit={handleCreateTask}
         clients={clients}
+      />
+
+      {/* Task Detail Sidebar */}
+      <TaskDetailSidebar
+        isOpen={isSidebarOpen}
+        onClose={handleCloseSidebar}
+        task={selectedTask}
+        chatContext={selectedChatContext}
+        onStatusChange={handleStatusChange}
       />
     </div>
   );

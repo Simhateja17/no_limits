@@ -40,6 +40,7 @@ interface Return {
 interface ReturnsTableProps {
   showClientColumn: boolean;
   basePath?: string;
+  canCreateReturn?: boolean;
 }
 
 // Status tag component - needs translations
@@ -92,7 +93,7 @@ const StatusTag = ({ status, t, compact = false }: { status: ReturnStatus; t: (k
   );
 };
 
-export function ReturnsTable({ showClientColumn, basePath = '/admin/returns' }: ReturnsTableProps) {
+export function ReturnsTable({ showClientColumn, basePath = '/admin/returns', canCreateReturn = false }: ReturnsTableProps) {
   const router = useRouter();
   const t = useTranslations('returns');
   const tCommon = useTranslations('common');
@@ -405,7 +406,8 @@ export function ReturnsTable({ showClientColumn, basePath = '/admin/returns' }: 
         </div>
         )}
 
-        {/* Create Return Button */}
+        {/* Create Return Button - Only shown for admin/employee */}
+        {canCreateReturn && (
         <button
           onClick={() => router.push(`${basePath}/create`)}
           className="w-full md:w-auto"
@@ -440,6 +442,7 @@ export function ReturnsTable({ showClientColumn, basePath = '/admin/returns' }: 
             {t('createReturn')}
           </span>
         </button>
+        )}
       </div>
 
       {/* Full-width horizontal line below tabs - hidden on mobile */}

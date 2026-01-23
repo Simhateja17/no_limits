@@ -26,7 +26,7 @@ export default function AdminReturnsPage() {
   return (
     <DashboardLayout>
       <div className="w-full px-[5.2%] py-8">
-        <ReturnsTable showClientColumn={showClientColumn} />
+        <ReturnsTable showClientColumn={showClientColumn} canCreateReturn={true} />
       </div>
     </DashboardLayout>
   );

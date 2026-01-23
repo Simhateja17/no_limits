@@ -402,7 +402,12 @@
     "orderProcessing": "Auftragsabwicklung",
     "inventoryCheck": "Bestandsprüfung",
     "noTasksFound": "Keine Aufgaben gefunden",
-    "returns": "Retouren"
+    "returns": "Retouren",
+    "chatContext": "Chat-Kontext",
+    "noChatContext": "Kein Chat-Kontext für diese Aufgabe verfügbar",
+    "markAsClosed": "Als geschlossen markieren",
+    "reopenTask": "Aufgabe wieder öffnen",
+    "taskDetailsComingSoon": "Aufgabendetails kommen bald"
   },
   "channels": {
     "title": "Vertriebskanäle",

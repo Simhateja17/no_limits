@@ -402,7 +402,12 @@
     "orderProcessing": "Order Processing",
     "inventoryCheck": "Inventory Check",
     "noTasksFound": "No tasks found",
-    "returns": "Returns"
+    "returns": "Returns",
+    "chatContext": "Chat Context",
+    "noChatContext": "No chat context available for this task",
+    "markAsClosed": "Mark as Closed",
+    "reopenTask": "Reopen Task",
+    "taskDetailsComingSoon": "Task details coming soon"
   },
   "channels": {
     "title": "Sales Channels",
