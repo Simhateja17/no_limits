@@ -287,6 +287,22 @@ export interface UpdateReturnInput {
   }>;
 }
 
+export interface CreateReturnInput {
+  orderId?: string;
+  reason?: string;
+  reasonCategory?: string;
+  customerName?: string;
+  customerEmail?: string;
+  notes?: string;
+  warehouseNotes?: string;
+  items: Array<{
+    sku?: string;
+    productName?: string;
+    quantity: number;
+    condition: 'GOOD' | 'ACCEPTABLE' | 'DAMAGED' | 'DEFECTIVE';
+  }>;
+}
+
 export interface UpdateResponse<T> {
   data: T;
   changedFields: string[];
@@ -426,6 +442,11 @@ export const dataApi = {
       changedFields: response.data.changedFields || [],
       jtlSync: response.data.jtlSync || null,
     };
+  },
+
+  async createReturn(input: CreateReturnInput): Promise<Return> {
+    const response = await api.post('/data/returns', input);
+    return response.data.data;
   },
 
   async deleteOrder(id: string): Promise<{ message: string }> {

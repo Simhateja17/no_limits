@@ -48,7 +48,13 @@
     "add": "Hinzufügen",
     "remove": "Entfernen",
     "finish": "Fertig",
-    "saveChanges": "Änderungen speichern"
+    "saveChanges": "Änderungen speichern",
+    "changedMind": "Meinung geändert",
+    "other": "Sonstiges",
+    "addItem": "Artikel hinzufügen",
+    "warehouseNotes": "Lagernotizen",
+    "email": "E-Mail",
+    "saving": "Speichern..."
   },
   "login": {
     "storeOwner": "Fulfillment Kunde",
@@ -352,7 +358,15 @@
     "acceptable": "Akzeptabel",
     "disposed": "Entsorgt",
     "bookedInAgain": "Wieder eingebucht",
-    "returnImages": "Retourenbilder"
+    "returnImages": "Retourenbilder",
+    "createReturn": "Retoure erstellen",
+    "enterOrderId": "Bestell-ID eingeben (optional)",
+    "enterCustomerName": "Kundennamen eingeben",
+    "enterCustomerEmail": "Kunden-E-Mail eingeben",
+    "enterReturnReason": "Retourengrund eingeben",
+    "enterNotes": "Notizen eingeben",
+    "enterWarehouseNotes": "Lagernotizen eingeben",
+    "atLeastOneItemRequired": "Mindestens ein Artikel mit SKU oder Produktname ist erforderlich"
   },
   "chat": {
     "title": "Chat",

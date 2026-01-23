@@ -405,16 +405,41 @@ export function ReturnsTable({ showClientColumn, basePath = '/admin/returns' }: 
         </div>
         )}
 
-        {/* Invisible spacer to match height of pages with Create button - hidden on mobile */}
-        {!isMobile && (
-        <div
+        {/* Create Return Button */}
+        <button
+          onClick={() => router.push(`${basePath}/create`)}
+          className="w-full md:w-auto"
           style={{
             height: 'clamp(32px, 2.8vw, 38px)',
+            borderRadius: '6px',
+            paddingTop: 'clamp(7px, 0.66vw, 9px)',
+            paddingRight: 'clamp(13px, 1.25vw, 17px)',
+            paddingBottom: 'clamp(7px, 0.66vw, 9px)',
+            paddingLeft: 'clamp(13px, 1.25vw, 17px)',
+            backgroundColor: '#003450',
+            boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.05)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: 'pointer',
+            border: 'none',
+            whiteSpace: 'nowrap',
             marginBottom: 'clamp(8px, 0.88vw, 12px)',
-            visibility: 'hidden',
           }}
-        />
-        )}
+        >
+          <span
+            style={{
+              fontFamily: 'Inter, sans-serif',
+              fontWeight: 500,
+              fontSize: 'clamp(12px, 1.03vw, 14px)',
+              lineHeight: '20px',
+              color: '#FFFFFF',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            {t('createReturn')}
+          </span>
+        </button>
       </div>
 
       {/* Full-width horizontal line below tabs - hidden on mobile */}
