@@ -547,7 +547,7 @@ export function TaskDetailSidebar({
                 {task.status === 'Open' ? (
                   <path d="M13.3333 4L6 11.3333L2.66667 8" stroke="#FFFFFF" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                 ) : (
-                  <path d="M8 3.33334V12.6667M3.33333 8H12.6667" stroke={task.status === 'Open' ? '#FFFFFF' : '#003450'} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M8 3.33334V12.6667M3.33333 8H12.6667" stroke="#003450" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                 )}
               </svg>
               <span
