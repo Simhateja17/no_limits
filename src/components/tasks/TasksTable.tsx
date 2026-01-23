@@ -5,17 +5,8 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { useTranslations } from 'next-intl';
 import { dataApi, CreateTaskInput } from '@/lib/data-api';
+import { useTasks, getTaskClientNames, DisplayTask } from '@/lib/hooks';
 import { TaskDetailSidebar } from './TaskDetailSidebar';
-
-// Chat context interface for sidebar
-interface ChatContext {
-  id: string;
-  senderName: string;
-  senderAvatar?: string;
-  content: string;
-  timestamp: string;
-  isFromClient: boolean;
-}
 
 // Hook to detect mobile viewport
 function useIsMobile() {
@@ -33,19 +24,6 @@ function useIsMobile() {
 
 // Tab type
 type TabType = 'all' | 'open' | 'closed';
-
-// Task interface
-interface Task {
-  id: string;
-  taskId: string;
-  client: string;
-  created: string;
-  priority: 'Low' | 'High';
-  status: 'Open' | 'Closed';
-  title?: string;
-  description?: string;
-  type?: string;
-}
 
 // Task data for creation
 interface TaskData {
@@ -471,79 +449,6 @@ function CreateTaskModal({
   );
 }
 
-// Mock chat context data for tasks
-const mockChatContexts: Record<string, ChatContext> = {
-  '23423': {
-    id: 'msg-1',
-    senderName: 'Merchant 3',
-    content: 'Wir haben ein Problem mit der Bestellung #1234. Der Kunde hat die falsche Farbe erhalten. Könnten Sie bitte eine Ersatzlieferung veranlassen?',
-    timestamp: '14:30',
-    isFromClient: true,
-  },
-  '43642': {
-    id: 'msg-2',
-    senderName: 'Merchant 4',
-    content: 'Die Lieferung für Bestellung #5678 wurde beschädigt empfangen. Bitte prüfen Sie den Lagerbestand.',
-    timestamp: '09:15',
-    isFromClient: true,
-  },
-  '67890': {
-    id: 'msg-3',
-    senderName: 'Support Team',
-    content: 'Bestellung #9999 benötigt besondere Aufmerksamkeit. Der Kunde hat eine dringende Lieferung angefordert.',
-    timestamp: '11:45',
-    isFromClient: false,
-  },
-  '12345': {
-    id: 'msg-4',
-    senderName: 'Merchant 1',
-    content: 'Können Sie bitte den Status meiner Retoure #RET-123 überprüfen? Der Kunde wartet auf die Gutschrift.',
-    timestamp: '16:20',
-    isFromClient: true,
-  },
-};
-
-// Mock data matching the image
-const mockTasks: Task[] = [
-  { id: '1', taskId: '23423', client: 'Merchant 3', created: '1 hour ago', priority: 'High', status: 'Open', description: 'Ersatzlieferung für falsche Produktfarbe veranlassen', type: 'Order Processing' },
-  { id: '2', taskId: '43642', client: 'Merchant 4', created: '5 hours ago', priority: 'Low', status: 'Open', description: 'Beschädigte Lieferung prüfen und Lagerbestand aktualisieren', type: 'Internal Warehouse' },
-  { id: '3', taskId: '34532', client: 'Merchant 5', created: '2 days ago', priority: 'Low', status: 'Closed', type: 'Returns' },
-  { id: '4', taskId: '43462', client: 'Warehouse', created: '5 days ago', priority: 'Low', status: 'Closed', type: 'Inventory Check' },
-  { id: '5', taskId: '34983', client: 'Warehouse', created: '22.10.2025', priority: 'Low', status: 'Closed', type: 'Internal Warehouse' },
-  { id: '6', taskId: '43895', client: 'Merchant 3', created: '20.10.2025', priority: 'High', status: 'Closed', type: 'Client Communication' },
-  { id: '7', taskId: '12345', client: 'Merchant 1', created: '18.10.2025', priority: 'Low', status: 'Open', description: 'Retoure Status prüfen und Gutschrift veranlassen', type: 'Returns' },
-  { id: '8', taskId: '67890', client: 'Merchant 2', created: '15.10.2025', priority: 'High', status: 'Open', description: 'Dringende Lieferung für Kunde bearbeiten', type: 'Order Processing' },
-  { id: '9', taskId: '11111', client: 'Warehouse', created: '10.10.2025', priority: 'Low', status: 'Closed', type: 'Inventory Check' },
-  { id: '10', taskId: '22222', client: 'Merchant 4', created: '05.10.2025', priority: 'High', status: 'Closed', type: 'Client Communication' },
-];
-
-// Channel interface for dropdown
-interface ChannelInfo {
-  name: string;
-  type: 'Shopify' | 'Woocommerce' | 'Amazon';
-  client: string; // The client/owner of this channel
-}
-
-// All channels (admin/employee can see all, clients see only their own)
-const allChannels: ChannelInfo[] = [
-  // Papercrush channels
-  { name: 'Papercrush B2C', type: 'Shopify', client: 'Papercrush' },
-  { name: 'Papercrush B2B', type: 'Shopify', client: 'Papercrush' },
-  // Caobali channels
-  { name: 'Caobali Store', type: 'Woocommerce', client: 'Caobali' },
-  { name: 'Caobali Wholesale', type: 'Amazon', client: 'Caobali' },
-  // Merchant channels
-  { name: 'Merchant 1 Shop', type: 'Shopify', client: 'Merchant 1' },
-  { name: 'Merchant 2 Store', type: 'Woocommerce', client: 'Merchant 2' },
-  { name: 'Merchant 3 Main', type: 'Amazon', client: 'Merchant 3' },
-  { name: 'Merchant 4 Shop', type: 'Shopify', client: 'Merchant 4' },
-  { name: 'Merchant 5 Store', type: 'Woocommerce', client: 'Merchant 5' },
-  { name: 'Warehouse Store', type: 'Amazon', client: 'Warehouse' },
-];
-
-// Clients for admin/employee filter (excluding 'All' which will be added dynamically with translation)
-const clients = ['Merchant 1', 'Merchant 2', 'Merchant 3', 'Merchant 4', 'Merchant 5', 'Warehouse'];
-
 interface TasksTableProps {
   showClientColumn: boolean;
   baseUrl: string;
@@ -558,20 +463,15 @@ export function TasksTable({ showClientColumn, baseUrl }: TasksTableProps) {
   const [clientFilter, setClientFilter] = useState('ALL');
   const [currentPage, setCurrentPage] = useState(1);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [selectedTask, setSelectedTask] = useState<DisplayTask | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [tasks, setTasks] = useState<Task[]>(mockTasks);
   const itemsPerPage = 10;
 
-  // Mock current client for demo - in production this would come from auth context
-  const currentClient = 'Papercrush';
+  // Fetch tasks from API
+  const { tasks, loading, error, refetch, updateTaskStatus } = useTasks();
   
-  // Filter channels based on user role
-  // showClientColumn = true means admin/employee view (can see all clients)
-  // showClientColumn = false means client view (can only see their own channels)
-  const channels = showClientColumn 
-    ? allChannels 
-    : allChannels.filter(ch => ch.client === currentClient);
+  // Get unique client names from tasks for filter dropdown
+  const clientNames = useMemo(() => getTaskClientNames(tasks), [tasks]);
 
   const handleTaskClick = (taskId: string) => {
     const task = tasks.find(t => t.taskId === taskId);
@@ -589,18 +489,17 @@ export function TasksTable({ showClientColumn, baseUrl }: TasksTableProps) {
     }, 300);
   };
 
-  const handleStatusChange = (taskId: string, newStatus: 'Open' | 'Closed') => {
-    setTasks(prev => prev.map(task =>
-      task.taskId === taskId ? { ...task, status: newStatus } : task
-    ));
-    // Update selected task if it's the one being changed
-    if (selectedTask?.taskId === taskId) {
-      setSelectedTask(prev => prev ? { ...prev, status: newStatus } : null);
+  const handleStatusChange = async (taskId: string, newStatus: 'Open' | 'Closed') => {
+    try {
+      await updateTaskStatus(taskId, newStatus);
+      // Update selected task if it's the one being changed
+      if (selectedTask?.taskId === taskId) {
+        setSelectedTask(prev => prev ? { ...prev, status: newStatus } : null);
+      }
+    } catch (err) {
+      console.error('Failed to update task status:', err);
     }
   };
-
-  // Get chat context for selected task
-  const selectedChatContext = selectedTask ? mockChatContexts[selectedTask.taskId] : undefined;
 
   const handleCreateTask = async (taskData: TaskData) => {
     try {
@@ -632,8 +531,8 @@ export function TasksTable({ showClientColumn, baseUrl }: TasksTableProps) {
       await dataApi.createTask(input);
       setIsCreateModalOpen(false);
       
-      // Optionally refresh the tasks list here
-      // For now, the user can refresh or the page can be refreshed
+      // Refresh the tasks list
+      await refetch();
     } catch (error) {
       console.error('Error creating task:', error);
       // Could show an error toast here
@@ -693,7 +592,7 @@ export function TasksTable({ showClientColumn, baseUrl }: TasksTableProps) {
   };
 
   // Priority badge component - responsive sizing based on 1358px reference
-  const PriorityBadge = ({ priority }: { priority: Task['priority'] }) => {
+  const PriorityBadge = ({ priority }: { priority: DisplayTask['priority'] }) => {
     const isHigh = priority === 'High';
     const priorityKey = priority.toLowerCase() as 'low' | 'high';
     
@@ -722,7 +621,7 @@ export function TasksTable({ showClientColumn, baseUrl }: TasksTableProps) {
   };
 
   // Get translated status
-  const getTranslatedStatus = (status: Task['status']) => {
+  const getTranslatedStatus = (status: DisplayTask['status']) => {
     return status === 'Open' ? t('open') : t('closed');
   };
 
@@ -730,7 +629,7 @@ export function TasksTable({ showClientColumn, baseUrl }: TasksTableProps) {
   const isMobile = useIsMobile();
 
   // Task Card Component for mobile view
-  const TaskCard = ({ task }: { task: Task }) => (
+  const TaskCard = ({ task }: { task: DisplayTask }) => (
     <div
       onClick={() => handleTaskClick(task.taskId)}
       className="p-4 bg-white border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors"
@@ -947,7 +846,7 @@ export function TasksTable({ showClientColumn, baseUrl }: TasksTableProps) {
 
       {/* Filter and Search Row */}
       <div className="flex items-end gap-4 md:gap-6 flex-wrap">
-        {/* Filter by Client (admin/employee) or Channels (client) */}
+        {/* Filter by Client */}
         <div className="flex flex-col gap-2 w-full md:w-auto">
           <label
             style={{
@@ -958,7 +857,7 @@ export function TasksTable({ showClientColumn, baseUrl }: TasksTableProps) {
               color: '#374151',
             }}
           >
-            {showClientColumn ? t('filterByCustomer') : tCommon('channels')}
+            {t('filterByCustomer')}
           </label>
           <div className="relative">
             <select
@@ -986,18 +885,11 @@ export function TasksTable({ showClientColumn, baseUrl }: TasksTableProps) {
               <option key="ALL" value="ALL">
                 {tCommon('all')}
               </option>
-              {showClientColumn
-                ? clients.map((client) => (
-                    <option key={client} value={client}>
-                      {client}
-                    </option>
-                  ))
-                : channels.map((channel) => (
-                    <option key={channel.name} value={channel.name}>
-                      {channel.name} - {channel.type}
-                    </option>
-                  ))
-              }
+              {clientNames.map((client) => (
+                <option key={client} value={client}>
+                  {client}
+                </option>
+              ))}
             </select>
             {/* Dropdown Arrow */}
             <div
@@ -1407,7 +1299,7 @@ export function TasksTable({ showClientColumn, baseUrl }: TasksTableProps) {
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
         onSubmit={handleCreateTask}
-        clients={clients}
+        clients={clientNames}
       />
 
       {/* Task Detail Sidebar */}
@@ -1415,7 +1307,6 @@ export function TasksTable({ showClientColumn, baseUrl }: TasksTableProps) {
         isOpen={isSidebarOpen}
         onClose={handleCloseSidebar}
         task={selectedTask}
-        chatContext={selectedChatContext}
         onStatusChange={handleStatusChange}
       />
     </div>

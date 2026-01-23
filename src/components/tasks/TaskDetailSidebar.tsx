@@ -12,7 +12,7 @@ interface Task {
   priority: 'Low' | 'High';
   status: 'Open' | 'Closed';
   title?: string;
-  description?: string;
+  description?: string | null;
   type?: string;
 }
 
