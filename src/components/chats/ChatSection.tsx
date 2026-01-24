@@ -295,7 +295,7 @@ export function ChatSection({
 
         {messages.map((message) => {
           const isCurrentUser = message.senderId === currentUserId;
-          
+
           return (
             <div key={message.id} className="mb-4">
               {/* Message sender info - positioned based on sender */}
@@ -331,21 +331,6 @@ export function ChatSection({
                 >
                   {message.senderName}
                 </span>
-                <span
-                  style={{
-                    fontFamily: 'Poppins, sans-serif',
-                    fontWeight: 400,
-                    fontSize: '10px',
-                    lineHeight: '100%',
-                    letterSpacing: '1%',
-                    color: '#90A0B7',
-                    marginLeft: '8px',
-                  }}
-                >
-                  {formatTime(message.timestamp)}
-                </span>
-                {/* Message status indicator for sent messages */}
-                {isCurrentUser && <MessageStatus status={message.status} />}
                 {isCurrentUser && (
                   <div
                     className="relative flex-shrink-0"
@@ -394,6 +379,24 @@ export function ChatSection({
                   >
                     {message.content}
                   </p>
+                </div>
+
+                {/* Timestamp and status - positioned below message bubble */}
+                <div className={`flex items-center mt-1 ${isCurrentUser ? 'justify-end' : ''}`}>
+                  <span
+                    style={{
+                      fontFamily: 'Poppins, sans-serif',
+                      fontWeight: 400,
+                      fontSize: '10px',
+                      lineHeight: '100%',
+                      letterSpacing: '1%',
+                      color: '#90A0B7',
+                    }}
+                  >
+                    {formatTime(message.timestamp)}
+                  </span>
+                  {/* Message status indicator for sent messages */}
+                  {isCurrentUser && <MessageStatus status={message.status} />}
                 </div>
 
                 {/* Create task button - only for non-user messages and when showCreateTask is true */}
