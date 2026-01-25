@@ -37,6 +37,11 @@ export interface Order {
   totalWeight: number | null;
   tags: string[];
 
+  // Hold status
+  isOnHold?: boolean;
+  holdReason?: string | null;
+  holdNotes?: string | null;
+
   // Customer information
   customerName: string | null;
   customerEmail: string | null;

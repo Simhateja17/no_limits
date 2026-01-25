@@ -597,6 +597,43 @@ export default function ClientOrderDetailPage() {
                     </div>
                   </div>
                 )}
+
+                {/* Awaiting Payment Badge - shown when order is held for payment */}
+                {rawOrder?.holdReason === 'AWAITING_PAYMENT' && (
+                  <div
+                    style={{
+                      height: '26px',
+                      padding: '3px 13px',
+                      borderRadius: '13px',
+                      backgroundColor: '#FEF3C7',
+                      border: '1px solid #F59E0B',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      marginTop: '8px',
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: '6px',
+                        height: '6px',
+                        borderRadius: '50%',
+                        backgroundColor: '#D97706',
+                      }}
+                    />
+                    <span
+                      style={{
+                        fontFamily: 'Inter, sans-serif',
+                        fontWeight: 500,
+                        fontSize: '13px',
+                        color: '#D97706',
+                      }}
+                    >
+                      Awaiting Payment
+                    </span>
+                  </div>
+                )}
+
                 <span
                   style={{
                     fontFamily: 'Inter, sans-serif',
@@ -906,7 +943,12 @@ export default function ClientOrderDetailPage() {
                     {tOrders('onHold')}
                   </span>
                   <button
-                    onClick={() => editOrderEnabled && setOnHoldStatus(!onHoldStatus)}
+                    onClick={() => {
+                      // Prevent toggling if on payment hold (system-managed)
+                      if (editOrderEnabled && rawOrder?.holdReason !== 'AWAITING_PAYMENT') {
+                        setOnHoldStatus(!onHoldStatus);
+                      }
+                    }}
                     style={{
                       width: '44px',
                       height: '24px',
@@ -914,10 +956,10 @@ export default function ClientOrderDetailPage() {
                       padding: '2px',
                       backgroundColor: onHoldStatus ? '#003450' : '#E5E7EB',
                       position: 'relative',
-                      cursor: editOrderEnabled ? 'pointer' : 'not-allowed',
+                      cursor: (editOrderEnabled && rawOrder?.holdReason !== 'AWAITING_PAYMENT') ? 'pointer' : 'not-allowed',
                       border: 'none',
                       transition: 'background-color 0.2s',
-                      opacity: editOrderEnabled ? 1 : 0.6,
+                      opacity: (editOrderEnabled && rawOrder?.holdReason !== 'AWAITING_PAYMENT') ? 1 : 0.6,
                     }}
                   >
                     <div
@@ -935,17 +977,32 @@ export default function ClientOrderDetailPage() {
                     />
                   </button>
                 </div>
-                <p
-                  style={{
-                    fontFamily: 'Inter, sans-serif',
-                    fontWeight: 400,
-                    fontSize: '14px',
-                    lineHeight: '20px',
-                    color: '#6B7280',
-                  }}
-                >
-                  {tOrders('onHoldDescription')}
-                </p>
+                {/* Show payment hold message when order is held for payment */}
+                {rawOrder?.holdReason === 'AWAITING_PAYMENT' ? (
+                  <p
+                    style={{
+                      fontFamily: 'Inter, sans-serif',
+                      fontWeight: 400,
+                      fontSize: '14px',
+                      lineHeight: '20px',
+                      color: '#D97706',
+                    }}
+                  >
+                    This order is awaiting payment. Hold will be automatically released when payment is confirmed.
+                  </p>
+                ) : (
+                  <p
+                    style={{
+                      fontFamily: 'Inter, sans-serif',
+                      fontWeight: 400,
+                      fontSize: '14px',
+                      lineHeight: '20px',
+                      color: '#6B7280',
+                    }}
+                  >
+                    {tOrders('onHoldDescription')}
+                  </p>
+                )}
               </div>
 
               {/* Shipment Weight Box */}
