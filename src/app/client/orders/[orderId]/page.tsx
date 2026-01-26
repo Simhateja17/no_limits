@@ -12,7 +12,8 @@ import { dataApi, type Order as ApiOrder, type UpdateOrderInput } from '@/lib/da
 // Type for transformed order details
 interface OrderDetails {
   orderId: string;
-  status: 'Processing' | 'On Hold' | 'Shipped' | 'Cancelled';
+  status: string; // Now uses fulfillmentState for more detailed display
+  statusColor: string; // Color for the status badge
   deliveryMethod: {
     name: string;
     street: string;
@@ -36,23 +37,102 @@ interface OrderDetails {
 
 // Transform API order to component format
 const transformApiOrderToDetails = (apiOrder: ApiOrder): OrderDetails => {
-  const mapStatus = (status: string): 'Processing' | 'On Hold' | 'Shipped' | 'Cancelled' => {
+  // Get display status based on fulfillmentState (if available) or status
+  const getDisplayStatus = (status: string, fulfillmentState: string | null): string => {
+    if (fulfillmentState) {
+      switch (fulfillmentState) {
+        case 'PENDING':
+          return 'Processing';
+        case 'AWAITING_STOCK':
+          return 'Awaiting Stock';
+        case 'READY_FOR_PICKING':
+          return 'Ready for Picking';
+        case 'PICKING':
+          return 'Picking';
+        case 'PICKED':
+          return 'Picked';
+        case 'PACKING':
+          return 'Packing';
+        case 'PACKED':
+          return 'Packed';
+        case 'LABEL_CREATED':
+          return 'Label Created';
+        case 'SHIPPED':
+          return 'Shipped';
+        case 'IN_TRANSIT':
+          return 'In Transit';
+        case 'OUT_FOR_DELIVERY':
+          return 'Out for Delivery';
+        case 'DELIVERED':
+          return 'Delivered';
+        case 'FAILED_DELIVERY':
+          return 'Delivery Failed';
+        case 'RETURNED_TO_SENDER':
+          return 'Returned to Sender';
+      }
+    }
+    
+    // Fall back to order status
     switch (status) {
       case 'SHIPPED':
-      case 'DELIVERED':
         return 'Shipped';
+      case 'DELIVERED':
+        return 'Delivered';
       case 'ON_HOLD':
         return 'On Hold';
       case 'CANCELLED':
         return 'Cancelled';
+      case 'ERROR':
+        return 'Error';
       default:
         return 'Processing';
+    }
+  };
+  
+  // Get color based on status
+  const getStatusColor = (status: string, fulfillmentState: string | null): string => {
+    if (fulfillmentState) {
+      switch (fulfillmentState) {
+        case 'SHIPPED':
+        case 'IN_TRANSIT':
+        case 'OUT_FOR_DELIVERY':
+          return '#8B5CF6'; // Purple for shipped
+        case 'DELIVERED':
+          return '#10B981'; // Green for delivered
+        case 'PICKING':
+        case 'PICKED':
+          return '#3B82F6'; // Blue for picking
+        case 'PACKING':
+        case 'PACKED':
+        case 'LABEL_CREATED':
+          return '#06B6D4'; // Cyan for packing
+        case 'FAILED_DELIVERY':
+        case 'RETURNED_TO_SENDER':
+          return '#EF4444'; // Red for failed
+        case 'AWAITING_STOCK':
+          return '#F59E0B'; // Amber for awaiting
+      }
+    }
+    
+    switch (status) {
+      case 'SHIPPED':
+        return '#8B5CF6';
+      case 'DELIVERED':
+        return '#10B981';
+      case 'ON_HOLD':
+        return '#F59E0B';
+      case 'CANCELLED':
+      case 'ERROR':
+        return '#EF4444';
+      default:
+        return '#6BAC4D'; // Green for processing
     }
   };
 
   return {
     orderId: apiOrder.externalOrderId || apiOrder.orderNumber || apiOrder.orderId,
-    status: mapStatus(apiOrder.status),
+    status: getDisplayStatus(apiOrder.status, apiOrder.fulfillmentState || null),
+    statusColor: getStatusColor(apiOrder.status, apiOrder.fulfillmentState || null),
     // Use actual shipping address from order
     deliveryMethod: {
       name: apiOrder.customerName ||
@@ -100,16 +180,32 @@ const shippingMethods = [
   { id: 'hermes', name: 'Hermes Paket', logo: '/hermes.png' },
 ];
 
-// Status color mapping
+// Status color mapping (legacy - kept for compatibility but statusColor from transform is preferred)
 const getStatusColor = (status: string) => {
   switch (status) {
     case 'Processing':
       return '#6BAC4D';
     case 'On Hold':
+    case 'Awaiting Stock':
       return '#F59E0B';
     case 'Shipped':
+    case 'In Transit':
+    case 'Out for Delivery':
+      return '#8B5CF6';
+    case 'Delivered':
       return '#10B981';
+    case 'Picking':
+    case 'Picked':
+    case 'Ready for Picking':
+      return '#3B82F6';
+    case 'Packing':
+    case 'Packed':
+    case 'Label Created':
+      return '#06B6D4';
     case 'Cancelled':
+    case 'Error':
+    case 'Delivery Failed':
+    case 'Returned to Sender':
       return '#EF4444';
     default:
       return '#6BAC4D';

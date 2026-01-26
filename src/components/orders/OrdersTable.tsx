@@ -9,8 +9,8 @@ import { dataApi, type Order as ApiOrder } from '@/lib/data-api';
 // Tab type for orders
 type OrderTabType = 'all' | 'inStock' | 'outOfStock' | 'errors' | 'partiallyFulfilled' | 'cancelled' | 'sent';
 
-// Order status type
-type OrderStatus = 'success' | 'error' | 'mildError' | 'partiallyFulfilled';
+// Order status type for color coding
+type OrderStatusColor = 'success' | 'error' | 'mildError' | 'partiallyFulfilled' | 'shipped' | 'picking' | 'packing';
 
 // Order interface
 interface Order {
@@ -21,7 +21,9 @@ interface Order {
   weight: string;
   quantity: number;
   method: string;
-  status: OrderStatus;
+  status: OrderStatusColor;
+  fulfillmentState: string | null; // FFN state for display
+  displayStatus: string; // Human-readable status label
 }
 
 // Custom hook to detect screen size
@@ -41,13 +43,39 @@ function useIsMobile() {
   return isMobile;
 }
 
-// Helper function to map backend status to frontend status
-const mapBackendStatusToFrontend = (backendStatus: string): OrderStatus => {
+// Helper function to get status color from backend status and fulfillment state
+const getStatusColorFromBackend = (backendStatus: string, fulfillmentState: string | null): OrderStatusColor => {
+  // First check fulfillmentState for more specific status
+  if (fulfillmentState) {
+    switch (fulfillmentState) {
+      case 'SHIPPED':
+      case 'IN_TRANSIT':
+      case 'OUT_FOR_DELIVERY':
+        return 'shipped';
+      case 'DELIVERED':
+        return 'success';
+      case 'PICKING':
+        return 'picking';
+      case 'PACKING':
+      case 'PACKED':
+      case 'LABEL_CREATED':
+        return 'packing';
+      case 'FAILED_DELIVERY':
+      case 'RETURNED_TO_SENDER':
+        return 'error';
+      case 'AWAITING_STOCK':
+        return 'mildError';
+    }
+  }
+  
+  // Fall back to order status
   switch (backendStatus) {
     case 'PENDING':
     case 'PROCESSING':
     case 'IN_STOCK':
+      return 'success';
     case 'SHIPPED':
+      return 'shipped';
     case 'DELIVERED':
       return 'success';
     case 'CANCELLED':
@@ -63,6 +91,59 @@ const mapBackendStatusToFrontend = (backendStatus: string): OrderStatus => {
   }
 };
 
+// Helper function to get human-readable display status
+const getDisplayStatus = (backendStatus: string, fulfillmentState: string | null): string => {
+  // If we have a fulfillmentState, prefer that for display
+  if (fulfillmentState) {
+    switch (fulfillmentState) {
+      case 'PENDING':
+        return 'processing'; // Will be translated
+      case 'AWAITING_STOCK':
+        return 'awaiting_stock';
+      case 'READY_FOR_PICKING':
+        return 'ready_for_picking';
+      case 'PICKING':
+        return 'picking';
+      case 'PICKED':
+        return 'picked';
+      case 'PACKING':
+        return 'packing';
+      case 'PACKED':
+        return 'packed';
+      case 'LABEL_CREATED':
+        return 'label_created';
+      case 'SHIPPED':
+        return 'shipped';
+      case 'IN_TRANSIT':
+        return 'in_transit';
+      case 'OUT_FOR_DELIVERY':
+        return 'out_for_delivery';
+      case 'DELIVERED':
+        return 'delivered';
+      case 'FAILED_DELIVERY':
+        return 'failed_delivery';
+      case 'RETURNED_TO_SENDER':
+        return 'returned_to_sender';
+    }
+  }
+  
+  // Fall back to order status
+  switch (backendStatus) {
+    case 'SHIPPED':
+      return 'shipped';
+    case 'DELIVERED':
+      return 'delivered';
+    case 'CANCELLED':
+      return 'cancelled';
+    case 'ON_HOLD':
+      return 'on_hold';
+    case 'ERROR':
+      return 'error';
+    default:
+      return 'processing';
+  }
+};
+
 // Helper function to transform API order to component Order
 const transformApiOrder = (apiOrder: ApiOrder): Order => ({
   id: apiOrder.id,
@@ -72,7 +153,9 @@ const transformApiOrder = (apiOrder: ApiOrder): Order => ({
   weight: '0 kg', // Placeholder - can be calculated from items if needed
   quantity: apiOrder.items.reduce((sum, item) => sum + item.quantity, 0),
   method: apiOrder.shippingMethod || 'Standard',
-  status: mapBackendStatusToFrontend(apiOrder.status),
+  status: getStatusColorFromBackend(apiOrder.status, apiOrder.fulfillmentState || null),
+  fulfillmentState: apiOrder.fulfillmentState || null,
+  displayStatus: getDisplayStatus(apiOrder.status, apiOrder.fulfillmentState || null),
 });
 
 interface OrdersTableProps {
@@ -81,33 +164,68 @@ interface OrdersTableProps {
 }
 
 // Status tag component - needs translation function
-const StatusTag = ({ status, t, compact = false }: { status: OrderStatus; t: (key: string) => string; compact?: boolean }) => {
+const StatusTag = ({ status, displayStatus, t, compact = false }: { 
+  status: OrderStatusColor; 
+  displayStatus?: string; 
+  t: (key: string) => string; 
+  compact?: boolean 
+}) => {
   const getStatusConfig = () => {
+    // If we have displayStatus, use it for the label (with translation)
+    const getLabel = () => {
+      if (displayStatus) {
+        // Try to translate the displayStatus key, fallback to processing
+        const translationKey = displayStatus;
+        const translated = t(translationKey);
+        // If translation returns the key itself, use a formatted version
+        if (translated === translationKey) {
+          return displayStatus.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+        }
+        return translated;
+      }
+      return t('processing');
+    };
+    
     switch (status) {
       case 'success':
         return {
-          label: t('processing'),
-          dotColor: '#22C55E',
+          label: getLabel(),
+          dotColor: '#22C55E', // Green
+        };
+      case 'shipped':
+        return {
+          label: getLabel(),
+          dotColor: '#8B5CF6', // Purple
+        };
+      case 'picking':
+        return {
+          label: getLabel(),
+          dotColor: '#3B82F6', // Blue
+        };
+      case 'packing':
+        return {
+          label: getLabel(),
+          dotColor: '#06B6D4', // Cyan
         };
       case 'error':
         return {
-          label: 'Error',
-          dotColor: '#EF4444',
+          label: getLabel(),
+          dotColor: '#EF4444', // Red
         };
       case 'mildError':
         return {
-          label: t('issue'),
-          dotColor: '#F59E0B',
+          label: getLabel(),
+          dotColor: '#F59E0B', // Amber
         };
       case 'partiallyFulfilled':
         return {
-          label: t('partiallyFulfilled'),
+          label: getLabel(),
           dotColor: '#3B82F6', // Blue
         };
       default:
         return {
-          label: t('unknown'),
-          dotColor: '#6B7280',
+          label: getLabel(),
+          dotColor: '#6B7280', // Gray
         };
     }
   };
@@ -168,7 +286,7 @@ const OrderCard = ({
           <p className="text-sm font-medium text-gray-900">#{order.orderId.replace(/^#/, '')}</p>
           <p className="text-xs text-gray-500 mt-0.5">{formatOrderDate(order.orderDate)}</p>
         </div>
-        <StatusTag status={order.status} t={t} compact />
+        <StatusTag status={order.status} displayStatus={order.displayStatus} t={t} compact />
       </div>
       
       <div className="grid grid-cols-2 gap-2 text-sm">
@@ -1033,7 +1151,7 @@ export function OrdersTable({ showClientColumn, basePath = '/admin/orders' }: Or
               {order.method}
             </span>
             <div className="flex items-center justify-start">
-              <StatusTag status={order.status} t={t} />
+              <StatusTag status={order.status} displayStatus={order.displayStatus} t={t} />
             </div>
           </div>
         ))}

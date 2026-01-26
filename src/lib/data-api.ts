@@ -31,6 +31,7 @@ export interface Order {
   externalOrderId: string | null;
   orderDate: string;
   status: string;
+  fulfillmentState: string | null; // FFN operational state (PENDING, PICKING, PACKING, PACKED, SHIPPED, etc.)
   totalAmount: number | null;
   shippingMethod: string | null;
   trackingNumber: string | null;

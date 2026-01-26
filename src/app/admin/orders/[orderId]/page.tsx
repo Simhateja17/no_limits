@@ -142,8 +142,6 @@ export default function OrderDetailPage() {
     return null;
   }
 
-  const orderId = params.orderId as string;
-
   const handleBack = () => {
     router.back();
   };
@@ -536,7 +534,7 @@ export default function OrderDetailPage() {
                     display: 'block',
                   }}
                 >
-                  {orderId || mockOrderDetails.orderId}
+                  {rawOrder?.externalOrderId || rawOrder?.orderNumber || mockOrderDetails.orderId}
                 </span>
               </div>
 
