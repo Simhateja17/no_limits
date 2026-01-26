@@ -356,8 +356,6 @@ export default function ClientOrderDetailPage() {
     );
   }
 
-  const orderId = params.orderId as string;
-
   const handleBack = () => {
     router.back();
   };
@@ -741,7 +739,7 @@ export default function ClientOrderDetailPage() {
                     display: 'block',
                   }}
                 >
-                  {orderId || orderDetails?.orderId}
+                  {orderDetails?.orderId}
                 </span>
               </div>
 

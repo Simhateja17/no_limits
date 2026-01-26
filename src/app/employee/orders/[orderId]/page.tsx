@@ -136,8 +136,6 @@ export default function EmployeeOrderDetailPage() {
     return null;
   }
 
-  const orderId = params.orderId as string;
-
   const handleBack = () => {
     router.back();
   };
@@ -413,7 +411,7 @@ export default function EmployeeOrderDetailPage() {
                     display: 'block',
                   }}
                 >
-                  {orderId || mockOrderDetails.orderId}
+                  {rawOrder?.externalOrderId || rawOrder?.orderNumber || mockOrderDetails.orderId}
                 </span>
               </div>
 
