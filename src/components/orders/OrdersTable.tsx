@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useTranslations, useLocale } from 'next-intl';
 import { useClients, getClientNames } from '@/lib/hooks';
 import { dataApi, type Order as ApiOrder } from '@/lib/data-api';
+import fulfillmentApi from '@/lib/fulfillment-api';
 
 // Tab type for orders
 type OrderTabType = 'all' | 'inStock' | 'outOfStock' | 'errors' | 'partiallyFulfilled' | 'cancelled' | 'sent';
@@ -329,30 +330,73 @@ export function OrdersTable({ showClientColumn, basePath = '/admin/orders' }: Or
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  // State for syncing order statuses
+  const [syncing, setSyncing] = useState(false);
+  const [syncMessage, setSyncMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   // Fetch real clients for admin/employee filter
   const { clients, loading: clientsLoading } = useClients();
   const customerNames = getClientNames(clients);
 
+  // Function to fetch orders
+  const fetchOrders = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await dataApi.getOrders();
+      const transformedOrders = data.map(transformApiOrder);
+      setOrders(transformedOrders);
+    } catch (err) {
+      console.error('Error fetching orders:', err);
+      setError(err instanceof Error ? err.message : 'Failed to load orders');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Fetch orders from API
   useEffect(() => {
-    const fetchOrders = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        const data = await dataApi.getOrders();
-        const transformedOrders = data.map(transformApiOrder);
-        setOrders(transformedOrders);
-      } catch (err) {
-        console.error('Error fetching orders:', err);
-        setError(err instanceof Error ? err.message : 'Failed to load orders');
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchOrders();
   }, []);
+
+  // Handler for syncing order statuses from FFN
+  const handleSyncOrderStatuses = async () => {
+    try {
+      setSyncing(true);
+      setSyncMessage(null);
+      
+      const result = await fulfillmentApi.syncOrderStatusesFromFFN();
+      
+      if (result.success) {
+        setSyncMessage({
+          type: 'success',
+          text: result.updatesProcessed > 0 
+            ? `${result.updatesProcessed} ${t('ordersUpdated') || 'order(s) updated'}`
+            : t('noUpdatesFound') || 'No updates found'
+        });
+        // Refresh orders to show updated statuses
+        await fetchOrders();
+      } else {
+        setSyncMessage({
+          type: 'error',
+          text: result.error || t('syncFailed') || 'Sync failed'
+        });
+      }
+      
+      // Clear message after 5 seconds
+      setTimeout(() => setSyncMessage(null), 5000);
+    } catch (err) {
+      console.error('Error syncing order statuses:', err);
+      setSyncMessage({
+        type: 'error',
+        text: err instanceof Error ? err.message : t('syncFailed') || 'Sync failed'
+      });
+      setTimeout(() => setSyncMessage(null), 5000);
+    } finally {
+      setSyncing(false);
+    }
+  };
 
   // Format date for display with locale support
   const formatOrderDate = (date: Date): string => {
@@ -756,42 +800,129 @@ export function OrdersTable({ showClientColumn, basePath = '/admin/orders' }: Or
           </button>
         </div>
 
-        {/* Create Order Button */}
-        <button
-          onClick={() => router.push(`${basePath}/create`)}
-          className="w-full md:w-auto"
+        {/* Action Buttons */}
+        <div className="flex flex-col md:flex-row gap-2 w-full md:w-auto">
+          {/* Sync Order Status Button */}
+          <button
+            onClick={handleSyncOrderStatuses}
+            disabled={syncing}
+            className="w-full md:w-auto"
+            style={{
+              height: 'clamp(38px, 2.8vw, 38px)',
+              borderRadius: '6px',
+              paddingTop: 'clamp(7px, 0.66vw, 9px)',
+              paddingRight: 'clamp(13px, 1.25vw, 17px)',
+              paddingBottom: 'clamp(7px, 0.66vw, 9px)',
+              paddingLeft: 'clamp(13px, 1.25vw, 17px)',
+              backgroundColor: '#FFFFFF',
+              border: '1px solid #D1D5DB',
+              boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.05)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '8px',
+              cursor: syncing ? 'not-allowed' : 'pointer',
+              opacity: syncing ? 0.7 : 1,
+              whiteSpace: 'nowrap',
+              marginBottom: 'clamp(8px, 0.88vw, 12px)',
+            }}
+          >
+            {syncing ? (
+              <svg className="animate-spin h-4 w-4 text-gray-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+            ) : (
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C14.8273 3 17.35 4.30367 19 6.34267" stroke="#374151" strokeWidth="2" strokeLinecap="round"/>
+                <path d="M21 3V7H17" stroke="#374151" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            )}
+            <span
+              style={{
+                fontFamily: 'Inter, sans-serif',
+                fontWeight: 500,
+                fontSize: 'clamp(12px, 1.03vw, 14px)',
+                lineHeight: '20px',
+                color: '#374151',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              {syncing ? (t('syncing') || 'Syncing...') : (t('syncOrderStatus') || 'Sync Status')}
+            </span>
+          </button>
+
+          {/* Create Order Button */}
+          <button
+            onClick={() => router.push(`${basePath}/create`)}
+            className="w-full md:w-auto"
+            style={{
+              height: 'clamp(38px, 2.8vw, 38px)',
+              borderRadius: '6px',
+              paddingTop: 'clamp(7px, 0.66vw, 9px)',
+              paddingRight: 'clamp(13px, 1.25vw, 17px)',
+              paddingBottom: 'clamp(7px, 0.66vw, 9px)',
+              paddingLeft: 'clamp(13px, 1.25vw, 17px)',
+              backgroundColor: '#003450',
+              boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.05)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              border: 'none',
+              whiteSpace: 'nowrap',
+              marginBottom: 'clamp(8px, 0.88vw, 12px)',
+            }}
+          >
+            <span
+              style={{
+                fontFamily: 'Inter, sans-serif',
+                fontWeight: 500,
+                fontSize: 'clamp(12px, 1.03vw, 14px)',
+                lineHeight: '20px',
+                color: '#FFFFFF',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              {t('createOrder')}
+            </span>
+          </button>
+        </div>
+      </div>
+
+      {/* Sync Status Message */}
+      {syncMessage && (
+        <div
           style={{
-            height: 'clamp(38px, 2.8vw, 38px)',
+            padding: '10px 16px',
             borderRadius: '6px',
-            paddingTop: 'clamp(7px, 0.66vw, 9px)',
-            paddingRight: 'clamp(13px, 1.25vw, 17px)',
-            paddingBottom: 'clamp(7px, 0.66vw, 9px)',
-            paddingLeft: 'clamp(13px, 1.25vw, 17px)',
-            backgroundColor: '#003450',
-            boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.05)',
+            backgroundColor: syncMessage.type === 'success' ? '#ECFDF5' : '#FEF2F2',
+            border: `1px solid ${syncMessage.type === 'success' ? '#A7F3D0' : '#FECACA'}`,
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'center',
-            cursor: 'pointer',
-            border: 'none',
-            whiteSpace: 'nowrap',
-            marginBottom: 'clamp(8px, 0.88vw, 12px)',
+            gap: '8px',
           }}
         >
+          {syncMessage.type === 'success' ? (
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M9 12L11 14L15 10M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="#059669" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          ) : (
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 8V12M12 16H12.01M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="#DC2626" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          )}
           <span
             style={{
               fontFamily: 'Inter, sans-serif',
-              fontWeight: 500,
-              fontSize: 'clamp(12px, 1.03vw, 14px)',
-              lineHeight: '20px',
-              color: '#FFFFFF',
-              whiteSpace: 'nowrap',
+              fontSize: '14px',
+              color: syncMessage.type === 'success' ? '#059669' : '#DC2626',
             }}
           >
-            {t('createOrder')}
+            {syncMessage.text}
           </span>
-        </button>
-      </div>
+        </div>
+      )}
 
       {/* Full-width horizontal line below tabs - hidden on mobile */}
       <div

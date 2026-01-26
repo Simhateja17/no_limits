@@ -356,6 +356,20 @@ export const fulfillmentApi = {
     const response = await api.post(`/fulfillment/orders/${orderId}/fulfill`, input);
     return response.data.data;
   },
+
+  // Poll JTL FFN for order status updates
+  async syncOrderStatusesFromFFN(clientId?: string): Promise<{
+    success: boolean;
+    updatesProcessed: number;
+    message: string;
+    error?: string;
+  }> {
+    const endpoint = clientId 
+      ? `/sync-admin/clients/${clientId}/poll-ffn`
+      : '/sync-admin/poll-ffn';
+    const response = await api.post(endpoint, {});
+    return response.data.data || response.data;
+  },
 };
 
 export default fulfillmentApi;
