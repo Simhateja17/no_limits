@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import { useTranslations } from 'next-intl';
+import { TaskChat } from './TaskChat';
 
 // Task interface matching the table
 interface Task {
@@ -16,21 +17,10 @@ interface Task {
   type?: string;
 }
 
-// Chat message context interface
-interface ChatContext {
-  id: string;
-  senderName: string;
-  senderAvatar?: string;
-  content: string;
-  timestamp: string;
-  isFromClient: boolean;
-}
-
 interface TaskDetailSidebarProps {
   isOpen: boolean;
   onClose: () => void;
   task: Task | null;
-  chatContext?: ChatContext;
   onStatusChange?: (taskId: string, newStatus: 'Open' | 'Closed') => void;
 }
 
@@ -38,7 +28,6 @@ export function TaskDetailSidebar({
   isOpen,
   onClose,
   task,
-  chatContext,
   onStatusChange,
 }: TaskDetailSidebarProps) {
   const t = useTranslations('tasks');
@@ -377,136 +366,8 @@ export function TaskDetailSidebar({
           {/* Divider */}
           <div style={{ height: '1px', background: '#E5E7EB' }} />
 
-          {/* Chat Context Section */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            <label
-              style={{
-                fontFamily: 'Inter, sans-serif',
-                fontWeight: 600,
-                fontSize: '14px',
-                lineHeight: '20px',
-                color: '#111827',
-              }}
-            >
-              {t('chatContext') || 'Chat Context'}
-            </label>
-
-            {chatContext ? (
-              <div
-                style={{
-                  background: '#F9FAFB',
-                  borderRadius: '8px',
-                  padding: '16px',
-                  border: '1px solid #E5E7EB',
-                }}
-              >
-                {/* Message header */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
-                  <div
-                    style={{
-                      width: '32px',
-                      height: '32px',
-                      borderRadius: '50%',
-                      background: chatContext.isFromClient ? '#003450' : '#6BAC4D',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      flexShrink: 0,
-                    }}
-                  >
-                    <span
-                      style={{
-                        fontFamily: 'Inter, sans-serif',
-                        fontWeight: 500,
-                        fontSize: '12px',
-                        color: '#FFFFFF',
-                      }}
-                    >
-                      {chatContext.senderName.charAt(0).toUpperCase()}
-                    </span>
-                  </div>
-                  <div style={{ display: 'flex', flexDirection: 'column' }}>
-                    <span
-                      style={{
-                        fontFamily: 'Inter, sans-serif',
-                        fontWeight: 500,
-                        fontSize: '13px',
-                        lineHeight: '18px',
-                        color: '#111827',
-                      }}
-                    >
-                      {chatContext.senderName}
-                    </span>
-                    <span
-                      style={{
-                        fontFamily: 'Inter, sans-serif',
-                        fontWeight: 400,
-                        fontSize: '11px',
-                        lineHeight: '14px',
-                        color: '#9CA3AF',
-                      }}
-                    >
-                      {chatContext.timestamp}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Message content */}
-                <p
-                  style={{
-                    fontFamily: 'Inter, sans-serif',
-                    fontWeight: 400,
-                    fontSize: '14px',
-                    lineHeight: '22px',
-                    color: '#374151',
-                    margin: 0,
-                    whiteSpace: 'pre-wrap',
-                  }}
-                >
-                  {chatContext.content}
-                </p>
-              </div>
-            ) : (
-              <div
-                style={{
-                  background: '#F9FAFB',
-                  borderRadius: '8px',
-                  padding: '32px 16px',
-                  border: '1px solid #E5E7EB',
-                  textAlign: 'center',
-                }}
-              >
-                <svg
-                  width="40"
-                  height="40"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                  style={{ margin: '0 auto 12px', opacity: 0.4 }}
-                >
-                  <path
-                    d="M21 15C21 15.5304 20.7893 16.0391 20.4142 16.4142C20.0391 16.7893 19.5304 17 19 17H7L3 21V5C3 4.46957 3.21071 3.96086 3.58579 3.58579C3.96086 3.21071 4.46957 3 5 3H19C19.5304 3 20.0391 3.21071 20.4142 3.58579C20.7893 3.96086 21 4.46957 21 5V15Z"
-                    stroke="#9CA3AF"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-                <p
-                  style={{
-                    fontFamily: 'Inter, sans-serif',
-                    fontWeight: 400,
-                    fontSize: '13px',
-                    lineHeight: '20px',
-                    color: '#9CA3AF',
-                    margin: 0,
-                  }}
-                >
-                  {t('noChatContext') || 'No chat context available for this task'}
-                </p>
-              </div>
-            )}
-          </div>
+          {/* Task Chat Section */}
+          <TaskChat taskId={task.id} />
         </div>
 
         {/* Footer Actions */}

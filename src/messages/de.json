@@ -403,8 +403,10 @@
     "inventoryCheck": "Bestandsprüfung",
     "noTasksFound": "Keine Aufgaben gefunden",
     "returns": "Retouren",
-    "chatContext": "Chat-Kontext",
-    "noChatContext": "Kein Chat-Kontext für diese Aufgabe verfügbar",
+    "taskChat": "Aufgaben-Chat",
+    "noMessages": "Noch keine Nachrichten. Starten Sie das Gespräch!",
+    "typeMessage": "Nachricht eingeben...",
+    "isTyping": "tippt...",
     "markAsClosed": "Als geschlossen markieren",
     "reopenTask": "Aufgabe wieder öffnen",
     "taskDetailsComingSoon": "Aufgabendetails kommen bald"

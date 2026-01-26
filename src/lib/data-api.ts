@@ -219,6 +219,17 @@ export interface CreateTaskInput {
   notifyCustomer?: boolean;
 }
 
+export interface TaskMessage {
+  id: string;
+  senderId: string;
+  senderName: string;
+  senderAvatar: string | null;
+  senderRole: string;
+  content: string;
+  timestamp: string;
+  isFromCurrentUser: boolean;
+}
+
 // Update input types
 export interface UpdateOrderInput {
   warehouseNotes?: string;
@@ -501,6 +512,17 @@ export const dataApi = {
 
   async updateTask(id: string, input: Partial<CreateTaskInput>): Promise<Task> {
     const response = await api.put(`/data/tasks/${id}`, input);
+    return response.data.data;
+  },
+
+  // Task Messages (Task-specific chat)
+  async getTaskMessages(taskId: string): Promise<TaskMessage[]> {
+    const response = await api.get(`/tasks/${taskId}/messages`);
+    return response.data.data;
+  },
+
+  async sendTaskMessage(taskId: string, content: string): Promise<TaskMessage> {
+    const response = await api.post(`/tasks/${taskId}/messages`, { content });
     return response.data.data;
   },
 

@@ -124,3 +124,54 @@ export const removeListener = (event: string, callback?: (...args: any[]) => voi
 export const isSocketConnected = (): boolean => {
   return socket?.connected || false;
 };
+
+// ========== TASK CHAT FUNCTIONS ==========
+
+// Join a task chat room
+export const joinTaskRoom = (taskId: string): void => {
+  if (socket?.connected) {
+    socket.emit('task:join', taskId);
+  }
+};
+
+// Leave a task chat room
+export const leaveTaskRoom = (taskId: string): void => {
+  if (socket?.connected) {
+    socket.emit('task:leave', taskId);
+  }
+};
+
+// Send typing indicator for task chat
+export const sendTaskTypingIndicator = (taskId: string, isTyping: boolean): void => {
+  if (socket?.connected) {
+    socket.emit('task:typing', { taskId, isTyping });
+  }
+};
+
+// Listen for new task messages
+export const onTaskMessage = (callback: (message: any) => void): void => {
+  if (socket) {
+    socket.on('task:newMessage', callback);
+  }
+};
+
+// Listen for task typing indicator
+export const onTaskTyping = (callback: (data: { userId: string; taskId: string; isTyping: boolean; userName: string }) => void): void => {
+  if (socket) {
+    socket.on('task:typing', callback);
+  }
+};
+
+// Listen for user joining task room
+export const onTaskUserJoined = (callback: (data: { userId: string; taskId: string }) => void): void => {
+  if (socket) {
+    socket.on('task:userJoined', callback);
+  }
+};
+
+// Listen for user leaving task room
+export const onTaskUserLeft = (callback: (data: { userId: string; taskId: string }) => void): void => {
+  if (socket) {
+    socket.on('task:userLeft', callback);
+  }
+};
