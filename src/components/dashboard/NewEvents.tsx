@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { dataApi, DashboardEvent } from '@/lib/data-api';
 import { useAuthStore } from '@/lib/store';
+import { Skeleton } from '@/components/ui';
 
 interface Event {
   id: string;
@@ -125,19 +126,29 @@ export function NewEvents({ events: propEvents, onViewAll }: NewEventsProps) {
           overflowY: 'auto',
         }}
       >
-        {/* Loading State */}
+        {/* Loading State - Skeleton */}
         {loading && (
-          <div
-            style={{
-              flex: 1,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: '#6B7280',
-            }}
-          >
-            Loading events...
-          </div>
+          <>
+            {Array.from({ length: 5 }).map((_, index) => (
+              <div
+                key={index}
+                style={{
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  gap: '12px',
+                  padding: '12px',
+                  borderRadius: '8px',
+                  backgroundColor: '#F9FAFB',
+                }}
+              >
+                <Skeleton width="8px" height="8px" borderRadius="50%" style={{ marginTop: '6px' }} />
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <Skeleton width="80%" height="16px" />
+                  <Skeleton width="60%" height="14px" />
+                </div>
+              </div>
+            ))}
+          </>
         )}
 
         {/* Error State */}

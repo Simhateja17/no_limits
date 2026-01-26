@@ -7,6 +7,7 @@ import { useAuthStore } from '@/lib/store';
 import { api } from '@/lib/api';
 import { shippingMethodsApi, ShippingMethod } from '@/lib/shipping-methods-api';
 import { onboardingApi } from '@/lib/onboarding-api';
+import { Skeleton, FormSkeleton } from '@/components/ui';
 
 // Keyframes for spin animation (injected once)
 if (typeof document !== 'undefined' && !document.getElementById('ffn-spin-keyframes')) {
@@ -451,20 +452,24 @@ export function FFNAccountDetails() {
     }
   };
 
-  // Loading state
+  // Loading state - skeleton
   if (loading) {
     return (
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          padding: 'clamp(60px, 5.89vw, 80px)',
-          color: '#6B7280',
-          fontSize: 'clamp(12px, 1.03vw, 14px)',
-        }}
-      >
-        {tCommon('loading')}...
+      <div style={{ padding: 'clamp(24px, 2.36vw, 32px)' }}>
+        {/* Header skeleton */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '24px' }}>
+          <Skeleton width="200px" height="28px" />
+          <Skeleton width="100px" height="36px" borderRadius="6px" />
+        </div>
+
+        {/* Status bar skeleton */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '32px', padding: '16px', backgroundColor: '#F9FAFB', borderRadius: '8px' }}>
+          <Skeleton width="24px" height="24px" borderRadius="50%" />
+          <Skeleton width="150px" height="16px" />
+        </div>
+
+        {/* Form skeleton */}
+        <FormSkeleton fields={6} />
       </div>
     );
   }

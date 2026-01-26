@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { Skeleton } from '@/components/ui';
 import {
   Clock,
   Pause,
@@ -206,24 +207,25 @@ export function FulfillmentAuditTrail({ orderId }: FulfillmentAuditTrailProps) {
           backgroundColor: '#FFFFFF',
           borderRadius: '12px',
           border: '1px solid #E5E7EB',
-          padding: '40px',
-          textAlign: 'center',
+          padding: '24px',
         }}
       >
-        <div
-          style={{
-            width: '32px',
-            height: '32px',
-            border: '3px solid #E5E7EB',
-            borderTopColor: '#003450',
-            borderRadius: '50%',
-            animation: 'spin 1s linear infinite',
-            margin: '0 auto 16px',
-          }}
-        />
-        <p style={{ color: '#6B7280', fontFamily: 'Inter, sans-serif' }}>
-          Loading audit trail...
-        </p>
+        {/* Header skeleton */}
+        <Skeleton width="150px" height="24px" style={{ marginBottom: '24px' }} />
+
+        {/* Timeline skeleton */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          {Array.from({ length: 4 }).map((_, index) => (
+            <div key={index} style={{ display: 'flex', gap: '16px' }}>
+              <Skeleton width="40px" height="40px" borderRadius="50%" />
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <Skeleton width="60%" height="16px" />
+                <Skeleton width="40%" height="14px" />
+                <Skeleton width="80%" height="12px" />
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     );
   }

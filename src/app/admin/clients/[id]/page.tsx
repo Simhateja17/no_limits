@@ -6,6 +6,7 @@ import { useRouter, useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { api } from '@/lib/api';
+import { Skeleton, FormSkeleton } from '@/components/ui';
 
 interface Client {
   id: string;
@@ -107,8 +108,28 @@ export default function ClientDetailPage() {
   if (loading) {
     return (
       <DashboardLayout>
-        <div className="w-full min-h-screen flex items-center justify-center" style={{ backgroundColor: '#F9FAFB' }}>
-          <div className="text-gray-600">{tCommon('loading')}</div>
+        <div className="w-full min-h-screen" style={{ backgroundColor: '#F9FAFB' }}>
+          <div className="w-full px-[5.2%] py-8">
+            {/* Back button skeleton */}
+            <Skeleton width="80px" height="38px" borderRadius="6px" style={{ marginBottom: '24px' }} />
+
+            {/* Client header skeleton */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
+              <div>
+                <Skeleton width="200px" height="28px" style={{ marginBottom: '8px' }} />
+                <Skeleton width="150px" height="16px" />
+              </div>
+              <div style={{ display: 'flex', gap: '12px' }}>
+                <Skeleton width="100px" height="38px" borderRadius="6px" />
+                <Skeleton width="100px" height="38px" borderRadius="6px" />
+              </div>
+            </div>
+
+            {/* Client details skeleton */}
+            <div style={{ backgroundColor: '#FFFFFF', borderRadius: '8px', padding: '32px', boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.06)' }}>
+              <FormSkeleton fields={8} />
+            </div>
+          </div>
         </div>
       </DashboardLayout>
     );

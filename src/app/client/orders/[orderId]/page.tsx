@@ -8,6 +8,7 @@ import { useAuthStore } from '@/lib/store';
 import { useEffect } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { dataApi, type Order as ApiOrder, type UpdateOrderInput } from '@/lib/data-api';
+import { Skeleton, GenericTableSkeleton } from '@/components/ui';
 
 // Type for transformed order details
 interface OrderDetails {
@@ -314,14 +315,45 @@ export default function ClientOrderDetailPage() {
     return null;
   }
 
-  // Loading state
+  // Loading state - skeleton
   if (loading) {
     return (
       <DashboardLayout>
-        <div className="w-full flex justify-center items-center" style={{ padding: '40px' }}>
-          <div style={{ color: '#6B7280', fontSize: '14px', fontFamily: 'Inter, sans-serif' }}>
-            {tCommon('loading') || 'Loading order...'}
+        <div className="w-full min-h-screen" style={{ backgroundColor: '#F9FAFB', padding: '32px 5.2%' }}>
+          {/* Back button skeleton */}
+          <Skeleton width="80px" height="38px" borderRadius="6px" style={{ marginBottom: '24px' }} />
+
+          {/* Order header skeleton */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+            <Skeleton width="200px" height="32px" />
+            <Skeleton width="100px" height="28px" borderRadius="14px" />
           </div>
+
+          {/* Order details skeleton */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6" style={{ marginBottom: '24px' }}>
+            <div style={{ backgroundColor: '#FFFFFF', borderRadius: '8px', padding: '24px', boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.06)' }}>
+              <Skeleton width="120px" height="20px" style={{ marginBottom: '16px' }} />
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <div key={i} style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <Skeleton width="80px" height="14px" />
+                    <Skeleton width="120px" height="14px" />
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div style={{ backgroundColor: '#FFFFFF', borderRadius: '8px', padding: '24px', boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.06)' }}>
+              <Skeleton width="120px" height="20px" style={{ marginBottom: '16px' }} />
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <Skeleton key={i} width="100%" height="14px" />
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Order items table skeleton */}
+          <GenericTableSkeleton rows={3} columns={4} />
         </div>
       </DashboardLayout>
     );

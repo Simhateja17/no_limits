@@ -4,6 +4,7 @@ import { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { useInbounds, getInboundClientNames, getDeliveryTypes } from '@/lib/hooks';
+import { InboundsTableSkeleton, MobileCardSkeleton, TabsSkeleton, FilterBarSkeleton } from '@/components/ui';
 
 // Hook to detect mobile viewport
 function useIsMobile() {
@@ -169,16 +170,21 @@ export function InboundsTable({ showClientColumn, baseUrl, userRole }: InboundsT
     </div>
   );
 
-  // Show loading state
+  // Show loading state - skeleton
   if (inboundsLoading) {
     return (
-      <div className="w-full flex items-center justify-center py-12">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#003450] mx-auto mb-4"></div>
-          <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '14px', color: '#6B7280' }}>
-            {tCommon('loading')}...
-          </p>
-        </div>
+      <div className="w-full flex flex-col" style={{ gap: 'clamp(16px, 1.76vw, 24px)' }}>
+        <TabsSkeleton tabs={4} />
+        <FilterBarSkeleton />
+        {isMobile ? (
+          <div className="flex flex-col gap-3">
+            {Array.from({ length: 5 }).map((_, index) => (
+              <MobileCardSkeleton key={index} />
+            ))}
+          </div>
+        ) : (
+          <InboundsTableSkeleton rows={10} />
+        )}
       </div>
     );
   }

@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { api } from '@/lib/api';
+import { GenericTableSkeleton } from '@/components/ui';
 
 // Client interface matching API response
 interface Client {
@@ -316,21 +317,7 @@ export default function AdminClientsPage() {
 
           {/* Content */}
           {loading ? (
-            <div 
-              className="flex items-center justify-center w-full"
-              style={{
-                minHeight: 'clamp(300px, 29.4vw, 400px)',
-                padding: 'clamp(32px, 3.53vw, 48px) clamp(16px, 1.76vw, 24px)',
-                backgroundColor: '#FFFFFF',
-                borderRadius: '8px',
-                border: '1px solid #E5E7EB',
-              }}
-            >
-              <div className="flex flex-col items-center gap-4">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
-                <p style={{ color: '#6B7280', fontSize: '14px' }}>Loading clients...</p>
-              </div>
-            </div>
+            <GenericTableSkeleton rows={8} columns={5} />
           ) : error ? (
             <div 
               className="flex items-center justify-center w-full"

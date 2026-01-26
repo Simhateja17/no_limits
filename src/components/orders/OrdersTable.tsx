@@ -6,6 +6,7 @@ import { useTranslations, useLocale } from 'next-intl';
 import { useClients, getClientNames } from '@/lib/hooks';
 import { dataApi, type Order as ApiOrder } from '@/lib/data-api';
 import fulfillmentApi from '@/lib/fulfillment-api';
+import { OrdersTableSkeleton, MobileCardSkeleton, TabsSkeleton, FilterBarSkeleton } from '@/components/ui';
 
 // Tab type for orders
 type OrderTabType = 'all' | 'inStock' | 'outOfStock' | 'errors' | 'partiallyFulfilled' | 'cancelled' | 'sent';
@@ -493,13 +494,21 @@ export function OrdersTable({ showClientColumn, basePath = '/admin/orders' }: Or
     }
   };
 
-  // Loading state
+  // Loading state - show skeleton
   if (loading) {
     return (
-      <div className="w-full flex justify-center items-center" style={{ padding: '40px' }}>
-        <div style={{ color: '#6B7280', fontSize: '14px', fontFamily: 'Inter, sans-serif' }}>
-          {t('loading') || 'Loading orders...'}
-        </div>
+      <div className="w-full flex flex-col" style={{ gap: 'clamp(16px, 1.76vw, 24px)' }}>
+        <TabsSkeleton tabs={7} />
+        <FilterBarSkeleton />
+        {isMobile ? (
+          <div className="flex flex-col gap-3">
+            {Array.from({ length: 5 }).map((_, index) => (
+              <MobileCardSkeleton key={index} />
+            ))}
+          </div>
+        ) : (
+          <OrdersTableSkeleton rows={10} />
+        )}
       </div>
     );
   }

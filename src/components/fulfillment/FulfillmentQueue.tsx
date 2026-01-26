@@ -8,6 +8,7 @@ import {
   FulfillmentRequestStatus
 } from '@/lib/fulfillment-api';
 import { Package, Clock, AlertTriangle, CheckCircle, XCircle, Pause } from 'lucide-react';
+import { Skeleton, GenericTableSkeleton } from '@/components/ui';
 
 interface FulfillmentQueueProps {
   orders: FulfillmentOrder[];
@@ -100,24 +101,10 @@ export function FulfillmentQueue({
           backgroundColor: '#FFFFFF',
           borderRadius: '12px',
           border: '1px solid #E5E7EB',
-          padding: '40px',
-          textAlign: 'center',
+          overflow: 'hidden',
         }}
       >
-        <div
-          style={{
-            width: '32px',
-            height: '32px',
-            border: '3px solid #E5E7EB',
-            borderTopColor: '#003450',
-            borderRadius: '50%',
-            animation: 'spin 1s linear infinite',
-            margin: '0 auto 16px',
-          }}
-        />
-        <p style={{ color: '#6B7280', fontFamily: 'Inter, sans-serif' }}>
-          Loading fulfillment queue...
-        </p>
+        <GenericTableSkeleton rows={5} columns={6} />
       </div>
     );
   }

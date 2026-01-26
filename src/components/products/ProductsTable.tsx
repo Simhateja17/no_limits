@@ -8,6 +8,7 @@ import { useAuthStore } from '@/lib/store';
 import { dataApi } from '@/lib/data-api';
 import { channelsApi, Channel } from '@/lib/channels-api';
 import type { Product as ApiProduct } from '@/lib/data-api';
+import { ProductsTableSkeleton, MobileCardSkeleton, TabsSkeleton, FilterBarSkeleton } from '@/components/ui';
 
 // Tab type
 type TabType = 'all' | 'outOfStock' | 'missingData';
@@ -288,11 +289,21 @@ export function ProductsTable({ showClientColumn, baseUrl }: ProductsTableProps)
     }
   };
 
-  // Show loading state
+  // Show loading state - skeleton
   if (loading) {
     return (
-      <div className="w-full flex items-center justify-center p-8">
-        <p className="text-gray-500">Loading products...</p>
+      <div className="w-full flex flex-col" style={{ gap: 'clamp(16px, 1.76vw, 24px)' }}>
+        <TabsSkeleton tabs={3} />
+        <FilterBarSkeleton />
+        {isMobile ? (
+          <div className="flex flex-col gap-3">
+            {Array.from({ length: 5 }).map((_, index) => (
+              <MobileCardSkeleton key={index} />
+            ))}
+          </div>
+        ) : (
+          <ProductsTableSkeleton rows={10} />
+        )}
       </div>
     );
   }

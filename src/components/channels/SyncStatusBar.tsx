@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { getSyncJobStatus } from '@/lib/channels-api';
+import { Skeleton } from '@/components/ui';
 
 interface SyncJob {
   id: string;
@@ -114,13 +115,14 @@ export function SyncStatusBar({ channelId, onSyncComplete }: SyncStatusBarProps)
       <div style={{
         display: 'flex',
         alignItems: 'center',
-        gap: 8,
+        gap: 12,
         padding: 12,
         backgroundColor: '#F3F4F6',
         borderRadius: 8,
       }}>
-        <SpinnerIcon />
-        <span style={{ fontSize: 14, color: '#6B7280' }}>Loading sync status...</span>
+        <Skeleton width="24px" height="24px" borderRadius="50%" />
+        <Skeleton width="150px" height="16px" />
+        <Skeleton width="100px" height="8px" borderRadius="4px" style={{ marginLeft: 'auto' }} />
       </div>
     );
   }

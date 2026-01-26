@@ -5,6 +5,7 @@ import { useState, useRef, useEffect } from 'react';
 import type { Contact } from './ContactsList';
 import { CreateTaskModal } from './CreateTaskModal';
 import { useTranslations } from 'next-intl';
+import { ChatMessagesSkeleton } from '@/components/ui';
 
 export interface ChatMessage {
   id: string;
@@ -267,11 +268,9 @@ export function ChatSection({
           minHeight: 0,
         }}
       >
-        {/* Loading indicator for initial messages */}
+        {/* Loading indicator for initial messages - Skeleton */}
         {isLoadingMessages && messages.length === 0 && (
-          <div className="flex justify-center items-center h-full">
-            <div className="animate-spin rounded-full h-10 w-10 border-b-3 border-blue-500"></div>
-          </div>
+          <ChatMessagesSkeleton messages={5} />
         )}
 
         {/* Loading indicator for older messages */}

@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { useTaskMessages } from '@/lib/hooks/useTaskMessages';
 import { TaskMessage } from '@/lib/data-api';
+import { TaskChatSkeleton } from '@/components/ui';
 
 interface TaskChatProps {
   taskId: string;
@@ -78,48 +79,7 @@ export function TaskChat({ taskId, currentUserId }: TaskChatProps) {
   };
 
   if (loading) {
-    return (
-      <div
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '12px',
-        }}
-      >
-        <label
-          style={{
-            fontFamily: 'Inter, sans-serif',
-            fontWeight: 600,
-            fontSize: '14px',
-            lineHeight: '20px',
-            color: '#111827',
-          }}
-        >
-          {t('taskChat') || 'Task Chat'}
-        </label>
-        <div
-          style={{
-            background: '#F9FAFB',
-            borderRadius: '8px',
-            padding: '32px 16px',
-            border: '1px solid #E5E7EB',
-            textAlign: 'center',
-          }}
-        >
-          <div
-            style={{
-              width: '24px',
-              height: '24px',
-              border: '2px solid #E5E7EB',
-              borderTopColor: '#003450',
-              borderRadius: '50%',
-              animation: 'spin 1s linear infinite',
-              margin: '0 auto',
-            }}
-          />
-        </div>
-      </div>
-    );
+    return <TaskChatSkeleton />;
   }
 
   if (error) {

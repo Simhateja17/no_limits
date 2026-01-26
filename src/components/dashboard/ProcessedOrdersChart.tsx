@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { dataApi, ChartDataPoint } from '@/lib/data-api';
+import { Skeleton } from '@/components/ui';
 
 interface ProcessedOrdersChartProps {
   dateRange?: string;
@@ -235,18 +236,35 @@ export function ProcessedOrdersChart({ dateRange }: ProcessedOrdersChartProps) {
         )}
       </div>
 
-      {/* Loading State */}
+      {/* Loading State - Skeleton */}
       {loading && (
-        <div
-          style={{
-            height: dimensions.height,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: '#6B7280',
-          }}
-        >
-          Loading chart data...
+        <div style={{ height: dimensions.height, position: 'relative' }}>
+          {/* Y-axis labels skeleton */}
+          <div style={{ position: 'absolute', left: 0, top: 0, bottom: 50, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+            {Array.from({ length: 5 }).map((_, index) => (
+              <Skeleton key={index} width="30px" height="12px" />
+            ))}
+          </div>
+
+          {/* Chart bars skeleton */}
+          <div style={{ marginLeft: '40px', height: dimensions.height - 50, display: 'flex', alignItems: 'flex-end', gap: '8px', paddingBottom: '20px' }}>
+            {Array.from({ length: 12 }).map((_, index) => (
+              <Skeleton
+                key={index}
+                width="100%"
+                height={`${30 + (index % 3) * 20 + Math.random() * 20}%`}
+                borderRadius="4px 4px 0 0"
+                style={{ flex: 1 }}
+              />
+            ))}
+          </div>
+
+          {/* X-axis labels skeleton */}
+          <div style={{ marginLeft: '40px', display: 'flex', justifyContent: 'space-between' }}>
+            {Array.from({ length: 6 }).map((_, index) => (
+              <Skeleton key={index} width="40px" height="12px" />
+            ))}
+          </div>
         </div>
       )}
 
