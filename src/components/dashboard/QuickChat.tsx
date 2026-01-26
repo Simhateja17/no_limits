@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { dataApi, QuickChatMessage } from '@/lib/data-api';
+import { SkeletonCircle, Skeleton } from '@/components/ui';
 
 interface ChatMessage {
   id: string;
@@ -102,19 +103,20 @@ export function QuickChat({ messages: propMessages }: QuickChatProps) {
           overflowY: 'auto',
         }}
       >
-        {/* Loading State */}
+        {/* Loading State - Skeleton */}
         {loading && (
-          <div
-            style={{
-              flex: 1,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: '#6B7280',
-            }}
-          >
-            Loading messages...
-          </div>
+          <>
+            {Array.from({ length: 3 }).map((_, index) => (
+              <div key={index} style={{ display: 'flex', gap: '12px' }}>
+                <SkeletonCircle size={40} />
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <Skeleton width="120px" height="16px" />
+                  <Skeleton width="80px" height="14px" />
+                  <Skeleton width="100%" height="40px" borderRadius="8px" />
+                </div>
+              </div>
+            ))}
+          </>
         )}
 
         {/* Error State */}

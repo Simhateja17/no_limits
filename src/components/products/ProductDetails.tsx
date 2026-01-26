@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { dataApi, type Product as ApiProduct, type UpdateProductInput } from '@/lib/data-api';
+import { ProductDetailsSkeleton } from '@/components/ui';
 
 // Tab type for product details
 type ProductTab = 'productData' | 'stockMovements' | 'orders' | 'bundle';
@@ -345,15 +346,9 @@ export function ProductDetails({ productId, backUrl }: ProductDetailsProps) {
     }
   };
 
-  // Loading state
+  // Loading state - show skeleton
   if (loading) {
-    return (
-      <div className="w-full flex justify-center items-center" style={{ padding: '40px' }}>
-        <div style={{ color: '#6B7280', fontSize: '14px', fontFamily: 'Inter, sans-serif' }}>
-          {tCommon('loading') || 'Loading product...'}
-        </div>
-      </div>
-    );
+    return <ProductDetailsSkeleton />;
   }
 
   // Error state

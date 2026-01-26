@@ -7,6 +7,7 @@ import { useTranslations } from 'next-intl';
 import { dataApi, CreateTaskInput } from '@/lib/data-api';
 import { useTasks, getTaskClientNames, DisplayTask } from '@/lib/hooks';
 import { TaskDetailSidebar } from './TaskDetailSidebar';
+import { TasksTableSkeleton, Skeleton } from '@/components/ui';
 
 // Hook to detect mobile viewport
 function useIsMobile() {
@@ -946,7 +947,32 @@ export function TasksTable({ showClientColumn, baseUrl }: TasksTableProps) {
       </div>
 
       {/* Tasks Table - Mobile Cards or Desktop Table */}
-      {isMobile ? (
+      {loading ? (
+        isMobile ? (
+          <div className="flex flex-col gap-3">
+            {Array.from({ length: 5 }).map((_, index) => (
+              <div
+                key={index}
+                className="p-4 bg-white border border-gray-200 rounded-lg"
+              >
+                <div className="flex justify-between items-start mb-3">
+                  <div>
+                    <Skeleton width="120px" height="16px" style={{ marginBottom: '8px' }} />
+                    <Skeleton width="80px" height="12px" />
+                  </div>
+                  <Skeleton width="60px" height="24px" borderRadius="4px" />
+                </div>
+                <div className="flex justify-between items-center">
+                  <Skeleton width="80px" height="12px" />
+                  <Skeleton width="50px" height="20px" borderRadius="10px" />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <TasksTableSkeleton rows={5} />
+        )
+      ) : isMobile ? (
         <div className="flex flex-col gap-3">
           {paginatedTasks.map((task) => (
             <TaskCard key={task.id} task={task} />
