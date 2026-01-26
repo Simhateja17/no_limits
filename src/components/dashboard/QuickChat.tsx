@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
-import { useRouter } from 'next/navigation';
 import { dataApi, QuickChatMessage } from '@/lib/data-api';
 
 interface ChatMessage {
@@ -23,7 +22,6 @@ interface QuickChatProps {
 
 export function QuickChat({ messages: propMessages }: QuickChatProps) {
   const t = useTranslations('dashboard');
-  const router = useRouter();
   const [inputValue, setInputValue] = useState('');
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [loading, setLoading] = useState(true);
@@ -65,14 +63,6 @@ export function QuickChat({ messages: propMessages }: QuickChatProps) {
 
     fetchMessages();
   }, [propMessages]);
-
-  const handleMessageClick = (roomId?: string) => {
-    if (roomId) {
-      router.push(`/admin/chat?room=${roomId}`);
-    } else {
-      router.push('/admin/chat');
-    }
-  };
 
   return (
     <div
@@ -161,8 +151,7 @@ export function QuickChat({ messages: propMessages }: QuickChatProps) {
         {!loading && !error && messages.map((message) => (
           <div
             key={message.id}
-            style={{ display: 'flex', gap: '12px', cursor: 'pointer' }}
-            onClick={() => handleMessageClick(message.roomId)}
+            style={{ display: 'flex', gap: '12px' }}
           >
             {/* Avatar */}
             <div

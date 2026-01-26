@@ -972,7 +972,7 @@ export function TasksTable({ showClientColumn, baseUrl }: TasksTableProps) {
         <div
           className="grid"
           style={{
-            gridTemplateColumns: 'minmax(100px, 1fr) minmax(120px, 1.5fr) minmax(120px, 1.5fr) minmax(100px, 1fr) minmax(100px, 1fr)',
+            gridTemplateColumns: 'minmax(100px, 1fr) minmax(120px, 1.5fr) minmax(120px, 1.5fr) minmax(120px, 1.5fr) minmax(100px, 1fr) minmax(100px, 1fr)',
             borderBottom: '1px solid #E5E7EB',
             backgroundColor: '#F9FAFB',
             alignItems: 'center',
@@ -1006,6 +1006,21 @@ export function TasksTable({ showClientColumn, baseUrl }: TasksTableProps) {
               }}
             >
               {t('client')}
+            </span>
+          </div>
+          <div style={{ padding: 'clamp(10px, 0.88vw, 12px) clamp(18px, 1.77vw, 24px)' }}>
+            <span
+              style={{
+                fontFamily: 'Inter, sans-serif',
+                fontWeight: 500,
+                fontSize: 'clamp(10px, 0.88vw, 12px)',
+                lineHeight: 'clamp(14px, 1.18vw, 16px)',
+                letterSpacing: '0.05em',
+                textTransform: 'uppercase',
+                color: '#6B7280',
+              }}
+            >
+              {t('taskType')}
             </span>
           </div>
           <div style={{ padding: 'clamp(10px, 0.88vw, 12px) clamp(18px, 1.77vw, 24px)' }}>
@@ -1062,7 +1077,7 @@ export function TasksTable({ showClientColumn, baseUrl }: TasksTableProps) {
             className="grid"
             onClick={() => handleTaskClick(task.taskId)}
             style={{
-              gridTemplateColumns: 'minmax(100px, 1fr) minmax(120px, 1.5fr) minmax(120px, 1.5fr) minmax(100px, 1fr) minmax(100px, 1fr)',
+              gridTemplateColumns: 'minmax(100px, 1fr) minmax(120px, 1.5fr) minmax(120px, 1.5fr) minmax(120px, 1.5fr) minmax(100px, 1fr) minmax(100px, 1fr)',
               borderBottom: index < paginatedTasks.length - 1 ? '1px solid #E5E7EB' : 'none',
               backgroundColor: '#FFFFFF',
               cursor: 'pointer',
@@ -1123,6 +1138,27 @@ export function TasksTable({ showClientColumn, baseUrl }: TasksTableProps) {
                 }}
               >
                 {task.client}
+              </span>
+            </div>
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                padding: 'clamp(12px, 1.18vw, 16px) clamp(18px, 1.77vw, 24px)',
+                backgroundColor: '#FFFFFF',
+                transition: 'background-color 0.15s ease',
+              }}
+            >
+              <span
+                style={{
+                  fontFamily: 'Inter, sans-serif',
+                  fontWeight: 400,
+                  fontSize: 'clamp(12px, 1.03vw, 14px)',
+                  lineHeight: 'clamp(16px, 1.47vw, 20px)',
+                  color: '#6B7280',
+                }}
+              >
+                {task.type}
               </span>
             </div>
             <div

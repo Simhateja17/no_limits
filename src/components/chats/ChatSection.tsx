@@ -293,7 +293,7 @@ export function ChatSection({
           </div>
         )}
 
-        {messages.map((message) => {
+        {[...messages].sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()).map((message) => {
           const isCurrentUser = message.senderId === currentUserId;
 
           return (

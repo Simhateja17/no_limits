@@ -49,7 +49,7 @@ const transformApiProduct = (apiProduct: ApiProduct): ProductDetailsData => ({
   productId: apiProduct.productId,
   productName: apiProduct.name,
   manufacturer: '-',
-  imageUrl: apiProduct.imageUrl || '/product-image.jpg',
+  imageUrl: apiProduct.imageUrl || '',
   totalStock: apiProduct.available + apiProduct.reserved + apiProduct.announced,
   available: apiProduct.available,
   reserved: apiProduct.reserved,
@@ -583,7 +583,7 @@ export function ProductDetails({ productId, backUrl }: ProductDetailsProps) {
                 style={{ display: 'none' }}
               />
               {/* Product image or placeholder */}
-              {(productImage || productDetails?.imageUrl) && !imageError ? (
+              {(productImage || (productDetails?.imageUrl && productDetails.imageUrl.trim() !== '')) && !imageError ? (
                 <img
                   src={productImage || productDetails?.imageUrl || ''}
                   alt={productDetails?.productName || 'Product'}
