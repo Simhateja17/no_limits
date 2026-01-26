@@ -250,7 +250,7 @@ function WorkflowContent() {
             Fulfillment Workflow
           </h1>
           <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '14px', color: '#6B7280', marginTop: '4px' }}>
-            Pick, pack, and ship order {order.orderNumber || order.orderId}
+            Pick, pack, and ship order {order.externalOrderId || order.orderNumber || order.orderId}
           </p>
         </div>
       </div>

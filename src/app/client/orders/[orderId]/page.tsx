@@ -51,7 +51,7 @@ const transformApiOrderToDetails = (apiOrder: ApiOrder): OrderDetails => {
   };
 
   return {
-    orderId: apiOrder.orderNumber || apiOrder.orderId,
+    orderId: apiOrder.externalOrderId || apiOrder.orderNumber || apiOrder.orderId,
     status: mapStatus(apiOrder.status),
     // Use actual shipping address from order
     deliveryMethod: {

@@ -113,6 +113,8 @@ export function ProductsTable({ showClientColumn, baseUrl }: ProductsTableProps)
   const [channels, setChannels] = useState<DisplayChannel[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [syncingStock, setSyncingStock] = useState(false);
+  const [syncResult, setSyncResult] = useState<{ success: boolean; message: string } | null>(null);
   const itemsPerPage = 10;
   const t = useTranslations('products');
   const tCommon = useTranslations('common');
@@ -189,6 +191,48 @@ export function ProductsTable({ showClientColumn, baseUrl }: ProductsTableProps)
 
   const handleProductClick = (productId: string) => {
     router.push(`${baseUrl}/${productId}`);
+  };
+
+  // Sync stock from JTL FFN
+  const handleSyncStock = async () => {
+    setSyncingStock(true);
+    setSyncResult(null);
+    try {
+      const result = await dataApi.syncStockFromJTL(user?.clientId);
+      if (result.success) {
+        setSyncResult({
+          success: true,
+          message: `Stock synced! ${result.productsUpdated} updated, ${result.productsUnchanged} unchanged.`,
+        });
+        // Refetch products to show updated stock
+        const data = await dataApi.getProducts();
+        const transformedProducts: Product[] = data.map(p => ({
+          id: p.id,
+          productId: p.productId,
+          productName: p.name,
+          available: p.available,
+          reserved: p.reserved,
+          announced: p.announced,
+          client: p.client.companyName || p.client.name,
+        }));
+        setProducts(transformedProducts);
+      } else {
+        setSyncResult({
+          success: false,
+          message: `Sync completed with ${result.productsFailed} failures.`,
+        });
+      }
+    } catch (err) {
+      console.error('Error syncing stock:', err);
+      setSyncResult({
+        success: false,
+        message: 'Failed to sync stock from JTL. Please try again.',
+      });
+    } finally {
+      setSyncingStock(false);
+      // Clear message after 5 seconds
+      setTimeout(() => setSyncResult(null), 5000);
+    }
   };
 
   // Filter products based on tab and search
@@ -403,42 +447,113 @@ export function ProductsTable({ showClientColumn, baseUrl }: ProductsTableProps)
           </button>
         </div>
 
-        {/* Create Product Button */}
-        <button
-          onClick={() => router.push(`${baseUrl}/create`)}
-          className="w-full md:w-auto"
-          style={{
-            height: 'clamp(32px, 2.8vw, 38px)',
-            borderRadius: '6px',
-            paddingTop: 'clamp(7px, 0.66vw, 9px)',
-            paddingRight: 'clamp(13px, 1.25vw, 17px)',
-            paddingBottom: 'clamp(7px, 0.66vw, 9px)',
-            paddingLeft: 'clamp(13px, 1.25vw, 17px)',
-            backgroundColor: '#003450',
-            boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.05)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            cursor: 'pointer',
-            border: 'none',
-            whiteSpace: 'nowrap',
-            marginBottom: 'clamp(8px, 0.88vw, 12px)',
-          }}
-        >
-          <span
+        {/* Action Buttons */}
+        <div className="flex flex-col md:flex-row gap-2 md:gap-3 w-full md:w-auto">
+          {/* Sync Stock Button - Only show for admin/super_admin */}
+          {showClientColumn && (
+            <button
+              onClick={handleSyncStock}
+              disabled={syncingStock}
+              className="w-full md:w-auto"
+              style={{
+                height: 'clamp(32px, 2.8vw, 38px)',
+                borderRadius: '6px',
+                paddingTop: 'clamp(7px, 0.66vw, 9px)',
+                paddingRight: 'clamp(13px, 1.25vw, 17px)',
+                paddingBottom: 'clamp(7px, 0.66vw, 9px)',
+                paddingLeft: 'clamp(13px, 1.25vw, 17px)',
+                backgroundColor: syncingStock ? '#9CA3AF' : '#059669',
+                boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.05)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: syncingStock ? 'not-allowed' : 'pointer',
+                border: 'none',
+                whiteSpace: 'nowrap',
+                marginBottom: 'clamp(8px, 0.88vw, 12px)',
+                gap: '6px',
+              }}
+            >
+              {syncingStock && (
+                <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+              )}
+              <span
+                style={{
+                  fontFamily: 'Inter, sans-serif',
+                  fontWeight: 500,
+                  fontSize: 'clamp(12px, 1.03vw, 14px)',
+                  lineHeight: '20px',
+                  color: '#FFFFFF',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {syncingStock ? 'Syncing...' : 'Sync Stock from JTL'}
+              </span>
+            </button>
+          )}
+
+          {/* Create Product Button */}
+          <button
+            onClick={() => router.push(`${baseUrl}/create`)}
+            className="w-full md:w-auto"
             style={{
-              fontFamily: 'Inter, sans-serif',
-              fontWeight: 500,
-              fontSize: 'clamp(12px, 1.03vw, 14px)',
-              lineHeight: '20px',
-              color: '#FFFFFF',
+              height: 'clamp(32px, 2.8vw, 38px)',
+              borderRadius: '6px',
+              paddingTop: 'clamp(7px, 0.66vw, 9px)',
+              paddingRight: 'clamp(13px, 1.25vw, 17px)',
+              paddingBottom: 'clamp(7px, 0.66vw, 9px)',
+              paddingLeft: 'clamp(13px, 1.25vw, 17px)',
+              backgroundColor: '#003450',
+              boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.05)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              border: 'none',
               whiteSpace: 'nowrap',
+              marginBottom: 'clamp(8px, 0.88vw, 12px)',
             }}
           >
-            {t('createProduct')}
-          </span>
-        </button>
+            <span
+              style={{
+                fontFamily: 'Inter, sans-serif',
+                fontWeight: 500,
+                fontSize: 'clamp(12px, 1.03vw, 14px)',
+                lineHeight: '20px',
+                color: '#FFFFFF',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              {t('createProduct')}
+            </span>
+          </button>
+        </div>
       </div>
+
+      {/* Sync Result Toast */}
+      {syncResult && (
+        <div
+          className={`fixed top-4 right-4 z-50 px-4 py-3 rounded-lg shadow-lg transition-all duration-300 ${
+            syncResult.success ? 'bg-green-500' : 'bg-red-500'
+          } text-white`}
+        >
+          <div className="flex items-center gap-2">
+            {syncResult.success ? (
+              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+            ) : (
+              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            )}
+            <span className="text-sm font-medium">{syncResult.message}</span>
+          </div>
+        </div>
+      )}
 
       {/* Full-width horizontal line below tabs - hidden on mobile */}
       <div

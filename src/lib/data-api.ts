@@ -93,6 +93,7 @@ export interface Return {
   order: {
     orderId: string;
     orderNumber: string | null;
+    externalOrderId: string | null;
   } | null;
   items: Array<{
     id: string;
@@ -521,5 +522,17 @@ export const dataApi = {
   async getRecentChatMessages(limit?: number): Promise<QuickChatMessage[]> {
     const response = await api.get(`/chat/recent${limit ? `?limit=${limit}` : ''}`);
     return response.data.data;
+  },
+
+  // Stock Sync from JTL FFN
+  async syncStockFromJTL(clientId?: string): Promise<{
+    success: boolean;
+    productsUpdated: number;
+    productsUnchanged: number;
+    productsFailed: number;
+    errors: string[];
+  }> {
+    const response = await api.post('/sync-admin/stock/sync', clientId ? { clientId } : {});
+    return response.data;
   },
 };

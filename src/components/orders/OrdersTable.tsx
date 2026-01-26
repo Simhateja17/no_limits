@@ -66,7 +66,7 @@ const mapBackendStatusToFrontend = (backendStatus: string): OrderStatus => {
 // Helper function to transform API order to component Order
 const transformApiOrder = (apiOrder: ApiOrder): Order => ({
   id: apiOrder.id,
-  orderId: apiOrder.orderNumber || apiOrder.orderId,
+  orderId: apiOrder.externalOrderId || apiOrder.orderNumber || apiOrder.orderId,
   orderDate: new Date(apiOrder.orderDate),
   client: apiOrder.client.companyName || apiOrder.client.name,
   weight: '0 kg', // Placeholder - can be calculated from items if needed

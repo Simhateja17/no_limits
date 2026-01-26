@@ -323,7 +323,7 @@ export function FulfillmentQueue({
                     color: '#111827',
                   }}
                 >
-                  #{order.orderNumber || order.orderId}
+                  #{order.externalOrderId || order.orderNumber || order.orderId}
                 </span>
                 {isOnHold && order.holdReason && (
                   <span

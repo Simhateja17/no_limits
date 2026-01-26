@@ -651,7 +651,7 @@ export function FulfillmentWorkflowWizard({
           marginBottom: '32px',
         }}
       >
-        Order {order.orderNumber || order.orderId} has been successfully fulfilled.
+        Order {order.externalOrderId || order.orderNumber || order.orderId} has been successfully fulfilled.
       </p>
 
       {trackingNumber && (
@@ -776,7 +776,7 @@ export function FulfillmentWorkflowWizard({
       >
         <div className="flex items-center gap-4">
           <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '14px', fontWeight: 600, color: '#1D4ED8' }}>
-            Order {order.orderNumber || order.orderId}
+            Order {order.externalOrderId || order.orderNumber || order.orderId}
           </span>
           <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '14px', color: '#3B82F6' }}>
             {order.customerName}

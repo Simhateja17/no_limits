@@ -46,7 +46,7 @@ function transformReturn(apiReturn: Return): DisplayReturn {
     returnId: apiReturn.returnId,
     returnDate: new Date(apiReturn.createdAt),
     client: apiReturn.client?.companyName || apiReturn.client?.name || 'Unknown',
-    orderId: apiReturn.order?.orderId || apiReturn.order?.orderNumber || 'N/A',
+    orderId: apiReturn.order?.externalOrderId || apiReturn.order?.orderId || apiReturn.order?.orderNumber || 'N/A',
     quantity: totalQuantity,
     reason,
     status: mapApiStatusToDisplay(apiReturn.status),

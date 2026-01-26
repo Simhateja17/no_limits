@@ -219,7 +219,7 @@ export default function FulfillmentOrderDetailPage() {
                   gap: '12px',
                 }}
               >
-                Order {order.orderNumber || order.orderId}
+                Order {order.externalOrderId || order.orderNumber || order.orderId}
                 <span
                   style={{
                     padding: '4px 12px',
@@ -742,7 +742,7 @@ export default function FulfillmentOrderDetailPage() {
         isOpen={showHoldModal}
         onClose={() => setShowHoldModal(false)}
         orderId={order.id}
-        orderNumber={order.orderNumber || order.orderId}
+        orderNumber={order.externalOrderId || order.orderNumber || order.orderId}
         currentStatus={order.status as 'ON_HOLD' | 'OPEN' | 'IN_PROGRESS'}
         currentHoldReason={order.holdReason}
         currentHoldNotes={order.holdNotes}
@@ -753,7 +753,7 @@ export default function FulfillmentOrderDetailPage() {
         isOpen={showTrackingModal}
         onClose={() => setShowTrackingModal(false)}
         orderId={order.id}
-        orderNumber={order.orderNumber || order.orderId}
+        orderNumber={order.externalOrderId || order.orderNumber || order.orderId}
         currentTracking={order.trackingInfo}
         onSuccess={handleRefresh}
       />
@@ -762,7 +762,7 @@ export default function FulfillmentOrderDetailPage() {
         isOpen={showRequestModal}
         onClose={() => setShowRequestModal(false)}
         orderId={order.id}
-        orderNumber={order.orderNumber || order.orderId}
+        orderNumber={order.externalOrderId || order.orderNumber || order.orderId}
         currentRequestStatus={order.requestStatus}
         action={requestAction}
         onSuccess={handleRefresh}
