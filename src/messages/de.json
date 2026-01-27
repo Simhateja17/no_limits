@@ -745,5 +745,27 @@
     "tryAgain": "Erneut versuchen",
     "missingOAuthParams": "Erforderliche OAuth-Parameter fehlen",
     "failedToCreateChannel": "Kanal konnte nicht erstellt werden"
+  },
+  "notifications": {
+    "title": "Benachrichtigungen",
+    "markAllRead": "Alle als gelesen markieren",
+    "viewAll": "Alle Benachrichtigungen anzeigen",
+    "noNotifications": "Keine Benachrichtigungen",
+    "loading": "Benachrichtigungen werden geladen...",
+    "types": {
+      "SHIPPING_MISMATCH": "Versandmethode nicht übereinstimmend",
+      "ORDER_ON_HOLD": "Bestellung zurückgestellt",
+      "SYNC_ERROR": "Synchronisierungsfehler",
+      "INVENTORY_LOW": "Niedriger Lagerbestand",
+      "SYSTEM_ALERT": "Systembenachrichtigung",
+      "TASK_ASSIGNED": "Aufgabe zugewiesen",
+      "INFO": "Information"
+    },
+    "priority": {
+      "LOW": "Niedrig",
+      "MEDIUM": "Mittel",
+      "HIGH": "Hoch",
+      "CRITICAL": "Kritisch"
+    }
   }
 }

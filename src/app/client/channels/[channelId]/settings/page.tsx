@@ -12,7 +12,11 @@ export default function ChannelSettingsPage() {
   const params = useParams();
   const searchParams = useSearchParams();
   const channelId = params.channelId as string;
-  const channelType = searchParams.get('type') || 'Woocommerce';
+
+  // Normalize channel type from database enum (SHOPIFY, WOOCOMMERCE) to title case (Shopify, Woocommerce)
+  const rawChannelType = searchParams.get('type') || 'WOOCOMMERCE';
+  const channelType = rawChannelType.charAt(0).toUpperCase() + rawChannelType.slice(1).toLowerCase();
+
   const isNew = searchParams.get('isNew') === 'true';
 
   useEffect(() => {

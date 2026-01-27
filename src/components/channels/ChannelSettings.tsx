@@ -196,12 +196,7 @@ export function ChannelSettings({ channelId, baseUrl, initialChannelType = 'Wooc
   const [isLoadingLocations, setIsLoadingLocations] = useState(false);
 
   // Shipping Setup State
-  const [selectedMethods, setSelectedMethods] = useState<{ [key: string]: string }>({
-    '1': 'DHL Parcel',
-    '2': 'DHL Parcel',
-    '3': 'DHL Parcel',
-    '4': 'DHL Parcel',
-  });
+  const [selectedMethods, setSelectedMethods] = useState<{ [key: string]: string }>({});
   const [openShippingDropdown, setOpenShippingDropdown] = useState<string | null>(null);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [warehouseMethods, setWarehouseMethods] = useState<ShippingMethod[]>([]);
@@ -293,6 +288,24 @@ export function ChannelSettings({ channelId, baseUrl, initialChannelType = 'Wooc
     };
 
     fetchShippingMethods();
+  }, [channelId]);
+
+  // Fetch existing shipping mappings when channelId changes
+  useEffect(() => {
+    const fetchMappings = async () => {
+      if (!channelId || channelId === 'new') return;
+
+      try {
+        const response = await channelsApi.getShippingMappings(channelId);
+        if (response.success && response.mappings) {
+          setSelectedMethods(response.mappings);
+        }
+      } catch (err) {
+        console.error('Error fetching shipping mappings:', err);
+      }
+    };
+
+    fetchMappings();
   }, [channelId]);
 
   const handleBack = () => {

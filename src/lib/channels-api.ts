@@ -137,6 +137,18 @@ export const channelsApi = {
   },
 
   /**
+   * Get existing shipping method mappings for a channel
+   */
+  getShippingMappings: async (
+    channelId: string
+  ): Promise<{ success: boolean; mappings?: Record<string, string>; error?: string }> => {
+    const response = await api.get<{ success: boolean; mappings: Record<string, string>; error?: string }>(
+      `/integrations/channels/${channelId}/shipping-mappings`
+    );
+    return response.data;
+  },
+
+  /**
    * Save shipping method mappings for a channel
    */
   saveShippingMappings: async (
