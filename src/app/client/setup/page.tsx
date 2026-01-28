@@ -32,18 +32,11 @@ export default function ClientSetupPage() {
   const [showSyncModal, setShowSyncModal] = useState(false);
   const [syncChannelId, setSyncChannelId] = useState<string | null>(null);
 
-  // Shopify connection type - NOW WITH THREE OPTIONS
-  const [shopifyConnectionType, setShopifyConnectionType] = useState<'access_token' | 'api_key' | 'oauth'>('access_token');
+  // Shopify connection type - OAUTH ONLY
+  const [shopifyConnectionType] = useState<'oauth'>('oauth');
 
-  // Shopify credentials - Access Token method
+  // Shopify credentials - OAuth method only
   const [shopDomain, setShopDomain] = useState('');
-  const [shopifyAccessToken, setShopifyAccessToken] = useState('');
-
-  // Shopify credentials - API Key & Secret method
-  const [shopifyApiKey, setShopifyApiKey] = useState('');
-  const [shopifyApiSecret, setShopifyApiSecret] = useState('');
-
-  // Shopify credentials - OAuth method
   const [shopifyOAuthClientId, setShopifyOAuthClientId] = useState('');
   const [shopifyOAuthClientSecret, setShopifyOAuthClientSecret] = useState('');
   const [shopifyOAuthStatus, setShopifyOAuthStatus] = useState<'pending' | 'authorizing' | 'success' | 'error' | null>(null);
@@ -154,19 +147,10 @@ export default function ClientSetupPage() {
     try {
       if (selectedPlatform === 'shopify') {
         // OAuth method cannot be tested without completing the full OAuth flow
-        if (shopifyConnectionType === 'oauth') {
-          setError('OAuth connection will be verified during authorization');
-          setPlatformTestSuccess(null);
-          setIsLoading(false);
-          return;
-        }
-
-        const accessToken = shopifyConnectionType === 'access_token' ? shopifyAccessToken : shopifyApiKey;
-        const result = await onboardingApi.testShopifyConnection(shopDomain, accessToken);
-        setPlatformTestSuccess(result.success);
-        if (!result.success) {
-          setError(result.message);
-        }
+        setError('OAuth connection will be verified during authorization');
+        setPlatformTestSuccess(null);
+        setIsLoading(false);
+        return;
       } else if (selectedPlatform === 'woocommerce') {
         const result = await onboardingApi.testWooCommerceConnection(
           wooStoreUrl,
@@ -395,31 +379,10 @@ export default function ClientSetupPage() {
       let channelId: string | null = null;
 
       if (selectedPlatform === 'shopify') {
-        console.log('[Setup] 🛍️ Adding Shopify channel...');
-
-        // Handle OAuth flow differently
-        if (shopifyConnectionType === 'oauth') {
-          console.log('[Setup] 🔐 Triggering OAuth flow...');
-          await handleShopifyOAuth();
-          return; // Don't continue - OAuth flow will handle the rest
-        }
-
-        const accessToken = shopifyConnectionType === 'access_token' ? shopifyAccessToken : shopifyApiKey;
-        const result = await onboardingApi.addShopifyChannel({
-          clientId,
-          shopDomain,
-          accessToken: accessToken,
-          apiSecret: shopifyConnectionType === 'api_key' ? shopifyApiSecret : undefined,
-        });
-
-        console.log('[Setup] 📦 Shopify channel result:', result);
-
-        if (!result.success) {
-          console.error('[Setup] ❌ Failed to add Shopify channel:', result.error);
-          setError(result.error || 'Failed to add Shopify channel');
-          return;
-        }
-        channelId = result.channelId || null;
+        console.log('[Setup] 🛍️ Adding Shopify channel via OAuth...');
+        console.log('[Setup] 🔐 Triggering OAuth flow...');
+        await handleShopifyOAuth();
+        return; // Don't continue - OAuth flow will handle the rest
       } else if (selectedPlatform === 'woocommerce') {
         console.log('[Setup] 🛒 Adding WooCommerce channel...');
         const result = await onboardingApi.addWooCommerceChannel({
@@ -929,79 +892,7 @@ export default function ClientSetupPage() {
 
             {selectedPlatform === 'shopify' ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                {/* Connection Method Toggle */}
-                <div>
-                  <label
-                    style={{
-                      display: 'block',
-                      fontFamily: 'Inter, sans-serif',
-                      fontWeight: 500,
-                      fontSize: '14px',
-                      color: '#374151',
-                      marginBottom: '8px',
-                    }}
-                  >
-                    Connection Method
-                  </label>
-                  <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                    <button
-                      type="button"
-                      onClick={() => setShopifyConnectionType('access_token')}
-                      style={{
-                        flex: '1 1 150px',
-                        padding: '10px 12px',
-                        borderRadius: '8px',
-                        border: shopifyConnectionType === 'access_token' ? '2px solid #003450' : '1px solid #D1D5DB',
-                        background: shopifyConnectionType === 'access_token' ? '#F0F9FF' : 'white',
-                        color: shopifyConnectionType === 'access_token' ? '#003450' : '#6B7280',
-                        fontWeight: 500,
-                        fontSize: '13px',
-                        cursor: 'pointer',
-                        transition: 'all 0.2s',
-                      }}
-                    >
-                      Access Token
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setShopifyConnectionType('api_key')}
-                      style={{
-                        flex: '1 1 150px',
-                        padding: '10px 12px',
-                        borderRadius: '8px',
-                        border: shopifyConnectionType === 'api_key' ? '2px solid #003450' : '1px solid #D1D5DB',
-                        background: shopifyConnectionType === 'api_key' ? '#F0F9FF' : 'white',
-                        color: shopifyConnectionType === 'api_key' ? '#003450' : '#6B7280',
-                        fontWeight: 500,
-                        fontSize: '13px',
-                        cursor: 'pointer',
-                        transition: 'all 0.2s',
-                      }}
-                    >
-                      API Key & Secret
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setShopifyConnectionType('oauth')}
-                      style={{
-                        flex: '1 1 150px',
-                        padding: '10px 12px',
-                        borderRadius: '8px',
-                        border: shopifyConnectionType === 'oauth' ? '2px solid #003450' : '1px solid #D1D5DB',
-                        background: shopifyConnectionType === 'oauth' ? '#F0F9FF' : 'white',
-                        color: shopifyConnectionType === 'oauth' ? '#003450' : '#6B7280',
-                        fontWeight: 500,
-                        fontSize: '13px',
-                        cursor: 'pointer',
-                        transition: 'all 0.2s',
-                      }}
-                    >
-                      OAuth Flow
-                    </button>
-                  </div>
-                </div>
-
-                {/* Shop Domain - Common for both methods */}
+                {/* Shop Domain */}
                 <div>
                   <label
                     style={{
@@ -1031,103 +922,8 @@ export default function ClientSetupPage() {
                   />
                 </div>
 
-                {/* Admin API Access Token Method */}
-                {shopifyConnectionType === 'access_token' && (
-                  <div>
-                    <label
-                      style={{
-                        display: 'block',
-                        fontFamily: 'Inter, sans-serif',
-                        fontWeight: 500,
-                        fontSize: '14px',
-                        color: '#374151',
-                        marginBottom: '6px',
-                      }}
-                    >
-                      Admin API Access Token
-                    </label>
-                    <input
-                      type="password"
-                      value={shopifyAccessToken}
-                      onChange={(e) => setShopifyAccessToken(e.target.value)}
-                      placeholder="shpat_..."
-                      style={{
-                        width: '100%',
-                        padding: '12px',
-                        borderRadius: '8px',
-                        border: '1px solid #D1D5DB',
-                        fontSize: '14px',
-                        outline: 'none',
-                      }}
-                    />
-                  </div>
-                )}
-
-                {/* API Key & Secret Method */}
-                {shopifyConnectionType === 'api_key' && (
-                  <>
-                    <div>
-                      <label
-                        style={{
-                          display: 'block',
-                          fontFamily: 'Inter, sans-serif',
-                          fontWeight: 500,
-                          fontSize: '14px',
-                          color: '#374151',
-                          marginBottom: '6px',
-                        }}
-                      >
-                        API Key
-                      </label>
-                      <input
-                        type="text"
-                        value={shopifyApiKey}
-                        onChange={(e) => setShopifyApiKey(e.target.value)}
-                        placeholder="Your Shopify API Key"
-                        style={{
-                          width: '100%',
-                          padding: '12px',
-                          borderRadius: '8px',
-                          border: '1px solid #D1D5DB',
-                          fontSize: '14px',
-                          outline: 'none',
-                        }}
-                      />
-                    </div>
-                    <div>
-                      <label
-                        style={{
-                          display: 'block',
-                          fontFamily: 'Inter, sans-serif',
-                          fontWeight: 500,
-                          fontSize: '14px',
-                          color: '#374151',
-                          marginBottom: '6px',
-                        }}
-                      >
-                        API Secret
-                      </label>
-                      <input
-                        type="password"
-                        value={shopifyApiSecret}
-                        onChange={(e) => setShopifyApiSecret(e.target.value)}
-                        placeholder="Your Shopify API Secret"
-                        style={{
-                          width: '100%',
-                          padding: '12px',
-                          borderRadius: '8px',
-                          border: '1px solid #D1D5DB',
-                          fontSize: '14px',
-                          outline: 'none',
-                        }}
-                      />
-                    </div>
-                  </>
-                )}
-
-                {/* OAuth Method */}
-                {shopifyConnectionType === 'oauth' && (
-                  <>
+                {/* OAuth Credentials */}
+                <>
                     <div>
                       <label
                         style={{
@@ -1259,7 +1055,6 @@ export default function ClientSetupPage() {
                       </div>
                     )}
                   </>
-                )}
               </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
@@ -1381,37 +1176,50 @@ export default function ClientSetupPage() {
             )}
 
             <div style={{ display: 'flex', gap: '12px', marginTop: '32px' }}>
-              <button
-                onClick={handleTestConnection}
-                disabled={isLoading}
-                style={{
-                  flex: 1,
-                  padding: '12px 24px',
-                  borderRadius: '8px',
-                  border: '1px solid #D1D5DB',
-                  background: 'white',
-                  color: '#374151',
-                  fontWeight: 500,
-                  fontSize: '14px',
-                  cursor: isLoading ? 'not-allowed' : 'pointer',
-                  opacity: isLoading ? 0.7 : 1,
-                }}
-              >
-                {isLoading ? t('testing') || 'Testing...' : t('testConnection') || 'Test Connection'}
-              </button>
+              {selectedPlatform === 'woocommerce' && (
+                <button
+                  onClick={handleTestConnection}
+                  disabled={isLoading}
+                  style={{
+                    flex: 1,
+                    padding: '12px 24px',
+                    borderRadius: '8px',
+                    border: '1px solid #D1D5DB',
+                    background: 'white',
+                    color: '#374151',
+                    fontWeight: 500,
+                    fontSize: '14px',
+                    cursor: isLoading ? 'not-allowed' : 'pointer',
+                    opacity: isLoading ? 0.7 : 1,
+                  }}
+                >
+                  {isLoading ? t('testing') || 'Testing...' : t('testConnection') || 'Test Connection'}
+                </button>
+              )}
               <button
                 onClick={handleCredentialsSubmit}
-                disabled={isLoading || (shopifyConnectionType !== 'oauth' && platformTestSuccess !== true)}
+                disabled={
+                  isLoading ||
+                  (selectedPlatform === 'woocommerce' && platformTestSuccess !== true) ||
+                  (selectedPlatform === 'shopify' && (!shopDomain || !shopifyOAuthClientId || !shopifyOAuthClientSecret))
+                }
                 style={{
                   flex: 1,
                   padding: '12px 24px',
                   borderRadius: '8px',
                   border: 'none',
-                  background: (platformTestSuccess === true || shopifyConnectionType === 'oauth') ? '#003450' : '#9CA3AF',
+                  background: (
+                    (selectedPlatform === 'shopify' && shopDomain && shopifyOAuthClientId && shopifyOAuthClientSecret) ||
+                    (selectedPlatform === 'woocommerce' && platformTestSuccess === true)
+                  ) ? '#003450' : '#9CA3AF',
                   color: 'white',
                   fontWeight: 500,
                   fontSize: '14px',
-                  cursor: isLoading || (shopifyConnectionType !== 'oauth' && platformTestSuccess !== true) ? 'not-allowed' : 'pointer',
+                  cursor: (
+                    isLoading ||
+                    (selectedPlatform === 'woocommerce' && platformTestSuccess !== true) ||
+                    (selectedPlatform === 'shopify' && (!shopDomain || !shopifyOAuthClientId || !shopifyOAuthClientSecret))
+                  ) ? 'not-allowed' : 'pointer',
                 }}
               >
                 {isLoading ? t('saving') || 'Saving...' : t('continue') || 'Continue'}
