@@ -15,6 +15,7 @@ interface InboundProduct {
   sku: string;
   gtin: string | null;
   qty: number;
+  jtlProductId?: string | null; // JTL FFN product ID (jfsku)
 }
 
 export default function CreateInboundPage() {
@@ -83,7 +84,8 @@ export default function CreateInboundPage() {
         name: product.name,
         sku: product.sku,
         gtin: product.gtin,
-        qty
+        qty,
+        jtlProductId: (product as any).jtlProductId || null,
       }]);
     }
   };
@@ -136,14 +138,70 @@ export default function CreateInboundPage() {
   // State for saving
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [validationErrors, setValidationErrors] = useState<string[]>([]);
+
+  // Validation helper functions
+  const validateDateFormat = (dateStr: string): boolean => {
+    if (!dateStr) return true; // Optional field
+    const dateRegex = /^(\d{2})\.(\d{2})\.(\d{4})$/;
+    const match = dateStr.match(dateRegex);
+    if (!match) return false;
+    const [, day, month, year] = match;
+    const date = new Date(`${year}-${month}-${day}`);
+    return !isNaN(date.getTime()) &&
+           date.getDate() === parseInt(day) &&
+           date.getMonth() + 1 === parseInt(month) &&
+           date.getFullYear() === parseInt(year);
+  };
+
+  // Check which products have JTL IDs
+  const productsWithJtlId = inboundProducts.filter(p => p.jtlProductId);
+  const productsWithoutJtlId = inboundProducts.filter(p => !p.jtlProductId);
+  const hasProductsWithoutJtlId = productsWithoutJtlId.length > 0;
 
   // Handle save inbound
   const handleSaveInbound = async () => {
+    const errors: string[] = [];
+
+    // Validate: at least one product
     if (inboundProducts.length === 0) {
-      setSaveError(tMessages('noProductsAdded'));
+      errors.push(tMessages('noProductsAdded'));
+    }
+
+    // Validate: at least one product must have JTL ID for sync
+    if (inboundProducts.length > 0 && productsWithJtlId.length === 0) {
+      errors.push(tMessages('noProductsWithJtlId') || 'None of the selected products are synced with JTL FFN. Products must be registered with JTL before creating an inbound.');
+    }
+
+    // Validate: all quantities must be positive integers
+    const invalidQtyProducts = inboundProducts.filter(p => !Number.isInteger(p.qty) || p.qty < 1);
+    if (invalidQtyProducts.length > 0) {
+      errors.push(tMessages('invalidQuantity') || `Invalid quantity for: ${invalidQtyProducts.map(p => p.sku).join(', ')}. Quantity must be a positive whole number.`);
+    }
+
+    // Validate: ETA date format (DD.MM.YYYY)
+    if (eta && !validateDateFormat(eta)) {
+      errors.push(tMessages('invalidDateFormat') || 'Invalid date format. Please use DD.MM.YYYY (e.g., 15.03.2024)');
+    }
+
+    // Validate: ETA should be in the future
+    if (eta && validateDateFormat(eta)) {
+      const [day, month, year] = eta.split('.');
+      const etaDate = new Date(`${year}-${month}-${day}`);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      if (etaDate < today) {
+        errors.push(tMessages('etaMustBeFuture') || 'Expected arrival date must be today or in the future.');
+      }
+    }
+
+    if (errors.length > 0) {
+      setValidationErrors(errors);
+      setSaveError(null);
       return;
     }
 
+    setValidationErrors([]);
     setIsSaving(true);
     setSaveError(null);
 
@@ -270,7 +328,7 @@ export default function CreateInboundPage() {
               <div
                 className="grid"
                 style={{
-                  gridTemplateColumns: '0.6fr 2fr 1fr 1.5fr 0.8fr',
+                  gridTemplateColumns: '0.6fr 2fr 1fr 1.5fr 0.8fr 0.6fr',
                   padding: '12px 24px',
                   borderBottom: '1px solid #E5E7EB',
                   backgroundColor: '#F9FAFB',
@@ -281,6 +339,7 @@ export default function CreateInboundPage() {
                 <span style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '12px', lineHeight: '16px', letterSpacing: '0.05em', textTransform: 'uppercase', color: '#6B7280' }}>{tOrders('sku')}</span>
                 <span style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '12px', lineHeight: '16px', letterSpacing: '0.05em', textTransform: 'uppercase', color: '#6B7280' }}>{tOrders('gtin')}</span>
                 <span style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '12px', lineHeight: '16px', letterSpacing: '0.05em', textTransform: 'uppercase', color: '#6B7280' }}>{tOrders('qty')}</span>
+                <span style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '12px', lineHeight: '16px', letterSpacing: '0.05em', textTransform: 'uppercase', color: '#6B7280' }}>JTL</span>
               </div>
 
               {/* Table Body */}
@@ -290,7 +349,7 @@ export default function CreateInboundPage() {
                 </div>
               ) : (
                 inboundProducts.map((product, index) => (
-                  <div key={product.id} className="grid items-center" style={{ gridTemplateColumns: '0.6fr 2fr 1fr 1.5fr 0.8fr', padding: '16px 24px', borderBottom: index < inboundProducts.length - 1 ? '1px solid #E5E7EB' : 'none' }}>
+                  <div key={product.id} className="grid items-center" style={{ gridTemplateColumns: '0.6fr 2fr 1fr 1.5fr 0.8fr 0.6fr', padding: '16px 24px', borderBottom: index < inboundProducts.length - 1 ? '1px solid #E5E7EB' : 'none', backgroundColor: product.jtlProductId ? 'transparent' : '#FEF3C7' }}>
                     <button onClick={() => handleRemoveProduct(product.id)} style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', padding: '2px 10px', borderRadius: '10px', backgroundColor: '#FEE2E2', border: 'none', cursor: 'pointer', width: 'fit-content' }}>
                       <span style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '12px', lineHeight: '16px', color: '#DC2626' }}>{tOrders('remove')}</span>
                     </button>
@@ -300,11 +359,24 @@ export default function CreateInboundPage() {
                     <input
                       type="number"
                       min="1"
+                      step="1"
                       value={product.qty}
                       onChange={(e) => { const value = e.target.value; const newQty = value === '' ? 0 : parseInt(value); setInboundProducts(inboundProducts.map(p => p.id === product.id ? { ...p, qty: newQty } : p)); }}
                       onBlur={(e) => { const value = parseInt(e.target.value); if (!value || value < 1) { setInboundProducts(inboundProducts.map(p => p.id === product.id ? { ...p, qty: 1 } : p)); } }}
                       style={{ width: '60px', height: '32px', padding: '6px 10px', borderRadius: '6px', border: '1px solid #D1D5DB', fontFamily: 'Inter, sans-serif', fontWeight: 400, fontSize: '14px', lineHeight: '20px', color: '#111827', textAlign: 'center' }}
                     />
+                    {/* JTL Sync Status */}
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      {product.jtlProductId ? (
+                        <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', padding: '2px 8px', borderRadius: '10px', backgroundColor: '#D1FAE5', color: '#059669', fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '11px' }} title={`JTL ID: ${product.jtlProductId}`}>
+                          Synced
+                        </span>
+                      ) : (
+                        <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', padding: '2px 8px', borderRadius: '10px', backgroundColor: '#FEF3C7', color: '#D97706', fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '11px' }} title="Product not synced with JTL FFN">
+                          Not synced
+                        </span>
+                      )}
+                    </div>
                   </div>
                 ))
               )}
@@ -332,10 +404,11 @@ export default function CreateInboundPage() {
             {/* Available Products Table */}
             {showProductList && productSearchQuery && filteredAvailableProducts.length > 0 && (
               <div style={{ width: '100%', maxWidth: '927px', borderRadius: '8px', border: '1px solid #E5E7EB', backgroundColor: '#FFFFFF', boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.06), 0px 1px 3px 0px rgba(0, 0, 0, 0.1)', overflow: 'hidden' }}>
-                <div className="grid" style={{ gridTemplateColumns: '2fr 1fr 1.5fr 0.8fr 0.6fr', padding: '12px 24px', borderBottom: '1px solid #E5E7EB', backgroundColor: '#F9FAFB' }}>
+                <div className="grid" style={{ gridTemplateColumns: '2fr 1fr 1fr 0.6fr 0.8fr 0.6fr', padding: '12px 24px', borderBottom: '1px solid #E5E7EB', backgroundColor: '#F9FAFB' }}>
                   <span style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '12px', lineHeight: '16px', letterSpacing: '0.05em', textTransform: 'uppercase', color: '#6B7280' }}>{tOrders('productName')}</span>
                   <span style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '12px', lineHeight: '16px', letterSpacing: '0.05em', textTransform: 'uppercase', color: '#6B7280' }}>{tOrders('sku')}</span>
                   <span style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '12px', lineHeight: '16px', letterSpacing: '0.05em', textTransform: 'uppercase', color: '#6B7280' }}>{tOrders('gtin')}</span>
+                  <span style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '12px', lineHeight: '16px', letterSpacing: '0.05em', textTransform: 'uppercase', color: '#6B7280' }}>JTL</span>
                   <span style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '12px', lineHeight: '16px', letterSpacing: '0.05em', textTransform: 'uppercase', color: '#6B7280' }}>{tOrders('qty')}</span>
                   <span></span>
                 </div>
@@ -344,11 +417,22 @@ export default function CreateInboundPage() {
                     {tCommon('loading')}...
                   </div>
                 ) : filteredAvailableProducts.map((product, index) => (
-                  <div key={product.id} className="grid items-center" style={{ gridTemplateColumns: '2fr 1fr 1.5fr 0.8fr 0.6fr', padding: '16px 24px', borderBottom: index < filteredAvailableProducts.length - 1 ? '1px solid #E5E7EB' : 'none' }}>
+                  <div key={product.id} className="grid items-center" style={{ gridTemplateColumns: '2fr 1fr 1fr 0.6fr 0.8fr 0.6fr', padding: '16px 24px', borderBottom: index < filteredAvailableProducts.length - 1 ? '1px solid #E5E7EB' : 'none', backgroundColor: (product as any).jtlProductId ? 'transparent' : '#FFFBEB' }}>
                     <span style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '14px', lineHeight: '20px', color: '#111827' }}>{product.name}</span>
                     <span style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '14px', lineHeight: '20px', color: '#111827' }}>{product.sku}</span>
                     <span style={{ fontFamily: 'Inter, sans-serif', fontWeight: 400, fontSize: '14px', lineHeight: '20px', color: '#6B7280' }}>{product.gtin || 'N/A'}</span>
-                    <input type="number" min="1" value={productQuantities[product.id] ?? 1} onChange={(e) => handleQuantityChange(product.id, e.target.value === '' ? 0 : parseInt(e.target.value))} onBlur={(e) => { if (!parseInt(e.target.value) || parseInt(e.target.value) < 1) handleQuantityChange(product.id, 1); }} style={{ width: '60px', height: '32px', padding: '6px 10px', borderRadius: '6px', border: '1px solid #D1D5DB', fontFamily: 'Inter, sans-serif', fontWeight: 400, fontSize: '14px', lineHeight: '20px', color: '#111827', textAlign: 'center' }} />
+                    <div style={{ display: 'flex', alignItems: 'center' }}>
+                      {(product as any).jtlProductId ? (
+                        <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', padding: '2px 8px', borderRadius: '10px', backgroundColor: '#D1FAE5', color: '#059669', fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '11px' }} title={`JTL ID: ${(product as any).jtlProductId}`}>
+                          Synced
+                        </span>
+                      ) : (
+                        <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', padding: '2px 8px', borderRadius: '10px', backgroundColor: '#FEF3C7', color: '#D97706', fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '11px' }} title="Product not synced with JTL FFN">
+                          Not synced
+                        </span>
+                      )}
+                    </div>
+                    <input type="number" min="1" step="1" value={productQuantities[product.id] ?? 1} onChange={(e) => handleQuantityChange(product.id, e.target.value === '' ? 0 : parseInt(e.target.value))} onBlur={(e) => { if (!parseInt(e.target.value) || parseInt(e.target.value) < 1) handleQuantityChange(product.id, 1); }} style={{ width: '60px', height: '32px', padding: '6px 10px', borderRadius: '6px', border: '1px solid #D1D5DB', fontFamily: 'Inter, sans-serif', fontWeight: 400, fontSize: '14px', lineHeight: '20px', color: '#111827', textAlign: 'center' }} />
                     <button onClick={() => handleAddProduct(product)} style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', padding: '2px 10px', borderRadius: '10px', backgroundColor: '#003450', border: 'none', cursor: 'pointer', width: 'fit-content' }}>
                       <span style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '12px', lineHeight: '16px', color: '#FFFFFF' }}>{tMessages('add')}</span>
                     </button>
@@ -366,7 +450,29 @@ export default function CreateInboundPage() {
               <div className="grid grid-cols-3 gap-4 mb-4">
                 <div>
                   <label style={{ display: 'block', fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '14px', lineHeight: '20px', color: '#374151', marginBottom: '6px' }}>{tMessages('eta')}</label>
-                  <input type="text" value={eta} onChange={(e) => setEta(e.target.value)} style={{ width: '100%', height: '38px', borderRadius: '6px', border: '1px solid #D1D5DB', padding: '9px 13px', fontFamily: 'Inter, sans-serif', fontSize: '14px', lineHeight: '20px', color: '#111827', backgroundColor: '#FFFFFF', boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.05)' }} />
+                  <input
+                    type="text"
+                    value={eta}
+                    onChange={(e) => setEta(e.target.value)}
+                    placeholder="DD.MM.YYYY"
+                    maxLength={10}
+                    style={{
+                      width: '100%',
+                      height: '38px',
+                      borderRadius: '6px',
+                      border: eta && !validateDateFormat(eta) ? '1px solid #EF4444' : '1px solid #D1D5DB',
+                      padding: '9px 13px',
+                      fontFamily: 'Inter, sans-serif',
+                      fontSize: '14px',
+                      lineHeight: '20px',
+                      color: '#111827',
+                      backgroundColor: '#FFFFFF',
+                      boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.05)'
+                    }}
+                  />
+                  <span style={{ fontSize: '12px', color: '#6B7280', marginTop: '4px', display: 'block' }}>
+                    {tMessages('dateFormatHint') || 'Format: DD.MM.YYYY (e.g., 15.03.2024)'}
+                  </span>
                 </div>
                 <div>
                   <label style={{ display: 'block', fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '14px', lineHeight: '20px', color: '#374151', marginBottom: '6px' }}>{tMessages('deliveryType')}</label>
@@ -446,7 +552,47 @@ export default function CreateInboundPage() {
               </button>
             </div>
 
-            {/* Error Message */}
+            {/* Warning: Products without JTL IDs */}
+            {hasProductsWithoutJtlId && (
+              <div style={{ width: '100%', maxWidth: '927px', padding: '12px 16px', borderRadius: '8px', backgroundColor: '#FEF3C7', border: '1px solid #F59E0B', fontFamily: 'Inter, sans-serif', fontSize: '14px' }}>
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ flexShrink: 0, marginTop: '2px' }}>
+                    <path d="M10 6V10M10 14H10.01M19 10C19 14.9706 14.9706 19 10 19C5.02944 19 1 14.9706 1 10C1 5.02944 5.02944 1 10 1C14.9706 1 19 5.02944 19 10Z" stroke="#D97706" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                  <div>
+                    <p style={{ color: '#92400E', fontWeight: 500, margin: 0 }}>
+                      {tMessages('jtlWarningTitle') || 'Some products are not synced with JTL FFN'}
+                    </p>
+                    <p style={{ color: '#B45309', margin: '4px 0 0 0', fontSize: '13px' }}>
+                      {tMessages('jtlWarningDescription') || `The following products will NOT be included in the JTL inbound: ${productsWithoutJtlId.map(p => p.sku).join(', ')}. Please sync these products with JTL FFN first.`}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Validation Errors */}
+            {validationErrors.length > 0 && (
+              <div style={{ width: '100%', maxWidth: '927px', padding: '12px 16px', borderRadius: '8px', backgroundColor: '#FEE2E2', border: '1px solid #EF4444', fontFamily: 'Inter, sans-serif', fontSize: '14px' }}>
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ flexShrink: 0, marginTop: '2px' }}>
+                    <path d="M10 6V10M10 14H10.01M19 10C19 14.9706 14.9706 19 10 19C5.02944 19 1 14.9706 1 10C1 5.02944 5.02944 1 10 1C14.9706 1 19 5.02944 19 10Z" stroke="#DC2626" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                  <div>
+                    <p style={{ color: '#991B1B', fontWeight: 500, margin: 0 }}>
+                      {tMessages('validationErrors') || 'Please fix the following errors:'}
+                    </p>
+                    <ul style={{ color: '#DC2626', margin: '4px 0 0 0', paddingLeft: '20px', fontSize: '13px' }}>
+                      {validationErrors.map((error, index) => (
+                        <li key={index}>{error}</li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* API Error Message */}
             {saveError && (
               <div style={{ width: '100%', maxWidth: '927px', padding: '12px 16px', borderRadius: '8px', backgroundColor: '#FEE2E2', color: '#DC2626', fontFamily: 'Inter, sans-serif', fontSize: '14px' }}>
                 {saveError}

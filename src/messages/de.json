@@ -632,7 +632,15 @@
     "presaleDescription": "Vorverkauf aktivieren, um Produkte vor Lagerverfügbarkeit zu verkaufen.",
     "confirmDeleteOrder": "Sind Sie sicher, dass Sie diese Bestellung löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden.",
     "confirmDeleteProduct": "Sind Sie sicher, dass Sie dieses Produkt löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden.",
-    "confirmDeleteReturn": "Sind Sie sicher, dass Sie diese Retoure löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden."
+    "confirmDeleteReturn": "Sind Sie sicher, dass Sie diese Retoure löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden.",
+    "noProductsWithJtlId": "Keines der ausgewählten Produkte ist mit JTL FFN synchronisiert. Produkte müssen vor dem Erstellen eines Wareneingangs bei JTL registriert werden.",
+    "invalidQuantity": "Die Menge muss eine positive ganze Zahl sein.",
+    "invalidDateFormat": "Ungültiges Datumsformat. Bitte verwenden Sie TT.MM.JJJJ (z.B. 15.03.2024)",
+    "etaMustBeFuture": "Das erwartete Ankunftsdatum muss heute oder in der Zukunft liegen.",
+    "validationErrors": "Bitte beheben Sie die folgenden Fehler:",
+    "jtlWarningTitle": "Einige Produkte sind nicht mit JTL FFN synchronisiert",
+    "jtlWarningDescription": "Produkte ohne JTL-Synchronisierung werden NICHT in den Lager-Wareneingang aufgenommen. Bitte synchronisieren Sie diese Produkte zuerst.",
+    "dateFormatHint": "Format: TT.MM.JJJJ (z.B. 15.03.2024)"
   },
   "clients": {
     "title": "Kunden",

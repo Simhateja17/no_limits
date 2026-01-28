@@ -250,13 +250,26 @@ export function Navbar() {
         {user && (
           <div className="absolute bottom-0 left-0 right-0 border-t border-gray-200 p-4 bg-white">
             <div className="flex items-center gap-3 mb-3">
-              <Image
-                src="/tom_cooks.jpg"
-                alt="Profile"
-                width={40}
-                height={40}
-                className="rounded-full object-cover"
-              />
+              <div
+                className="flex items-center justify-center rounded-full"
+                style={{
+                  width: '40px',
+                  height: '40px',
+                  background: '#F3F4F6',
+                  flexShrink: 0,
+                }}
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                  <path
+                    d="M12 12C14.7614 12 17 9.76142 17 7C17 4.23858 14.7614 2 12 2C9.23858 2 7 4.23858 7 7C7 9.76142 9.23858 12 12 12Z"
+                    fill="#6B7280"
+                  />
+                  <path
+                    d="M12 14C6.47715 14 2 18.4772 2 24H22C22 18.4772 17.5228 14 12 14Z"
+                    fill="#6B7280"
+                  />
+                </svg>
+              </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-gray-900 truncate">
                   {user.name || 'User'}
@@ -367,30 +380,27 @@ export function Navbar() {
           <div className="relative" ref={dropdownRef}>
             <button
               onClick={() => setShowDropdown(!showDropdown)}
-              className="flex items-center justify-center hover:opacity-80 transition-opacity"
+              className="flex items-center justify-center hover:bg-gray-100 transition-colors"
               style={{
                 width: '32px',
                 height: '32px',
                 borderRadius: '16px',
-                overflow: 'hidden',
-                background: 'transparent',
+                background: '#F3F4F6',
                 border: 'none',
                 cursor: 'pointer',
                 padding: 0,
               }}
             >
-              <Image
-                src="/tom_cooks.jpg"
-                alt="Profile"
-                width={32}
-                height={32}
-                style={{
-                  width: '32px',
-                  height: '32px',
-                  borderRadius: '16px',
-                  objectFit: 'cover',
-                }}
-              />
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                <path
+                  d="M12 12C14.7614 12 17 9.76142 17 7C17 4.23858 14.7614 2 12 2C9.23858 2 7 4.23858 7 7C7 9.76142 9.23858 12 12 12Z"
+                  fill="#6B7280"
+                />
+                <path
+                  d="M12 14C6.47715 14 2 18.4772 2 24H22C22 18.4772 17.5228 14 12 14Z"
+                  fill="#6B7280"
+                />
+              </svg>
             </button>
 
             {/* Dropdown Menu */}

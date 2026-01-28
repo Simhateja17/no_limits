@@ -649,7 +649,15 @@
     "presaleDescription": "Activate presale to make products available for purchase before they arrive in the warehouse",
     "confirmDeleteOrder": "Are you sure you want to delete this order? This action cannot be undone.",
     "confirmDeleteProduct": "Are you sure you want to delete this product? This action cannot be undone.",
-    "confirmDeleteReturn": "Are you sure you want to delete this return? This action cannot be undone."
+    "confirmDeleteReturn": "Are you sure you want to delete this return? This action cannot be undone.",
+    "noProductsWithJtlId": "None of the selected products are synced with JTL FFN. Products must be registered with JTL before creating an inbound.",
+    "invalidQuantity": "Quantity must be a positive whole number.",
+    "invalidDateFormat": "Invalid date format. Please use DD.MM.YYYY (e.g., 15.03.2024)",
+    "etaMustBeFuture": "Expected arrival date must be today or in the future.",
+    "validationErrors": "Please fix the following errors:",
+    "jtlWarningTitle": "Some products are not synced with JTL FFN",
+    "jtlWarningDescription": "Products without JTL sync will NOT be included in the warehouse inbound. Please sync these products first.",
+    "dateFormatHint": "Format: DD.MM.YYYY (e.g., 15.03.2024)"
   },
   "clients": {
     "title": "Clients",

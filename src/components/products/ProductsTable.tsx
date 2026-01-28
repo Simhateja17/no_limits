@@ -52,6 +52,7 @@ interface DisplayChannel {
 interface ProductsTableProps {
   showClientColumn: boolean; // Show client column only for superadmin and warehouse labor view
   baseUrl: string; // Base URL for product details navigation (e.g., '/admin/products' or '/employee/products')
+  showSyncButtons?: boolean; // Show JTL sync buttons (defaults to true)
 }
 
 // Mobile Product Card Component
@@ -103,7 +104,7 @@ const ProductCard = ({
   );
 };
 
-export function ProductsTable({ showClientColumn, baseUrl }: ProductsTableProps) {
+export function ProductsTable({ showClientColumn, baseUrl, showSyncButtons = true }: ProductsTableProps) {
   const router = useRouter();
   const { user } = useAuthStore();
   const [activeTab, setActiveTab] = useState<TabType>('all');
@@ -115,6 +116,7 @@ export function ProductsTable({ showClientColumn, baseUrl }: ProductsTableProps)
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [syncingStock, setSyncingStock] = useState(false);
+  const [pushingProducts, setPushingProducts] = useState(false);
   const [syncResult, setSyncResult] = useState<{ success: boolean; message: string } | null>(null);
   const itemsPerPage = 10;
   const t = useTranslations('products');
@@ -194,20 +196,140 @@ export function ProductsTable({ showClientColumn, baseUrl }: ProductsTableProps)
     router.push(`${baseUrl}/${productId}`);
   };
 
-  // Sync stock from JTL FFN
+  // Push products to JTL FFN (assigns jtlProductId)
+  const handlePushProducts = async () => {
+    if (!user?.clientId) {
+      setSyncResult({
+        success: false,
+        message: 'Client ID not found. Please log in again.',
+      });
+      return;
+    }
+
+    setPushingProducts(true);
+    setSyncResult(null);
+    try {
+      // Step 1: Pull existing products from JTL first to match by SKU
+      setSyncResult({
+        success: true,
+        message: 'Pulling existing products from JTL...',
+      });
+
+      const pullResult = await dataApi.pullProductsFromJTL(user.clientId);
+
+      if (pullResult.data.updated > 0) {
+        setSyncResult({
+          success: true,
+          message: `Matched ${pullResult.data.updated} existing products. Now pushing updates...`,
+        });
+      }
+
+      // Step 2: Push products to JTL (create new or update existing)
+      const result = await dataApi.pushProductsToJTL(user.clientId);
+
+      if (result.success) {
+        setSyncResult({
+          success: true,
+          message: `Sync complete! ${pullResult.data.updated} matched from JTL, ${result.data.synced} synced, ${result.data.failed} failed.`,
+        });
+        // Refetch products to show updated sync status
+        const data = await dataApi.getProducts();
+        const transformedProducts: Product[] = data.map(p => ({
+          id: p.id,
+          productId: p.productId,
+          productName: p.name,
+          available: p.available,
+          reserved: p.reserved,
+          announced: p.announced,
+          client: p.client.companyName || p.client.name,
+        }));
+        setProducts(transformedProducts);
+      } else {
+        setSyncResult({
+          success: false,
+          message: result.message || 'Failed to push products to JTL.',
+        });
+      }
+    } catch (err) {
+      console.error('Error pushing products:', err);
+      setSyncResult({
+        success: false,
+        message: 'Failed to sync products with JTL. Please try again.',
+      });
+    } finally {
+      setPushingProducts(false);
+      setTimeout(() => setSyncResult(null), 5000);
+    }
+  };
+
+  // Smart sync stock from JTL FFN - checks if products need to be pushed first
   const handleSyncStock = async () => {
+    if (!user?.clientId) {
+      setSyncResult({
+        success: false,
+        message: 'Client ID not found. Please log in again.',
+      });
+      return;
+    }
+
     setSyncingStock(true);
     setSyncResult(null);
     try {
-      const result = await dataApi.syncStockFromJTL(user?.clientId);
+      // Step 1: Pull products from JTL to match existing products by SKU
+      setSyncResult({
+        success: true,
+        message: 'Checking for products in JTL...',
+      });
+
+      const pullResult = await dataApi.pullProductsFromJTL(user.clientId);
+
+      if (pullResult.data.updated > 0) {
+        setSyncResult({
+          success: true,
+          message: `Matched ${pullResult.data.updated} existing products from JTL...`,
+        });
+      }
+
+      // Step 2: Check if any products still don't have jtlProductId
+      const data = await dataApi.getProducts();
+      const productsWithoutJtlId = data.filter(p => !(p as any).jtlProductId);
+
+      if (productsWithoutJtlId.length > 0) {
+        // Need to push new products to JTL
+        setSyncResult({
+          success: true,
+          message: `${productsWithoutJtlId.length} new products need to be created in JTL. Pushing...`,
+        });
+
+        const pushResult = await dataApi.pushProductsToJTL(user.clientId);
+
+        if (!pushResult.success) {
+          setSyncResult({
+            success: false,
+            message: `Failed to push products: ${pushResult.message}`,
+          });
+          setSyncingStock(false);
+          setTimeout(() => setSyncResult(null), 5000);
+          return;
+        }
+
+        // Show progress
+        setSyncResult({
+          success: true,
+          message: `Products synced! Now pulling stock levels...`,
+        });
+      }
+
+      // Now sync stock levels
+      const result = await dataApi.syncStockFromJTL(user.clientId);
       if (result.success) {
         setSyncResult({
           success: true,
           message: `Stock synced! ${result.productsUpdated} updated, ${result.productsUnchanged} unchanged.`,
         });
         // Refetch products to show updated stock
-        const data = await dataApi.getProducts();
-        const transformedProducts: Product[] = data.map(p => ({
+        const refreshedData = await dataApi.getProducts();
+        const transformedProducts: Product[] = refreshedData.map(p => ({
           id: p.id,
           productId: p.productId,
           productName: p.name,
@@ -460,8 +582,54 @@ export function ProductsTable({ showClientColumn, baseUrl }: ProductsTableProps)
 
         {/* Action Buttons */}
         <div className="flex flex-col md:flex-row gap-2 md:gap-3 w-full md:w-auto">
-          {/* Sync Stock Button - Only show for admin/super_admin */}
-          {showClientColumn && (
+          {/* Push Products to JTL Button */}
+          {showSyncButtons && (
+            <button
+              onClick={handlePushProducts}
+              disabled={pushingProducts}
+              className="w-full md:w-auto"
+              style={{
+                height: 'clamp(32px, 2.8vw, 38px)',
+                borderRadius: '6px',
+                paddingTop: 'clamp(7px, 0.66vw, 9px)',
+                paddingRight: 'clamp(13px, 1.25vw, 17px)',
+                paddingBottom: 'clamp(7px, 0.66vw, 9px)',
+                paddingLeft: 'clamp(13px, 1.25vw, 17px)',
+                backgroundColor: pushingProducts ? '#9CA3AF' : '#2563EB',
+                boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.05)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: pushingProducts ? 'not-allowed' : 'pointer',
+                border: 'none',
+                whiteSpace: 'nowrap',
+                marginBottom: 'clamp(8px, 0.88vw, 12px)',
+                gap: '6px',
+              }}
+            >
+              {pushingProducts && (
+                <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+              )}
+              <span
+                style={{
+                  fontFamily: 'Inter, sans-serif',
+                  fontWeight: 500,
+                  fontSize: 'clamp(12px, 1.03vw, 14px)',
+                  lineHeight: '20px',
+                  color: '#FFFFFF',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {pushingProducts ? 'Pushing...' : 'Push Products to JTL'}
+              </span>
+            </button>
+          )}
+
+          {/* Sync Stock Button */}
+          {showSyncButtons && (
             <button
               onClick={handleSyncStock}
               disabled={syncingStock}
@@ -750,8 +918,8 @@ export function ProductsTable({ showClientColumn, baseUrl }: ProductsTableProps)
           className="grid"
           style={{
             gridTemplateColumns: showClientColumn
-              ? 'minmax(80px, 1fr) minmax(120px, 2fr) minmax(80px, 1fr) minmax(80px, 1fr) minmax(80px, 1fr) minmax(100px, 1.5fr)'
-              : 'minmax(80px, 1fr) minmax(120px, 2fr) minmax(80px, 1fr) minmax(80px, 1fr) minmax(80px, 1fr)',
+              ? 'minmax(80px, 1fr) minmax(120px, 2fr) minmax(80px, 1fr) minmax(80px, 1fr) minmax(80px, 1fr) minmax(100px, 1fr) minmax(100px, 1.5fr)'
+              : 'minmax(80px, 1fr) minmax(120px, 2fr) minmax(80px, 1fr) minmax(80px, 1fr) minmax(80px, 1fr) minmax(100px, 1fr)',
             padding: '12px 24px',
             borderBottom: '1px solid #E5E7EB',
             backgroundColor: '#F9FAFB',
@@ -822,6 +990,19 @@ export function ProductsTable({ showClientColumn, baseUrl }: ProductsTableProps)
           >
             {t('announced')}
           </span>
+          <span
+            style={{
+              fontFamily: 'Inter, sans-serif',
+              fontWeight: 500,
+              fontSize: '12px',
+              lineHeight: '16px',
+              letterSpacing: '0.05em',
+              textTransform: 'uppercase',
+              color: '#6B7280',
+            }}
+          >
+            JTL SYNC
+          </span>
           {showClientColumn && (
             <span
               style={{
@@ -847,8 +1028,8 @@ export function ProductsTable({ showClientColumn, baseUrl }: ProductsTableProps)
             onClick={() => handleProductClick(product.productId)}
             style={{
               gridTemplateColumns: showClientColumn
-                ? 'minmax(80px, 1fr) minmax(120px, 2fr) minmax(80px, 1fr) minmax(80px, 1fr) minmax(80px, 1fr) minmax(100px, 1.5fr)'
-                : 'minmax(80px, 1fr) minmax(120px, 2fr) minmax(80px, 1fr) minmax(80px, 1fr) minmax(80px, 1fr)',
+                ? 'minmax(80px, 1fr) minmax(120px, 2fr) minmax(80px, 1fr) minmax(80px, 1fr) minmax(80px, 1fr) minmax(100px, 1fr) minmax(100px, 1.5fr)'
+                : 'minmax(80px, 1fr) minmax(120px, 2fr) minmax(80px, 1fr) minmax(80px, 1fr) minmax(80px, 1fr) minmax(100px, 1fr)',
               padding: '16px 24px',
               borderBottom: index < paginatedProducts.length - 1 ? '1px solid #E5E7EB' : 'none',
               backgroundColor: '#FFFFFF',
@@ -917,6 +1098,46 @@ export function ProductsTable({ showClientColumn, baseUrl }: ProductsTableProps)
             >
               {product.announced}
             </span>
+            {/* JTL Sync Status */}
+            <div style={{ display: 'flex', alignItems: 'center' }}>
+              {(product as any).jtlProductId ? (
+                <span
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    padding: '2px 8px',
+                    borderRadius: '10px',
+                    backgroundColor: (product as any).jtlSyncStatus === 'SYNCED' ? '#D1FAE5' : (product as any).jtlSyncStatus === 'ERROR' ? '#FEE2E2' : '#FEF3C7',
+                    color: (product as any).jtlSyncStatus === 'SYNCED' ? '#059669' : (product as any).jtlSyncStatus === 'ERROR' ? '#DC2626' : '#D97706',
+                    fontFamily: 'Inter, sans-serif',
+                    fontWeight: 500,
+                    fontSize: '11px'
+                  }}
+                  title={`JTL ID: ${(product as any).jtlProductId}${(product as any).lastJtlSync ? ` | Last sync: ${new Date((product as any).lastJtlSync).toLocaleString()}` : ''}`}
+                >
+                  {(product as any).jtlSyncStatus === 'SYNCED' ? 'Synced' : (product as any).jtlSyncStatus === 'ERROR' ? 'Error' : 'Pending'}
+                </span>
+              ) : (
+                <span
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    padding: '2px 8px',
+                    borderRadius: '10px',
+                    backgroundColor: '#F3F4F6',
+                    color: '#6B7280',
+                    fontFamily: 'Inter, sans-serif',
+                    fontWeight: 500,
+                    fontSize: '11px'
+                  }}
+                  title="Product not synced with JTL FFN"
+                >
+                  Not synced
+                </span>
+              )}
+            </div>
             {showClientColumn && (
               <span
                 style={{

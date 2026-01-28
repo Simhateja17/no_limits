@@ -571,4 +571,35 @@ export const dataApi = {
     const response = await api.post('/sync-admin/stock/sync', clientId ? { clientId } : {});
     return response.data;
   },
+
+  // Pull products FROM JTL FFN (updates jtlProductId for existing products)
+  async pullProductsFromJTL(clientId: string): Promise<{
+    success: boolean;
+    message: string;
+    data: {
+      totalJtlProducts: number;
+      matched: number;
+      updated: number;
+      notFound: number;
+      errors: string[];
+    };
+  }> {
+    const response = await api.post(`/integrations/product-sync/client/${clientId}/pull-from-jtl`);
+    return response.data;
+  },
+
+  // Push Products to JTL FFN (assigns jtlProductId)
+  async pushProductsToJTL(clientId: string): Promise<{
+    success: boolean;
+    message: string;
+    data: {
+      totalProducts: number;
+      synced: number;
+      failed: number;
+      skipped: number;
+    };
+  }> {
+    const response = await api.post(`/integrations/product-sync/client/${clientId}/full-sync`);
+    return response.data;
+  },
 };
