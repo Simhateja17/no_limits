@@ -105,3 +105,40 @@ export function getDeliveryTypes(inbounds: DisplayInbound[]): string[] {
   const uniqueTypes = [...new Set(inbounds.map(i => i.deliveryType))];
   return uniqueTypes.filter(Boolean).sort();
 }
+
+// Hook for fetching a single inbound by ID
+interface UseInboundResult {
+  inbound: Inbound | null;
+  loading: boolean;
+  error: string | null;
+  refetch: () => Promise<void>;
+}
+
+export function useInbound(inboundId: string): UseInboundResult {
+  const [inbound, setInbound] = useState<Inbound | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchInbound = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const apiInbound = await dataApi.getInbound(inboundId);
+      setInbound(apiInbound);
+    } catch (err: any) {
+      console.error('Error fetching inbound:', err);
+      setError(err.response?.data?.error || err.message || 'Failed to fetch inbound');
+      setInbound(null);
+    } finally {
+      setLoading(false);
+    }
+  }, [inboundId]);
+
+  useEffect(() => {
+    if (inboundId) {
+      fetchInbound();
+    }
+  }, [fetchInbound, inboundId]);
+
+  return { inbound, loading, error, refetch: fetchInbound };
+}

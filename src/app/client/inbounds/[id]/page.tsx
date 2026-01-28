@@ -5,41 +5,18 @@ import { useAuthStore } from '@/lib/store';
 import { useRouter, useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
-import Image from 'next/image';
+import { useInbound } from '@/lib/hooks';
 
-// Mock product data
-interface Product {
+// Inbound item interface
+interface InboundItem {
   id: string;
-  name: string;
-  sku: string;
-  gtin: string;
-  qty: number;
-  deliveredQty: number;
+  expectedQuantity: number;
+  receivedQuantity: number | null;
+  product: {
+    name: string;
+    sku: string;
+  };
 }
-
-const mockProducts: Product[] = [
-  { id: '1', name: 'Testproduct 1', sku: '#24234', gtin: '342345235324', qty: 3, deliveredQty: 3 },
-  { id: '2', name: 'Testproduct 2', sku: '#24076', gtin: '324343243242', qty: 3, deliveredQty: 2 },
-];
-
-// Available products for adding
-const availableProducts: Product[] = [
-  { id: '3', name: 'Testproduct 3', sku: '#24235', gtin: '342345235325', qty: 1, deliveredQty: 0 },
-  { id: '4', name: 'Testproduct 4', sku: '#24236', gtin: '342345235326', qty: 1, deliveredQty: 0 },
-  { id: '5', name: 'Testproduct 5', sku: '#24237', gtin: '342345235327', qty: 1, deliveredQty: 0 },
-  { id: '6', name: 'Testproduct 6', sku: '#24238', gtin: '342345235328', qty: 1, deliveredQty: 0 },
-  { id: '7', name: 'Testproduct 7', sku: '#24234', gtin: '342345235324', qty: 1, deliveredQty: 0 },
-  { id: '8', name: 'Product Alpha', sku: '#24239', gtin: '342345235329', qty: 1, deliveredQty: 0 },
-  { id: '9', name: 'Product Beta', sku: '#24240', gtin: '342345235330', qty: 1, deliveredQty: 0 },
-];
-
-// Mock inbound images
-const mockInboundImages = [
-  '/women_in_return.jpg',
-  '/women_in_return.jpg',
-  '/women_in_return.jpg',
-  '/women_in_return.jpg',
-];
 
 export default function ClientInboundDetailPage() {
   const { user, isAuthenticated } = useAuthStore();
@@ -52,20 +29,35 @@ export default function ClientInboundDetailPage() {
   const tInbounds = useTranslations('inbounds');
   const inboundId = params.id as string;
 
+  // Fetch real inbound data
+  const { inbound, loading, error, refetch } = useInbound(inboundId);
+
   const [editMode, setEditMode] = useState(false);
   const [presaleActive, setPresaleActive] = useState(false);
-  const [products, setProducts] = useState<Product[]>(mockProducts);
-  const [searchQuery, setSearchQuery] = useState('');
   const [showSuccess, setShowSuccess] = useState(false);
 
-  // Form state
-  const [eta, setEta] = useState('10.12.2025');
-  const [freightForwarder, setFreightForwarder] = useState('10.12.2025');
-  const [trackingNo, setTrackingNo] = useState('10.12.2025');
-  const [qtyBoxes, setQtyBoxes] = useState('10');
-  const [qtyPallets, setQtyPallets] = useState('10');
-  const [totalCBM, setTotalCBM] = useState('10');
-  const [extInorderId, setExtInorderId] = useState('DE3-3245');
+  // Form state - will be populated from API data
+  const [eta, setEta] = useState('');
+  const [freightForwarder, setFreightForwarder] = useState('');
+  const [trackingNo, setTrackingNo] = useState('');
+  const [qtyBoxes, setQtyBoxes] = useState('');
+  const [qtyPallets, setQtyPallets] = useState('');
+  const [totalCBM, setTotalCBM] = useState('');
+  const [extInboundId, setExtInboundId] = useState('');
+
+  // Update form state when inbound data loads
+  useEffect(() => {
+    if (inbound) {
+      setEta(inbound.expectedDate ? new Date(inbound.expectedDate).toLocaleDateString('de-DE') : '');
+      setFreightForwarder(inbound.deliveryType || '');
+      setExtInboundId(inbound.externalInboundId || '');
+      // These fields aren't in the current schema but could be added
+      setTrackingNo('');
+      setQtyBoxes('');
+      setQtyPallets('');
+      setTotalCBM('');
+    }
+  }, [inbound]);
 
   useEffect(() => {
     if (!isAuthenticated || user?.role !== 'CLIENT') {
@@ -77,33 +69,73 @@ export default function ClientInboundDetailPage() {
     return null;
   }
 
-  const handleRemoveProduct = (productId: string) => {
-    setProducts(products.filter(p => p.id !== productId));
-  };
-
-  const handleAddProduct = (product: Product) => {
-    if (!products.find(p => p.id === product.id)) {
-      setProducts([...products, product]);
-    }
-  };
-
-  const handleQuantityChange = (productId: string, newQty: number) => {
-    setProducts(products.map(p => 
-      p.id === productId ? { ...p, qty: newQty } : p
-    ));
-  };
-
-  const handleSave = () => {
+  const handleSave = async () => {
+    // TODO: Implement save functionality with API call
     setShowSuccess(true);
     setTimeout(() => {
       setShowSuccess(false);
     }, 2000);
   };
 
-  const filteredAvailableProducts = availableProducts.filter(p => 
-    p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    p.sku.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // Map status to display format
+  const getStatusColor = (status: string) => {
+    switch (status?.toUpperCase()) {
+      case 'RECEIVED':
+      case 'BOOKED_IN':
+        return '#10B981'; // green
+      case 'PARTIALLY_RECEIVED':
+      case 'PARTIALLY_BOOKED_IN':
+        return '#F59E0B'; // amber
+      default:
+        return '#F59E0B'; // amber for pending
+    }
+  };
+
+  const getStatusLabel = (status: string) => {
+    switch (status?.toUpperCase()) {
+      case 'RECEIVED':
+      case 'BOOKED_IN':
+        return tInbounds('bookedIn');
+      case 'PARTIALLY_RECEIVED':
+      case 'PARTIALLY_BOOKED_IN':
+        return tInbounds('partiallyBookedIn');
+      default:
+        return tInbounds('pending');
+    }
+  };
+
+  // Loading state
+  if (loading) {
+    return (
+      <DashboardLayout>
+        <div className="w-full min-h-screen bg-[#F9FAFB] flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#003450] mx-auto"></div>
+            <p className="mt-4 text-gray-600">{tCommon('loading')}</p>
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  // Error state
+  if (error || !inbound) {
+    return (
+      <DashboardLayout>
+        <div className="w-full min-h-screen bg-[#F9FAFB] flex items-center justify-center">
+          <div className="text-center">
+            <p className="text-red-600 mb-4">{error || tMessages('inboundNotFound')}</p>
+            <button
+              onClick={() => refetch()}
+              className="px-4 py-2 bg-[#003450] text-white rounded-md hover:bg-[#002940]"
+            >
+              {tCommon('retry')}
+            </button>
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout>
@@ -154,38 +186,6 @@ export default function ClientInboundDetailPage() {
             </span>
           </button>
 
-          {/* Tab - Inbound Data */}
-          <div
-            className="flex items-center"
-            style={{
-              borderBottom: '1px solid #E5E7EB',
-              marginTop: '24px',
-            }}
-          >
-            <button
-              style={{
-                height: '38px',
-                paddingLeft: '4px',
-                paddingRight: '4px',
-                paddingBottom: '16px',
-                borderBottom: '2px solid #003450',
-                marginBottom: '-1px',
-              }}
-            >
-              <span
-                style={{
-                  fontFamily: 'Inter, sans-serif',
-                  fontWeight: 500,
-                  fontSize: '14px',
-                  lineHeight: '20px',
-                  color: '#003450',
-                }}
-              >
-                Inbound Data
-              </span>
-            </button>
-          </div>
-
           {/* Main Content */}
           <div className="mt-6 flex gap-[2.5%] flex-wrap lg:flex-nowrap">
             {/* Left Sidebar */}
@@ -223,7 +223,7 @@ export default function ClientInboundDetailPage() {
                             width: '6px',
                             height: '6px',
                             borderRadius: '50%',
-                            backgroundColor: '#F59E0B',
+                            backgroundColor: getStatusColor(inbound.status),
                           }}
                         />
                         <span
@@ -235,7 +235,7 @@ export default function ClientInboundDetailPage() {
                             color: '#000000',
                           }}
                         >
-                          {tInbounds('pending')}
+                          {getStatusLabel(inbound.status)}
                         </span>
                       </div>
                     </div>
@@ -282,7 +282,7 @@ export default function ClientInboundDetailPage() {
                           width: '6px',
                           height: '6px',
                           borderRadius: '50%',
-                          backgroundColor: '#F59E0B',
+                          backgroundColor: getStatusColor(inbound.status),
                         }}
                       />
                       <span
@@ -294,7 +294,7 @@ export default function ClientInboundDetailPage() {
                           color: '#000000',
                         }}
                       >
-                        {tInbounds('pending')}
+                        {getStatusLabel(inbound.status)}
                       </span>
                     </div>
                   </div>
@@ -310,9 +310,9 @@ export default function ClientInboundDetailPage() {
                     display: 'block',
                   }}
                 >
-                  {inboundId}
+                  {inbound.inboundId}
                 </span>
-                
+
                 <div style={{ marginTop: '12px' }}>
                   <span
                     style={{
@@ -335,7 +335,7 @@ export default function ClientInboundDetailPage() {
                       display: 'block',
                     }}
                   >
-                    {extInorderId}
+                    {extInboundId || 'N/A'}
                   </span>
                 </div>
               </div>
@@ -419,179 +419,32 @@ export default function ClientInboundDetailPage() {
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead>
                   <tr style={{ backgroundColor: '#F9FAFB' }}>
-                    {editMode && <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '12px', fontWeight: 500, color: '#6B7280', textTransform: 'uppercase' }}></th>}
                     <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '12px', fontWeight: 500, color: '#6B7280', textTransform: 'uppercase' }}>{tOrders('productName')}</th>
                     <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '12px', fontWeight: 500, color: '#6B7280', textTransform: 'uppercase' }}>{tOrders('sku')}</th>
-                    <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '12px', fontWeight: 500, color: '#6B7280', textTransform: 'uppercase' }}>{tOrders('gtin')}</th>
                     <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '12px', fontWeight: 500, color: '#6B7280', textTransform: 'uppercase' }}>{tInbounds('announcedQty')}</th>
                     <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '12px', fontWeight: 500, color: '#6B7280', textTransform: 'uppercase' }}>{tInbounds('deliveredQty')}</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {products.map((product) => (
-                    <tr key={product.id} style={{ borderTop: '1px solid #E5E7EB' }}>
-                      {editMode && (
-                        <td style={{ padding: '12px 16px' }}>
-                          <button
-                            onClick={() => handleRemoveProduct(product.id)}
-                            style={{
-                              padding: '4px 12px',
-                              backgroundColor: '#FEE2E2',
-                              color: '#991B1B',
-                              border: 'none',
-                              borderRadius: '4px',
-                              fontSize: '12px',
-                              fontWeight: 500,
-                              cursor: 'pointer'
-                            }}
-                          >
-                            {tCommon('remove')}
-                          </button>
-                        </td>
-                      )}
-                      <td style={{ padding: '12px 16px', fontSize: '14px', color: '#111827' }}>{product.name}</td>
-                      <td style={{ padding: '12px 16px', fontSize: '14px', color: '#6B7280' }}>{product.sku}</td>
-                      <td style={{ padding: '12px 16px', fontSize: '14px', color: '#6B7280' }}>{product.gtin}</td>
-                      <td style={{ padding: '12px 16px' }}>
-                        {editMode ? (
-                          <input
-                            type="number"
-                            value={product.qty}
-                            onChange={(e) => handleQuantityChange(product.id, parseInt(e.target.value) || 0)}
-                            style={{
-                              width: '60px',
-                              padding: '6px 10px',
-                              border: '1px solid #D1D5DB',
-                              borderRadius: '6px',
-                              fontSize: '14px',
-                              textAlign: 'center'
-                            }}
-                          />
-                        ) : (
-                          <span style={{ fontSize: '14px', color: '#111827' }}>{product.qty}</span>
-                        )}
+                  {inbound.items && inbound.items.length > 0 ? (
+                    inbound.items.map((item) => (
+                      <tr key={item.id} style={{ borderTop: '1px solid #E5E7EB' }}>
+                        <td style={{ padding: '12px 16px', fontSize: '14px', color: '#111827' }}>{item.product.name}</td>
+                        <td style={{ padding: '12px 16px', fontSize: '14px', color: '#6B7280' }}>{item.product.sku}</td>
+                        <td style={{ padding: '12px 16px', fontSize: '14px', color: '#111827' }}>{item.expectedQuantity}</td>
+                        <td style={{ padding: '12px 16px', fontSize: '14px', color: '#111827' }}>{item.receivedQuantity ?? 0}</td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan={4} style={{ padding: '24px 16px', textAlign: 'center', color: '#6B7280' }}>
+                        {tMessages('noProductsFound')}
                       </td>
-                      <td style={{ padding: '12px 16px', fontSize: '14px', color: '#111827' }}>{product.deliveredQty}</td>
                     </tr>
-                  ))}
+                  )}
                 </tbody>
               </table>
             </div>
-
-            {/* Add Products Section - Only in Edit Mode */}
-            {editMode && (
-              <div style={{
-                backgroundColor: 'white',
-                borderRadius: '8px',
-                boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.06), 0px 1px 3px 0px rgba(0, 0, 0, 0.1)',
-                padding: 'clamp(16px, 1.5vw, 20px) clamp(12px, 1.2vw, 16px)'
-              }}>
-                <div style={{ marginBottom: searchQuery ? '16px' : 0 }}>
-                  <label style={{ fontSize: '12px', color: '#6B7280', display: 'block', marginBottom: '4px' }}>{tOrders('addProducts')}</label>
-                  <div style={{ position: 'relative', width: '320px', maxWidth: '100%' }}>
-                    <input
-                      type="text"
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      placeholder={tOrders('searchProducts')}
-                      style={{
-                        width: '100%',
-                        padding: '9px 12px',
-                        paddingRight: searchQuery ? '36px' : '12px',
-                        border: '1px solid #D1D5DB',
-                        borderRadius: '6px',
-                        fontSize: '14px',
-                        backgroundColor: 'white'
-                      }}
-                    />
-                    {searchQuery && (
-                      <button
-                        onClick={() => setSearchQuery('')}
-                        style={{
-                          position: 'absolute',
-                          right: '10px',
-                          top: '50%',
-                          transform: 'translateY(-50%)',
-                          width: '20px',
-                          height: '20px',
-                          borderRadius: '50%',
-                          border: 'none',
-                          backgroundColor: '#E5E7EB',
-                          color: '#6B7280',
-                          cursor: 'pointer',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          fontSize: '14px',
-                          lineHeight: 1,
-                          padding: 0
-                        }}
-                      >
-                        ×
-                      </button>
-                    )}
-                  </div>
-                </div>
-
-                {searchQuery && filteredAvailableProducts.length > 0 && (
-                  <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                    <thead>
-                      <tr style={{ backgroundColor: '#F9FAFB' }}>
-                        <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '12px', fontWeight: 500, color: '#6B7280', textTransform: 'uppercase' }}></th>
-                        <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '12px', fontWeight: 500, color: '#6B7280', textTransform: 'uppercase' }}>{tOrders('productName')}</th>
-                        <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '12px', fontWeight: 500, color: '#6B7280', textTransform: 'uppercase' }}>SKU</th>
-                        <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '12px', fontWeight: 500, color: '#6B7280', textTransform: 'uppercase' }}>GTIN</th>
-                        <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '12px', fontWeight: 500, color: '#6B7280', textTransform: 'uppercase' }}>{tInbounds('announcedQty')}</th>
-                        <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '12px', fontWeight: 500, color: '#6B7280', textTransform: 'uppercase' }}>{tInbounds('deliveredQty')}</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {filteredAvailableProducts.map((product) => (
-                        <tr key={product.id} style={{ borderTop: '1px solid #E5E7EB' }}>
-                          <td style={{ padding: '12px 16px' }}>
-                            <button
-                              onClick={() => handleAddProduct(product)}
-                              style={{
-                                padding: '5px 14px',
-                                backgroundColor: '#003450',
-                                color: 'white',
-                                border: 'none',
-                                borderRadius: '9999px',
-                                fontSize: '12px',
-                                fontWeight: 500,
-                                cursor: 'pointer'
-                              }}
-                            >
-                              {tOrders('add')}
-                            </button>
-                          </td>
-                          <td style={{ padding: '12px 16px', fontSize: '14px', color: '#111827' }}>{product.name}</td>
-                          <td style={{ padding: '12px 16px', fontSize: '14px', color: '#6B7280' }}>{product.sku}</td>
-                          <td style={{ padding: '12px 16px', fontSize: '14px', color: '#6B7280' }}>{product.gtin}</td>
-                          <td style={{ padding: '12px 16px' }}>
-                            <input
-                              type="number"
-                              value={product.qty}
-                              readOnly
-                              style={{
-                                width: '60px',
-                                padding: '6px 10px',
-                                border: '1px solid #D1D5DB',
-                                borderRadius: '6px',
-                                fontSize: '14px',
-                                textAlign: 'center',
-                                backgroundColor: 'white'
-                              }}
-                            />
-                          </td>
-                          <td style={{ padding: '12px 16px', fontSize: '14px', color: '#111827' }}>{product.deliveredQty}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                )}
-              </div>
-            )}
 
             {/* Delivery Section */}
             <div style={{
@@ -917,19 +770,19 @@ export default function ClientInboundDetailPage() {
                   )}
                 </div>
                 <div>
-                  <label style={{ 
+                  <label style={{
                     fontFamily: 'Inter, sans-serif',
-                    fontSize: 'clamp(13px, 1.1vw, 15px)', 
-                    fontWeight: 500, 
-                    color: '#374151', 
-                    display: 'block', 
-                    marginBottom: '8px' 
+                    fontSize: 'clamp(13px, 1.1vw, 15px)',
+                    fontWeight: 500,
+                    color: '#374151',
+                    display: 'block',
+                    marginBottom: '8px'
                   }}>{tInbounds('extInboundId')}</label>
                   {editMode ? (
                     <input
                       type="text"
-                      value={extInorderId}
-                      onChange={(e) => setExtInorderId(e.target.value)}
+                      value={extInboundId}
+                      onChange={(e) => setExtInboundId(e.target.value)}
                       style={{
                         width: '100%',
                         height: '38px',
@@ -961,57 +814,11 @@ export default function ClientInboundDetailPage() {
                           color: '#6B7280',
                         }}
                       >
-                        {extInorderId}
+                        {extInboundId || 'N/A'}
                       </span>
                     </div>
                   )}
                 </div>
-              </div>
-            </div>
-
-            {/* Inbound Images Section */}
-            <div style={{
-              backgroundColor: 'white',
-              borderRadius: '8px',
-              boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.06), 0px 1px 3px 0px rgba(0, 0, 0, 0.1)',
-              padding: 'clamp(16px, 1.5vw, 20px) clamp(12px, 1.2vw, 16px)'
-            }}>
-              <h3 style={{ 
-                fontFamily: 'Inter, sans-serif',
-                fontWeight: 500,
-                fontSize: 'clamp(16px, 1.3vw, 18px)',
-                lineHeight: '24px',
-                color: '#111827', 
-                marginBottom: '16px' 
-              }}>Inbound Images</h3>
-              
-              <div style={{
-                display: 'flex',
-                flexWrap: 'wrap',
-                gap: 'clamp(12px, 1.18vw, 16px)'
-              }}>
-                {mockInboundImages.map((imageSrc, index) => (
-                  <div
-                    key={index}
-                    style={{
-                      width: 'clamp(144px, 14.14vw, 192px)',
-                      height: 'clamp(144px, 14.14vw, 192px)',
-                      borderRadius: '8px',
-                      overflow: 'hidden',
-                      boxShadow: '0px 0px 0px 4px #FFFFFF',
-                      position: 'relative',
-                    }}
-                  >
-                    <Image
-                      src={imageSrc}
-                      alt={`Inbound image ${index + 1}`}
-                      fill
-                      style={{
-                        objectFit: 'cover',
-                      }}
-                    />
-                  </div>
-                ))}
               </div>
             </div>
 
