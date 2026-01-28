@@ -317,6 +317,7 @@
     "filterByFreightForwarder": "Nach Spediteur filtern",
     "freightForwarder": "Spedition",
     "parcelService": "Paketdienst",
+    "selfDelivery": "Selbstanlieferung",
     "noInboundsFound": "Keine Wareneingänge gefunden",
     "inboundDetails": "Wareneingangsdetails",
     "supplier": "Lieferant",

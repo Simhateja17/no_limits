@@ -316,6 +316,7 @@
     "filterByFreightForwarder": "Filter by Freight Forwarder",
     "freightForwarder": "Freight forwarder",
     "parcelService": "Parcel service",
+    "selfDelivery": "Self delivery",
     "noInboundsFound": "No inbounds found",
     "inboundDetails": "Inbound Details",
     "supplier": "Supplier",

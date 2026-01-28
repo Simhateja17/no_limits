@@ -3,3 +3,4 @@ export { useOnboarding } from './useOnboarding';
 export { useReturns, getReturnClientNames, type DisplayReturn } from './useReturns';
 export { useInbounds, useInbound, getInboundClientNames, getDeliveryTypes, type DisplayInbound } from './useInbounds';
 export { useTasks, getTaskClientNames, type DisplayTask } from './useTasks';
+export { useProducts, type Product } from './useProducts';

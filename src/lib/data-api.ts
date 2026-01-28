@@ -495,6 +495,19 @@ export const dataApi = {
     return response.data.data;
   },
 
+  async createInbound(data: {
+    deliveryType?: string;
+    expectedDate?: string;
+    carrierName?: string;
+    trackingNumber?: string;
+    notes?: string;
+    simulateStock?: boolean;
+    items: Array<{ productId: string; quantity: number }>;
+  }): Promise<Inbound> {
+    const response = await api.post('/data/inbounds', data);
+    return response.data.data;
+  },
+
   // Tasks
   async getTasks(): Promise<Task[]> {
     const response = await api.get('/data/tasks');

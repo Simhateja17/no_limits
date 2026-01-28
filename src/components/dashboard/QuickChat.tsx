@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import { dataApi, QuickChatMessage } from '@/lib/data-api';
 import { SkeletonCircle, Skeleton } from '@/components/ui';
+import { supabase } from '@/lib/supabase';
 
 interface ChatMessage {
   id: string;
@@ -28,6 +29,19 @@ export function QuickChat({ messages: propMessages }: QuickChatProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Transform API message to ChatMessage format
+  const transformMessage = useCallback((msg: QuickChatMessage): ChatMessage => ({
+    id: msg.id,
+    sender: msg.sender,
+    avatar: msg.avatar || undefined,
+    avatarColor: msg.avatarColor,
+    timestamp: msg.timestamp,
+    content: msg.content,
+    tasks: msg.tasks,
+    roomId: msg.roomId,
+    clientName: msg.clientName,
+  }), []);
+
   // Fetch recent messages from API
   useEffect(() => {
     // If messages are provided as props, use them instead
@@ -42,18 +56,7 @@ export function QuickChat({ messages: propMessages }: QuickChatProps) {
         setLoading(true);
         setError(null);
         const data = await dataApi.getRecentChatMessages(5);
-        const transformedMessages: ChatMessage[] = data.map((msg: QuickChatMessage) => ({
-          id: msg.id,
-          sender: msg.sender,
-          avatar: msg.avatar || undefined,
-          avatarColor: msg.avatarColor,
-          timestamp: msg.timestamp,
-          content: msg.content,
-          tasks: msg.tasks,
-          roomId: msg.roomId,
-          clientName: msg.clientName,
-        }));
-        setMessages(transformedMessages);
+        setMessages(data.map(transformMessage));
       } catch (err) {
         console.error('Error fetching chat messages:', err);
         setError('Failed to load messages');
@@ -63,7 +66,46 @@ export function QuickChat({ messages: propMessages }: QuickChatProps) {
     };
 
     fetchMessages();
-  }, [propMessages]);
+  }, [propMessages, transformMessage]);
+
+  // Subscribe to Supabase Realtime for new messages
+  useEffect(() => {
+    // Skip if using prop messages (they're managed externally)
+    if (propMessages && propMessages.length > 0) return;
+
+    const channel = supabase
+      .channel('quickchat-realtime')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'ChatMessage',
+        },
+        async () => {
+          // When new message inserted, fetch latest message with full details
+          try {
+            const response = await dataApi.getRecentChatMessages(1);
+            if (response.length > 0) {
+              const newMsg = response[0];
+              setMessages((prev) => {
+                // Avoid duplicates
+                if (prev.some((m) => m.id === newMsg.id)) return prev;
+                // Add to beginning, keep max 5
+                return [transformMessage(newMsg), ...prev].slice(0, 5);
+              });
+            }
+          } catch (err) {
+            console.error('Error fetching new message:', err);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [propMessages, transformMessage]);
 
   return (
     <div

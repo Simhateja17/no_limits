@@ -5,17 +5,17 @@ import { useRouter } from 'next/navigation';
 import { DashboardLayout } from '@/components/layout';
 import { useAuthStore } from '@/lib/store';
 import { useTranslations } from 'next-intl';
+import { useProducts, Product } from '@/lib/hooks';
+import { dataApi } from '@/lib/data-api';
 
-// Mock available products to add
-const mockAvailableProducts = [
-  { id: '1', name: 'Testproduct 1', sku: '#24234', gtin: '342345235324', qty: 1 },
-  { id: '2', name: 'Testproduct 2', sku: '#24076', gtin: '324343243242', qty: 1 },
-  { id: '3', name: 'Testproduct 3', sku: '#24235', gtin: '342345235325', qty: 1 },
-  { id: '4', name: 'Testproduct 4', sku: '#24236', gtin: '342345235326', qty: 1 },
-  { id: '5', name: 'Testproduct 5', sku: '#24237', gtin: '342345235327', qty: 1 },
-  { id: '6', name: 'Testproduct 6', sku: '#24238', gtin: '342345235328', qty: 1 },
-  { id: '7', name: 'Testproduct 7', sku: '#24239', gtin: '342345235329', qty: 1 },
-];
+// Product type for inbound items
+interface InboundProduct {
+  id: string;
+  name: string;
+  sku: string;
+  gtin: string | null;
+  qty: number;
+}
 
 export default function CreateInboundPage() {
   const router = useRouter();
@@ -24,15 +24,19 @@ export default function CreateInboundPage() {
   const tInbounds = useTranslations('inbounds');
   const tOrders = useTranslations('orders');
   const tMessages = useTranslations('messages');
+
+  // Fetch real products from API
+  const { products: availableProducts, loading: productsLoading } = useProducts();
+
   const [showSuccessModal, setShowSuccessModal] = useState(false);
-  const [inboundProducts, setInboundProducts] = useState<typeof mockAvailableProducts>([]);
+  const [inboundProducts, setInboundProducts] = useState<InboundProduct[]>([]);
   const [productSearchQuery, setProductSearchQuery] = useState('');
   const [productQuantities, setProductQuantities] = useState<Record<string, number>>({});
   const [showProductList, setShowProductList] = useState(false);
   
   // Delivery form fields
   const [eta, setEta] = useState('');
-  const [freightForwarder, setFreightForwarder] = useState('');
+  const [freightForwarder, setFreightForwarder] = useState('PARCEL_SERVICE');
   const [trackingNo, setTrackingNo] = useState('');
   const [qtyBoxes, setQtyBoxes] = useState('');
   const [qtyPallets, setQtyPallets] = useState('');
@@ -66,15 +70,21 @@ export default function CreateInboundPage() {
   };
 
   // Handle adding product to inbound
-  const handleAddProduct = (product: typeof mockAvailableProducts[0]) => {
+  const handleAddProduct = (product: Product) => {
     const qty = productQuantities[product.id] || 1;
     const existingProduct = inboundProducts.find(p => p.id === product.id);
     if (existingProduct) {
-      setInboundProducts(inboundProducts.map(p => 
+      setInboundProducts(inboundProducts.map(p =>
         p.id === product.id ? { ...p, qty: p.qty + qty } : p
       ));
     } else {
-      setInboundProducts([...inboundProducts, { ...product, qty }]);
+      setInboundProducts([...inboundProducts, {
+        id: product.id,
+        name: product.name,
+        sku: product.sku,
+        gtin: product.gtin,
+        qty
+      }]);
     }
   };
 
@@ -90,8 +100,9 @@ export default function CreateInboundPage() {
   };
 
   // Filter available products based on search
-  const filteredAvailableProducts = mockAvailableProducts.filter(p =>
-    p.name.toLowerCase().includes(productSearchQuery.toLowerCase()) &&
+  const filteredAvailableProducts = availableProducts.filter(p =>
+    (p.name.toLowerCase().includes(productSearchQuery.toLowerCase()) ||
+     p.sku.toLowerCase().includes(productSearchQuery.toLowerCase())) &&
     !inboundProducts.find(op => op.id === p.id)
   );
 
@@ -123,26 +134,53 @@ export default function CreateInboundPage() {
   };
 
   // Handle save inbound
-  const handleSaveInbound = () => {
-    console.log('Saving inbound...', {
-      eta,
-      freightForwarder,
-      trackingNo,
-      qtyBoxes,
-      qtyPallets,
-      totalCBM,
-      extInorderId,
-      uploadedFile,
-      presaleActive,
-      products: inboundProducts,
-    });
-    
-    setShowSuccessModal(true);
-    
-    setTimeout(() => {
-      setShowSuccessModal(false);
-      router.push('/admin/inbounds');
-    }, 2000);
+  // State for saving
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+
+  const handleSaveInbound = async () => {
+    if (inboundProducts.length === 0) {
+      setSaveError(tMessages('noProductsAdded'));
+      return;
+    }
+
+    setIsSaving(true);
+    setSaveError(null);
+
+    try {
+      // Parse expected date from eta (format: DD.MM.YYYY)
+      let expectedDate: string | undefined;
+      if (eta) {
+        const [day, month, year] = eta.split('.');
+        if (day && month && year) {
+          expectedDate = new Date(`${year}-${month}-${day}`).toISOString();
+        }
+      }
+
+      await dataApi.createInbound({
+        deliveryType: freightForwarder || undefined,
+        expectedDate,
+        carrierName: freightForwarder || undefined,
+        trackingNumber: trackingNo || undefined,
+        simulateStock: presaleActive,
+        items: inboundProducts.map(p => ({
+          productId: p.id,
+          quantity: p.qty,
+        })),
+      });
+
+      setShowSuccessModal(true);
+
+      setTimeout(() => {
+        setShowSuccessModal(false);
+        router.push('/admin/inbounds');
+      }, 2000);
+    } catch (error: any) {
+      console.error('Error creating inbound:', error);
+      setSaveError(error.response?.data?.error || error.message || 'Failed to create inbound');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -374,7 +412,7 @@ export default function CreateInboundPage() {
                         color: '#6B7280',
                       }}
                     >
-                      {product.gtin}
+                      {product.gtin || 'N/A'}
                     </span>
                     <input
                       type="number"
@@ -528,7 +566,11 @@ export default function CreateInboundPage() {
                 </div>
 
                 {/* Table Body */}
-                {filteredAvailableProducts.map((product, index) => (
+                {productsLoading ? (
+                  <div style={{ padding: '24px', textAlign: 'center', color: '#6B7280' }}>
+                    {tCommon('loading')}...
+                  </div>
+                ) : filteredAvailableProducts.map((product, index) => (
                   <div
                     key={product.id}
                     className="grid items-center"
@@ -556,7 +598,7 @@ export default function CreateInboundPage() {
                     </button>
                     <span style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '14px', lineHeight: '20px', color: '#111827' }}>{product.name}</span>
                     <span style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '14px', lineHeight: '20px', color: '#111827' }}>{product.sku}</span>
-                    <span style={{ fontFamily: 'Inter, sans-serif', fontWeight: 400, fontSize: '14px', lineHeight: '20px', color: '#6B7280' }}>{product.gtin}</span>
+                    <span style={{ fontFamily: 'Inter, sans-serif', fontWeight: 400, fontSize: '14px', lineHeight: '20px', color: '#6B7280' }}>{product.gtin || 'N/A'}</span>
                     <input
                       type="number"
                       min="1"
@@ -655,19 +697,17 @@ export default function CreateInboundPage() {
                       marginBottom: '6px',
                     }}
                   >
-                    {tMessages('freightForwarder')}
+                    {tMessages('deliveryType')}
                   </label>
-                  <input
-                    type="text"
+                  <select
                     value={freightForwarder}
                     onChange={(e) => setFreightForwarder(e.target.value)}
-                    placeholder=""
                     style={{
                       width: '100%',
                       height: '38px',
                       borderRadius: '6px',
                       border: '1px solid #D1D5DB',
-                      padding: '9px 13px',
+                      padding: '0 13px',
                       fontFamily: 'Inter, sans-serif',
                       fontSize: '14px',
                       lineHeight: '20px',
@@ -675,7 +715,12 @@ export default function CreateInboundPage() {
                       backgroundColor: '#FFFFFF',
                       boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.05)',
                     }}
-                  />
+                  >
+                    <option value="PARCEL_SERVICE">{tMessages('parcelService')}</option>
+                    <option value="FREIGHT_FORWARDER">{tMessages('freightForwarder')}</option>
+                    <option value="SELF_DELIVERY">{tMessages('selfDelivery')}</option>
+                    <option value="OTHER">{tMessages('other')}</option>
+                  </select>
                 </div>
                 <div>
                   <label
@@ -1079,22 +1124,34 @@ export default function CreateInboundPage() {
               </button>
             </div>
 
+            {/* Error Message */}
+            {saveError && (
+              <div style={{ width: '100%', maxWidth: '927px', padding: '12px 16px', borderRadius: '8px', backgroundColor: '#FEE2E2', color: '#DC2626', fontFamily: 'Inter, sans-serif', fontSize: '14px' }}>
+                {saveError}
+              </div>
+            )}
+
             {/* Save Button at Bottom */}
             <div style={{ width: '100%', maxWidth: '927px', display: 'flex', justifyContent: 'flex-end', marginTop: '24px' }}>
               <button
                 onClick={handleSaveInbound}
+                disabled={isSaving || inboundProducts.length === 0}
                 style={{
                   height: '38px',
                   padding: '9px 17px',
                   borderRadius: '6px',
-                  backgroundColor: '#003450',
+                  backgroundColor: isSaving || inboundProducts.length === 0 ? '#9CA3AF' : '#003450',
                   border: 'none',
-                  cursor: 'pointer',
+                  cursor: isSaving || inboundProducts.length === 0 ? 'not-allowed' : 'pointer',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
+                  gap: '8px',
                 }}
               >
+                {isSaving && (
+                  <div style={{ width: '16px', height: '16px', border: '2px solid #FFFFFF', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+                )}
                 <span
                   style={{
                     fontFamily: 'Inter, sans-serif',
@@ -1105,7 +1162,7 @@ export default function CreateInboundPage() {
                     whiteSpace: 'nowrap',
                   }}
                 >
-                  {tCommon('save')}
+                  {isSaving ? tCommon('saving') : tCommon('save')}
                 </span>
               </button>
             </div>
