@@ -575,6 +575,20 @@
         "orders": "Auftragen werden synchronisiert...",
         "returns": "Retouren werden synchronisiert...",
         "done": "Abgeschlossen"
+      },
+      "pipeline": {
+        "title": "Initiale Sync-Pipeline",
+        "step": "Schritt",
+        "progress": "Fortschritt",
+        "processed": "verarbeitet",
+        "error": "Fehler",
+        "pause": "Pausieren",
+        "resume": "Fortsetzen",
+        "retry": "Wiederholen",
+        "noPipeline": "Keine Sync-Pipeline für diesen Kanal gefunden.",
+        "startInitialSync": "Initiale Synchronisierung starten",
+        "starting": "Wird gestartet...",
+        "startSync": "Sync starten"
       }
     }
   },

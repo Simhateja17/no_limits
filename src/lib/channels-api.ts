@@ -254,6 +254,21 @@ export const getSyncJobHistory = async (channelId: string, limit: number = 10): 
 };
 
 /**
+ * Get channel info including clientId
+ */
+export const getChannelInfo = async (
+  channelId: string
+): Promise<{ id: string; name: string; type: string; clientId: string; status: string } | null> => {
+  try {
+    const response = await api.get(`/integrations/channels/${channelId}`);
+    return response.data.channel || response.data;
+  } catch (error) {
+    console.error('[channels-api] Error getting channel info:', error);
+    return null;
+  }
+};
+
+/**
  * Start background sync with user-selected date
  */
 export const startBackgroundSync = async (

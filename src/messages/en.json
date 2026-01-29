@@ -592,6 +592,20 @@
         "orders": "Syncing orders...",
         "returns": "Syncing returns...",
         "done": "Completed"
+      },
+      "pipeline": {
+        "title": "Initial Sync Pipeline",
+        "step": "Step",
+        "progress": "Progress",
+        "processed": "processed",
+        "error": "Error",
+        "pause": "Pause",
+        "resume": "Resume",
+        "retry": "Retry",
+        "noPipeline": "No sync pipeline found for this channel.",
+        "startInitialSync": "Start Initial Sync",
+        "starting": "Starting...",
+        "startSync": "Start Sync"
       }
     }
   },

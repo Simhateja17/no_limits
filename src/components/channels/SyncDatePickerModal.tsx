@@ -1,13 +1,15 @@
 'use client';
 
 import { useState } from 'react';
-import { startBackgroundSync } from '@/lib/channels-api';
+import { startBackgroundSync, getChannelInfo } from '@/lib/channels-api';
+import { SyncPipelineProgress } from '@/components/sync/SyncPipelineProgress';
 
 interface SyncDatePickerModalProps {
   isOpen: boolean;
   channelId: string;
   onComplete: () => void;
   onCancel?: () => void;
+  showPipelineProgress?: boolean;
 }
 
 export default function SyncDatePickerModal({
@@ -15,10 +17,13 @@ export default function SyncDatePickerModal({
   channelId,
   onComplete,
   onCancel,
+  showPipelineProgress = true,
 }: SyncDatePickerModalProps) {
   const [selectedDate, setSelectedDate] = useState<string>('');
   const [isStarting, setIsStarting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [pipelineStarted, setPipelineStarted] = useState(false);
+  const [clientId, setClientId] = useState<string | null>(null);
 
   // Calculate default date (180 days ago)
   const getDefaultDate = () => {
@@ -49,14 +54,26 @@ export default function SyncDatePickerModal({
     setError(null);
 
     try {
+      // First, get the channel info to get the clientId
+      const channelInfo = await getChannelInfo(channelId);
+      if (channelInfo?.clientId) {
+        setClientId(channelInfo.clientId);
+      }
+
       const syncFromDate = new Date(selectedDate).toISOString();
       console.log('[SyncDatePicker] Starting sync from:', syncFromDate, 'Selected date:', selectedDate);
 
       const response = await startBackgroundSync(channelId, syncFromDate);
 
       if (response.success) {
-        console.log('[SyncDatePicker] Background sync started successfully:', response);
-        onComplete();
+        console.log('[SyncDatePicker] Sync pipeline started successfully:', response);
+
+        // If showPipelineProgress is enabled, show the progress view
+        if (showPipelineProgress && channelInfo?.clientId) {
+          setPipelineStarted(true);
+        } else {
+          onComplete();
+        }
       } else {
         const errorMsg = response.error || 'Failed to start sync';
         console.error('[SyncDatePicker] Error:', errorMsg);
@@ -77,6 +94,39 @@ export default function SyncDatePickerModal({
   };
 
   if (!isOpen) return null;
+
+  // If pipeline has started and we have a clientId, show the progress view
+  if (pipelineStarted && clientId) {
+    return (
+      <div className="fixed inset-0 z-[9999] flex items-center justify-center">
+        {/* Backdrop */}
+        <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
+
+        {/* Modal */}
+        <div className="relative z-10 bg-white rounded-lg shadow-2xl p-8 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+          <SyncPipelineProgress
+            channelId={channelId}
+            clientId={clientId}
+            syncFromDate={selectedDate}
+            onComplete={onComplete}
+            onError={(error) => {
+              console.error('[SyncDatePicker] Pipeline error:', error);
+            }}
+          />
+
+          {/* Continue button - shown after sync starts */}
+          <div className="mt-6 flex justify-end">
+            <button
+              onClick={onComplete}
+              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+            >
+              Continue to Dashboard
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center">

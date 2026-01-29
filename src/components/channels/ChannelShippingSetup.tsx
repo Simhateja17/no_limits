@@ -197,11 +197,12 @@ export function ChannelShippingSetup({ channelId, channelType, baseUrl }: Channe
         }
 
         // If advanced mapping is enabled and has mappings, save them
+        // Format: channelMethodName -> warehouseMethodId
         if (showAdvancedMapping && Object.keys(selectedMethods).length > 0) {
           const mappings: Record<string, string> = {};
-          for (const [warehouseMethodId, channelMethodName] of Object.entries(selectedMethods)) {
-            if (channelMethodName) {
-              mappings[warehouseMethodId] = channelMethodName;
+          for (const [channelMethodName, warehouseMethodId] of Object.entries(selectedMethods)) {
+            if (warehouseMethodId) {
+              mappings[channelMethodName] = warehouseMethodId;
             }
           }
 
@@ -736,10 +737,10 @@ export function ChannelShippingSetup({ channelId, channelType, baseUrl }: Channe
                         </span>
                       </div>
 
-                      {/* FFN Method Dropdown */}
+                      {/* FFN Method Dropdown - Same FFN method can be selected multiple times */}
                       <div style={{ flex: 1, position: 'relative' }}>
                         <button
-                          onClick={() => setOpenDropdown(openDropdown === channelMethod.id ? null : channelMethod.id)}
+                          onClick={() => setOpenDropdown(openDropdown === channelMethod.name ? null : channelMethod.name)}
                           style={{
                             width: '100%',
                             height: 'clamp(36px, 3.53vw, 48px)',
@@ -756,12 +757,12 @@ export function ChannelShippingSetup({ channelId, channelType, baseUrl }: Channe
                             fontWeight: 400,
                             fontSize: 'clamp(11px, 1.03vw, 14px)',
                             lineHeight: 'clamp(15px, 1.47vw, 20px)',
-                            color: selectedMethods[channelMethod.id] ? '#111827' : '#9CA3AF',
+                            color: selectedMethods[channelMethod.name] ? '#111827' : '#9CA3AF',
                           }}
                         >
                           <span>
-                            {selectedMethods[channelMethod.id]
-                              ? ffnShippingMethods.find(m => m.jtlShippingMethodId === selectedMethods[channelMethod.id])?.name || selectedMethods[channelMethod.id]
+                            {selectedMethods[channelMethod.name]
+                              ? ffnShippingMethods.find(m => m.id === selectedMethods[channelMethod.name])?.name || tShipping('useDefault')
                               : tShipping('useDefault')}
                           </span>
                           <svg
@@ -771,7 +772,7 @@ export function ChannelShippingSetup({ channelId, channelType, baseUrl }: Channe
                             fill="none"
                             xmlns="http://www.w3.org/2000/svg"
                             style={{
-                              transform: openDropdown === channelMethod.id ? 'rotate(180deg)' : 'rotate(0deg)',
+                              transform: openDropdown === channelMethod.name ? 'rotate(180deg)' : 'rotate(0deg)',
                               transition: 'transform 0.2s ease',
                             }}
                           >
@@ -785,7 +786,7 @@ export function ChannelShippingSetup({ channelId, channelType, baseUrl }: Channe
                           </svg>
                         </button>
 
-                        {openDropdown === channelMethod.id && (
+                        {openDropdown === channelMethod.name && (
                           <div
                             style={{
                               position: 'absolute',
@@ -807,7 +808,7 @@ export function ChannelShippingSetup({ channelId, channelType, baseUrl }: Channe
                               onClick={() => {
                                 setSelectedMethods(prev => {
                                   const newMethods = { ...prev };
-                                  delete newMethods[channelMethod.id];
+                                  delete newMethods[channelMethod.name];
                                   return newMethods;
                                 });
                                 setOpenDropdown(null);
@@ -815,7 +816,7 @@ export function ChannelShippingSetup({ channelId, channelType, baseUrl }: Channe
                               style={{
                                 width: '100%',
                                 padding: 'clamp(10px, 0.98vw, 14px) clamp(12px, 1.18vw, 16px)',
-                                backgroundColor: !selectedMethods[channelMethod.id] ? '#F9FAFB' : '#FFFFFF',
+                                backgroundColor: !selectedMethods[channelMethod.name] ? '#F9FAFB' : '#FFFFFF',
                                 border: 'none',
                                 borderBottom: '1px solid #F3F4F6',
                                 display: 'flex',
@@ -823,7 +824,7 @@ export function ChannelShippingSetup({ channelId, channelType, baseUrl }: Channe
                                 justifyContent: 'space-between',
                                 cursor: 'pointer',
                                 fontFamily: 'Inter, sans-serif',
-                                fontWeight: !selectedMethods[channelMethod.id] ? 500 : 400,
+                                fontWeight: !selectedMethods[channelMethod.name] ? 500 : 400,
                                 fontSize: 'clamp(11px, 1.03vw, 14px)',
                                 color: '#6B7280',
                                 fontStyle: 'italic',
@@ -838,14 +839,14 @@ export function ChannelShippingSetup({ channelId, channelType, baseUrl }: Channe
                                 onClick={() => {
                                   setSelectedMethods(prev => ({
                                     ...prev,
-                                    [channelMethod.id]: method.jtlShippingMethodId || '',
+                                    [channelMethod.name]: method.id,
                                   }));
                                   setOpenDropdown(null);
                                 }}
                                 style={{
                                   width: '100%',
                                   padding: 'clamp(10px, 0.98vw, 14px) clamp(12px, 1.18vw, 16px)',
-                                  backgroundColor: selectedMethods[channelMethod.id] === method.jtlShippingMethodId ? '#F9FAFB' : '#FFFFFF',
+                                  backgroundColor: selectedMethods[channelMethod.name] === method.id ? '#F9FAFB' : '#FFFFFF',
                                   border: 'none',
                                   borderBottom: index < ffnShippingMethods.length - 1 ? '1px solid #F3F4F6' : 'none',
                                   display: 'flex',
@@ -853,7 +854,7 @@ export function ChannelShippingSetup({ channelId, channelType, baseUrl }: Channe
                                   justifyContent: 'space-between',
                                   cursor: 'pointer',
                                   fontFamily: 'Inter, sans-serif',
-                                  fontWeight: selectedMethods[channelMethod.id] === method.jtlShippingMethodId ? 500 : 400,
+                                  fontWeight: selectedMethods[channelMethod.name] === method.id ? 500 : 400,
                                   fontSize: 'clamp(11px, 1.03vw, 14px)',
                                   color: '#111827',
                                   textAlign: 'left',

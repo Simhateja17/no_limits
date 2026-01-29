@@ -1812,7 +1812,7 @@ export function ChannelSettings({ channelId, baseUrl, initialChannelType = 'Wooc
                 textAlign: 'center',
               }}
             >
-              Warehouse
+              {getChannelLabel()}
             </div>
             <div
               style={{
@@ -1825,7 +1825,7 @@ export function ChannelSettings({ channelId, baseUrl, initialChannelType = 'Wooc
                 textAlign: 'center',
               }}
             >
-              {getChannelLabel()}
+              Warehouse
             </div>
           </div>
 
@@ -1876,17 +1876,17 @@ export function ChannelSettings({ channelId, baseUrl, initialChannelType = 'Wooc
             </div>
           )}
 
-          {/* Method Rows */}
-          {!isLoadingMethods && warehouseMethods.map((warehouseMethod) => (
+          {/* Method Rows - Iterate over channel methods to allow same warehouse method to be used multiple times */}
+          {!isLoadingMethods && channelMethods.map((channelMethod) => (
             <div
-              key={warehouseMethod.id}
+              key={channelMethod.id}
               style={{
                 display: 'flex',
                 gap: 'clamp(18px, 1.77vw, 24px)',
                 alignItems: 'center',
               }}
             >
-              {/* Warehouse Method (Read-only) */}
+              {/* Channel Method (Read-only) */}
               <div
                 style={{
                   flex: 1,
@@ -1908,11 +1908,11 @@ export function ChannelSettings({ channelId, baseUrl, initialChannelType = 'Wooc
                     color: '#6B7280',
                   }}
                 >
-                  {warehouseMethod.name}
+                  {channelMethod.name}
                 </span>
               </div>
 
-              {/* Channel Method Dropdown */}
+              {/* Warehouse Method Dropdown - Same warehouse method can be selected multiple times */}
               <div
                 style={{
                   flex: 1,
@@ -1920,7 +1920,7 @@ export function ChannelSettings({ channelId, baseUrl, initialChannelType = 'Wooc
                 }}
               >
                 <button
-                  onClick={() => setOpenShippingDropdown(openShippingDropdown === warehouseMethod.id ? null : warehouseMethod.id)}
+                  onClick={() => setOpenShippingDropdown(openShippingDropdown === channelMethod.name ? null : channelMethod.name)}
                   style={{
                     width: '100%',
                     height: 'clamp(36px, 3.53vw, 48px)',
@@ -1940,7 +1940,11 @@ export function ChannelSettings({ channelId, baseUrl, initialChannelType = 'Wooc
                     color: '#111827',
                   }}
                 >
-                  <span>{selectedMethods[warehouseMethod.id] || 'Select method'}</span>
+                  <span>
+                    {selectedMethods[channelMethod.name]
+                      ? warehouseMethods.find(m => m.id === selectedMethods[channelMethod.name])?.name || 'Select method'
+                      : 'Select method'}
+                  </span>
                   <svg
                     width="16"
                     height="16"
@@ -1948,7 +1952,7 @@ export function ChannelSettings({ channelId, baseUrl, initialChannelType = 'Wooc
                     fill="none"
                     xmlns="http://www.w3.org/2000/svg"
                     style={{
-                      transform: openShippingDropdown === warehouseMethod.id ? 'rotate(180deg)' : 'rotate(0deg)',
+                      transform: openShippingDropdown === channelMethod.name ? 'rotate(180deg)' : 'rotate(0deg)',
                       transition: 'transform 0.2s ease',
                     }}
                   >
@@ -1962,8 +1966,8 @@ export function ChannelSettings({ channelId, baseUrl, initialChannelType = 'Wooc
                   </svg>
                 </button>
 
-                {/* Dropdown Menu */}
-                {openShippingDropdown === warehouseMethod.id && (
+                {/* Dropdown Menu - Shows all warehouse methods (allows reuse) */}
+                {openShippingDropdown === channelMethod.name && (
                   <div
                     style={{
                       position: 'absolute',
@@ -1980,22 +1984,22 @@ export function ChannelSettings({ channelId, baseUrl, initialChannelType = 'Wooc
                       zIndex: 100,
                     }}
                   >
-                    {channelMethods.map((method, index) => (
+                    {warehouseMethods.map((method, index) => (
                       <button
                         key={method.id}
-                        onClick={() => handleMethodSelect(warehouseMethod.id, method.name)}
+                        onClick={() => handleMethodSelect(channelMethod.name, method.id)}
                         style={{
                           width: '100%',
                           padding: 'clamp(10px, 0.98vw, 14px) clamp(12px, 1.18vw, 16px)',
-                          backgroundColor: selectedMethods[warehouseMethod.id] === method.name ? '#F9FAFB' : '#FFFFFF',
+                          backgroundColor: selectedMethods[channelMethod.name] === method.id ? '#F9FAFB' : '#FFFFFF',
                           border: 'none',
-                          borderBottom: index < channelMethods.length - 1 ? '1px solid #F3F4F6' : 'none',
+                          borderBottom: index < warehouseMethods.length - 1 ? '1px solid #F3F4F6' : 'none',
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'space-between',
                           cursor: 'pointer',
                           fontFamily: 'Inter, sans-serif',
-                          fontWeight: selectedMethods[warehouseMethod.id] === method.name ? 500 : 400,
+                          fontWeight: selectedMethods[channelMethod.name] === method.id ? 500 : 400,
                           fontSize: 'clamp(11px, 1.03vw, 14px)',
                           lineHeight: 'clamp(15px, 1.47vw, 20px)',
                           color: '#111827',
@@ -2006,11 +2010,11 @@ export function ChannelSettings({ channelId, baseUrl, initialChannelType = 'Wooc
                         }}
                         onMouseLeave={(e) => {
                           e.currentTarget.style.backgroundColor =
-                            selectedMethods[warehouseMethod.id] === method.name ? '#F9FAFB' : '#FFFFFF';
+                            selectedMethods[channelMethod.name] === method.id ? '#F9FAFB' : '#FFFFFF';
                         }}
                       >
                         <span>{method.name}</span>
-                        {selectedMethods[warehouseMethod.id] === method.name && (
+                        {selectedMethods[channelMethod.name] === method.id && (
                           <svg
                             width="16"
                             height="16"
