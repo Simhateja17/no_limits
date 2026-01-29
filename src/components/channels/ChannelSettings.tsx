@@ -195,7 +195,7 @@ export function ChannelSettings({ channelId, baseUrl, initialChannelType = 'Wooc
   const [locations, setLocations] = useState<Location[]>([]);
   const [isLoadingLocations, setIsLoadingLocations] = useState(false);
 
-  // Shipping Setup State
+  // Shipping Setup State - channelMethodId -> warehouseMethodId mapping
   const [selectedMethods, setSelectedMethods] = useState<{ [key: string]: string }>({});
   const [openShippingDropdown, setOpenShippingDropdown] = useState<string | null>(null);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
@@ -487,10 +487,10 @@ export function ChannelSettings({ channelId, baseUrl, initialChannelType = 'Wooc
     }
   };
 
-  const handleMethodSelect = (warehouseId: string, methodName: string) => {
+  const handleMethodSelect = (channelMethodId: string, warehouseMethodId: string) => {
     setSelectedMethods((prev) => ({
       ...prev,
-      [warehouseId]: methodName,
+      [channelMethodId]: warehouseMethodId,
     }));
     setOpenShippingDropdown(null);
   };
@@ -506,11 +506,12 @@ export function ChannelSettings({ channelId, baseUrl, initialChannelType = 'Wooc
       setShippingSaveError(null);
       setShippingSaveSuccess(false);
 
-      // Convert selectedMethods to proper format (warehouseMethodId -> channelMethodName)
+      // Format: channelMethodName -> warehouseMethodId
+      // This allows multiple channel methods to map to the same warehouse method
       const mappings: Record<string, string> = {};
-      for (const [warehouseMethodId, channelMethodName] of Object.entries(selectedMethods)) {
-        if (channelMethodName) {
-          mappings[warehouseMethodId] = channelMethodName;
+      for (const [channelMethodName, warehouseMethodId] of Object.entries(selectedMethods)) {
+        if (warehouseMethodId) {
+          mappings[channelMethodName] = warehouseMethodId;
         }
       }
 

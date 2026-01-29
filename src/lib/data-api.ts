@@ -24,6 +24,18 @@ export interface Product {
   updatedAt: string;
 }
 
+export interface OrderSyncLog {
+  id: string;
+  action: string;
+  origin: string;
+  targetPlatform: string;
+  changedFields: string[];
+  previousState: Record<string, unknown> | null;
+  newState: Record<string, unknown> | null;
+  success: boolean;
+  createdAt: string;
+}
+
 export interface Order {
   id: string;
   orderId: string;
@@ -78,6 +90,7 @@ export interface Order {
       gtin: string | null;
     } | null;
   }>;
+  syncLogs?: OrderSyncLog[];
 }
 
 export interface Return {
@@ -600,6 +613,23 @@ export const dataApi = {
     };
   }> {
     const response = await api.post(`/integrations/product-sync/client/${clientId}/full-sync`);
+    return response.data;
+  },
+
+  // Import products FROM JTL FFN (creates new products locally, no channel sync)
+  async importProductsFromJTL(clientId: string): Promise<{
+    success: boolean;
+    message: string;
+    data: {
+      totalJtlProducts: number;
+      alreadyExists: number;
+      imported: number;
+      failed: number;
+      errors: string[];
+      importedProducts: Array<{ sku: string; name: string; jfsku: string }>;
+    };
+  }> {
+    const response = await api.post(`/integrations/product-sync/client/${clientId}/import-from-jtl`);
     return response.data;
   },
 };

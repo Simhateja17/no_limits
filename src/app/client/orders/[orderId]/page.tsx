@@ -9,6 +9,7 @@ import { useEffect } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { dataApi, type Order as ApiOrder, type UpdateOrderInput } from '@/lib/data-api';
 import { Skeleton, GenericTableSkeleton } from '@/components/ui';
+import { StatusHistory } from '@/components/orders/StatusHistory';
 
 // Type for transformed order details
 interface OrderDetails {
@@ -2014,6 +2015,26 @@ export default function ClientOrderDetailPage() {
                     {isCreatingReplacement ? 'Creating...' : tOrders('createReplacementOrder')}
                   </span>
                 </button>
+              </div>
+
+              {/* Status History Box */}
+              <div
+                style={{
+                  width: '100%',
+                  minHeight: '178px',
+                  gap: '20px',
+                  borderRadius: '8px',
+                  padding: 'clamp(16px, 1.8vw, 24px)',
+                  backgroundColor: '#FFFFFF',
+                  boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.06), 0px 1px 3px 0px rgba(0, 0, 0, 0.1)',
+                }}
+              >
+                <StatusHistory
+                  syncLogs={rawOrder?.syncLogs}
+                  orderDate={rawOrder?.orderDate}
+                  currentStatus={rawOrder?.status}
+                  fulfillmentState={rawOrder?.fulfillmentState}
+                />
               </div>
             </div>
           </div>

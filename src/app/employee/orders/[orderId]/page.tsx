@@ -7,6 +7,7 @@ import { DashboardLayout } from '@/components/layout';
 import { useAuthStore } from '@/lib/store';
 import { useTranslations, useLocale } from 'next-intl';
 import { dataApi, type Order as ApiOrder } from '@/lib/data-api';
+import { StatusHistory } from '@/components/orders/StatusHistory';
 
 // Mock order data - in real app this would come from API
 const mockOrderDetails = {
@@ -1646,6 +1647,26 @@ export default function EmployeeOrderDetailPage() {
                     {isCreatingReplacement ? 'Creating...' : tOrders('createReplacementOrder')}
                   </span>
                 </button>
+              </div>
+
+              {/* Status History Box */}
+              <div
+                style={{
+                  width: '100%',
+                  minHeight: '178px',
+                  gap: '20px',
+                  borderRadius: '8px',
+                  padding: 'clamp(16px, 1.8vw, 24px)',
+                  backgroundColor: '#FFFFFF',
+                  boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.06), 0px 1px 3px 0px rgba(0, 0, 0, 0.1)',
+                }}
+              >
+                <StatusHistory
+                  syncLogs={rawOrder?.syncLogs}
+                  orderDate={rawOrder?.orderDate}
+                  currentStatus={rawOrder?.status}
+                  fulfillmentState={rawOrder?.fulfillmentState}
+                />
               </div>
             </div>
           </div>

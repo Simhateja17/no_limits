@@ -150,10 +150,12 @@ export const channelsApi = {
 
   /**
    * Save shipping method mappings for a channel
+   * Format: channelMethodName -> warehouseMethodId
+   * This supports multiple channel methods mapping to the same warehouse method
    */
   saveShippingMappings: async (
     channelId: string,
-    mappings: Record<string, string> // warehouseMethodId -> channelMethodId
+    mappings: Record<string, string> // channelMethodName -> warehouseMethodId
   ): Promise<{ success: boolean; error?: string }> => {
     const response = await api.put(
       `/integrations/channels/${channelId}/shipping-mappings`,
