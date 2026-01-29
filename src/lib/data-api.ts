@@ -22,6 +22,9 @@ export interface Product {
   };
   createdAt: string;
   updatedAt: string;
+  jtlProductId?: string | null;
+  jtlSyncStatus?: string | null;
+  lastJtlSync?: string | null;
 }
 
 export interface OrderSyncLog {
