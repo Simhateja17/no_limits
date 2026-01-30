@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { useAuthStore } from '@/lib/store';
-import { channelsApi, Location, ShippingMethod, fetchAllProducts, fetchAllOrders } from '@/lib/channels-api';
+import { channelsApi, Location, ShippingMethod, fetchAllProducts, fetchAllOrders, syncOrderStatuses } from '@/lib/channels-api';
 import { onboardingApi } from '@/lib/onboarding-api';
 import { SyncStatusBar } from './SyncStatusBar';
 import {
@@ -248,7 +248,8 @@ export function ChannelSettings({ channelId, baseUrl, initialChannelType = 'Wooc
   // Fetch All State (for fetching all products/orders without date filter)
   const [isFetchingAllProducts, setIsFetchingAllProducts] = useState(false);
   const [isFetchingAllOrders, setIsFetchingAllOrders] = useState(false);
-  const [fetchAllResult, setFetchAllResult] = useState<{ type: 'products' | 'orders' | null; message: string; success: boolean } | null>(null);
+  const [isSyncingOrderStatuses, setIsSyncingOrderStatuses] = useState(false);
+  const [fetchAllResult, setFetchAllResult] = useState<{ type: 'products' | 'orders' | 'order-statuses' | null; message: string; success: boolean } | null>(null);
 
   // Suppress unused variable warning
   void baseUrl;
@@ -583,6 +584,38 @@ export function ChannelSettings({ channelId, baseUrl, initialChannelType = 'Wooc
       });
     } finally {
       setIsFetchingAllOrders(false);
+    }
+  };
+
+  // Handler for syncing order statuses from JTL FFN and pushing to channel
+  const handleSyncOrderStatuses = async () => {
+    if (!channelId) return;
+
+    try {
+      setIsSyncingOrderStatuses(true);
+      setFetchAllResult(null);
+
+      const result = await syncOrderStatuses(channelId);
+
+      setFetchAllResult({
+        type: 'order-statuses',
+        message: result.message,
+        success: result.success,
+      });
+
+      // Auto-hide success message after 5 seconds
+      if (result.success) {
+        setTimeout(() => setFetchAllResult(null), 5000);
+      }
+    } catch (err) {
+      console.error('Error syncing order statuses:', err);
+      setFetchAllResult({
+        type: 'order-statuses',
+        message: err instanceof Error ? err.message : 'Failed to sync order statuses',
+        success: false,
+      });
+    } finally {
+      setIsSyncingOrderStatuses(false);
     }
   };
 
@@ -3264,6 +3297,69 @@ export function ChannelSettings({ channelId, baseUrl, initialChannelType = 'Wooc
                     }}
                   >
                     {isFetchingAllOrders ? 'Fetching Orders...' : 'Fetch All Orders'}
+                  </span>
+                </button>
+
+                {/* Sync Order Statuses Button */}
+                <button
+                  onClick={handleSyncOrderStatuses}
+                  disabled={isFetchingAllProducts || isFetchingAllOrders || isSyncingOrderStatuses}
+                  style={{
+                    height: 'clamp(36px, 3.53vw, 44px)',
+                    borderRadius: '6px',
+                    border: 'none',
+                    padding: 'clamp(8px, 0.78vw, 10px) clamp(16px, 1.57vw, 20px)',
+                    backgroundColor: isFetchingAllProducts || isFetchingAllOrders || isSyncingOrderStatuses ? '#9CA3AF' : '#059669',
+                    cursor: isFetchingAllProducts || isFetchingAllOrders || isSyncingOrderStatuses ? 'not-allowed' : 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 'clamp(8px, 0.78vw, 10px)',
+                    transition: 'background-color 0.2s',
+                  }}
+                >
+                  {isSyncingOrderStatuses && (
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                      style={{ animation: 'spin 1s linear infinite' }}
+                    >
+                      <path
+                        d="M12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22C17.5228 22 22 17.5228 22 12"
+                        stroke="white"
+                        strokeWidth="2.5"
+                        strokeLinecap="round"
+                      />
+                    </svg>
+                  )}
+                  {!isSyncingOrderStatuses && (
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        d="M4 4V9H4.582M4.582 9C5.248 7.354 6.425 5.964 7.946 5.031C9.467 4.098 11.253 3.673 13.034 3.819C14.816 3.965 16.504 4.674 17.844 5.841C19.184 7.008 20.106 8.572 20.472 10.297M4.582 9H9M20 20V15H19.418M19.418 15C18.752 16.646 17.575 18.036 16.054 18.969C14.533 19.902 12.747 20.327 10.966 20.181C9.184 20.035 7.496 19.326 6.156 18.159C4.816 16.992 3.894 15.428 3.528 13.703M19.418 15H15"
+                        stroke="white"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  )}
+                  <span
+                    style={{
+                      fontFamily: 'Inter, sans-serif',
+                      fontWeight: 500,
+                      fontSize: 'clamp(12px, 1.18vw, 14px)',
+                      color: '#FFFFFF',
+                    }}
+                  >
+                    {isSyncingOrderStatuses ? 'Syncing Statuses...' : 'Sync Order Statuses'}
                   </span>
                 </button>
               </div>

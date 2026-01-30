@@ -351,4 +351,32 @@ export const fetchAllData = async (channelId: string): Promise<FetchAllResult> =
   }
 };
 
+/**
+ * Sync order statuses from JTL FFN and push to channel
+ * This fetches order statuses from JTL, updates local DB, and pushes to Shopify/WooCommerce
+ */
+export const syncOrderStatuses = async (channelId: string): Promise<{
+  success: boolean;
+  message: string;
+  data?: {
+    totalOrders: number;
+    statusesUpdated: number;
+    channelsPushed: number;
+    errors: string[];
+  };
+  error?: string;
+}> => {
+  try {
+    const response = await api.post(`/integrations/channel/${channelId}/sync-order-statuses`);
+    return response.data;
+  } catch (error) {
+    console.error('[channels-api] Error syncing order statuses:', error);
+    return {
+      success: false,
+      message: 'Failed to sync order statuses',
+      error: error instanceof Error ? error.message : 'Unknown error',
+    };
+  }
+};
+
 export default channelsApi;
