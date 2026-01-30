@@ -282,4 +282,73 @@ export const startBackgroundSync = async (
   return response.data;
 };
 
+// ============= FETCH ALL (NO DATE FILTER) =============
+
+export interface FetchAllResult {
+  success: boolean;
+  message: string;
+  data: {
+    products?: { itemsProcessed: number; itemsFailed: number };
+    orders?: { itemsProcessed: number; itemsFailed: number };
+    returns?: { itemsProcessed: number; itemsFailed: number };
+  };
+  error?: string;
+}
+
+/**
+ * Fetch ALL products from a channel without date filter
+ * Useful for migration clients or when date-based sync misses products
+ */
+export const fetchAllProducts = async (channelId: string): Promise<FetchAllResult> => {
+  try {
+    const response = await api.post(`/integrations/channel/${channelId}/fetch-all-products`);
+    return response.data;
+  } catch (error) {
+    console.error('[channels-api] Error fetching all products:', error);
+    return {
+      success: false,
+      message: 'Failed to fetch products',
+      data: {},
+      error: error instanceof Error ? error.message : 'Unknown error',
+    };
+  }
+};
+
+/**
+ * Fetch ALL orders from a channel without date filter
+ * Useful for migration clients or when date-based sync misses orders
+ */
+export const fetchAllOrders = async (channelId: string): Promise<FetchAllResult> => {
+  try {
+    const response = await api.post(`/integrations/channel/${channelId}/fetch-all-orders`);
+    return response.data;
+  } catch (error) {
+    console.error('[channels-api] Error fetching all orders:', error);
+    return {
+      success: false,
+      message: 'Failed to fetch orders',
+      data: {},
+      error: error instanceof Error ? error.message : 'Unknown error',
+    };
+  }
+};
+
+/**
+ * Fetch ALL data (products, orders, returns) from a channel without date filter
+ */
+export const fetchAllData = async (channelId: string): Promise<FetchAllResult> => {
+  try {
+    const response = await api.post(`/integrations/channel/${channelId}/fetch-all`);
+    return response.data;
+  } catch (error) {
+    console.error('[channels-api] Error fetching all data:', error);
+    return {
+      success: false,
+      message: 'Failed to fetch data',
+      data: {},
+      error: error instanceof Error ? error.message : 'Unknown error',
+    };
+  }
+};
+
 export default channelsApi;

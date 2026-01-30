@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { useAuthStore } from '@/lib/store';
-import { channelsApi, Location, ShippingMethod } from '@/lib/channels-api';
+import { channelsApi, Location, ShippingMethod, fetchAllProducts, fetchAllOrders } from '@/lib/channels-api';
 import { onboardingApi } from '@/lib/onboarding-api';
 import { SyncStatusBar } from './SyncStatusBar';
 import {
@@ -244,6 +244,11 @@ export function ChannelSettings({ channelId, baseUrl, initialChannelType = 'Wooc
     date.setMonth(date.getMonth() - 6);
     return date.toISOString().split('T')[0];
   });
+
+  // Fetch All State (for fetching all products/orders without date filter)
+  const [isFetchingAllProducts, setIsFetchingAllProducts] = useState(false);
+  const [isFetchingAllOrders, setIsFetchingAllOrders] = useState(false);
+  const [fetchAllResult, setFetchAllResult] = useState<{ type: 'products' | 'orders' | null; message: string; success: boolean } | null>(null);
 
   // Suppress unused variable warning
   void baseUrl;
@@ -514,6 +519,70 @@ export function ChannelSettings({ channelId, baseUrl, initialChannelType = 'Wooc
       setPipelineError(err instanceof Error ? err.message : 'Failed to restart sync');
     } finally {
       setIsStartingPipeline(false);
+    }
+  };
+
+  // Handler to fetch ALL products without date filter
+  const handleFetchAllProducts = async () => {
+    if (!channelId || channelId === 'new') return;
+
+    try {
+      setIsFetchingAllProducts(true);
+      setFetchAllResult(null);
+
+      const result = await fetchAllProducts(channelId);
+
+      setFetchAllResult({
+        type: 'products',
+        message: result.message,
+        success: result.success,
+      });
+
+      // Auto-hide success message after 5 seconds
+      if (result.success) {
+        setTimeout(() => setFetchAllResult(null), 5000);
+      }
+    } catch (err) {
+      console.error('Error fetching all products:', err);
+      setFetchAllResult({
+        type: 'products',
+        message: err instanceof Error ? err.message : 'Failed to fetch products',
+        success: false,
+      });
+    } finally {
+      setIsFetchingAllProducts(false);
+    }
+  };
+
+  // Handler to fetch ALL orders without date filter
+  const handleFetchAllOrders = async () => {
+    if (!channelId || channelId === 'new') return;
+
+    try {
+      setIsFetchingAllOrders(true);
+      setFetchAllResult(null);
+
+      const result = await fetchAllOrders(channelId);
+
+      setFetchAllResult({
+        type: 'orders',
+        message: result.message,
+        success: result.success,
+      });
+
+      // Auto-hide success message after 5 seconds
+      if (result.success) {
+        setTimeout(() => setFetchAllResult(null), 5000);
+      }
+    } catch (err) {
+      console.error('Error fetching all orders:', err);
+      setFetchAllResult({
+        type: 'orders',
+        message: err instanceof Error ? err.message : 'Failed to fetch orders',
+        success: false,
+      });
+    } finally {
+      setIsFetchingAllOrders(false);
     }
   };
 
@@ -2958,6 +3027,319 @@ export function ChannelSettings({ channelId, baseUrl, initialChannelType = 'Wooc
                 </div>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Fetch All Data Section (No Date Filter) */}
+      {!isNewChannel && (
+        <div
+          style={{
+            width: '100%',
+            maxWidth: 'clamp(912px, 89.54vw, 1216px)',
+            display: 'flex',
+            flexDirection: 'row',
+            gap: 'clamp(18px, 1.77vw, 24px)',
+          }}
+        >
+          {/* Left Side - Title and Description */}
+          <div
+            style={{
+              width: 'clamp(292px, 28.65vw, 389px)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 'clamp(3px, 0.29vw, 4px)',
+              flexShrink: 0,
+            }}
+          >
+            <h2
+              style={{
+                fontFamily: 'Inter, sans-serif',
+                fontWeight: 500,
+                fontSize: 'clamp(14px, 1.33vw, 18px)',
+                lineHeight: 'clamp(18px, 1.77vw, 24px)',
+                color: '#111827',
+                margin: 0,
+              }}
+            >
+              Fetch All Data
+            </h2>
+            <p
+              style={{
+                fontFamily: 'Inter, sans-serif',
+                fontWeight: 400,
+                fontSize: 'clamp(11px, 1.03vw, 14px)',
+                lineHeight: 'clamp(15px, 1.47vw, 20px)',
+                color: '#6B7280',
+                margin: 0,
+              }}
+            >
+              Import all products or orders from your sales channel without date restrictions. Useful for migration or recovering missed data.
+            </p>
+          </div>
+
+          {/* Right Side - Fetch All Buttons Card */}
+          <div
+            style={{
+              flex: 1,
+              maxWidth: 'clamp(602px, 59.13vw, 803px)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 'clamp(18px, 1.77vw, 24px)',
+            }}
+          >
+            <div
+              style={{
+                width: '100%',
+                borderRadius: '8px',
+                backgroundColor: '#FFFFFF',
+                boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.06), 0px 1px 3px 0px rgba(0, 0, 0, 0.1)',
+                padding: 'clamp(18px, 1.77vw, 24px)',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 'clamp(16px, 1.57vw, 20px)',
+              }}
+            >
+              {/* Info Banner */}
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  gap: 'clamp(10px, 0.96vw, 12px)',
+                  padding: 'clamp(12px, 1.18vw, 16px)',
+                  backgroundColor: '#EFF6FF',
+                  borderRadius: '6px',
+                  border: '1px solid #BFDBFE',
+                }}
+              >
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 20 20"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                  style={{ flexShrink: 0, marginTop: '2px' }}
+                >
+                  <path
+                    d="M10 18.3334C14.6024 18.3334 18.3333 14.6025 18.3333 10.0001C18.3333 5.39771 14.6024 1.66675 10 1.66675C5.39762 1.66675 1.66666 5.39771 1.66666 10.0001C1.66666 14.6025 5.39762 18.3334 10 18.3334Z"
+                    stroke="#2563EB"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                  <path
+                    d="M10 13.3333V10"
+                    stroke="#2563EB"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                  <path
+                    d="M10 6.66675H10.0083"
+                    stroke="#2563EB"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+                <p
+                  style={{
+                    fontFamily: 'Inter, sans-serif',
+                    fontSize: 'clamp(11px, 1.03vw, 14px)',
+                    lineHeight: 'clamp(16px, 1.57vw, 20px)',
+                    color: '#1E40AF',
+                    margin: 0,
+                  }}
+                >
+                  These operations fetch <strong>all data</strong> from your sales channel, ignoring any date filters. This is useful for migration clients or when the normal sync misses some data. The process may take longer for stores with many products or orders.
+                </p>
+              </div>
+
+              {/* Buttons Row */}
+              <div
+                style={{
+                  display: 'flex',
+                  gap: 'clamp(12px, 1.18vw, 16px)',
+                  flexWrap: 'wrap',
+                }}
+              >
+                {/* Fetch All Products Button */}
+                <button
+                  onClick={handleFetchAllProducts}
+                  disabled={isFetchingAllProducts || isFetchingAllOrders}
+                  style={{
+                    height: 'clamp(36px, 3.53vw, 44px)',
+                    borderRadius: '6px',
+                    border: 'none',
+                    padding: 'clamp(8px, 0.78vw, 10px) clamp(16px, 1.57vw, 20px)',
+                    backgroundColor: isFetchingAllProducts || isFetchingAllOrders ? '#9CA3AF' : '#059669',
+                    cursor: isFetchingAllProducts || isFetchingAllOrders ? 'not-allowed' : 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 'clamp(8px, 0.78vw, 10px)',
+                    transition: 'background-color 0.2s',
+                  }}
+                >
+                  {isFetchingAllProducts && (
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      style={{ animation: 'spin 1s linear infinite' }}
+                    >
+                      <circle
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                        fill="none"
+                        opacity="0.25"
+                      />
+                      <path
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        fill="white"
+                      />
+                    </svg>
+                  )}
+                  <span
+                    style={{
+                      fontFamily: 'Inter, sans-serif',
+                      fontWeight: 500,
+                      fontSize: 'clamp(12px, 1.18vw, 14px)',
+                      color: '#FFFFFF',
+                    }}
+                  >
+                    {isFetchingAllProducts ? 'Fetching Products...' : 'Fetch All Products'}
+                  </span>
+                </button>
+
+                {/* Fetch All Orders Button */}
+                <button
+                  onClick={handleFetchAllOrders}
+                  disabled={isFetchingAllProducts || isFetchingAllOrders}
+                  style={{
+                    height: 'clamp(36px, 3.53vw, 44px)',
+                    borderRadius: '6px',
+                    border: 'none',
+                    padding: 'clamp(8px, 0.78vw, 10px) clamp(16px, 1.57vw, 20px)',
+                    backgroundColor: isFetchingAllProducts || isFetchingAllOrders ? '#9CA3AF' : '#2563EB',
+                    cursor: isFetchingAllProducts || isFetchingAllOrders ? 'not-allowed' : 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 'clamp(8px, 0.78vw, 10px)',
+                    transition: 'background-color 0.2s',
+                  }}
+                >
+                  {isFetchingAllOrders && (
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      style={{ animation: 'spin 1s linear infinite' }}
+                    >
+                      <circle
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                        fill="none"
+                        opacity="0.25"
+                      />
+                      <path
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        fill="white"
+                      />
+                    </svg>
+                  )}
+                  <span
+                    style={{
+                      fontFamily: 'Inter, sans-serif',
+                      fontWeight: 500,
+                      fontSize: 'clamp(12px, 1.18vw, 14px)',
+                      color: '#FFFFFF',
+                    }}
+                  >
+                    {isFetchingAllOrders ? 'Fetching Orders...' : 'Fetch All Orders'}
+                  </span>
+                </button>
+              </div>
+
+              {/* Result Message */}
+              {fetchAllResult && (
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 'clamp(8px, 0.78vw, 10px)',
+                    padding: 'clamp(10px, 0.96vw, 12px)',
+                    backgroundColor: fetchAllResult.success ? '#D1FAE5' : '#FEE2E2',
+                    borderRadius: '6px',
+                    border: `1px solid ${fetchAllResult.success ? '#6EE7B7' : '#FECACA'}`,
+                  }}
+                >
+                  {fetchAllResult.success ? (
+                    <svg
+                      width="18"
+                      height="18"
+                      viewBox="0 0 20 20"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        d="M10 18.3334C14.6024 18.3334 18.3333 14.6025 18.3333 10.0001C18.3333 5.39771 14.6024 1.66675 10 1.66675C5.39762 1.66675 1.66666 5.39771 1.66666 10.0001C1.66666 14.6025 5.39762 18.3334 10 18.3334Z"
+                        stroke="#059669"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                      <path
+                        d="M7.5 10L9.16667 11.6667L12.5 8.33337"
+                        stroke="#059669"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  ) : (
+                    <svg
+                      width="18"
+                      height="18"
+                      viewBox="0 0 20 20"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        d="M10 18.3334C14.6024 18.3334 18.3333 14.6025 18.3333 10.0001C18.3333 5.39771 14.6024 1.66675 10 1.66675C5.39762 1.66675 1.66666 5.39771 1.66666 10.0001C1.66666 14.6025 5.39762 18.3334 10 18.3334Z"
+                        stroke="#DC2626"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                      <path
+                        d="M12.5 7.5L7.5 12.5M7.5 7.5L12.5 12.5"
+                        stroke="#DC2626"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  )}
+                  <span
+                    style={{
+                      fontFamily: 'Inter, sans-serif',
+                      fontSize: 'clamp(11px, 1.03vw, 14px)',
+                      color: fetchAllResult.success ? '#065F46' : '#991B1B',
+                    }}
+                  >
+                    {fetchAllResult.message}
+                  </span>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}
