@@ -48,6 +48,7 @@ export interface Order {
   orderDate: string;
   status: string;
   fulfillmentState: string | null; // FFN operational state (PENDING, PICKING, PACKING, PACKED, SHIPPED, etc.)
+  jtlOutboundId: string | null; // JTL FFN outbound ID
   totalAmount: number | null;
   shippingMethod: string | null;
   trackingNumber: string | null;
@@ -489,6 +490,18 @@ export const dataApi = {
 
   async deleteOrder(id: string): Promise<{ message: string }> {
     const response = await api.delete(`/data/orders/${id}`);
+    return response.data;
+  },
+
+  async syncOrderToJTL(orderId: string): Promise<{
+    success: boolean;
+    message: string;
+    data: {
+      outboundId?: string;
+      alreadyExisted: boolean;
+    };
+  }> {
+    const response = await api.post(`/fulfillment/orders/${orderId}/sync-to-jtl`);
     return response.data;
   },
 
