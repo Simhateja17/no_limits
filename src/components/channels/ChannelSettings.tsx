@@ -1,12 +1,22 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { useAuthStore } from '@/lib/store';
 import { channelsApi, Location, ShippingMethod } from '@/lib/channels-api';
 import { onboardingApi } from '@/lib/onboarding-api';
 import { SyncStatusBar } from './SyncStatusBar';
+import {
+  startPipeline,
+  getPipelineStatus,
+  retryPipeline,
+  pausePipeline,
+  resumePipeline,
+  cancelPipeline,
+  PipelineStatus,
+  getStepLabel,
+} from '@/lib/sync-pipeline-api';
 
 // Channel types
 const channelTypes = ['Woocommerce', 'Shopify', 'Amazon'];
@@ -223,6 +233,18 @@ export function ChannelSettings({ channelId, baseUrl, initialChannelType = 'Wooc
     return date.toISOString().split('T')[0];
   });
 
+  // Sync Pipeline State (for existing channels)
+  const [pipelineStatus, setPipelineStatus] = useState<PipelineStatus | null>(null);
+  const [isLoadingPipeline, setIsLoadingPipeline] = useState(false);
+  const [isStartingPipeline, setIsStartingPipeline] = useState(false);
+  const [pipelineError, setPipelineError] = useState<string | null>(null);
+  const [resyncFromDate, setResyncFromDate] = useState<string>(() => {
+    // Default to 6 months ago
+    const date = new Date();
+    date.setMonth(date.getMonth() - 6);
+    return date.toISOString().split('T')[0];
+  });
+
   // Suppress unused variable warning
   void baseUrl;
 
@@ -307,6 +329,193 @@ export function ChannelSettings({ channelId, baseUrl, initialChannelType = 'Wooc
 
     fetchMappings();
   }, [channelId]);
+
+  // Fetch pipeline status for existing channels
+  const fetchPipelineStatus = useCallback(async () => {
+    if (!channelId || channelId === 'new' || isNewChannel) return;
+
+    try {
+      setIsLoadingPipeline(true);
+      const status = await getPipelineStatus(channelId, 'initial');
+      setPipelineStatus(status);
+    } catch (err) {
+      console.error('Error fetching pipeline status:', err);
+    } finally {
+      setIsLoadingPipeline(false);
+    }
+  }, [channelId, isNewChannel]);
+
+  // Initial fetch and polling for pipeline status
+  useEffect(() => {
+    if (!channelId || channelId === 'new' || isNewChannel) return;
+
+    fetchPipelineStatus();
+
+    // Poll while pipeline is running
+    const interval = setInterval(() => {
+      if (pipelineStatus?.status === 'IN_PROGRESS') {
+        fetchPipelineStatus();
+      }
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, [channelId, isNewChannel, fetchPipelineStatus, pipelineStatus?.status]);
+
+  // Handler to start sync pipeline
+  const handleStartSyncPipeline = async () => {
+    if (!user?.clientId || !channelId || channelId === 'new') return;
+
+    try {
+      setIsStartingPipeline(true);
+      setPipelineError(null);
+
+      const result = await startPipeline({
+        channelId,
+        clientId: user.clientId,
+        syncFromDate: resyncFromDate,
+        syncType: 'initial',
+      });
+
+      if (result.success) {
+        // Refresh pipeline status
+        await fetchPipelineStatus();
+      } else {
+        setPipelineError(result.error || 'Failed to start sync pipeline');
+      }
+    } catch (err) {
+      console.error('Error starting sync pipeline:', err);
+      setPipelineError(err instanceof Error ? err.message : 'Failed to start sync');
+    } finally {
+      setIsStartingPipeline(false);
+    }
+  };
+
+  // Handler to retry failed pipeline
+  const handleRetryPipeline = async () => {
+    if (!pipelineStatus?.pipelineId) return;
+
+    try {
+      setIsStartingPipeline(true);
+      setPipelineError(null);
+
+      const result = await retryPipeline(pipelineStatus.pipelineId);
+
+      if (result.success) {
+        await fetchPipelineStatus();
+      } else {
+        setPipelineError(result.error || 'Failed to retry sync');
+      }
+    } catch (err) {
+      console.error('Error retrying pipeline:', err);
+      setPipelineError(err instanceof Error ? err.message : 'Failed to retry sync');
+    } finally {
+      setIsStartingPipeline(false);
+    }
+  };
+
+  // Handler to pause running pipeline
+  const handlePausePipeline = async () => {
+    if (!pipelineStatus?.pipelineId) return;
+
+    try {
+      setIsStartingPipeline(true);
+      setPipelineError(null);
+
+      const result = await pausePipeline(pipelineStatus.pipelineId);
+
+      if (result.success) {
+        await fetchPipelineStatus();
+      } else {
+        setPipelineError(result.error || 'Failed to pause sync');
+      }
+    } catch (err) {
+      console.error('Error pausing pipeline:', err);
+      setPipelineError(err instanceof Error ? err.message : 'Failed to pause sync');
+    } finally {
+      setIsStartingPipeline(false);
+    }
+  };
+
+  // Handler to resume paused pipeline
+  const handleResumePipeline = async () => {
+    if (!pipelineStatus?.pipelineId) return;
+
+    try {
+      setIsStartingPipeline(true);
+      setPipelineError(null);
+
+      const result = await resumePipeline(pipelineStatus.pipelineId);
+
+      if (result.success) {
+        await fetchPipelineStatus();
+      } else {
+        setPipelineError(result.error || 'Failed to resume sync');
+      }
+    } catch (err) {
+      console.error('Error resuming pipeline:', err);
+      setPipelineError(err instanceof Error ? err.message : 'Failed to resume sync');
+    } finally {
+      setIsStartingPipeline(false);
+    }
+  };
+
+  // Handler to stop/cancel running pipeline
+  const handleStopPipeline = async () => {
+    if (!pipelineStatus?.pipelineId) return;
+
+    try {
+      setIsStartingPipeline(true);
+      setPipelineError(null);
+
+      const result = await cancelPipeline(pipelineStatus.pipelineId);
+
+      if (result.success) {
+        await fetchPipelineStatus();
+      } else {
+        setPipelineError(result.error || 'Failed to stop sync');
+      }
+    } catch (err) {
+      console.error('Error stopping pipeline:', err);
+      setPipelineError(err instanceof Error ? err.message : 'Failed to stop sync');
+    } finally {
+      setIsStartingPipeline(false);
+    }
+  };
+
+  // Handler to restart sync (cancel current + start new)
+  const handleRestartPipeline = async () => {
+    if (!user?.clientId || !channelId || channelId === 'new') return;
+
+    try {
+      setIsStartingPipeline(true);
+      setPipelineError(null);
+
+      // If there's an existing pipeline, cancel it first
+      if (pipelineStatus?.pipelineId &&
+          (pipelineStatus.status === 'IN_PROGRESS' || pipelineStatus.status === 'PAUSED')) {
+        await cancelPipeline(pipelineStatus.pipelineId);
+      }
+
+      // Start a new pipeline
+      const result = await startPipeline({
+        channelId,
+        clientId: user.clientId,
+        syncFromDate: resyncFromDate,
+        syncType: 'initial',
+      });
+
+      if (result.success) {
+        await fetchPipelineStatus();
+      } else {
+        setPipelineError(result.error || 'Failed to restart sync');
+      }
+    } catch (err) {
+      console.error('Error restarting pipeline:', err);
+      setPipelineError(err instanceof Error ? err.message : 'Failed to restart sync');
+    } finally {
+      setIsStartingPipeline(false);
+    }
+  };
 
   const handleBack = () => {
     router.back();
@@ -2129,6 +2338,628 @@ export function ChannelSettings({ channelId, baseUrl, initialChannelType = 'Wooc
           </div>
         </div>
       </div>
+      )}
+
+      {/* Data Sync Section - Only show for existing channels */}
+      {!isNewChannel && channelId && channelId !== 'new' && (
+        <div
+          style={{
+            width: '100%',
+            maxWidth: 'clamp(912px, 89.54vw, 1216px)',
+            display: 'flex',
+            flexDirection: 'row',
+            gap: 'clamp(18px, 1.77vw, 24px)',
+            marginBottom: 'clamp(48px, 4.71vw, 64px)',
+          }}
+        >
+          {/* Left Side - Title and Description */}
+          <div
+            style={{
+              width: 'clamp(292px, 28.65vw, 389px)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 'clamp(3px, 0.29vw, 4px)',
+              flexShrink: 0,
+            }}
+          >
+            <h2
+              style={{
+                fontFamily: 'Inter, sans-serif',
+                fontWeight: 500,
+                fontSize: 'clamp(14px, 1.33vw, 18px)',
+                lineHeight: 'clamp(18px, 1.77vw, 24px)',
+                color: '#111827',
+                margin: 0,
+              }}
+            >
+              Data Sync
+            </h2>
+            <p
+              style={{
+                fontFamily: 'Inter, sans-serif',
+                fontWeight: 400,
+                fontSize: 'clamp(11px, 1.03vw, 14px)',
+                lineHeight: 'clamp(15px, 1.47vw, 20px)',
+                color: '#6B7280',
+                margin: 0,
+              }}
+            >
+              Run the initial sync pipeline to synchronize products, orders, and stock between your channel and JTL FFN
+            </p>
+          </div>
+
+          {/* Right Side - Form Card */}
+          <div
+            style={{
+              flex: 1,
+              maxWidth: 'clamp(602px, 59.13vw, 803px)',
+              borderRadius: '6px',
+              backgroundColor: '#FFFFFF',
+              boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.06), 0px 1px 3px 0px rgba(0, 0, 0, 0.1)',
+              padding: 'clamp(18px, 1.77vw, 24px)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 'clamp(18px, 1.77vw, 24px)',
+            }}
+          >
+            {/* Pipeline Error */}
+            {pipelineError && (
+              <div
+                style={{
+                  padding: 'clamp(12px, 1.18vw, 16px)',
+                  backgroundColor: '#FEF2F2',
+                  border: '1px solid #FECACA',
+                  borderRadius: '6px',
+                  color: '#DC2626',
+                  fontFamily: 'Inter, sans-serif',
+                  fontSize: 'clamp(11px, 1.03vw, 14px)',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                }}
+              >
+                <span>{pipelineError}</span>
+                <button
+                  onClick={() => setPipelineError(null)}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    cursor: 'pointer',
+                    padding: 0,
+                    color: '#DC2626',
+                    fontSize: 'clamp(16px, 1.57vw, 20px)',
+                    lineHeight: 1,
+                  }}
+                >
+                  ×
+                </button>
+              </div>
+            )}
+
+            {/* Loading State */}
+            {isLoadingPipeline && !pipelineStatus && (
+              <div
+                style={{
+                  padding: 'clamp(24px, 2.36vw, 32px)',
+                  textAlign: 'center',
+                  color: '#6B7280',
+                  fontFamily: 'Inter, sans-serif',
+                  fontSize: 'clamp(11px, 1.03vw, 14px)',
+                }}
+              >
+                Loading sync status...
+              </div>
+            )}
+
+            {/* Pipeline Status Display */}
+            {pipelineStatus && (
+              <div
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 'clamp(12px, 1.18vw, 16px)',
+                }}
+              >
+                {/* Status Header */}
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 'clamp(8px, 0.78vw, 12px)' }}>
+                    {/* Status Icon */}
+                    {pipelineStatus.status === 'IN_PROGRESS' && (
+                      <svg
+                        width="20"
+                        height="20"
+                        viewBox="0 0 20 20"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                        style={{ animation: 'spin 1s linear infinite' }}
+                      >
+                        <path
+                          d="M10 2V5M10 15V18M5 5L7 7M13 13L15 15M2 10H5M15 10H18M5 15L7 13M13 7L15 5"
+                          stroke="#3B82F6"
+                          strokeWidth="1.5"
+                          strokeLinecap="round"
+                        />
+                      </svg>
+                    )}
+                    {pipelineStatus.status === 'COMPLETED' && (
+                      <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="10" cy="10" r="9" stroke="#059669" strokeWidth="1.5" fill="none" />
+                        <path d="M6 10L9 13L14 7" stroke="#059669" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    )}
+                    {pipelineStatus.status === 'FAILED' && (
+                      <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="10" cy="10" r="9" stroke="#DC2626" strokeWidth="1.5" fill="none" />
+                        <path d="M7 7L13 13M13 7L7 13" stroke="#DC2626" strokeWidth="1.5" strokeLinecap="round" />
+                      </svg>
+                    )}
+                    {pipelineStatus.status === 'PENDING' && (
+                      <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="10" cy="10" r="9" stroke="#6B7280" strokeWidth="1.5" fill="none" />
+                        <path d="M10 6V10L13 13" stroke="#6B7280" strokeWidth="1.5" strokeLinecap="round" />
+                      </svg>
+                    )}
+                    <span
+                      style={{
+                        fontFamily: 'Inter, sans-serif',
+                        fontWeight: 500,
+                        fontSize: 'clamp(11px, 1.03vw, 14px)',
+                        color: pipelineStatus.status === 'COMPLETED' ? '#059669' :
+                               pipelineStatus.status === 'FAILED' ? '#DC2626' :
+                               pipelineStatus.status === 'IN_PROGRESS' ? '#3B82F6' : '#6B7280',
+                      }}
+                    >
+                      {pipelineStatus.status === 'IN_PROGRESS' ? 'Sync in progress' :
+                       pipelineStatus.status === 'COMPLETED' ? 'Sync completed' :
+                       pipelineStatus.status === 'FAILED' ? 'Sync failed' :
+                       pipelineStatus.status === 'PAUSED' ? 'Sync paused' : 'Pending'}
+                    </span>
+                  </div>
+                  <span
+                    style={{
+                      fontFamily: 'Inter, sans-serif',
+                      fontSize: 'clamp(10px, 0.96vw, 13px)',
+                      color: '#6B7280',
+                    }}
+                  >
+                    {Math.round(pipelineStatus.progress)}%
+                  </span>
+                </div>
+
+                {/* Progress Bar */}
+                <div
+                  style={{
+                    width: '100%',
+                    height: '8px',
+                    backgroundColor: '#E5E7EB',
+                    borderRadius: '4px',
+                    overflow: 'hidden',
+                  }}
+                >
+                  <div
+                    style={{
+                      width: `${pipelineStatus.progress}%`,
+                      height: '100%',
+                      backgroundColor: pipelineStatus.status === 'COMPLETED' ? '#059669' :
+                                       pipelineStatus.status === 'FAILED' ? '#DC2626' : '#3B82F6',
+                      transition: 'width 0.3s ease',
+                    }}
+                  />
+                </div>
+
+                {/* Current Step Info */}
+                {pipelineStatus.progressMessage && (
+                  <p
+                    style={{
+                      fontFamily: 'Inter, sans-serif',
+                      fontSize: 'clamp(10px, 0.96vw, 13px)',
+                      color: '#6B7280',
+                      margin: 0,
+                    }}
+                  >
+                    {pipelineStatus.progressMessage}
+                  </p>
+                )}
+
+                {/* Step List (collapsed) */}
+                <div
+                  style={{
+                    display: 'flex',
+                    flexWrap: 'wrap',
+                    gap: 'clamp(8px, 0.78vw, 12px)',
+                  }}
+                >
+                  {pipelineStatus.steps.map((step) => (
+                    <div
+                      key={step.stepNumber}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                        padding: '4px 8px',
+                        borderRadius: '4px',
+                        backgroundColor: step.status === 'COMPLETED' ? '#D1FAE5' :
+                                         step.status === 'FAILED' ? '#FEE2E2' :
+                                         step.status === 'IN_PROGRESS' ? '#DBEAFE' : '#F3F4F6',
+                      }}
+                    >
+                      <span
+                        style={{
+                          fontFamily: 'Inter, sans-serif',
+                          fontSize: 'clamp(9px, 0.88vw, 12px)',
+                          color: step.status === 'COMPLETED' ? '#065F46' :
+                                 step.status === 'FAILED' ? '#991B1B' :
+                                 step.status === 'IN_PROGRESS' ? '#1E40AF' : '#6B7280',
+                        }}
+                      >
+                        {step.stepNumber}. {getStepLabel(step.stepName)}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Error Message */}
+                {pipelineStatus.lastError && (
+                  <div
+                    style={{
+                      padding: 'clamp(8px, 0.78vw, 12px)',
+                      backgroundColor: '#FEF2F2',
+                      border: '1px solid #FECACA',
+                      borderRadius: '4px',
+                      fontFamily: 'Inter, sans-serif',
+                      fontSize: 'clamp(10px, 0.96vw, 13px)',
+                      color: '#DC2626',
+                    }}
+                  >
+                    {pipelineStatus.lastError}
+                  </div>
+                )}
+
+                {/* Action Buttons based on status */}
+                <div style={{ display: 'flex', gap: 'clamp(8px, 0.78vw, 12px)', flexWrap: 'wrap' }}>
+                  {/* IN_PROGRESS: Show Pause and Stop buttons */}
+                  {pipelineStatus.status === 'IN_PROGRESS' && (
+                    <>
+                      <button
+                        onClick={handlePausePipeline}
+                        disabled={isStartingPipeline}
+                        style={{
+                          height: 'clamp(29px, 2.80vw, 38px)',
+                          borderRadius: '6px',
+                          border: '1px solid #D1D5DB',
+                          padding: 'clamp(7px, 0.66vw, 9px) clamp(13px, 1.25vw, 17px)',
+                          backgroundColor: '#FFFFFF',
+                          cursor: isStartingPipeline ? 'not-allowed' : 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 'clamp(6px, 0.59vw, 8px)',
+                        }}
+                      >
+                        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <rect x="3" y="2" width="3" height="10" rx="1" fill="#374151"/>
+                          <rect x="8" y="2" width="3" height="10" rx="1" fill="#374151"/>
+                        </svg>
+                        <span style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: 'clamp(11px, 1.03vw, 14px)', color: '#374151' }}>
+                          Pause
+                        </span>
+                      </button>
+                      <button
+                        onClick={handleStopPipeline}
+                        disabled={isStartingPipeline}
+                        style={{
+                          height: 'clamp(29px, 2.80vw, 38px)',
+                          borderRadius: '6px',
+                          border: 'none',
+                          padding: 'clamp(7px, 0.66vw, 9px) clamp(13px, 1.25vw, 17px)',
+                          backgroundColor: '#FEE2E2',
+                          cursor: isStartingPipeline ? 'not-allowed' : 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 'clamp(6px, 0.59vw, 8px)',
+                        }}
+                      >
+                        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <rect x="2" y="2" width="10" height="10" rx="2" fill="#991B1B"/>
+                        </svg>
+                        <span style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: 'clamp(11px, 1.03vw, 14px)', color: '#991B1B' }}>
+                          Stop Sync
+                        </span>
+                      </button>
+                    </>
+                  )}
+
+                  {/* PAUSED: Show Resume and Stop buttons */}
+                  {pipelineStatus.status === 'PAUSED' && (
+                    <>
+                      <button
+                        onClick={handleResumePipeline}
+                        disabled={isStartingPipeline}
+                        style={{
+                          height: 'clamp(29px, 2.80vw, 38px)',
+                          borderRadius: '6px',
+                          border: 'none',
+                          padding: 'clamp(7px, 0.66vw, 9px) clamp(13px, 1.25vw, 17px)',
+                          backgroundColor: isStartingPipeline ? '#9CA3AF' : '#003450',
+                          cursor: isStartingPipeline ? 'not-allowed' : 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 'clamp(6px, 0.59vw, 8px)',
+                        }}
+                      >
+                        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <path d="M3 2L12 7L3 12V2Z" fill="#FFFFFF"/>
+                        </svg>
+                        <span style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: 'clamp(11px, 1.03vw, 14px)', color: '#FFFFFF' }}>
+                          Resume
+                        </span>
+                      </button>
+                      <button
+                        onClick={handleStopPipeline}
+                        disabled={isStartingPipeline}
+                        style={{
+                          height: 'clamp(29px, 2.80vw, 38px)',
+                          borderRadius: '6px',
+                          border: 'none',
+                          padding: 'clamp(7px, 0.66vw, 9px) clamp(13px, 1.25vw, 17px)',
+                          backgroundColor: '#FEE2E2',
+                          cursor: isStartingPipeline ? 'not-allowed' : 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 'clamp(6px, 0.59vw, 8px)',
+                        }}
+                      >
+                        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <rect x="2" y="2" width="10" height="10" rx="2" fill="#991B1B"/>
+                        </svg>
+                        <span style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: 'clamp(11px, 1.03vw, 14px)', color: '#991B1B' }}>
+                          Stop Sync
+                        </span>
+                      </button>
+                    </>
+                  )}
+
+                  {/* FAILED: Show Retry and Restart buttons */}
+                  {pipelineStatus.status === 'FAILED' && (
+                    <>
+                      <button
+                        onClick={handleRetryPipeline}
+                        disabled={isStartingPipeline}
+                        style={{
+                          height: 'clamp(29px, 2.80vw, 38px)',
+                          borderRadius: '6px',
+                          border: 'none',
+                          padding: 'clamp(7px, 0.66vw, 9px) clamp(13px, 1.25vw, 17px)',
+                          backgroundColor: isStartingPipeline ? '#9CA3AF' : '#003450',
+                          cursor: isStartingPipeline ? 'not-allowed' : 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 'clamp(6px, 0.59vw, 8px)',
+                        }}
+                      >
+                        {isStartingPipeline ? (
+                          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ animation: 'spin 1s linear infinite' }}>
+                            <path d="M7 1V3M7 11V13M3.5 3.5L4.91 4.91M9.09 9.09L10.5 10.5M1 7H3M11 7H13M3.5 10.5L4.91 9.09M9.09 4.91L10.5 3.5" stroke="#FFFFFF" strokeWidth="1.5" strokeLinecap="round"/>
+                          </svg>
+                        ) : (
+                          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M2 7C2 9.76 4.24 12 7 12C9.76 12 12 9.76 12 7C12 4.24 9.76 2 7 2C5.67 2 4.47 2.54 3.58 3.42" stroke="#FFFFFF" strokeWidth="1.5" strokeLinecap="round"/>
+                            <path d="M3.5 1V4H6.5" stroke="#FFFFFF" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                          </svg>
+                        )}
+                        <span style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: 'clamp(11px, 1.03vw, 14px)', color: '#FFFFFF' }}>
+                          {isStartingPipeline ? 'Retrying...' : 'Retry'}
+                        </span>
+                      </button>
+                      <button
+                        onClick={handleRestartPipeline}
+                        disabled={isStartingPipeline}
+                        style={{
+                          height: 'clamp(29px, 2.80vw, 38px)',
+                          borderRadius: '6px',
+                          border: '1px solid #D1D5DB',
+                          padding: 'clamp(7px, 0.66vw, 9px) clamp(13px, 1.25vw, 17px)',
+                          backgroundColor: '#FFFFFF',
+                          cursor: isStartingPipeline ? 'not-allowed' : 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 'clamp(6px, 0.59vw, 8px)',
+                        }}
+                      >
+                        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <path d="M2 7C2 9.76 4.24 12 7 12C9.76 12 12 9.76 12 7C12 4.24 9.76 2 7 2" stroke="#374151" strokeWidth="1.5" strokeLinecap="round"/>
+                          <path d="M7 2L4 4L7 6" stroke="#374151" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                        <span style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: 'clamp(11px, 1.03vw, 14px)', color: '#374151' }}>
+                          Restart Sync
+                        </span>
+                      </button>
+                    </>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* No Pipeline - Show Start Sync UI */}
+            {!pipelineStatus && !isLoadingPipeline && (
+              <div
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 'clamp(18px, 1.77vw, 24px)',
+                }}
+              >
+                {/* Date Picker for Resync */}
+                <div
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 'clamp(6px, 0.59vw, 8px)',
+                  }}
+                >
+                  <label
+                    style={{
+                      fontFamily: 'Inter, sans-serif',
+                      fontWeight: 500,
+                      fontSize: 'clamp(11px, 1.03vw, 14px)',
+                      lineHeight: 'clamp(15px, 1.47vw, 20px)',
+                      color: '#374151',
+                    }}
+                  >
+                    Sync From Date
+                  </label>
+                  <p
+                    style={{
+                      fontFamily: 'Inter, sans-serif',
+                      fontWeight: 400,
+                      fontSize: 'clamp(10px, 0.96vw, 13px)',
+                      lineHeight: 'clamp(14px, 1.37vw, 18px)',
+                      color: '#6B7280',
+                      margin: '0 0 clamp(6px, 0.59vw, 8px) 0',
+                    }}
+                  >
+                    All orders, products, and returns from this date onwards will be synchronized
+                  </p>
+                  <input
+                    type="date"
+                    value={resyncFromDate}
+                    onChange={(e) => setResyncFromDate(e.target.value)}
+                    max={new Date().toISOString().split('T')[0]}
+                    style={{
+                      width: '100%',
+                      maxWidth: 'clamp(281px, 27.54vw, 374px)',
+                      height: 'clamp(29px, 2.80vw, 38px)',
+                      borderRadius: '6px',
+                      border: '1px solid #D1D5DB',
+                      padding: 'clamp(7px, 0.66vw, 9px) clamp(10px, 0.96vw, 13px)',
+                      backgroundColor: '#FFFFFF',
+                      boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.05)',
+                      fontFamily: 'Inter, sans-serif',
+                      fontWeight: 400,
+                      fontSize: 'clamp(11px, 1.03vw, 14px)',
+                      lineHeight: 'clamp(15px, 1.47vw, 20px)',
+                      color: '#111827',
+                      outline: 'none',
+                    }}
+                  />
+                </div>
+
+                {/* Start Sync Button */}
+                <button
+                  onClick={handleStartSyncPipeline}
+                  disabled={isStartingPipeline}
+                  style={{
+                    width: 'fit-content',
+                    height: 'clamp(29px, 2.80vw, 38px)',
+                    borderRadius: '6px',
+                    border: 'none',
+                    padding: 'clamp(7px, 0.66vw, 9px) clamp(13px, 1.25vw, 17px)',
+                    backgroundColor: isStartingPipeline ? '#9CA3AF' : '#003450',
+                    cursor: isStartingPipeline ? 'not-allowed' : 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 'clamp(6px, 0.59vw, 8px)',
+                  }}
+                >
+                  {isStartingPipeline && (
+                    <svg
+                      width="14"
+                      height="14"
+                      viewBox="0 0 14 14"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                      style={{ animation: 'spin 1s linear infinite' }}
+                    >
+                      <path
+                        d="M7 1V3M7 11V13M3.5 3.5L4.91 4.91M9.09 9.09L10.5 10.5M1 7H3M11 7H13M3.5 10.5L4.91 9.09M9.09 4.91L10.5 3.5"
+                        stroke="#FFFFFF"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                      />
+                    </svg>
+                  )}
+                  <span
+                    style={{
+                      fontFamily: 'Inter, sans-serif',
+                      fontWeight: 500,
+                      fontSize: 'clamp(11px, 1.03vw, 14px)',
+                      color: '#FFFFFF',
+                    }}
+                  >
+                    {isStartingPipeline ? 'Starting...' : 'Start Initial Sync'}
+                  </span>
+                </button>
+              </div>
+            )}
+
+            {/* Already Completed - Option to Run Again */}
+            {pipelineStatus?.status === 'COMPLETED' && (
+              <div
+                style={{
+                  borderTop: '1px solid #E5E7EB',
+                  paddingTop: 'clamp(18px, 1.77vw, 24px)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 'clamp(12px, 1.18vw, 16px)',
+                }}
+              >
+                <p
+                  style={{
+                    fontFamily: 'Inter, sans-serif',
+                    fontSize: 'clamp(10px, 0.96vw, 13px)',
+                    color: '#6B7280',
+                    margin: 0,
+                  }}
+                >
+                  Need to resync? You can run the sync pipeline again with a new date range.
+                </p>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 'clamp(12px, 1.18vw, 16px)' }}>
+                  <input
+                    type="date"
+                    value={resyncFromDate}
+                    onChange={(e) => setResyncFromDate(e.target.value)}
+                    max={new Date().toISOString().split('T')[0]}
+                    style={{
+                      width: 'clamp(150px, 14.71vw, 200px)',
+                      height: 'clamp(29px, 2.80vw, 38px)',
+                      borderRadius: '6px',
+                      border: '1px solid #D1D5DB',
+                      padding: 'clamp(7px, 0.66vw, 9px) clamp(10px, 0.96vw, 13px)',
+                      backgroundColor: '#FFFFFF',
+                      fontFamily: 'Inter, sans-serif',
+                      fontSize: 'clamp(11px, 1.03vw, 14px)',
+                      color: '#111827',
+                      outline: 'none',
+                    }}
+                  />
+                  <button
+                    onClick={handleStartSyncPipeline}
+                    disabled={isStartingPipeline}
+                    style={{
+                      height: 'clamp(29px, 2.80vw, 38px)',
+                      borderRadius: '6px',
+                      border: '1px solid #D1D5DB',
+                      padding: 'clamp(7px, 0.66vw, 9px) clamp(13px, 1.25vw, 17px)',
+                      backgroundColor: '#FFFFFF',
+                      cursor: isStartingPipeline ? 'not-allowed' : 'pointer',
+                      fontFamily: 'Inter, sans-serif',
+                      fontWeight: 500,
+                      fontSize: 'clamp(11px, 1.03vw, 14px)',
+                      color: '#374151',
+                    }}
+                  >
+                    {isStartingPipeline ? 'Starting...' : 'Run Again'}
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
       )}
 
       {/* Manage Channel Section */}

@@ -9,6 +9,7 @@ import { dataApi } from '@/lib/data-api';
 import { channelsApi, Channel } from '@/lib/channels-api';
 import type { Product as ApiProduct } from '@/lib/data-api';
 import { ProductsTableSkeleton, MobileCardSkeleton, TabsSkeleton, FilterBarSkeleton } from '@/components/ui';
+import { JTLLinkModal } from './JTLLinkModal';
 
 // Tab type
 type TabType = 'all' | 'outOfStock' | 'missingData';
@@ -35,14 +36,22 @@ interface Product {
   id: string;
   productId: string;
   productName: string;
+  sku: string;
   available: number;
   reserved: number;
   announced: number;
   client: string;
+  clientId: string;
   jtlProductId?: string | null;
   jtlSyncStatus?: string | null;
   lastJtlSync?: string | null;
 }
+
+// Helper to check if a SKU is generated (SHOP-xxx or WOO-xxx)
+const GENERATED_SKU_PATTERNS = ['SHOP-', 'WOO-'];
+const isGeneratedSku = (sku: string): boolean => {
+  return GENERATED_SKU_PATTERNS.some(pattern => sku.startsWith(pattern));
+};
 
 // Channel interface for display
 interface DisplayChannel {
@@ -122,6 +131,8 @@ export function ProductsTable({ showClientColumn, baseUrl, showSyncButtons = tru
   const [pushingProducts, setPushingProducts] = useState(false);
   const [importingProducts, setImportingProducts] = useState(false);
   const [syncResult, setSyncResult] = useState<{ success: boolean; message: string } | null>(null);
+  const [linkModalOpen, setLinkModalOpen] = useState(false);
+  const [linkModalProduct, setLinkModalProduct] = useState<Product | null>(null);
   const itemsPerPage = 10;
   const t = useTranslations('products');
   const tCommon = useTranslations('common');
@@ -142,10 +153,12 @@ export function ProductsTable({ showClientColumn, baseUrl, showSyncButtons = tru
           id: p.id,
           productId: p.productId,
           productName: p.name,
+          sku: p.sku,
           available: p.available,
           reserved: p.reserved,
           announced: p.announced,
           client: p.client.companyName || p.client.name,
+          clientId: p.clientId,
           jtlProductId: p.jtlProductId,
           jtlSyncStatus: p.jtlSyncStatus,
           lastJtlSync: p.lastJtlSync,
@@ -203,6 +216,42 @@ export function ProductsTable({ showClientColumn, baseUrl, showSyncButtons = tru
     router.push(`${baseUrl}/${productId}`);
   };
 
+  // Open the JTL link modal for a product
+  const handleOpenLinkModal = (product: Product, e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent row click navigation
+    setLinkModalProduct(product);
+    setLinkModalOpen(true);
+  };
+
+  // Handle successful link - refresh products
+  const handleProductLinked = async () => {
+    try {
+      const data = await dataApi.getProducts();
+      const transformedProducts: Product[] = data.map(p => ({
+        id: p.id,
+        productId: p.productId,
+        productName: p.name,
+        sku: p.sku,
+        available: p.available,
+        reserved: p.reserved,
+        announced: p.announced,
+        client: p.client.companyName || p.client.name,
+        clientId: (p as any).clientId || '',
+        jtlProductId: p.jtlProductId,
+        jtlSyncStatus: p.jtlSyncStatus,
+        lastJtlSync: p.lastJtlSync,
+      }));
+      setProducts(transformedProducts);
+      setSyncResult({
+        success: true,
+        message: 'Product successfully linked to JTL FFN',
+      });
+      setTimeout(() => setSyncResult(null), 5000);
+    } catch (err) {
+      console.error('Error refreshing products:', err);
+    }
+  };
+
   // Push products to JTL FFN (assigns jtlProductId)
   const handlePushProducts = async () => {
     if (!user?.clientId) {
@@ -245,10 +294,12 @@ export function ProductsTable({ showClientColumn, baseUrl, showSyncButtons = tru
           id: p.id,
           productId: p.productId,
           productName: p.name,
+          sku: p.sku,
           available: p.available,
           reserved: p.reserved,
           announced: p.announced,
           client: p.client.companyName || p.client.name,
+          clientId: p.clientId,
           jtlProductId: p.jtlProductId,
           jtlSyncStatus: p.jtlSyncStatus,
           lastJtlSync: p.lastJtlSync,
@@ -313,10 +364,12 @@ export function ProductsTable({ showClientColumn, baseUrl, showSyncButtons = tru
           id: p.id,
           productId: p.productId,
           productName: p.name,
+          sku: p.sku,
           available: p.available,
           reserved: p.reserved,
           announced: p.announced,
           client: p.client.companyName || p.client.name,
+          clientId: p.clientId,
           jtlProductId: p.jtlProductId,
           jtlSyncStatus: p.jtlSyncStatus,
           lastJtlSync: p.lastJtlSync,
@@ -372,10 +425,12 @@ export function ProductsTable({ showClientColumn, baseUrl, showSyncButtons = tru
           id: p.id,
           productId: p.productId,
           productName: p.name,
+          sku: p.sku,
           available: p.available,
           reserved: p.reserved,
           announced: p.announced,
           client: p.client.companyName || p.client.name,
+          clientId: p.clientId,
           jtlProductId: p.jtlProductId,
           jtlSyncStatus: p.jtlSyncStatus,
           lastJtlSync: p.lastJtlSync,
@@ -1186,7 +1241,7 @@ export function ProductsTable({ showClientColumn, baseUrl, showSyncButtons = tru
               {product.announced}
             </span>
             {/* JTL Sync Status */}
-            <div style={{ display: 'flex', alignItems: 'center' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
               {product.jtlProductId ? (
                 <span
                   style={{
@@ -1205,6 +1260,46 @@ export function ProductsTable({ showClientColumn, baseUrl, showSyncButtons = tru
                 >
                   {product.jtlSyncStatus === 'SYNCED' ? 'Synced' : product.jtlSyncStatus === 'ERROR' ? 'Error' : 'Pending'}
                 </span>
+              ) : isGeneratedSku(product.sku) ? (
+                <>
+                  <span
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      padding: '2px 8px',
+                      borderRadius: '10px',
+                      backgroundColor: '#FEF3C7',
+                      color: '#D97706',
+                      fontFamily: 'Inter, sans-serif',
+                      fontWeight: 500,
+                      fontSize: '11px'
+                    }}
+                    title={`Product has generated SKU (${product.sku}) and needs manual linking to JTL FFN`}
+                  >
+                    Needs Linking
+                  </span>
+                  <button
+                    onClick={(e) => handleOpenLinkModal(product, e)}
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      padding: '2px 8px',
+                      borderRadius: '6px',
+                      backgroundColor: '#2563EB',
+                      color: '#FFFFFF',
+                      fontFamily: 'Inter, sans-serif',
+                      fontWeight: 500,
+                      fontSize: '11px',
+                      border: 'none',
+                      cursor: 'pointer',
+                    }}
+                    title="Link this product to an existing JTL FFN product"
+                  >
+                    Link
+                  </button>
+                </>
               ) : (
                 <span
                   style={{
@@ -1347,6 +1442,22 @@ export function ProductsTable({ showClientColumn, baseUrl, showSyncButtons = tru
           </button>
         </div>
       </div>
+
+      {/* JTL Link Modal */}
+      {linkModalProduct && (
+        <JTLLinkModal
+          isOpen={linkModalOpen}
+          productId={linkModalProduct.id}
+          productName={linkModalProduct.productName}
+          productSku={linkModalProduct.sku}
+          clientId={linkModalProduct.clientId || user?.clientId || ''}
+          onClose={() => {
+            setLinkModalOpen(false);
+            setLinkModalProduct(null);
+          }}
+          onLinked={handleProductLinked}
+        />
+      )}
     </div>
   );
 }

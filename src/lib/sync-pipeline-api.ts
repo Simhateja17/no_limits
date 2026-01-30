@@ -133,6 +133,14 @@ export async function retryPipeline(pipelineId: string): Promise<PipelineResult>
 }
 
 /**
+ * Cancel/stop a running pipeline completely
+ */
+export async function cancelPipeline(pipelineId: string): Promise<PipelineResult> {
+  const response = await api.post<PipelineResult>(`/sync-pipeline/${pipelineId}/cancel`);
+  return response.data;
+}
+
+/**
  * Get all pipelines for a client
  */
 export async function getClientPipelines(

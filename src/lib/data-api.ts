@@ -16,6 +16,7 @@ export interface Product {
   announced: number;
   weightInKg: number | null;
   imageUrl: string | null;
+  clientId: string;
   client: {
     companyName: string;
     name: string;
@@ -633,6 +634,45 @@ export const dataApi = {
     };
   }> {
     const response = await api.post(`/integrations/product-sync/client/${clientId}/import-from-jtl`);
+    return response.data;
+  },
+
+  // ============= MANUAL JTL FFN PRODUCT LINKING =============
+
+  // Get JTL FFN products that are NOT linked to any local product
+  async getUnlinkedJTLProducts(clientId: string): Promise<{
+    success: boolean;
+    data: {
+      total: number;
+      linked: number;
+      unlinked: number;
+      products: Array<{
+        jfsku: string;
+        merchantSku: string;
+        name: string;
+        description: string | null;
+        stockLevel: number;
+        ean: string | null;
+      }>;
+    };
+  }> {
+    const response = await api.get(`/integrations/jtl/unlinked-products/${clientId}`);
+    return response.data;
+  },
+
+  // Link a local product to an existing JTL FFN product
+  async linkProductToJTL(productId: string, jtlProductId: string): Promise<{
+    success: boolean;
+    message: string;
+    data: {
+      productId: string;
+      sku: string;
+      name: string;
+      jtlProductId: string;
+      jtlSyncStatus: string;
+    };
+  }> {
+    const response = await api.post(`/integrations/products/${productId}/link-jtl`, { jtlProductId });
     return response.data;
   },
 };
