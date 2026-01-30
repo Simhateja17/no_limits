@@ -142,6 +142,33 @@ export default function OrderDetailPage() {
     fetchOrder();
   }, [params.orderId]);
 
+  // Update local state when rawOrder loads
+  useEffect(() => {
+    if (rawOrder) {
+      // Update products from real order data
+      if (rawOrder.items && rawOrder.items.length > 0) {
+        setOrderProducts(rawOrder.items.map((item: any) => ({
+          id: item.id,
+          name: item.productName || item.product?.name || 'Unknown Product',
+          sku: item.sku || item.product?.sku || '',
+          gtin: item.product?.gtin || '',
+          qty: item.quantity,
+          merchant: rawOrder.client?.companyName || '',
+        })));
+      }
+      // Update hold status
+      setOnHoldStatus(rawOrder.isOnHold || false);
+      // Update tags
+      if (rawOrder.tags) {
+        setTags(rawOrder.tags);
+      }
+      // Update order notes
+      if ((rawOrder as any).notes) {
+        setOrderNotes((rawOrder as any).notes);
+      }
+    }
+  }, [rawOrder]);
+
   if (!isAuthenticated || (user?.role !== 'ADMIN' && user?.role !== 'SUPER_ADMIN')) {
     return null;
   }
@@ -479,7 +506,7 @@ export default function OrderDetailPage() {
                           width: '6px',
                           height: '6px',
                           borderRadius: '50%',
-                          backgroundColor: onHoldStatus ? '#F59E0B' : getStatusColor(mockOrderDetails.status),
+                          backgroundColor: onHoldStatus ? '#F59E0B' : getStatusColor(rawOrder?.status || 'Processing'),
                         }}
                       />
                       <span
@@ -491,7 +518,7 @@ export default function OrderDetailPage() {
                           color: '#000000',
                         }}
                       >
-                        {onHoldStatus ? tOrders('onHold') : tOrders(mockOrderDetails.status.toLowerCase())}
+                        {onHoldStatus ? tOrders('onHold') : (rawOrder?.status ? tOrders(rawOrder.status.toLowerCase()) : '-')}
                       </span>
                     </div>
 
@@ -541,7 +568,7 @@ export default function OrderDetailPage() {
                           width: '6px',
                           height: '6px',
                           borderRadius: '50%',
-                          backgroundColor: onHoldStatus ? '#F59E0B' : getStatusColor(mockOrderDetails.status),
+                          backgroundColor: onHoldStatus ? '#F59E0B' : getStatusColor(rawOrder?.status || 'Processing'),
                         }}
                       />
                       <span
@@ -553,7 +580,7 @@ export default function OrderDetailPage() {
                           color: '#000000',
                         }}
                       >
-                        {onHoldStatus ? tOrders('onHold') : tOrders(mockOrderDetails.status.toLowerCase())}
+                        {onHoldStatus ? tOrders('onHold') : (rawOrder?.status ? tOrders(rawOrder.status.toLowerCase()) : '-')}
                       </span>
                     </div>
                   </div>
@@ -639,10 +666,10 @@ export default function OrderDetailPage() {
                     color: '#111827',
                   }}
                 >
-                  <div>{mockOrderDetails.deliveryMethod.name}</div>
-                  <div>{mockOrderDetails.deliveryMethod.street}</div>
-                  <div>{mockOrderDetails.deliveryMethod.city}</div>
-                  <div>{mockOrderDetails.deliveryMethod.country}</div>
+                  <div>{rawOrder?.shippingFirstName} {rawOrder?.shippingLastName}</div>
+                  <div>{rawOrder?.shippingAddress1}</div>
+                  <div>{rawOrder?.shippingZip} {rawOrder?.shippingCity}</div>
+                  <div>{rawOrder?.shippingCountry || rawOrder?.shippingCountryCode}</div>
                 </div>
               </div>
 
@@ -823,7 +850,7 @@ export default function OrderDetailPage() {
                         {selectedShippingMethod.name}
                       </span>
                     </div>
-                    {mockOrderDetails.trackingNumber && (
+                    {rawOrder?.trackingNumber && (
                       <div
                         style={{
                           fontFamily: 'Inter, sans-serif',
@@ -834,9 +861,9 @@ export default function OrderDetailPage() {
                           paddingLeft: '32px',
                         }}
                       >
-                        {mockOrderDetails.trackingUrl ? (
+                        {rawOrder?.trackingUrl ? (
                           <a
-                            href={mockOrderDetails.trackingUrl}
+                            href={rawOrder.trackingUrl}
                             target="_blank"
                             rel="noopener noreferrer"
                             style={{
@@ -846,10 +873,10 @@ export default function OrderDetailPage() {
                             onMouseOver={(e) => e.currentTarget.style.textDecoration = 'underline'}
                             onMouseOut={(e) => e.currentTarget.style.textDecoration = 'none'}
                           >
-                            {mockOrderDetails.trackingNumber}
+                            {rawOrder.trackingNumber}
                           </a>
                         ) : (
-                          <span>{mockOrderDetails.trackingNumber}</span>
+                          <span>{rawOrder.trackingNumber}</span>
                         )}
                       </div>
                     )}
@@ -959,7 +986,7 @@ export default function OrderDetailPage() {
                     color: '#111827',
                   }}
                 >
-                  {mockOrderDetails.shipmentWeight}
+                  {rawOrder?.totalWeight ? `${rawOrder.totalWeight.toLocaleString('de-DE')} kg` : '-'}
                 </div>
                 <div
                   style={{

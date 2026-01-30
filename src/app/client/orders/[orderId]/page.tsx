@@ -255,6 +255,8 @@ export default function ClientOrderDetailPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [jtlSyncStatus, setJtlSyncStatus] = useState<{ success: boolean; error?: string } | null>(null);
+  const [isSyncingToJTL, setIsSyncingToJTL] = useState(false);
+  const [jtlSyncResult, setJtlSyncResult] = useState<{ success: boolean; message: string; alreadyExisted?: boolean } | null>(null);
 
   // Form state for edit modal
   const [formData, setFormData] = useState({
@@ -564,6 +566,37 @@ export default function ClientOrderDetailPage() {
       setError(err.response?.data?.error || 'Failed to create replacement order');
     } finally {
       setIsCreatingReplacement(false);
+    }
+  };
+
+  // Handle sync to JTL FFN
+  const handleSyncToJTL = async () => {
+    if (!rawOrder?.id) {
+      setJtlSyncResult({ success: false, message: 'Order data not loaded' });
+      return;
+    }
+
+    setIsSyncingToJTL(true);
+    setJtlSyncResult(null);
+
+    try {
+      const result = await dataApi.syncOrderToJTL(rawOrder.id);
+      setJtlSyncResult({
+        success: result.success,
+        message: result.message,
+        alreadyExisted: result.data?.alreadyExisted,
+      });
+      // Refresh order data to get updated jtlOutboundId
+      const updatedOrder = await dataApi.getOrder(rawOrder.id);
+      setRawOrder(updatedOrder as any);
+    } catch (err: any) {
+      console.error('Error syncing to JTL:', err);
+      setJtlSyncResult({
+        success: false,
+        message: err.response?.data?.error || 'Failed to sync order to JTL FFN',
+      });
+    } finally {
+      setIsSyncingToJTL(false);
     }
   };
 
@@ -2031,6 +2064,85 @@ export default function ClientOrderDetailPage() {
                     }}
                   >
                     {isCreatingReplacement ? 'Creating...' : tOrders('createReplacementOrder')}
+                  </span>
+                </button>
+              </div>
+
+              {/* Sync to JTL FFN Box */}
+              <div
+                style={{
+                  width: '100%',
+                  borderRadius: '8px',
+                  padding: 'clamp(16px, 1.8vw, 24px)',
+                  backgroundColor: '#FFFFFF',
+                  boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.06), 0px 1px 3px 0px rgba(0, 0, 0, 0.1)',
+                }}
+              >
+                <span
+                  style={{
+                    fontFamily: 'Inter, sans-serif',
+                    fontWeight: 500,
+                    fontSize: 'clamp(16px, 1.3vw, 18px)',
+                    lineHeight: '24px',
+                    color: '#111827',
+                    display: 'block',
+                    marginBottom: '8px',
+                  }}
+                >
+                  Sync to JTL FFN
+                </span>
+                <p
+                  style={{
+                    fontFamily: 'Inter, sans-serif',
+                    fontWeight: 400,
+                    fontSize: '14px',
+                    lineHeight: '20px',
+                    color: '#6B7280',
+                    marginBottom: '16px',
+                  }}
+                >
+                  {rawOrder?.jtlOutboundId
+                    ? `Already synced to JTL FFN (Outbound: ${rawOrder.jtlOutboundId})`
+                    : 'Manually push this order to JTL FFN for fulfillment. This will check if the order already exists in FFN before creating.'}
+                </p>
+                {jtlSyncResult && (
+                  <p
+                    style={{
+                      fontFamily: 'Inter, sans-serif',
+                      fontSize: '12px',
+                      color: jtlSyncResult.success ? '#059669' : '#DC2626',
+                      marginBottom: '12px',
+                    }}
+                  >
+                    {jtlSyncResult.message}
+                  </p>
+                )}
+                <button
+                  onClick={handleSyncToJTL}
+                  disabled={isSyncingToJTL || !!rawOrder?.jtlOutboundId}
+                  style={{
+                    minWidth: '140px',
+                    height: '38px',
+                    borderRadius: '6px',
+                    padding: '9px 17px',
+                    backgroundColor: rawOrder?.jtlOutboundId ? '#9CA3AF' : isSyncingToJTL ? '#9CA3AF' : '#003450',
+                    border: 'none',
+                    cursor: rawOrder?.jtlOutboundId || isSyncingToJTL ? 'not-allowed' : 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <span
+                    style={{
+                      fontFamily: 'Inter, sans-serif',
+                      fontWeight: 500,
+                      fontSize: 'clamp(12px, 1.03vw, 14px)',
+                      lineHeight: '20px',
+                      color: '#FFFFFF',
+                    }}
+                  >
+                    {isSyncingToJTL ? 'Syncing...' : rawOrder?.jtlOutboundId ? 'Already Synced' : 'Sync to JTL'}
                   </span>
                 </button>
               </div>
