@@ -21,6 +21,7 @@ const mockOrderDetails = {
   },
   shippingMethod: 'DHL Paket National',
   trackingNumber: '00343553983589394',
+  trackingUrl: 'https://nolp.dhl.de/nextt-online-public/set_identcodes.do?lang=de&idc=00343553983589394' as string | null,
   shipmentWeight: '0,58 kg',
   tags: ['b2b'],
   onHoldStatus: false,
@@ -677,7 +678,23 @@ export default function EmployeeOrderDetailPage() {
                           paddingLeft: '32px',
                         }}
                       >
-                        {mockOrderDetails.trackingNumber}
+                        {mockOrderDetails.trackingUrl ? (
+                          <a
+                            href={mockOrderDetails.trackingUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{
+                              color: '#2563EB',
+                              textDecoration: 'none',
+                            }}
+                            onMouseOver={(e) => e.currentTarget.style.textDecoration = 'underline'}
+                            onMouseOut={(e) => e.currentTarget.style.textDecoration = 'none'}
+                          >
+                            {mockOrderDetails.trackingNumber}
+                          </a>
+                        ) : (
+                          <span>{mockOrderDetails.trackingNumber}</span>
+                        )}
                       </div>
                     )}
                   </div>

@@ -51,6 +51,7 @@ export interface Order {
   totalAmount: number | null;
   shippingMethod: string | null;
   trackingNumber: string | null;
+  trackingUrl: string | null;
   totalWeight: number | null;
   tags: string[];
 

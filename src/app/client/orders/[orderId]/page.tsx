@@ -24,6 +24,7 @@ interface OrderDetails {
   };
   shippingMethod: string;
   trackingNumber: string;
+  trackingUrl: string | null;
   shipmentWeight: string;
   tags: string[];
   onHoldStatus: boolean;
@@ -147,6 +148,7 @@ const transformApiOrderToDetails = (apiOrder: ApiOrder): OrderDetails => {
     },
     shippingMethod: apiOrder.shippingMethod || 'Standard',
     trackingNumber: apiOrder.trackingNumber || 'N/A',
+    trackingUrl: apiOrder.trackingUrl || null,
     shipmentWeight: apiOrder.totalWeight ? `${apiOrder.totalWeight} kg` : '0 kg',
     tags: apiOrder.tags || [],
     onHoldStatus: apiOrder.status === 'ON_HOLD',
@@ -1026,7 +1028,7 @@ export default function ClientOrderDetailPage() {
                         {selectedShippingMethod.name}
                       </span>
                     </div>
-                    {orderDetails?.trackingNumber && (
+                    {orderDetails?.trackingNumber && orderDetails.trackingNumber !== 'N/A' && (
                       <div
                         style={{
                           fontFamily: 'Inter, sans-serif',
@@ -1037,7 +1039,23 @@ export default function ClientOrderDetailPage() {
                           paddingLeft: '32px',
                         }}
                       >
-                        {orderDetails.trackingNumber}
+                        {orderDetails.trackingUrl ? (
+                          <a
+                            href={orderDetails.trackingUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{
+                              color: '#2563EB',
+                              textDecoration: 'none',
+                            }}
+                            onMouseOver={(e) => e.currentTarget.style.textDecoration = 'underline'}
+                            onMouseOut={(e) => e.currentTarget.style.textDecoration = 'none'}
+                          >
+                            {orderDetails.trackingNumber}
+                          </a>
+                        ) : (
+                          <span>{orderDetails.trackingNumber}</span>
+                        )}
                       </div>
                     )}
                   </div>
