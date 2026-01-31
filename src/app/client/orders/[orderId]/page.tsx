@@ -133,7 +133,7 @@ const transformApiOrderToDetails = (apiOrder: ApiOrder): OrderDetails => {
   };
 
   return {
-    orderId: apiOrder.externalOrderId || apiOrder.orderNumber || apiOrder.orderId,
+    orderId: apiOrder.orderNumber || apiOrder.externalOrderId || apiOrder.orderId,
     status: getDisplayStatus(apiOrder.status, apiOrder.fulfillmentState || null),
     statusColor: getStatusColor(apiOrder.status, apiOrder.fulfillmentState || null),
     // Use actual shipping address from order

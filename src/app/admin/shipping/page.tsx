@@ -366,7 +366,7 @@ export default function ShippingSettingsPage() {
                       className="flex items-center justify-between p-3 bg-white rounded-lg border"
                     >
                       <div>
-                        <span className="font-medium">Order {mismatch.order?.externalOrderId || mismatch.order?.orderNumber || mismatch.orderId}</span>
+                        <span className="font-medium">Order {mismatch.order?.orderNumber || mismatch.order?.externalOrderId || mismatch.orderId}</span>
                         <span className="mx-2 text-gray-400">•</span>
                         <span className="text-gray-600">{mismatch.channelShippingTitle || mismatch.channelShippingCode}</span>
                         <Badge variant="outline" className="ml-2">{mismatch.channelType}</Badge>

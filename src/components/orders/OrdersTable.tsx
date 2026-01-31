@@ -149,7 +149,7 @@ const getDisplayStatus = (backendStatus: string, fulfillmentState: string | null
 // Helper function to transform API order to component Order
 const transformApiOrder = (apiOrder: ApiOrder): Order => ({
   id: apiOrder.id,
-  orderId: apiOrder.externalOrderId || apiOrder.orderNumber || apiOrder.orderId,
+  orderId: apiOrder.orderNumber || apiOrder.externalOrderId || apiOrder.orderId,
   orderDate: new Date(apiOrder.orderDate),
   client: apiOrder.client.companyName || apiOrder.client.name,
   weight: '0 kg', // Placeholder - can be calculated from items if needed

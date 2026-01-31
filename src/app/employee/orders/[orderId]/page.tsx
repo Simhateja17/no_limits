@@ -413,7 +413,7 @@ export default function EmployeeOrderDetailPage() {
                     display: 'block',
                   }}
                 >
-                  {rawOrder?.externalOrderId || rawOrder?.orderNumber || mockOrderDetails.orderId}
+                  {rawOrder?.orderNumber || rawOrder?.externalOrderId || mockOrderDetails.orderId}
                 </span>
               </div>
 
