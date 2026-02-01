@@ -50,26 +50,41 @@ const getStatusColorFromBackend = (backendStatus: string, fulfillmentState: stri
   // First check fulfillmentState for more specific status
   if (fulfillmentState) {
     switch (fulfillmentState) {
-      case 'SHIPPED':
-      case 'IN_TRANSIT':
-      case 'OUT_FOR_DELIVERY':
-        return 'shipped';
+      // Processing states - Green
+      case 'PENDING':
       case 'DELIVERED':
         return 'success';
-      case 'PICKING':
+
+      // Active fulfillment states - Blue/Cyan
+      case 'PREPARATION':
+      case 'ACKNOWLEDGED':
         return 'picking';
-      case 'PACKING':
-      case 'PACKED':
-      case 'LABEL_CREATED':
-        return 'packing';
+
+      case 'LOCKED':
+      case 'PICKPROCESS':
+        return 'picking';
+
+      // Packing/Ready to ship - Cyan
+      case 'SHIPPED':
+      case 'IN_TRANSIT':
+        return 'shipped';
+
+      // Partial states - Blue
+      case 'PARTIALLY_SHIPPED':
+        return 'partiallyFulfilled';
+
+      // Error states - Red
       case 'FAILED_DELIVERY':
       case 'RETURNED_TO_SENDER':
         return 'error';
-      case 'AWAITING_STOCK':
-        return 'mildError';
+
+      // Cancellation states - Red
+      case 'CANCELED':
+      case 'PARTIALLY_CANCELED':
+        return 'error';
     }
   }
-  
+
   // Fall back to order status
   switch (backendStatus) {
     case 'PENDING':
@@ -99,27 +114,25 @@ const getDisplayStatus = (backendStatus: string, fulfillmentState: string | null
   if (fulfillmentState) {
     switch (fulfillmentState) {
       case 'PENDING':
-        return 'processing'; // Will be translated
-      case 'AWAITING_STOCK':
-        return 'awaiting_stock';
-      case 'READY_FOR_PICKING':
-        return 'ready_for_picking';
-      case 'PICKING':
-        return 'picking';
-      case 'PICKED':
-        return 'picked';
-      case 'PACKING':
-        return 'packing';
-      case 'PACKED':
-        return 'packed';
-      case 'LABEL_CREATED':
-        return 'label_created';
+        return 'pending';
+      case 'PREPARATION':
+        return 'preparation';
+      case 'ACKNOWLEDGED':
+        return 'acknowledged';
+      case 'LOCKED':
+        return 'locked';
+      case 'PICKPROCESS':
+        return 'pickprocess';
       case 'SHIPPED':
         return 'shipped';
+      case 'PARTIALLY_SHIPPED':
+        return 'partially_shipped';
+      case 'CANCELED':
+        return 'canceled';
+      case 'PARTIALLY_CANCELED':
+        return 'partially_canceled';
       case 'IN_TRANSIT':
         return 'in_transit';
-      case 'OUT_FOR_DELIVERY':
-        return 'out_for_delivery';
       case 'DELIVERED':
         return 'delivered';
       case 'FAILED_DELIVERY':
@@ -128,7 +141,7 @@ const getDisplayStatus = (backendStatus: string, fulfillmentState: string | null
         return 'returned_to_sender';
     }
   }
-  
+
   // Fall back to order status
   switch (backendStatus) {
     case 'SHIPPED':
@@ -136,13 +149,13 @@ const getDisplayStatus = (backendStatus: string, fulfillmentState: string | null
     case 'DELIVERED':
       return 'delivered';
     case 'CANCELLED':
-      return 'cancelled';
+      return 'canceled';
     case 'ON_HOLD':
       return 'on_hold';
     case 'ERROR':
       return 'error';
     default:
-      return 'processing';
+      return 'pending';
   }
 };
 
