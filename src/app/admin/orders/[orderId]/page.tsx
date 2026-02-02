@@ -9,6 +9,75 @@ import { useTranslations, useLocale } from 'next-intl';
 import { dataApi, type Order as ApiOrder, type UpdateOrderInput } from '@/lib/data-api';
 import { StatusHistory } from '@/components/orders/StatusHistory';
 
+// Payment Status Badge Component
+const PaymentStatusBadge = ({
+  paymentStatus,
+  t,
+}: {
+  paymentStatus: string | null;
+  t: (key: string) => string;
+}) => {
+  const getPaymentConfig = () => {
+    switch (paymentStatus) {
+      case 'paid':
+        return {
+          label: t('paid'),
+          dotColor: '#22C55E',
+          bgColor: '#ECFDF5',
+          borderColor: '#A7F3D0',
+          textColor: '#059669'
+        };
+      case 'refunded':
+        return {
+          label: t('refunded'),
+          dotColor: '#8B5CF6',
+          bgColor: '#F3E8FF',
+          borderColor: '#DDD6FE',
+          textColor: '#7C3AED'
+        };
+      case 'pending':
+      case null:
+      default:
+        return {
+          label: t('unpaid'),
+          dotColor: '#F59E0B',
+          bgColor: '#FEF3C7',
+          borderColor: '#FCD34D',
+          textColor: '#D97706'
+        };
+    }
+  };
+
+  const config = getPaymentConfig();
+
+  return (
+    <div style={{
+      display: 'inline-flex',
+      alignItems: 'center',
+      gap: 6,
+      backgroundColor: config.bgColor,
+      border: `1px solid ${config.borderColor}`,
+      borderRadius: 13,
+      fontFamily: 'Inter, sans-serif',
+      fontWeight: 400,
+      color: config.textColor,
+      whiteSpace: 'nowrap',
+      fontSize: 14,
+      padding: '6px 14px',
+      height: 26
+    }}>
+      <div style={{
+        width: 6,
+        height: 6,
+        borderRadius: '50%',
+        backgroundColor: config.dotColor,
+        flexShrink: 0
+      }} />
+      {config.label}
+    </div>
+  );
+};
+
 // Mock order data - in real app this would come from API
 const mockOrderDetails = {
   orderId: '934242',
@@ -558,6 +627,17 @@ export default function OrderDetailPage() {
                     </div>
                   </div>
                 )}
+
+                {/* Payment Status Badge */}
+                {rawOrder?.paymentStatus && (
+                  <div style={{ marginTop: 8 }}>
+                    <PaymentStatusBadge
+                      paymentStatus={rawOrder.paymentStatus}
+                      t={tOrders}
+                    />
+                  </div>
+                )}
+
                 <span
                   style={{
                     fontFamily: 'Inter, sans-serif',

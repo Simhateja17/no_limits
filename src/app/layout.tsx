@@ -4,6 +4,7 @@ import "./globals.css";
 import { AuthProvider } from "@/components/auth";
 import { NextIntlClientProvider } from 'next-intl';
 import { getLocale, getMessages } from 'next-intl/server';
+import { Toaster } from 'sonner';
 
 const inter = Inter({
   variable: "--font-inter",
@@ -30,6 +31,7 @@ export default async function RootLayout({
           <AuthProvider>
             {children}
           </AuthProvider>
+          <Toaster position="top-right" richColors />
         </NextIntlClientProvider>
       </body>
     </html>

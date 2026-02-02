@@ -26,7 +26,11 @@ export default function ClientOrdersPage() {
   return (
     <DashboardLayout>
       <div className="w-full px-[5.2%] py-8">
-        <OrdersTable showClientColumn={showClientColumn} basePath="/client/orders" />
+        <OrdersTable
+          showClientColumn={showClientColumn}
+          basePath="/client/orders"
+          clientId={user?.clientId}
+        />
       </div>
     </DashboardLayout>
   );

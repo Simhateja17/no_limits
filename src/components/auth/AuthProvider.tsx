@@ -3,6 +3,7 @@
 import { useAuthStore, getDashboardRoute } from '@/lib/store';
 import { useRouter, usePathname } from 'next/navigation';
 import { useEffect, useState, useCallback } from 'react';
+import { initializeSocket, disconnectSocket } from '@/lib/socket';
 
 interface AuthProviderProps {
   children: React.ReactNode;
@@ -72,6 +73,25 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
     return () => clearInterval(interval);
   }, [isAuthenticated, user, logout, router]);
+
+  // Initialize socket connection with authentication token
+  useEffect(() => {
+    const token = localStorage.getItem('accessToken');
+
+    if (isAuthenticated && user && token) {
+      // Initialize socket with token
+      initializeSocket(token);
+      console.log('[AuthProvider] Socket initialized with token');
+    }
+
+    return () => {
+      // Cleanup socket on unmount or logout
+      if (!isAuthenticated || !user) {
+        disconnectSocket();
+        console.log('[AuthProvider] Socket disconnected');
+      }
+    };
+  }, [isAuthenticated, user]);
 
   // Check onboarding status for CLIENT users
   const checkOnboardingStatus = useCallback(async () => {

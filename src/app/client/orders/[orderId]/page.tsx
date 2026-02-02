@@ -11,6 +11,75 @@ import { dataApi, type Order as ApiOrder, type UpdateOrderInput } from '@/lib/da
 import { Skeleton, GenericTableSkeleton } from '@/components/ui';
 import { StatusHistory } from '@/components/orders/StatusHistory';
 
+// Payment Status Badge Component
+const PaymentStatusBadge = ({
+  paymentStatus,
+  t,
+}: {
+  paymentStatus: string | null;
+  t: (key: string) => string;
+}) => {
+  const getPaymentConfig = () => {
+    switch (paymentStatus) {
+      case 'paid':
+        return {
+          label: t('paid'),
+          dotColor: '#22C55E',
+          bgColor: '#ECFDF5',
+          borderColor: '#A7F3D0',
+          textColor: '#059669'
+        };
+      case 'refunded':
+        return {
+          label: t('refunded'),
+          dotColor: '#8B5CF6',
+          bgColor: '#F3E8FF',
+          borderColor: '#DDD6FE',
+          textColor: '#7C3AED'
+        };
+      case 'pending':
+      case null:
+      default:
+        return {
+          label: t('unpaid'),
+          dotColor: '#F59E0B',
+          bgColor: '#FEF3C7',
+          borderColor: '#FCD34D',
+          textColor: '#D97706'
+        };
+    }
+  };
+
+  const config = getPaymentConfig();
+
+  return (
+    <div style={{
+      display: 'inline-flex',
+      alignItems: 'center',
+      gap: 6,
+      backgroundColor: config.bgColor,
+      border: `1px solid ${config.borderColor}`,
+      borderRadius: 13,
+      fontFamily: 'Inter, sans-serif',
+      fontWeight: 400,
+      color: config.textColor,
+      whiteSpace: 'nowrap',
+      fontSize: 14,
+      padding: '6px 14px',
+      height: 26
+    }}>
+      <div style={{
+        width: 6,
+        height: 6,
+        borderRadius: '50%',
+        backgroundColor: config.dotColor,
+        flexShrink: 0
+      }} />
+      {config.label}
+    </div>
+  );
+};
+
 // Type for transformed order details
 interface OrderDetails {
   orderId: string;
@@ -760,39 +829,13 @@ export default function ClientOrderDetailPage() {
                   </div>
                 )}
 
-                {/* Awaiting Payment Badge - shown when order is held for payment */}
-                {rawOrder?.holdReason === 'AWAITING_PAYMENT' && (
-                  <div
-                    style={{
-                      height: '26px',
-                      padding: '3px 13px',
-                      borderRadius: '13px',
-                      backgroundColor: '#FEF3C7',
-                      border: '1px solid #F59E0B',
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: '8px',
-                      marginTop: '8px',
-                    }}
-                  >
-                    <div
-                      style={{
-                        width: '6px',
-                        height: '6px',
-                        borderRadius: '50%',
-                        backgroundColor: '#D97706',
-                      }}
+                {/* Payment Status Badge */}
+                {rawOrder?.paymentStatus && (
+                  <div style={{ marginTop: 8 }}>
+                    <PaymentStatusBadge
+                      paymentStatus={rawOrder.paymentStatus}
+                      t={tOrders}
                     />
-                    <span
-                      style={{
-                        fontFamily: 'Inter, sans-serif',
-                        fontWeight: 500,
-                        fontSize: '13px',
-                        color: '#D97706',
-                      }}
-                    >
-                      Awaiting Payment
-                    </span>
                   </div>
                 )}
 

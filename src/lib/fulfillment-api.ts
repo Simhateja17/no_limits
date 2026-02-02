@@ -361,14 +361,43 @@ export const fulfillmentApi = {
   async syncOrderStatusesFromFFN(clientId?: string): Promise<{
     success: boolean;
     updatesProcessed: number;
+    unchangedOrders?: number;
     message: string;
     error?: string;
+    details?: Array<{
+      clientId: string;
+      clientName: string;
+      updates: number;
+      unchanged?: number;
+      error?: string;
+    }>;
   }> {
-    const endpoint = clientId 
+    const endpoint = clientId
       ? `/sync-admin/clients/${clientId}/poll-ffn`
       : '/sync-admin/poll-ffn';
     const response = await api.post(endpoint, {});
     return response.data.data || response.data;
+  },
+
+  // Fetch orders from commerce channel and reconcile with JTL FFN
+  // Recovers orders that may have been missed due to webhook failures
+  async fetchOrdersFromChannel(clientId: string, since?: string): Promise<{
+    success: boolean;
+    stats: {
+      ordersFoundInChannel: number;
+      newOrdersCreated: number;
+      ordersAlreadyExisted: number;
+      ordersLinkedToFFN: number;
+      ordersPushedToFFN: number;
+      errors: number;
+    };
+    message: string;
+    error?: string;
+  }> {
+    const response = await api.post(`/sync-admin/clients/${clientId}/fetch-orders`, {
+      since,
+    });
+    return response.data;
   },
 };
 

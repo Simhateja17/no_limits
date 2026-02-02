@@ -26,12 +26,19 @@ interface UseClientsResult {
   refetch: () => Promise<void>;
 }
 
-export function useClients(): UseClientsResult {
+export function useClients(options?: { skip?: boolean }): UseClientsResult {
   const [clients, setClients] = useState<ClientData[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!options?.skip);
   const [error, setError] = useState<string | null>(null);
+  const skip = options?.skip ?? false;
 
   const fetchClients = async () => {
+    // Skip fetching if skip flag is set
+    if (skip) {
+      setLoading(false);
+      return;
+    }
+
     try {
       setLoading(true);
       setError(null);
@@ -43,7 +50,12 @@ export function useClients(): UseClientsResult {
       }
     } catch (err: any) {
       console.error('Error fetching clients:', err);
-      setError(err.response?.data?.error || 'Failed to fetch clients');
+      // Don't set error for 403 (permission denied) - this is expected for CLIENT users
+      if (err.response?.status === 403) {
+        console.log('Clients fetch skipped: insufficient permissions (expected for CLIENT role)');
+      } else {
+        setError(err.response?.data?.error || 'Failed to fetch clients');
+      }
     } finally {
       setLoading(false);
     }
@@ -51,7 +63,8 @@ export function useClients(): UseClientsResult {
 
   useEffect(() => {
     fetchClients();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [skip]);
 
   return { clients, loading, error, refetch: fetchClients };
 }

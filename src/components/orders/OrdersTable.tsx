@@ -3,7 +3,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations, useLocale } from 'next-intl';
-import { useClients, getClientNames } from '@/lib/hooks';
+import { useClients, getClientNames, useRealTimeOrders } from '@/lib/hooks';
 import { dataApi, type Order as ApiOrder } from '@/lib/data-api';
 import fulfillmentApi from '@/lib/fulfillment-api';
 import { OrdersTableSkeleton, MobileCardSkeleton, TabsSkeleton, FilterBarSkeleton } from '@/components/ui';
@@ -23,6 +23,7 @@ interface Order {
   weight: string;
   quantity: number;
   method: string;
+  paymentStatus: string | null; // "paid", "pending", "refunded", or null
   status: OrderStatusColor;
   fulfillmentState: string | null; // FFN state for display
   displayStatus: string; // Human-readable status label
@@ -168,6 +169,7 @@ const transformApiOrder = (apiOrder: ApiOrder): Order => ({
   weight: '0 kg', // Placeholder - can be calculated from items if needed
   quantity: apiOrder.items.reduce((sum, item) => sum + item.quantity, 0),
   method: apiOrder.shippingMethod || 'Standard',
+  paymentStatus: apiOrder.paymentStatus || null,
   status: getStatusColorFromBackend(apiOrder.status, apiOrder.fulfillmentState || null),
   fulfillmentState: apiOrder.fulfillmentState || null,
   displayStatus: getDisplayStatus(apiOrder.status, apiOrder.fulfillmentState || null),
@@ -176,6 +178,7 @@ const transformApiOrder = (apiOrder: ApiOrder): Order => ({
 interface OrdersTableProps {
   showClientColumn: boolean; // Show client column only for superadmin and warehouse labor view
   basePath?: string; // Base path for navigation (e.g., '/admin/orders' or '/employee/orders')
+  clientId?: string; // Optional clientId for CLIENT users to sync only their own orders
 }
 
 // Status tag component - needs translation function
@@ -277,6 +280,77 @@ const StatusTag = ({ status, displayStatus, t, compact = false }: {
   );
 };
 
+// Payment Status Badge Component
+const PaymentStatusBadge = ({
+  paymentStatus,
+  t,
+  compact = false
+}: {
+  paymentStatus: string | null;
+  t: (key: string) => string;
+  compact?: boolean
+}) => {
+  const getPaymentConfig = () => {
+    switch (paymentStatus) {
+      case 'paid':
+        return {
+          label: t('paid'),
+          dotColor: '#22C55E',
+          bgColor: '#ECFDF5',
+          borderColor: '#A7F3D0',
+          textColor: '#059669'
+        };
+      case 'refunded':
+        return {
+          label: t('refunded'),
+          dotColor: '#8B5CF6',
+          bgColor: '#F3E8FF',
+          borderColor: '#DDD6FE',
+          textColor: '#7C3AED'
+        };
+      case 'pending':
+      case null:
+      default:
+        return {
+          label: t('unpaid'),
+          dotColor: '#F59E0B',
+          bgColor: '#FEF3C7',
+          borderColor: '#FCD34D',
+          textColor: '#D97706'
+        };
+    }
+  };
+
+  const config = getPaymentConfig();
+  const size = compact ? { fontSize: 12, padding: '4px 10px', height: 22 }
+                        : { fontSize: 14, padding: '6px 14px', height: 26 };
+
+  return (
+    <div style={{
+      display: 'inline-flex',
+      alignItems: 'center',
+      gap: 6,
+      backgroundColor: config.bgColor,
+      border: `1px solid ${config.borderColor}`,
+      borderRadius: 13,
+      fontFamily: 'Inter, sans-serif',
+      fontWeight: 400,
+      color: config.textColor,
+      whiteSpace: 'nowrap',
+      ...size
+    }}>
+      <div style={{
+        width: 6,
+        height: 6,
+        borderRadius: '50%',
+        backgroundColor: config.dotColor,
+        flexShrink: 0
+      }} />
+      {config.label}
+    </div>
+  );
+};
+
 // Mobile Order Card Component
 const OrderCard = ({ 
   order, 
@@ -320,6 +394,14 @@ const OrderCard = ({
           <p className="text-gray-700 truncate">{order.method}</p>
         </div>
         <div>
+          <span className="text-gray-500 text-xs">{t('payment')}</span>
+          <PaymentStatusBadge
+            paymentStatus={order.paymentStatus}
+            t={t}
+            compact
+          />
+        </div>
+        <div>
           <span className="text-gray-500 text-xs">{t('weight')}</span>
           <p className="text-gray-700">{order.weight}</p>
         </div>
@@ -328,7 +410,7 @@ const OrderCard = ({
   );
 };
 
-export function OrdersTable({ showClientColumn, basePath = '/admin/orders' }: OrdersTableProps) {
+export function OrdersTable({ showClientColumn, basePath = '/admin/orders', clientId }: OrdersTableProps) {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<OrderTabType>('all');
   const [searchQuery, setSearchQuery] = useState('');
@@ -340,57 +422,50 @@ export function OrdersTable({ showClientColumn, basePath = '/admin/orders' }: Or
   const locale = useLocale();
   const isMobile = useIsMobile();
 
-  // State for API data
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  
+  // Real-time orders data with WebSocket updates
+  const { data: ordersData, loading, error, refetch } = useRealTimeOrders();
+
+  // Transform API orders to display format
+  const orders = useMemo(() => {
+    if (!ordersData) return [];
+    return ordersData.map(transformApiOrder);
+  }, [ordersData]);
+
   // State for syncing order statuses
   const [syncing, setSyncing] = useState(false);
-  const [syncMessage, setSyncMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [syncMessage, setSyncMessage] = useState<{ type: 'success' | 'error' | 'info'; text: string } | null>(null);
+
+  // State for fetching orders from channel
+  const [fetchingOrders, setFetchingOrders] = useState(false);
+  const [fetchMessage, setFetchMessage] = useState<{ type: 'success' | 'error' | 'info'; text: string } | null>(null);
 
   // Fetch real clients for admin/employee filter
-  const { clients, loading: clientsLoading } = useClients();
+  // Skip fetching if showClientColumn is false (CLIENT user view)
+  // CLIENT users don't have permission to fetch all clients and don't need this data
+  const { clients, loading: clientsLoading } = useClients({ skip: !showClientColumn });
   const customerNames = getClientNames(clients);
-
-  // Function to fetch orders
-  const fetchOrders = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const data = await dataApi.getOrders();
-      const transformedOrders = data.map(transformApiOrder);
-      setOrders(transformedOrders);
-    } catch (err) {
-      console.error('Error fetching orders:', err);
-      setError(err instanceof Error ? err.message : 'Failed to load orders');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Fetch orders from API
-  useEffect(() => {
-    fetchOrders();
-  }, []);
 
   // Handler for syncing order statuses from FFN
   const handleSyncOrderStatuses = async () => {
     try {
       setSyncing(true);
       setSyncMessage(null);
-      
-      const result = await fulfillmentApi.syncOrderStatusesFromFFN();
-      
+
+      // Pass clientId if available (for CLIENT users syncing their own orders)
+      const result = await fulfillmentApi.syncOrderStatusesFromFFN(clientId);
+
       if (result.success) {
+        const unchangedCount = result.unchangedOrders || 0;
         setSyncMessage({
-          type: 'success',
-          text: result.updatesProcessed > 0 
-            ? `${result.updatesProcessed} ${t('ordersUpdated') || 'order(s) updated'}`
-            : t('noUpdatesFound') || 'No updates found'
+          type: result.updatesProcessed > 0 ? 'success' : 'info',
+          text: result.updatesProcessed > 0
+            ? `✅ ${result.updatesProcessed} ${t('ordersUpdated') || 'order(s) updated'}. ${unchangedCount} ${t('ordersUnchanged') || 'order(s) already up to date'}.`
+            : `ℹ️ ${t('allOrdersUpToDate') || 'All orders are up to date'}. ${unchangedCount} ${t('ordersChecked') || 'order(s) checked'}.`
         });
-        // Refresh orders to show updated statuses
-        await fetchOrders();
+        // Only refresh orders if there were updates
+        if (result.updatesProcessed > 0) {
+          await refetch();
+        }
       } else {
         setSyncMessage({
           type: 'error',
@@ -409,6 +484,56 @@ export function OrdersTable({ showClientColumn, basePath = '/admin/orders' }: Or
       setTimeout(() => setSyncMessage(null), 5000);
     } finally {
       setSyncing(false);
+    }
+  };
+
+  // Handler for fetching orders from commerce channel
+  const handleFetchOrders = async () => {
+    if (!clientId) {
+      setFetchMessage({
+        type: 'error',
+        text: t('fetchOrdersNoClient') || 'Client ID required to fetch orders'
+      });
+      setTimeout(() => setFetchMessage(null), 5000);
+      return;
+    }
+
+    try {
+      setFetchingOrders(true);
+      setFetchMessage(null);
+
+      const result = await fulfillmentApi.fetchOrdersFromChannel(clientId);
+
+      if (result.success) {
+        const stats = result.stats;
+        setFetchMessage({
+          type: stats.newOrdersCreated > 0 ? 'success' : 'info',
+          text: stats.newOrdersCreated > 0
+            ? `✅ ${t('fetchOrdersSuccess') || 'Orders recovered!'} ${stats.newOrdersCreated} ${t('newOrders') || 'new'}, ${stats.ordersLinkedToFFN} ${t('linkedToFFN') || 'linked'}, ${stats.ordersPushedToFFN} ${t('pushedToFFN') || 'pushed to FFN'}.`
+            : `ℹ️ ${t('noNewOrders') || 'No new orders found'}. ${stats.ordersAlreadyExisted} ${t('ordersAlreadyExist') || 'already in system'}.`
+        });
+        // Refresh orders list if new orders were created
+        if (stats.newOrdersCreated > 0) {
+          await refetch();
+        }
+      } else {
+        setFetchMessage({
+          type: 'error',
+          text: result.error || t('fetchOrdersFailed') || 'Failed to fetch orders'
+        });
+      }
+
+      // Clear message after 8 seconds
+      setTimeout(() => setFetchMessage(null), 8000);
+    } catch (err) {
+      console.error('Error fetching orders:', err);
+      setFetchMessage({
+        type: 'error',
+        text: err instanceof Error ? err.message : t('fetchOrdersFailed') || 'Failed to fetch orders'
+      });
+      setTimeout(() => setFetchMessage(null), 5000);
+    } finally {
+      setFetchingOrders(false);
     }
   };
 
@@ -824,6 +949,58 @@ export function OrdersTable({ showClientColumn, basePath = '/admin/orders' }: Or
 
         {/* Action Buttons */}
         <div className="flex flex-col md:flex-row gap-2 w-full md:w-auto">
+          {/* Fetch Orders Button - Only show for CLIENT users with a clientId */}
+          {clientId && (
+            <button
+              onClick={handleFetchOrders}
+              disabled={fetchingOrders}
+              className="w-full md:w-auto"
+              style={{
+                height: 'clamp(38px, 2.8vw, 38px)',
+                borderRadius: '6px',
+                paddingTop: 'clamp(7px, 0.66vw, 9px)',
+                paddingRight: 'clamp(13px, 1.25vw, 17px)',
+                paddingBottom: 'clamp(7px, 0.66vw, 9px)',
+                paddingLeft: 'clamp(13px, 1.25vw, 17px)',
+                backgroundColor: '#FFFFFF',
+                border: '1px solid #D1D5DB',
+                boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.05)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px',
+                cursor: fetchingOrders ? 'not-allowed' : 'pointer',
+                opacity: fetchingOrders ? 0.7 : 1,
+                whiteSpace: 'nowrap',
+                marginBottom: 'clamp(8px, 0.88vw, 12px)',
+              }}
+            >
+              {fetchingOrders ? (
+                <svg className="animate-spin h-4 w-4 text-gray-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+              ) : (
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M12 4V20M12 4L8 8M12 4L16 8" stroke="#374151" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M4 14V18C4 19.1046 4.89543 20 6 20H18C19.1046 20 20 19.1046 20 18V14" stroke="#374151" strokeWidth="2" strokeLinecap="round"/>
+                </svg>
+              )}
+              <span
+                style={{
+                  fontFamily: 'Inter, sans-serif',
+                  fontWeight: 500,
+                  fontSize: 'clamp(12px, 1.03vw, 14px)',
+                  lineHeight: '20px',
+                  color: '#374151',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {fetchingOrders ? (t('fetchingOrders') || 'Fetching...') : (t('fetchOrders') || 'Fetch Orders')}
+              </span>
+            </button>
+          )}
+
           {/* Sync Order Status Button */}
           <button
             onClick={handleSyncOrderStatuses}
@@ -918,8 +1095,8 @@ export function OrdersTable({ showClientColumn, basePath = '/admin/orders' }: Or
           style={{
             padding: '10px 16px',
             borderRadius: '6px',
-            backgroundColor: syncMessage.type === 'success' ? '#ECFDF5' : '#FEF2F2',
-            border: `1px solid ${syncMessage.type === 'success' ? '#A7F3D0' : '#FECACA'}`,
+            backgroundColor: syncMessage.type === 'success' ? '#ECFDF5' : syncMessage.type === 'info' ? '#EFF6FF' : '#FEF2F2',
+            border: `1px solid ${syncMessage.type === 'success' ? '#A7F3D0' : syncMessage.type === 'info' ? '#BFDBFE' : '#FECACA'}`,
             display: 'flex',
             alignItems: 'center',
             gap: '8px',
@@ -928,6 +1105,10 @@ export function OrdersTable({ showClientColumn, basePath = '/admin/orders' }: Or
           {syncMessage.type === 'success' ? (
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M9 12L11 14L15 10M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="#059669" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          ) : syncMessage.type === 'info' ? (
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 8V12M12 16H12.01M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="#2563EB" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
           ) : (
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -938,10 +1119,48 @@ export function OrdersTable({ showClientColumn, basePath = '/admin/orders' }: Or
             style={{
               fontFamily: 'Inter, sans-serif',
               fontSize: '14px',
-              color: syncMessage.type === 'success' ? '#059669' : '#DC2626',
+              color: syncMessage.type === 'success' ? '#059669' : syncMessage.type === 'info' ? '#2563EB' : '#DC2626',
             }}
           >
             {syncMessage.text}
+          </span>
+        </div>
+      )}
+
+      {/* Fetch Orders Message */}
+      {fetchMessage && (
+        <div
+          style={{
+            padding: '10px 16px',
+            borderRadius: '6px',
+            backgroundColor: fetchMessage.type === 'success' ? '#ECFDF5' : fetchMessage.type === 'info' ? '#EFF6FF' : '#FEF2F2',
+            border: `1px solid ${fetchMessage.type === 'success' ? '#A7F3D0' : fetchMessage.type === 'info' ? '#BFDBFE' : '#FECACA'}`,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+          }}
+        >
+          {fetchMessage.type === 'success' ? (
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M9 12L11 14L15 10M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="#059669" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          ) : fetchMessage.type === 'info' ? (
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 8V12M12 16H12.01M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="#2563EB" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          ) : (
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 8V12M12 16H12.01M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="#DC2626" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          )}
+          <span
+            style={{
+              fontFamily: 'Inter, sans-serif',
+              fontSize: '14px',
+              color: fetchMessage.type === 'success' ? '#059669' : fetchMessage.type === 'info' ? '#2563EB' : '#DC2626',
+            }}
+          >
+            {fetchMessage.text}
           </span>
         </div>
       )}
@@ -1110,8 +1329,8 @@ export function OrdersTable({ showClientColumn, basePath = '/admin/orders' }: Or
           className="grid"
           style={{
             gridTemplateColumns: showClientColumn
-              ? 'minmax(100px, 1.2fr) minmax(80px, 1fr) minmax(100px, 1.2fr) minmax(80px, 1fr) minmax(60px, 0.8fr) minmax(100px, 1.2fr) minmax(90px, 1fr) minmax(60px, 0.8fr)'
-              : 'minmax(100px, 1.5fr) minmax(80px, 1fr) minmax(80px, 1fr) minmax(60px, 0.8fr) minmax(100px, 1.2fr) minmax(90px, 1fr) minmax(60px, 0.8fr)',
+              ? 'minmax(100px, 1.2fr) minmax(80px, 1fr) minmax(100px, 1.2fr) minmax(80px, 1fr) minmax(60px, 0.8fr) minmax(100px, 1.2fr) minmax(90px, 1fr) minmax(90px, 1fr) minmax(60px, 0.8fr)'
+              : 'minmax(100px, 1.5fr) minmax(80px, 1fr) minmax(80px, 1fr) minmax(60px, 0.8fr) minmax(100px, 1.2fr) minmax(90px, 1fr) minmax(90px, 1fr) minmax(60px, 0.8fr)',
             padding: 'clamp(8px, 0.9vw, 12px) clamp(12px, 1.8vw, 24px)',
             borderBottom: '1px solid #E5E7EB',
             backgroundColor: '#F9FAFB',
@@ -1208,6 +1427,19 @@ export function OrdersTable({ showClientColumn, basePath = '/admin/orders' }: Or
               color: '#6B7280',
             }}
           >
+            {t('paymentStatus')}
+          </span>
+          <span
+            style={{
+              fontFamily: 'Inter, sans-serif',
+              fontWeight: 500,
+              fontSize: 'clamp(10px, 0.9vw, 12px)',
+              lineHeight: '16px',
+              letterSpacing: '0.05em',
+              textTransform: 'uppercase',
+              color: '#6B7280',
+            }}
+          >
             JTL SYNC
           </span>
           <span
@@ -1232,8 +1464,8 @@ export function OrdersTable({ showClientColumn, basePath = '/admin/orders' }: Or
             className="grid items-center"
             style={{
               gridTemplateColumns: showClientColumn
-                ? 'minmax(100px, 1.2fr) minmax(80px, 1fr) minmax(100px, 1.2fr) minmax(80px, 1fr) minmax(60px, 0.8fr) minmax(100px, 1.2fr) minmax(90px, 1fr) minmax(60px, 0.8fr)'
-                : 'minmax(100px, 1.5fr) minmax(80px, 1fr) minmax(80px, 1fr) minmax(60px, 0.8fr) minmax(100px, 1.2fr) minmax(90px, 1fr) minmax(60px, 0.8fr)',
+                ? 'minmax(100px, 1.2fr) minmax(80px, 1fr) minmax(100px, 1.2fr) minmax(80px, 1fr) minmax(60px, 0.8fr) minmax(100px, 1.2fr) minmax(90px, 1fr) minmax(90px, 1fr) minmax(60px, 0.8fr)'
+                : 'minmax(100px, 1.5fr) minmax(80px, 1fr) minmax(80px, 1fr) minmax(60px, 0.8fr) minmax(100px, 1.2fr) minmax(90px, 1fr) minmax(90px, 1fr) minmax(60px, 0.8fr)',
               padding: 'clamp(12px, 1.2vw, 16px) clamp(12px, 1.8vw, 24px)',
               borderBottom: index < paginatedOrders.length - 1 ? '1px solid #E5E7EB' : 'none',
               backgroundColor: '#FFFFFF',
@@ -1316,6 +1548,14 @@ export function OrdersTable({ showClientColumn, basePath = '/admin/orders' }: Or
             >
               {order.method}
             </span>
+            {/* Payment Status */}
+            <div style={{ display: 'flex', alignItems: 'center' }}>
+              <PaymentStatusBadge
+                paymentStatus={order.paymentStatus}
+                t={t}
+                compact
+              />
+            </div>
             {/* JTL Sync Status */}
             <div style={{ display: 'flex', alignItems: 'center' }}>
               {(order as any).jtlOutboundId ? (

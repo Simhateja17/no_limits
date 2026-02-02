@@ -2,13 +2,25 @@ import { io, Socket } from 'socket.io-client';
 
 let socket: Socket | null = null;
 
-const SOCKET_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+// Socket.IO connects to the root URL, not /api
+const SOCKET_URL = process.env.NEXT_PUBLIC_SOCKET_URL ||
+  (process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || 'http://localhost:3001');
 
 // Initialize socket connection
 export const initializeSocket = (token: string): Socket => {
   if (socket && socket.connected) {
+    console.log('[Socket] Already connected, reusing existing connection');
     return socket;
   }
+
+  // Disconnect existing socket if not connected
+  if (socket && !socket.connected) {
+    console.log('[Socket] Disconnecting stale socket');
+    socket.disconnect();
+    socket = null;
+  }
+
+  console.log('[Socket] Initializing new connection to:', SOCKET_URL);
 
   socket = io(SOCKET_URL, {
     auth: {
@@ -22,19 +34,20 @@ export const initializeSocket = (token: string): Socket => {
 
   // Connection event handlers
   socket.on('connect', () => {
-    console.log('Socket connected:', socket?.id);
+    console.log('[Socket] Connected successfully. Socket ID:', socket?.id);
   });
 
   socket.on('disconnect', (reason) => {
-    console.log('Socket disconnected:', reason);
+    console.log('[Socket] Disconnected. Reason:', reason);
   });
 
   socket.on('connect_error', (error) => {
-    console.error('Socket connection error:', error.message);
+    console.error('[Socket] Connection error:', error.message);
+    console.error('[Socket] Attempted URL:', SOCKET_URL);
   });
 
   socket.on('error', (error) => {
-    console.error('Socket error:', error);
+    console.error('[Socket] Socket error:', error);
   });
 
   return socket;
@@ -173,5 +186,63 @@ export const onTaskUserJoined = (callback: (data: { userId: string; taskId: stri
 export const onTaskUserLeft = (callback: (data: { userId: string; taskId: string }) => void): void => {
   if (socket) {
     socket.on('task:userLeft', callback);
+  }
+};
+
+// ========== DATA SYNC FUNCTIONS ==========
+
+// Listen for product sync events
+export const onProductSynced = (callback: (data: {
+  productId: string;
+  platform: 'shopify' | 'woocommerce' | 'jtl';
+  action: string;
+  timestamp: string;
+}) => void): void => {
+  if (socket) {
+    socket.on('data:product:synced', callback);
+  }
+};
+
+// Listen for order sync events
+export const onOrderSynced = (callback: (data: {
+  orderId: string;
+  operation: string;
+  platform: 'ffn' | 'commerce';
+  timestamp: string;
+}) => void): void => {
+  if (socket) {
+    socket.on('data:order:synced', callback);
+  }
+};
+
+// Listen for order cancellation
+export const onOrderCancelled = (callback: (data: {
+  orderId: string;
+  timestamp: string;
+}) => void): void => {
+  if (socket) {
+    socket.on('data:order:cancelled', callback);
+  }
+};
+
+// Listen for return sync events
+export const onReturnSynced = (callback: (data: {
+  returnId: string;
+  operation: string;
+  timestamp: string;
+}) => void): void => {
+  if (socket) {
+    socket.on('data:return:synced', callback);
+  }
+};
+
+// Listen for return restock
+export const onReturnRestocked = (callback: (data: {
+  returnId: string;
+  productsUpdated: number;
+  timestamp: string;
+}) => void): void => {
+  if (socket) {
+    socket.on('data:return:restocked', callback);
   }
 };

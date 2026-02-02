@@ -50,6 +50,8 @@ export interface Order {
   fulfillmentState: string | null; // FFN operational state (PENDING, PICKING, PACKING, PACKED, SHIPPED, etc.)
   jtlOutboundId: string | null; // JTL FFN outbound ID
   totalAmount: number | null;
+  paymentStatus: string | null; // "paid", "pending", "refunded", or null
+  paymentMethod: string | null;
   shippingMethod: string | null;
   trackingNumber: string | null;
   trackingUrl: string | null;
