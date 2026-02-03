@@ -1093,6 +1093,8 @@ export function OrdersTable({ showClientColumn, basePath = '/admin/orders', clie
       {syncMessage && (
         <div
           style={{
+            marginTop: '20px',
+            marginBottom: '20px',
             padding: '10px 16px',
             borderRadius: '6px',
             backgroundColor: syncMessage.type === 'success' ? '#ECFDF5' : syncMessage.type === 'info' ? '#EFF6FF' : '#FEF2F2',
@@ -1131,6 +1133,8 @@ export function OrdersTable({ showClientColumn, basePath = '/admin/orders', clie
       {fetchMessage && (
         <div
           style={{
+            marginTop: '20px',
+            marginBottom: '20px',
             padding: '10px 16px',
             borderRadius: '6px',
             backgroundColor: fetchMessage.type === 'success' ? '#ECFDF5' : fetchMessage.type === 'info' ? '#EFF6FF' : '#FEF2F2',

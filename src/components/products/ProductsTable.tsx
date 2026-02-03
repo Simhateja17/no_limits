@@ -691,20 +691,20 @@ export function ProductsTable({ showClientColumn, baseUrl, showSyncButtons = tru
                 paddingRight: 'clamp(13px, 1.25vw, 17px)',
                 paddingBottom: 'clamp(7px, 0.66vw, 9px)',
                 paddingLeft: 'clamp(13px, 1.25vw, 17px)',
-                backgroundColor: pushingProducts ? '#9CA3AF' : '#2563EB',
+                backgroundColor: pushingProducts ? '#F3F4F6' : '#FFFFFF',
+                border: '1px solid #D1D5DB',
                 boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.05)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 cursor: pushingProducts ? 'not-allowed' : 'pointer',
-                border: 'none',
                 whiteSpace: 'nowrap',
                 marginBottom: 'clamp(8px, 0.88vw, 12px)',
                 gap: '6px',
               }}
             >
               {pushingProducts && (
-                <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <svg className="animate-spin h-4 w-4 text-gray-700" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
@@ -715,7 +715,7 @@ export function ProductsTable({ showClientColumn, baseUrl, showSyncButtons = tru
                   fontWeight: 500,
                   fontSize: 'clamp(12px, 1.03vw, 14px)',
                   lineHeight: '20px',
-                  color: '#FFFFFF',
+                  color: '#374151',
                   whiteSpace: 'nowrap',
                 }}
               >
@@ -737,20 +737,20 @@ export function ProductsTable({ showClientColumn, baseUrl, showSyncButtons = tru
                 paddingRight: 'clamp(13px, 1.25vw, 17px)',
                 paddingBottom: 'clamp(7px, 0.66vw, 9px)',
                 paddingLeft: 'clamp(13px, 1.25vw, 17px)',
-                backgroundColor: syncingStock ? '#9CA3AF' : '#059669',
+                backgroundColor: syncingStock ? '#F3F4F6' : '#FFFFFF',
+                border: '1px solid #D1D5DB',
                 boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.05)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 cursor: syncingStock ? 'not-allowed' : 'pointer',
-                border: 'none',
                 whiteSpace: 'nowrap',
                 marginBottom: 'clamp(8px, 0.88vw, 12px)',
                 gap: '6px',
               }}
             >
               {syncingStock && (
-                <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <svg className="animate-spin h-4 w-4 text-gray-700" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
@@ -761,7 +761,7 @@ export function ProductsTable({ showClientColumn, baseUrl, showSyncButtons = tru
                   fontWeight: 500,
                   fontSize: 'clamp(12px, 1.03vw, 14px)',
                   lineHeight: '20px',
-                  color: '#FFFFFF',
+                  color: '#374151',
                   whiteSpace: 'nowrap',
                 }}
               >
@@ -783,20 +783,20 @@ export function ProductsTable({ showClientColumn, baseUrl, showSyncButtons = tru
                 paddingRight: 'clamp(13px, 1.25vw, 17px)',
                 paddingBottom: 'clamp(7px, 0.66vw, 9px)',
                 paddingLeft: 'clamp(13px, 1.25vw, 17px)',
-                backgroundColor: importingProducts ? '#9CA3AF' : '#7C3AED',
+                backgroundColor: importingProducts ? '#F3F4F6' : '#FFFFFF',
+                border: '1px solid #D1D5DB',
                 boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.05)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 cursor: importingProducts ? 'not-allowed' : 'pointer',
-                border: 'none',
                 whiteSpace: 'nowrap',
                 marginBottom: 'clamp(8px, 0.88vw, 12px)',
                 gap: '6px',
               }}
             >
               {importingProducts && (
-                <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <svg className="animate-spin h-4 w-4 text-gray-700" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
@@ -807,7 +807,7 @@ export function ProductsTable({ showClientColumn, baseUrl, showSyncButtons = tru
                   fontWeight: 500,
                   fontSize: 'clamp(12px, 1.03vw, 14px)',
                   lineHeight: '20px',
-                  color: '#FFFFFF',
+                  color: '#374151',
                   whiteSpace: 'nowrap',
                 }}
               >
@@ -827,13 +827,13 @@ export function ProductsTable({ showClientColumn, baseUrl, showSyncButtons = tru
               paddingRight: 'clamp(13px, 1.25vw, 17px)',
               paddingBottom: 'clamp(7px, 0.66vw, 9px)',
               paddingLeft: 'clamp(13px, 1.25vw, 17px)',
-              backgroundColor: '#003450',
+              backgroundColor: '#FFFFFF',
+              border: '1px solid #D1D5DB',
               boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.05)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               cursor: 'pointer',
-              border: 'none',
               whiteSpace: 'nowrap',
               marginBottom: 'clamp(8px, 0.88vw, 12px)',
             }}
@@ -844,7 +844,7 @@ export function ProductsTable({ showClientColumn, baseUrl, showSyncButtons = tru
                 fontWeight: 500,
                 fontSize: 'clamp(12px, 1.03vw, 14px)',
                 lineHeight: '20px',
-                color: '#FFFFFF',
+                color: '#374151',
                 whiteSpace: 'nowrap',
               }}
             >
@@ -1287,12 +1287,12 @@ export function ProductsTable({ showClientColumn, baseUrl, showSyncButtons = tru
                       justifyContent: 'center',
                       padding: '2px 8px',
                       borderRadius: '6px',
-                      backgroundColor: '#2563EB',
-                      color: '#FFFFFF',
+                      backgroundColor: '#EFF6FF',
+                      border: '1px solid #BFDBFE',
+                      color: '#1E40AF',
                       fontFamily: 'Inter, sans-serif',
                       fontWeight: 500,
                       fontSize: '11px',
-                      border: 'none',
                       cursor: 'pointer',
                     }}
                     title="Link this product to an existing JTL FFN product"

@@ -3,11 +3,13 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
+import Link from 'next/link';
 import { DashboardLayout } from '@/components/layout';
 import { useAuthStore } from '@/lib/store';
 import { useTranslations, useLocale } from 'next-intl';
 import { dataApi, type Order as ApiOrder, type UpdateOrderInput } from '@/lib/data-api';
 import { StatusHistory } from '@/components/orders/StatusHistory';
+import { COUNTRIES } from '@/constants/countries';
 
 // Payment Status Badge Component
 const PaymentStatusBadge = ({
@@ -1297,17 +1299,29 @@ export default function OrderDetailPage() {
                         </span>
                       </button>
                     )}
-                    <span
+                    <Link
+                      href={`/admin/products/${product.id}`}
                       style={{
                         fontFamily: 'Inter, sans-serif',
                         fontWeight: 500,
                         fontSize: '14px',
                         lineHeight: '20px',
-                        color: '#111827',
+                        color: '#2563EB',
+                        textDecoration: 'none',
+                        cursor: 'pointer',
+                        transition: 'color 0.2s',
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.color = '#1E40AF';
+                        e.currentTarget.style.textDecoration = 'underline';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.color = '#2563EB';
+                        e.currentTarget.style.textDecoration = 'none';
                       }}
                     >
                       {product.name}
-                    </span>
+                    </Link>
                     <span
                       style={{
                         fontFamily: 'Inter, sans-serif',
@@ -1935,7 +1949,7 @@ export default function OrderDetailPage() {
                     display: 'block',
                   }}
                 >
-                  {tOrders('createReplacementOrder')}
+                  {tOrders('createReplacementOrderHeading')}
                 </span>
                 <p
                   style={{
@@ -2036,6 +2050,7 @@ export default function OrderDetailPage() {
           >
             <div
               style={{
+                position: 'relative',
                 width: '803px',
                 maxWidth: '90vw',
                 maxHeight: '90vh',
@@ -2047,6 +2062,32 @@ export default function OrderDetailPage() {
               }}
               onClick={(e) => e.stopPropagation()}
             >
+              {/* Close button (X) */}
+              <button
+                onClick={() => setShowEditModal(false)}
+                style={{
+                  position: 'absolute',
+                  top: '20px',
+                  right: '20px',
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  padding: '8px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  borderRadius: '4px',
+                  transition: 'background-color 0.2s',
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#F3F4F6')}
+                onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+                aria-label="Close"
+              >
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M18 6L6 18M6 6L18 18" stroke="#6B7280" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </button>
+
               <h2
                 style={{
                   fontFamily: 'Inter, sans-serif',
@@ -2318,10 +2359,12 @@ export default function OrderDetailPage() {
                         cursor: 'pointer',
                       }}
                     >
-                      <option value="unitedStates">{tCountries('unitedStates')}</option>
-                      <option value="germany">{tCountries('germany')}</option>
-                      <option value="austria">{tCountries('austria')}</option>
-                      <option value="switzerland">{tCountries('switzerland')}</option>
+                      <option value="">{locale === 'de' ? 'Land auswählen' : 'Select Country'}</option>
+                      {COUNTRIES.map(country => (
+                        <option key={country.code} value={country.code}>
+                          {locale === 'de' ? country.de : country.en}
+                        </option>
+                      ))}
                     </select>
                     <div
                       style={{
@@ -2340,10 +2383,49 @@ export default function OrderDetailPage() {
                 </div>
               </div>
 
-              {/* Save Button */}
-              <div className="flex justify-end mt-6">
+              {/* Action Buttons */}
+              <div style={{
+                display: 'flex',
+                justifyContent: 'flex-end',
+                gap: 'clamp(8px, 0.78vw, 12px)',
+                marginTop: 'clamp(20px, 1.96vw, 24px)',
+              }}>
+                {/* Cancel Button */}
+                <button
+                  onClick={() => setShowEditModal(false)}
+                  style={{
+                    minWidth: 'clamp(60px, 5.5vw, 75px)',
+                    height: 'clamp(34px, 2.8vw, 38px)',
+                    padding: 'clamp(7px, 0.66vw, 9px) clamp(13px, 1.25vw, 17px)',
+                    borderRadius: '6px',
+                    backgroundColor: '#FFFFFF',
+                    border: '1px solid #D1D5DB',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    transition: 'background-color 0.2s',
+                  }}
+                  onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#F9FAFB')}
+                  onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#FFFFFF')}
+                >
+                  <span
+                    style={{
+                      fontFamily: 'Inter, sans-serif',
+                      fontWeight: 500,
+                      fontSize: 'clamp(12px, 1.03vw, 14px)',
+                      lineHeight: '20px',
+                      color: '#374151',
+                    }}
+                  >
+                    {tCommon('cancel')}
+                  </span>
+                </button>
+
+                {/* Save Button */}
                 <button
                   onClick={handleSaveAddress}
+                  disabled={isSaving}
                   style={{
                     minWidth: 'clamp(60px, 5.5vw, 75px)',
                     height: 'clamp(34px, 2.8vw, 38px)',
@@ -2351,10 +2433,11 @@ export default function OrderDetailPage() {
                     borderRadius: '6px',
                     backgroundColor: '#003450',
                     border: 'none',
-                    cursor: 'pointer',
+                    cursor: isSaving ? 'not-allowed' : 'pointer',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
+                    opacity: isSaving ? 0.6 : 1,
                   }}
                 >
                   <span

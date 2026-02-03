@@ -297,9 +297,10 @@ export function ChatSection({
 
           return (
             <div key={message.id} className="mb-4">
-              {/* Message sender info - positioned based on sender */}
-              <div className={`flex items-center mb-2 ${isCurrentUser ? 'justify-end' : ''}`}>
-                {!isCurrentUser && (
+              {/* Message sender info - conditionally render based on alignment */}
+              {!isCurrentUser ? (
+                // OTHER PERSON - White bubble on LEFT - Avatar and Name on LEFT
+                <div className="flex items-center mb-2">
                   <div
                     className="relative flex-shrink-0"
                     style={{
@@ -317,20 +318,34 @@ export function ChatSection({
                       style={{ width: '16px', height: '16px' }}
                     />
                   </div>
-                )}
-                <span
-                  style={{
-                    fontFamily: 'Poppins, sans-serif',
-                    fontWeight: 500,
-                    fontSize: '12px',
-                    lineHeight: '100%',
-                    letterSpacing: '1%',
-                    color: '#192A3E',
-                  }}
-                >
-                  {message.senderName}
-                </span>
-                {isCurrentUser && (
+                  <span
+                    style={{
+                      fontFamily: 'Poppins, sans-serif',
+                      fontWeight: 500,
+                      fontSize: '12px',
+                      lineHeight: '100%',
+                      letterSpacing: '1%',
+                      color: '#192A3E',
+                    }}
+                  >
+                    {message.senderName}
+                  </span>
+                </div>
+              ) : (
+                // CURRENT USER - Blue bubble on RIGHT - Name and Avatar on RIGHT
+                <div className="flex items-center mb-2 justify-end">
+                  <span
+                    style={{
+                      fontFamily: 'Poppins, sans-serif',
+                      fontWeight: 500,
+                      fontSize: '12px',
+                      lineHeight: '100%',
+                      letterSpacing: '1%',
+                      color: '#192A3E',
+                    }}
+                  >
+                    {currentUserName}
+                  </span>
                   <div
                     className="relative flex-shrink-0"
                     style={{
@@ -348,23 +363,24 @@ export function ChatSection({
                       style={{ width: '16px', height: '16px' }}
                     />
                   </div>
-                )}
-              </div>
+                </div>
+              )}
 
               {/* Message bubble */}
-              <div
-                className={`inline-block max-w-[90%] md:max-w-[80%] ${isCurrentUser ? 'ml-auto' : ''}`}
-              >
+              <div className={`flex ${isCurrentUser ? 'justify-end' : 'justify-start'}`}>
                 <div
-                  style={{
-                    padding: 'clamp(12px, 1.5vw, 20px)',
-                    borderRadius: '8px',
-                    background: isCurrentUser ? '#FFFFFF' : '#003450',
-                    border: isCurrentUser ? '1px solid #E4E9EE' : 'none',
-                    display: 'inline-block',
-                    opacity: message.status === 'pending' ? 0.7 : 1,
-                  }}
+                  className="max-w-[90%] md:max-w-[80%]"
                 >
+                  <div
+                    style={{
+                      padding: 'clamp(12px, 1.5vw, 20px)',
+                      borderRadius: '8px',
+                      background: isCurrentUser ? '#2563EB' : '#FFFFFF',
+                      border: !isCurrentUser ? '1px solid #E4E9EE' : 'none',
+                      display: 'inline-block',
+                      opacity: message.status === 'pending' ? 0.7 : 1,
+                    }}
+                  >
                   <p
                     style={{
                       fontFamily: 'Poppins, sans-serif',
@@ -372,7 +388,7 @@ export function ChatSection({
                       fontSize: 'clamp(12px, 1.1vw, 15px)',
                       lineHeight: '165%',
                       letterSpacing: '1%',
-                      color: isCurrentUser ? '#192A3E' : '#FFFFFF',
+                      color: isCurrentUser ? '#FFFFFF' : '#192A3E',
                       margin: 0,
                     }}
                   >
@@ -444,6 +460,7 @@ export function ChatSection({
                   </button>
                 )}
               </div>
+            </div>
             </div>
           );
         })}

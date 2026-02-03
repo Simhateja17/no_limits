@@ -2837,7 +2837,7 @@ export function ChannelSettings({ channelId, baseUrl, initialChannelType = 'Wooc
                           borderRadius: '6px',
                           border: 'none',
                           padding: 'clamp(7px, 0.66vw, 9px) clamp(13px, 1.25vw, 17px)',
-                          backgroundColor: isStartingPipeline ? '#9CA3AF' : '#003450',
+                          backgroundColor: isStartingPipeline ? '#9CA3AF' : '#2563EB',
                           cursor: isStartingPipeline ? 'not-allowed' : 'pointer',
                           display: 'flex',
                           alignItems: 'center',
@@ -3203,9 +3203,9 @@ export function ChannelSettings({ channelId, baseUrl, initialChannelType = 'Wooc
                   style={{
                     height: 'clamp(36px, 3.53vw, 44px)',
                     borderRadius: '6px',
-                    border: 'none',
+                    border: '1px solid #D1D5DB',
                     padding: 'clamp(8px, 0.78vw, 10px) clamp(16px, 1.57vw, 20px)',
-                    backgroundColor: isFetchingAllProducts || isFetchingAllOrders ? '#9CA3AF' : '#059669',
+                    backgroundColor: isFetchingAllProducts || isFetchingAllOrders ? '#F3F4F6' : '#FFFFFF',
                     cursor: isFetchingAllProducts || isFetchingAllOrders ? 'not-allowed' : 'pointer',
                     display: 'flex',
                     alignItems: 'center',
@@ -3232,7 +3232,7 @@ export function ChannelSettings({ channelId, baseUrl, initialChannelType = 'Wooc
                       />
                       <path
                         d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                        fill="white"
+                        fill="currentColor"
                       />
                     </svg>
                   )}
@@ -3241,7 +3241,7 @@ export function ChannelSettings({ channelId, baseUrl, initialChannelType = 'Wooc
                       fontFamily: 'Inter, sans-serif',
                       fontWeight: 500,
                       fontSize: 'clamp(12px, 1.18vw, 14px)',
-                      color: '#FFFFFF',
+                      color: isFetchingAllProducts || isFetchingAllOrders ? '#9CA3AF' : '#374151',
                     }}
                   >
                     {isFetchingAllProducts ? 'Fetching Products...' : 'Fetch All Products'}
@@ -3255,9 +3255,9 @@ export function ChannelSettings({ channelId, baseUrl, initialChannelType = 'Wooc
                   style={{
                     height: 'clamp(36px, 3.53vw, 44px)',
                     borderRadius: '6px',
-                    border: 'none',
+                    border: '1px solid #D1D5DB',
                     padding: 'clamp(8px, 0.78vw, 10px) clamp(16px, 1.57vw, 20px)',
-                    backgroundColor: isFetchingAllProducts || isFetchingAllOrders ? '#9CA3AF' : '#2563EB',
+                    backgroundColor: isFetchingAllProducts || isFetchingAllOrders ? '#F3F4F6' : '#FFFFFF',
                     cursor: isFetchingAllProducts || isFetchingAllOrders ? 'not-allowed' : 'pointer',
                     display: 'flex',
                     alignItems: 'center',
@@ -3284,7 +3284,7 @@ export function ChannelSettings({ channelId, baseUrl, initialChannelType = 'Wooc
                       />
                       <path
                         d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                        fill="white"
+                        fill="currentColor"
                       />
                     </svg>
                   )}
@@ -3293,7 +3293,7 @@ export function ChannelSettings({ channelId, baseUrl, initialChannelType = 'Wooc
                       fontFamily: 'Inter, sans-serif',
                       fontWeight: 500,
                       fontSize: 'clamp(12px, 1.18vw, 14px)',
-                      color: '#FFFFFF',
+                      color: isFetchingAllProducts || isFetchingAllOrders ? '#9CA3AF' : '#374151',
                     }}
                   >
                     {isFetchingAllOrders ? 'Fetching Orders...' : 'Fetch All Orders'}
@@ -3309,7 +3309,7 @@ export function ChannelSettings({ channelId, baseUrl, initialChannelType = 'Wooc
                     borderRadius: '6px',
                     border: 'none',
                     padding: 'clamp(8px, 0.78vw, 10px) clamp(16px, 1.57vw, 20px)',
-                    backgroundColor: isFetchingAllProducts || isFetchingAllOrders || isSyncingOrderStatuses ? '#9CA3AF' : '#059669',
+                    backgroundColor: isFetchingAllProducts || isFetchingAllOrders || isSyncingOrderStatuses ? '#9CA3AF' : '#2563EB',
                     cursor: isFetchingAllProducts || isFetchingAllOrders || isSyncingOrderStatuses ? 'not-allowed' : 'pointer',
                     display: 'flex',
                     alignItems: 'center',
@@ -3440,6 +3440,17 @@ export function ChannelSettings({ channelId, baseUrl, initialChannelType = 'Wooc
         </div>
       )}
 
+      {/* Visual Divider between Fetch All Data and Manage Channel sections */}
+      {!isNewChannel && (
+        <div style={{
+          width: '100%',
+          height: '1px',
+          backgroundColor: '#E5E7EB',
+          marginTop: 'clamp(32px, 3.14vw, 40px)',
+          marginBottom: 'clamp(32px, 3.14vw, 40px)',
+        }} />
+      )}
+
       {/* Manage Channel Section */}
       {!isNewChannel && (
         <div
@@ -3521,8 +3532,12 @@ export function ChannelSettings({ channelId, baseUrl, initialChannelType = 'Wooc
               >
                 {tChannels('turnOffChannel')}
               </span>
-              
-              {/* Toggle Switch */}
+
+              {/* Toggle Switch
+                * When ON (blue): Channel is active and syncing data
+                * When OFF (gray): Channel is disabled - stops all sync operations
+                * Note: This setting needs to be saved to take effect
+                */}
               <button
                 onClick={handleToggleChannel}
                 style={{
@@ -3553,6 +3568,19 @@ export function ChannelSettings({ channelId, baseUrl, initialChannelType = 'Wooc
                 />
               </button>
             </div>
+
+            {/* Helper Text for Channel Toggle */}
+            <p style={{
+              fontFamily: 'Inter, sans-serif',
+              fontSize: '12px',
+              color: '#6B7280',
+              marginTop: '8px',
+              marginLeft: '0',
+            }}>
+              {isChannelOn
+                ? 'Channel is active and syncing data. Turn off to disable all sync operations.'
+                : 'Channel is currently disabled. Turn on to enable data synchronization.'}
+            </p>
 
             {/* Delete Channel Card */}
             <div
