@@ -49,6 +49,9 @@ export interface Order {
   status: string;
   fulfillmentState: string | null; // FFN operational state (PENDING, PICKING, PACKING, PACKED, SHIPPED, etc.)
   jtlOutboundId: string | null; // JTL FFN outbound ID
+  lastJtlSync: string | null; // Last sync date with JTL FFN
+  jtlSyncStatus: string | null; // Sync status (SYNCED, ERROR, PENDING, etc.)
+  jtlSyncError: string | null; // Error message if sync failed
   totalAmount: number | null;
   paymentStatus: string | null; // "paid", "pending", "refunded", or null
   paymentMethod: string | null;

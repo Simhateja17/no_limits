@@ -27,6 +27,10 @@ interface Order {
   status: OrderStatusColor;
   fulfillmentState: string | null; // FFN state for display
   displayStatus: string; // Human-readable status label
+  jtlOutboundId?: string | null;
+  lastJtlSync?: Date | null;
+  jtlSyncStatus?: string | null;
+  jtlSyncError?: string | null;
 }
 
 // Custom hook to detect screen size
@@ -173,6 +177,10 @@ const transformApiOrder = (apiOrder: ApiOrder): Order => ({
   status: getStatusColorFromBackend(apiOrder.status, apiOrder.fulfillmentState || null),
   fulfillmentState: apiOrder.fulfillmentState || null,
   displayStatus: getDisplayStatus(apiOrder.status, apiOrder.fulfillmentState || null),
+  jtlOutboundId: apiOrder.jtlOutboundId || null,
+  lastJtlSync: apiOrder.lastJtlSync ? new Date(apiOrder.lastJtlSync) : null,
+  jtlSyncStatus: apiOrder.jtlSyncStatus || null,
+  jtlSyncError: apiOrder.jtlSyncError || null,
 });
 
 interface OrdersTableProps {
@@ -1562,7 +1570,7 @@ export function OrdersTable({ showClientColumn, basePath = '/admin/orders', clie
             </div>
             {/* JTL Sync Status */}
             <div style={{ display: 'flex', alignItems: 'center' }}>
-              {(order as any).jtlOutboundId ? (
+              {order.jtlOutboundId ? (
                 <span
                   style={{
                     display: 'inline-flex',
@@ -1570,18 +1578,18 @@ export function OrdersTable({ showClientColumn, basePath = '/admin/orders', clie
                     justifyContent: 'center',
                     padding: '2px 8px',
                     borderRadius: '10px',
-                    backgroundColor: (order as any).syncStatus === 'SYNCED' ? '#D1FAE5' :
-                                    (order as any).syncStatus === 'ERROR' ? '#FEE2E2' : '#FEF3C7',
-                    color: (order as any).syncStatus === 'SYNCED' ? '#059669' :
-                           (order as any).syncStatus === 'ERROR' ? '#DC2626' : '#D97706',
+                    backgroundColor: order.jtlSyncStatus === 'SYNCED' ? '#D1FAE5' :
+                                    order.jtlSyncStatus === 'ERROR' ? '#FEE2E2' : '#FEF3C7',
+                    color: order.jtlSyncStatus === 'SYNCED' ? '#059669' :
+                           order.jtlSyncStatus === 'ERROR' ? '#DC2626' : '#D97706',
                     fontFamily: 'Inter, sans-serif',
                     fontWeight: 500,
                     fontSize: '11px'
                   }}
-                  title={`JTL Outbound ID: ${(order as any).jtlOutboundId}${(order as any).lastJtlSync ? ` | Last sync: ${new Date((order as any).lastJtlSync).toLocaleString()}` : ''}`}
+                  title={`JTL Outbound ID: ${order.jtlOutboundId}${order.lastJtlSync ? ` | Last sync: ${order.lastJtlSync.toLocaleString()}` : ''}`}
                 >
-                  {(order as any).syncStatus === 'SYNCED' ? 'Synced' :
-                   (order as any).syncStatus === 'ERROR' ? 'Error' : 'Pending'}
+                  {order.jtlSyncStatus === 'SYNCED' ? 'Synced' :
+                   order.jtlSyncStatus === 'ERROR' ? 'Error' : 'Pending'}
                 </span>
               ) : (
                 <span
