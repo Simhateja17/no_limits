@@ -1341,8 +1341,8 @@ export function OrdersTable({ showClientColumn, basePath = '/admin/orders', clie
           className="grid"
           style={{
             gridTemplateColumns: showClientColumn
-              ? 'minmax(100px, 1.2fr) minmax(80px, 1fr) minmax(100px, 1.2fr) minmax(80px, 1fr) minmax(60px, 0.8fr) minmax(100px, 1.2fr) minmax(90px, 1fr) minmax(90px, 1fr) minmax(60px, 0.8fr)'
-              : 'minmax(100px, 1.5fr) minmax(80px, 1fr) minmax(80px, 1fr) minmax(60px, 0.8fr) minmax(100px, 1.2fr) minmax(90px, 1fr) minmax(90px, 1fr) minmax(60px, 0.8fr)',
+              ? 'minmax(100px, 1.2fr) minmax(80px, 1fr) minmax(100px, 1.2fr) minmax(80px, 1fr) minmax(60px, 0.8fr) minmax(100px, 1.2fr) minmax(90px, 1fr) minmax(60px, 0.8fr)'
+              : 'minmax(100px, 1.5fr) minmax(80px, 1fr) minmax(80px, 1fr) minmax(60px, 0.8fr) minmax(100px, 1.2fr) minmax(90px, 1fr) minmax(60px, 0.8fr)',
             padding: 'clamp(8px, 0.9vw, 12px) clamp(12px, 1.8vw, 24px)',
             borderBottom: '1px solid #E5E7EB',
             backgroundColor: '#F9FAFB',
@@ -1452,19 +1452,6 @@ export function OrdersTable({ showClientColumn, basePath = '/admin/orders', clie
               color: '#6B7280',
             }}
           >
-            JTL SYNC
-          </span>
-          <span
-            style={{
-              fontFamily: 'Inter, sans-serif',
-              fontWeight: 500,
-              fontSize: 'clamp(10px, 0.9vw, 12px)',
-              lineHeight: '16px',
-              letterSpacing: '0.05em',
-              textTransform: 'uppercase',
-              color: '#6B7280',
-            }}
-          >
             {t('status')}
           </span>
         </div>
@@ -1476,8 +1463,8 @@ export function OrdersTable({ showClientColumn, basePath = '/admin/orders', clie
             className="grid items-center"
             style={{
               gridTemplateColumns: showClientColumn
-                ? 'minmax(100px, 1.2fr) minmax(80px, 1fr) minmax(100px, 1.2fr) minmax(80px, 1fr) minmax(60px, 0.8fr) minmax(100px, 1.2fr) minmax(90px, 1fr) minmax(90px, 1fr) minmax(60px, 0.8fr)'
-                : 'minmax(100px, 1.5fr) minmax(80px, 1fr) minmax(80px, 1fr) minmax(60px, 0.8fr) minmax(100px, 1.2fr) minmax(90px, 1fr) minmax(90px, 1fr) minmax(60px, 0.8fr)',
+                ? 'minmax(100px, 1.2fr) minmax(80px, 1fr) minmax(100px, 1.2fr) minmax(80px, 1fr) minmax(60px, 0.8fr) minmax(100px, 1.2fr) minmax(90px, 1fr) minmax(60px, 0.8fr)'
+                : 'minmax(100px, 1.5fr) minmax(80px, 1fr) minmax(80px, 1fr) minmax(60px, 0.8fr) minmax(100px, 1.2fr) minmax(90px, 1fr) minmax(60px, 0.8fr)',
               padding: 'clamp(12px, 1.2vw, 16px) clamp(12px, 1.8vw, 24px)',
               borderBottom: index < paginatedOrders.length - 1 ? '1px solid #E5E7EB' : 'none',
               backgroundColor: '#FFFFFF',
@@ -1567,49 +1554,6 @@ export function OrdersTable({ showClientColumn, basePath = '/admin/orders', clie
                 t={t}
                 compact
               />
-            </div>
-            {/* JTL Sync Status */}
-            <div style={{ display: 'flex', alignItems: 'center' }}>
-              {order.jtlOutboundId ? (
-                <span
-                  style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    padding: '2px 8px',
-                    borderRadius: '10px',
-                    backgroundColor: order.jtlSyncStatus === 'SYNCED' ? '#D1FAE5' :
-                                    order.jtlSyncStatus === 'ERROR' ? '#FEE2E2' : '#FEF3C7',
-                    color: order.jtlSyncStatus === 'SYNCED' ? '#059669' :
-                           order.jtlSyncStatus === 'ERROR' ? '#DC2626' : '#D97706',
-                    fontFamily: 'Inter, sans-serif',
-                    fontWeight: 500,
-                    fontSize: '11px'
-                  }}
-                  title={`JTL Outbound ID: ${order.jtlOutboundId}${order.lastJtlSync ? ` | Last sync: ${order.lastJtlSync.toLocaleString()}` : ''}`}
-                >
-                  {order.jtlSyncStatus === 'SYNCED' ? 'Synced' :
-                   order.jtlSyncStatus === 'ERROR' ? 'Error' : 'Pending'}
-                </span>
-              ) : (
-                <span
-                  style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    padding: '2px 8px',
-                    borderRadius: '10px',
-                    backgroundColor: '#F3F4F6',
-                    color: '#6B7280',
-                    fontFamily: 'Inter, sans-serif',
-                    fontWeight: 500,
-                    fontSize: '11px'
-                  }}
-                  title="Order not synced with JTL FFN"
-                >
-                  Not synced
-                </span>
-              )}
             </div>
             <div className="flex items-center justify-start">
               <StatusTag status={order.status} displayStatus={order.displayStatus} t={t} />
