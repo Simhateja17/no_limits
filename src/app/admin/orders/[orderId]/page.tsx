@@ -723,7 +723,7 @@ export default function OrderDetailPage() {
                 >
                   <div>{mockOrderDetails.deliveryMethod.name}</div>
                   <div>{mockOrderDetails.deliveryMethod.street}</div>
-                  <div>{mockOrderDetails.deliveryMethod.city}</div>
+                  <div>{rawOrder?.shippingZip || ''} {rawOrder?.shippingCity || mockOrderDetails.deliveryMethod.city}</div>
                   <div>{mockOrderDetails.deliveryMethod.country}</div>
                 </div>
               </div>

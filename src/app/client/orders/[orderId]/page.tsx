@@ -90,6 +90,7 @@ interface OrderDetails {
   deliveryMethod: {
     name: string;
     street: string;
+    zip: string;
     city: string;
     country: string;
   };
@@ -214,6 +215,7 @@ const transformApiOrderToDetails = (apiOrder: ApiOrder): OrderDetails => {
         (apiOrder.client?.name || apiOrder.client?.companyName || '').trim() ||
         'N/A',
       street: apiOrder.shippingAddress1 || 'N/A',
+      zip: apiOrder.shippingZip || '',
       city: apiOrder.shippingCity || 'N/A',
       country: apiOrder.shippingCountry || 'N/A',
     },
@@ -924,7 +926,7 @@ export default function ClientOrderDetailPage() {
                 >
                   <div>{orderDetails?.deliveryMethod.name}</div>
                   <div>{orderDetails?.deliveryMethod.street}</div>
-                  <div>{orderDetails?.deliveryMethod.city}</div>
+                  <div>{orderDetails?.deliveryMethod.zip} {orderDetails?.deliveryMethod.city}</div>
                   <div>{orderDetails?.deliveryMethod.country}</div>
                 </div>
               </div>
