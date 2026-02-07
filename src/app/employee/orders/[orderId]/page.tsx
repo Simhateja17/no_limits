@@ -1836,54 +1836,72 @@ export default function EmployeeOrderDetailPage() {
               <div
                 style={{
                   width: '100%',
-                  height: '72px',
                   borderRadius: '8px',
                   padding: 'clamp(16px, 1.8vw, 24px)',
                   backgroundColor: '#FFFFFF',
                   boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.06), 0px 1px 3px 0px rgba(0, 0, 0, 0.1)',
                   display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
+                  flexDirection: 'column',
+                  gap: '12px',
                 }}
               >
-                <span
-                  style={{
-                    fontFamily: 'Inter, sans-serif',
-                    fontWeight: 500,
-                    fontSize: 'clamp(16px, 1.3vw, 18px)',
-                    lineHeight: '24px',
-                    color: '#111827',
-                  }}
-                >
-                  {tOrders('editOrder')}
-                </span>
-                {/* Toggle */}
-                <button
-                  onClick={() => setEditOrderEnabled(!editOrderEnabled)}
-                  style={{
-                    width: '44px',
-                    height: '24px',
-                    borderRadius: '12px',
-                    padding: '2px',
-                    backgroundColor: editOrderEnabled ? '#003450' : '#E5E7EB',
-                    border: 'none',
-                    cursor: 'pointer',
-                    position: 'relative',
-                    transition: 'background-color 0.2s ease',
-                  }}
-                >
-                  <div
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <span
                     style={{
-                      width: '20px',
-                      height: '20px',
-                      borderRadius: '50%',
-                      backgroundColor: '#FFFFFF',
-                      boxShadow: '0px 1px 2px rgba(0, 0, 0, 0.1)',
-                      transform: editOrderEnabled ? 'translateX(20px)' : 'translateX(0)',
-                      transition: 'transform 0.2s ease',
+                      fontFamily: 'Inter, sans-serif',
+                      fontWeight: 500,
+                      fontSize: 'clamp(16px, 1.3vw, 18px)',
+                      lineHeight: '24px',
+                      color: '#111827',
                     }}
-                  />
-                </button>
+                  >
+                    {tOrders('editOrder')}
+                  </span>
+                  {/* Toggle */}
+                  <button
+                    onClick={() => {
+                      if (!rawOrder?.jtlOutboundId) {
+                        setEditOrderEnabled(!editOrderEnabled);
+                      }
+                    }}
+                    style={{
+                      width: '44px',
+                      height: '24px',
+                      borderRadius: '12px',
+                      padding: '2px',
+                      backgroundColor: editOrderEnabled ? '#003450' : '#E5E7EB',
+                      border: 'none',
+                      cursor: rawOrder?.jtlOutboundId ? 'not-allowed' : 'pointer',
+                      opacity: rawOrder?.jtlOutboundId ? 0.6 : 1,
+                      position: 'relative',
+                      transition: 'background-color 0.2s ease',
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: '20px',
+                        height: '20px',
+                        borderRadius: '50%',
+                        backgroundColor: '#FFFFFF',
+                        boxShadow: '0px 1px 2px rgba(0, 0, 0, 0.1)',
+                        transform: editOrderEnabled ? 'translateX(20px)' : 'translateX(0)',
+                        transition: 'transform 0.2s ease',
+                      }}
+                    />
+                  </button>
+                </div>
+                {rawOrder?.jtlOutboundId && (
+                  <p style={{
+                    fontFamily: 'Inter, sans-serif',
+                    fontWeight: 400,
+                    fontSize: '14px',
+                    lineHeight: '20px',
+                    color: '#6B7280',
+                    margin: 0,
+                  }}>
+                    This order has been synced to JTL FFN and can no longer be edited.
+                  </p>
+                )}
               </div>
 
               {/* Order Notes Box */}

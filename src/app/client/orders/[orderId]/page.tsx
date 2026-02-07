@@ -1944,7 +1944,11 @@ export default function ClientOrderDetailPage() {
                   </span>
                   {/* Toggle */}
                   <button
-                    onClick={() => setEditOrderEnabled(!editOrderEnabled)}
+                    onClick={() => {
+                      if (!rawOrder?.jtlOutboundId) {
+                        setEditOrderEnabled(!editOrderEnabled);
+                      }
+                    }}
                     style={{
                       width: '44px',
                       height: '24px',
@@ -1952,7 +1956,8 @@ export default function ClientOrderDetailPage() {
                       padding: '2px',
                       backgroundColor: editOrderEnabled ? '#003450' : '#E5E7EB',
                       border: 'none',
-                      cursor: 'pointer',
+                      cursor: rawOrder?.jtlOutboundId ? 'not-allowed' : 'pointer',
+                      opacity: rawOrder?.jtlOutboundId ? 0.6 : 1,
                       position: 'relative',
                       transition: 'background-color 0.2s ease',
                     }}
@@ -1970,6 +1975,18 @@ export default function ClientOrderDetailPage() {
                     />
                   </button>
                 </div>
+                {rawOrder?.jtlOutboundId && (
+                  <p style={{
+                    fontFamily: 'Inter, sans-serif',
+                    fontWeight: 400,
+                    fontSize: '14px',
+                    lineHeight: '20px',
+                    color: '#6B7280',
+                    margin: 0,
+                  }}>
+                    This order has been synced to JTL FFN and can no longer be edited.
+                  </p>
+                )}
               </div>
 
               {/* Order Notes Box */}
