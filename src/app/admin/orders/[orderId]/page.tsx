@@ -8,6 +8,7 @@ import { DashboardLayout } from '@/components/layout';
 import { useAuthStore } from '@/lib/store';
 import { useTranslations, useLocale } from 'next-intl';
 import { dataApi, type Order as ApiOrder, type UpdateOrderInput } from '@/lib/data-api';
+import { Skeleton, GenericTableSkeleton } from '@/components/ui';
 import { StatusHistory } from '@/components/orders/StatusHistory';
 import { COUNTRIES } from '@/constants/countries';
 
@@ -80,26 +81,114 @@ const PaymentStatusBadge = ({
   );
 };
 
-// Mock order data - in real app this would come from API
-const mockOrderDetails = {
-  orderId: '934242',
-  status: 'Processing' as 'Processing' | 'On Hold' | 'Shipped' | 'Cancelled',
+// Type for transformed order details
+interface OrderDetails {
+  orderId: string;
+  status: string;
+  statusColor: string;
   deliveryMethod: {
-    name: 'Max Mustermann',
-    street: 'Musterstr. 10',
-    city: '12345 Musterstadt',
-    country: 'Deutschland',
-  },
-  shippingMethod: 'DHL Paket National',
-  trackingNumber: '00343553983589394',
-  trackingUrl: 'https://nolp.dhl.de/nextt-online-public/set_identcodes.do?lang=de&idc=00343553983589394' as string | null,
-  shipmentWeight: '0,58 kg',
-  tags: ['b2b'],
-  onHoldStatus: false,
-  products: [
-    { id: '1', name: 'Testproduct 1', sku: '#24234', gtin: '342345235324', qty: 3, merchant: 'Merchant 3' },
-    { id: '2', name: 'Testproduct 2', sku: '#24076', gtin: '324343243242', qty: 1, merchant: 'Merchant 5' },
-  ],
+    name: string;
+    street: string;
+    zip: string;
+    city: string;
+    country: string;
+  };
+  shippingMethod: string;
+  trackingNumber: string;
+  trackingUrl: string | null;
+  shipmentWeight: string;
+  tags: string[];
+  onHoldStatus: boolean;
+  products: Array<{
+    id: string;
+    name: string;
+    sku: string;
+    gtin: string;
+    qty: number;
+    merchant: string;
+  }>;
+}
+
+// Transform API order to component format
+const transformApiOrderToDetails = (apiOrder: ApiOrder): OrderDetails => {
+  const getDisplayStatus = (status: string, fulfillmentState: string | null): string => {
+    if (fulfillmentState) {
+      switch (fulfillmentState) {
+        case 'PENDING': return 'Processing';
+        case 'AWAITING_STOCK': return 'Awaiting Stock';
+        case 'READY_FOR_PICKING': return 'Ready for Picking';
+        case 'PICKING': return 'Picking';
+        case 'PICKED': return 'Picked';
+        case 'PACKING': return 'Packing';
+        case 'PACKED': return 'Packed';
+        case 'LABEL_CREATED': return 'Label Created';
+        case 'SHIPPED': return 'Shipped';
+        case 'IN_TRANSIT': return 'In Transit';
+        case 'OUT_FOR_DELIVERY': return 'Out for Delivery';
+        case 'DELIVERED': return 'Delivered';
+        case 'FAILED_DELIVERY': return 'Delivery Failed';
+        case 'RETURNED_TO_SENDER': return 'Returned to Sender';
+      }
+    }
+    switch (status) {
+      case 'SHIPPED': return 'Shipped';
+      case 'DELIVERED': return 'Delivered';
+      case 'ON_HOLD': return 'On Hold';
+      case 'CANCELLED': return 'Cancelled';
+      case 'ERROR': return 'Error';
+      default: return 'Processing';
+    }
+  };
+
+  const getStatusColorForOrder = (status: string, fulfillmentState: string | null): string => {
+    if (fulfillmentState) {
+      switch (fulfillmentState) {
+        case 'SHIPPED': case 'IN_TRANSIT': case 'OUT_FOR_DELIVERY': return '#8B5CF6';
+        case 'DELIVERED': return '#10B981';
+        case 'PICKING': case 'PICKED': return '#3B82F6';
+        case 'PACKING': case 'PACKED': case 'LABEL_CREATED': return '#06B6D4';
+        case 'FAILED_DELIVERY': case 'RETURNED_TO_SENDER': return '#EF4444';
+        case 'AWAITING_STOCK': return '#F59E0B';
+      }
+    }
+    switch (status) {
+      case 'SHIPPED': return '#8B5CF6';
+      case 'DELIVERED': return '#10B981';
+      case 'ON_HOLD': return '#F59E0B';
+      case 'CANCELLED': case 'ERROR': return '#EF4444';
+      default: return '#6BAC4D';
+    }
+  };
+
+  return {
+    orderId: apiOrder.orderNumber || apiOrder.externalOrderId || apiOrder.orderId,
+    status: getDisplayStatus(apiOrder.status, apiOrder.fulfillmentState || null),
+    statusColor: getStatusColorForOrder(apiOrder.status, apiOrder.fulfillmentState || null),
+    deliveryMethod: {
+      name: apiOrder.customerName ||
+        `${apiOrder.shippingFirstName || ''} ${apiOrder.shippingLastName || ''}`.trim() ||
+        (apiOrder.client?.name || apiOrder.client?.companyName || '').trim() ||
+        'N/A',
+      street: apiOrder.shippingAddress1 || 'N/A',
+      zip: apiOrder.shippingZip || '',
+      city: apiOrder.shippingCity || 'N/A',
+      country: apiOrder.shippingCountry || 'N/A',
+    },
+    shippingMethod: apiOrder.shippingMethod || 'Standard',
+    trackingNumber: apiOrder.trackingNumber || 'N/A',
+    trackingUrl: apiOrder.trackingUrl || null,
+    shipmentWeight: apiOrder.totalWeight ? `${apiOrder.totalWeight} kg` : '0 kg',
+    tags: apiOrder.tags || [],
+    onHoldStatus: apiOrder.status === 'ON_HOLD',
+    products: apiOrder.items.map(item => ({
+      id: item.id,
+      name: item.product?.name || item.productName || 'Unknown Product',
+      sku: item.product?.sku || item.sku || 'N/A',
+      gtin: item.product?.gtin || 'N/A',
+      qty: item.quantity,
+      merchant: apiOrder.client?.companyName || apiOrder.client?.name || 'N/A',
+    })),
+  };
 };
 
 // Mock available products to add
@@ -123,19 +212,17 @@ const shippingMethods = [
   { id: 'hermes', name: 'Hermes Paket', logo: '/hermes.png' },
 ];
 
-// Status color mapping
+// Status color mapping (legacy - kept for compatibility but statusColor from transform is preferred)
 const getStatusColor = (status: string) => {
   switch (status) {
-    case 'Processing':
-      return '#6BAC4D';
-    case 'On Hold':
-      return '#F59E0B';
-    case 'Shipped':
-      return '#10B981';
-    case 'Cancelled':
-      return '#EF4444';
-    default:
-      return '#6BAC4D';
+    case 'Processing': return '#6BAC4D';
+    case 'On Hold': case 'Awaiting Stock': return '#F59E0B';
+    case 'Shipped': case 'In Transit': case 'Out for Delivery': return '#8B5CF6';
+    case 'Delivered': return '#10B981';
+    case 'Picking': case 'Picked': case 'Ready for Picking': return '#3B82F6';
+    case 'Packing': case 'Packed': case 'Label Created': return '#06B6D4';
+    case 'Cancelled': case 'Error': case 'Delivery Failed': case 'Returned to Sender': return '#EF4444';
+    default: return '#6BAC4D';
   }
 };
 
@@ -149,8 +236,13 @@ export default function OrderDetailPage() {
   const tCountries = useTranslations('countries');
   const tStatus = useTranslations('status');
   const tMessages = useTranslations('messages');
-  // API state for replacement order
+  const tErrors = useTranslations('errors');
+
+  // API state
+  const [orderDetails, setOrderDetails] = useState<OrderDetails | null>(null);
   const [rawOrder, setRawOrder] = useState<ApiOrder | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [isCreatingReplacement, setIsCreatingReplacement] = useState(false);
   const [replacementError, setReplacementError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
@@ -163,17 +255,17 @@ export default function OrderDetailPage() {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [showReplacementModal, setShowReplacementModal] = useState(false);
-  const [onHoldStatus, setOnHoldStatus] = useState(mockOrderDetails.onHoldStatus);
-  const [tags, setTags] = useState(mockOrderDetails.tags);
+  const [onHoldStatus, setOnHoldStatus] = useState(false);
+  const [tags, setTags] = useState<string[]>([]);
   const [newTag, setNewTag] = useState('');
   const [replacementCount, setReplacementCount] = useState(0);
-  const [orderProducts, setOrderProducts] = useState(mockOrderDetails.products);
+  const [orderProducts, setOrderProducts] = useState<OrderDetails['products']>([]);
   const [productSearchQuery, setProductSearchQuery] = useState('');
   const [productQuantities, setProductQuantities] = useState<Record<string, number>>({});
   const [showProductList, setShowProductList] = useState(false);
   const [selectedShippingMethod, setSelectedShippingMethod] = useState(shippingMethods[0]);
   const [showShippingDropdown, setShowShippingDropdown] = useState(false);
-  const [orderNotes, setOrderNotes] = useState('Please double check condition of the products before you send it out');
+  const [orderNotes, setOrderNotes] = useState('');
   const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
@@ -196,17 +288,40 @@ export default function OrderDetailPage() {
     }
   }, [isAuthenticated, user, router]);
 
-  // Fetch order data for replacement functionality
+  // Fetch order details from API
   useEffect(() => {
     const orderId = params.orderId as string;
     if (!orderId) return;
 
     const fetchOrder = async () => {
       try {
+        setLoading(true);
+        setError(null);
         const data = await dataApi.getOrder(orderId);
         setRawOrder(data as any);
+        const transformed = transformApiOrderToDetails(data as any);
+        setOrderDetails(transformed);
+        setOnHoldStatus(transformed.onHoldStatus);
+        setTags(transformed.tags);
+        setOrderProducts(transformed.products);
+        // Initialize form data from raw order
+        setFormData({
+          firstName: (data as any).shippingFirstName || '',
+          lastName: (data as any).shippingLastName || '',
+          company: (data as any).shippingCompany || '',
+          addressLine2: (data as any).shippingAddress2 || '',
+          streetAddress: (data as any).shippingAddress1 || '',
+          city: (data as any).shippingCity || '',
+          zipPostal: (data as any).shippingZip || '',
+          country: (data as any).shippingCountry || 'Deutschland',
+        });
+        // Initialize order notes
+        setOrderNotes((data as any).warehouseNotes || '');
       } catch (err) {
-        console.error('Error fetching order for replacement:', err);
+        console.error('Error fetching order:', err);
+        setError(err instanceof Error ? err.message : 'Failed to load order details');
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -215,6 +330,72 @@ export default function OrderDetailPage() {
 
   if (!isAuthenticated || (user?.role !== 'ADMIN' && user?.role !== 'SUPER_ADMIN')) {
     return null;
+  }
+
+  // Loading state - skeleton
+  if (loading) {
+    return (
+      <DashboardLayout>
+        <div className="w-full min-h-screen" style={{ backgroundColor: '#F9FAFB', padding: '32px 5.2%' }}>
+          <Skeleton width="80px" height="38px" borderRadius="6px" style={{ marginBottom: '24px' }} />
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+            <Skeleton width="200px" height="32px" />
+            <Skeleton width="100px" height="28px" borderRadius="14px" />
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6" style={{ marginBottom: '24px' }}>
+            <div style={{ backgroundColor: '#FFFFFF', borderRadius: '8px', padding: '24px', boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.06)' }}>
+              <Skeleton width="120px" height="20px" style={{ marginBottom: '16px' }} />
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <div key={i} style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <Skeleton width="80px" height="14px" />
+                    <Skeleton width="120px" height="14px" />
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div style={{ backgroundColor: '#FFFFFF', borderRadius: '8px', padding: '24px', boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.06)' }}>
+              <Skeleton width="120px" height="20px" style={{ marginBottom: '16px' }} />
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <Skeleton key={i} width="100%" height="14px" />
+                ))}
+              </div>
+            </div>
+          </div>
+          <GenericTableSkeleton rows={3} columns={4} />
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  // Error state
+  if (error || !orderDetails) {
+    return (
+      <DashboardLayout>
+        <div className="w-full flex flex-col items-center justify-center" style={{ padding: '40px', gap: '16px' }}>
+          <div style={{ color: '#EF4444', fontSize: '14px', fontFamily: 'Inter, sans-serif' }}>
+            {error || tErrors('orderNotFound')}
+          </div>
+          <button
+            onClick={() => router.back()}
+            style={{
+              padding: '8px 16px',
+              backgroundColor: '#003450',
+              color: '#FFFFFF',
+              borderRadius: '6px',
+              fontSize: '14px',
+              fontFamily: 'Inter, sans-serif',
+              fontWeight: 500,
+              cursor: 'pointer',
+              border: 'none',
+            }}
+          >
+            {tCommon('back') || 'Go Back'}
+          </button>
+        </div>
+      </DashboardLayout>
+    );
   }
 
   const handleBack = () => {
@@ -238,7 +419,8 @@ export default function OrderDetailPage() {
     setShowEditModal(true);
   };
 
-  const handleSaveAddress = async () => {
+  // Save all order changes to DB and sync to JTL
+  const handleSaveOrder = async () => {
     if (!rawOrder?.id) {
       setSaveError('Order data not loaded');
       return;
@@ -250,27 +432,40 @@ export default function OrderDetailPage() {
 
     try {
       const updateData: UpdateOrderInput = {
-        shippingFirstName: formData.firstName,
-        shippingLastName: formData.lastName,
+        warehouseNotes: orderNotes || undefined,
+        isOnHold: onHoldStatus,
+        tags: tags,
+        shippingFirstName: formData.firstName || undefined,
+        shippingLastName: formData.lastName || undefined,
         shippingCompany: formData.company || undefined,
-        shippingAddress1: formData.streetAddress,
+        shippingAddress1: formData.streetAddress || undefined,
         shippingAddress2: formData.addressLine2 || undefined,
-        shippingCity: formData.city,
-        shippingZip: formData.zipPostal,
-        shippingCountryCode: formData.country,
+        shippingCity: formData.city || undefined,
+        shippingZip: formData.zipPostal || undefined,
+        items: orderProducts.map(p => ({
+          id: p.id,
+          sku: p.sku,
+          productName: p.name,
+          quantity: p.qty,
+        })),
       };
 
       const result = await dataApi.updateOrder(rawOrder.id, updateData);
-      
+
       // Update local state with new data
       setRawOrder(result.data as any);
-      
+      const transformed = transformApiOrderToDetails(result.data as any);
+      setOrderDetails(transformed);
+
       // Track JTL sync status
       if (result.jtlSync) {
         setJtlSyncStatus(result.jtlSync);
+        if (!result.jtlSync.success) {
+          console.warn('JTL sync failed:', result.jtlSync.error);
+        }
       }
 
-      setShowEditModal(false);
+      setEditOrderEnabled(false);
       setShowSuccessModal(true);
       setTimeout(() => {
         setShowSuccessModal(false);
@@ -283,48 +478,10 @@ export default function OrderDetailPage() {
     }
   };
 
-  // Handle saving operational fields (tags, on-hold, notes, shipping method)
-  const handleSaveOperationalChanges = async () => {
-    if (!rawOrder?.id) {
-      setSaveError('Order data not loaded');
-      return;
-    }
-
-    setIsSaving(true);
-    setSaveError(null);
-    setJtlSyncStatus(null);
-
-    try {
-      const updateData: UpdateOrderInput = {
-        tags,
-        isOnHold: onHoldStatus,
-        warehouseNotes: orderNotes,
-        jtlShippingMethodId: selectedShippingMethod?.id,
-      };
-
-      const result = await dataApi.updateOrder(rawOrder.id, updateData);
-      
-      // Update local state with new data
-      setRawOrder(result.data as any);
-      
-      // Track JTL sync status
-      if (result.jtlSync) {
-        setJtlSyncStatus(result.jtlSync);
-        if (!result.jtlSync.success) {
-          console.warn('JTL sync failed:', result.jtlSync.error);
-        }
-      }
-
-      setShowSuccessModal(true);
-      setTimeout(() => {
-        setShowSuccessModal(false);
-      }, 2000);
-    } catch (err: any) {
-      console.error('Error updating order:', err);
-      setSaveError(err.response?.data?.error || 'Failed to update order');
-    } finally {
-      setIsSaving(false);
-    }
+  // Save address from modal and close it
+  const handleSaveAddress = async () => {
+    setShowEditModal(false);
+    // The actual save happens when the user clicks the main Save button
   };
 
   const handleAddTag = () => {
@@ -550,7 +707,7 @@ export default function OrderDetailPage() {
                           width: '6px',
                           height: '6px',
                           borderRadius: '50%',
-                          backgroundColor: onHoldStatus ? '#F59E0B' : getStatusColor(mockOrderDetails.status),
+                          backgroundColor: onHoldStatus ? '#F59E0B' : getStatusColor(orderDetails?.status || 'Processing'),
                         }}
                       />
                       <span
@@ -562,7 +719,7 @@ export default function OrderDetailPage() {
                           color: '#000000',
                         }}
                       >
-                        {onHoldStatus ? tOrders('onHold') : tOrders(mockOrderDetails.status.toLowerCase())}
+                        {onHoldStatus ? tOrders('onHold') : tOrders((orderDetails?.status || 'Processing').toLowerCase())}
                       </span>
                     </div>
 
@@ -612,7 +769,7 @@ export default function OrderDetailPage() {
                           width: '6px',
                           height: '6px',
                           borderRadius: '50%',
-                          backgroundColor: onHoldStatus ? '#F59E0B' : getStatusColor(mockOrderDetails.status),
+                          backgroundColor: onHoldStatus ? '#F59E0B' : getStatusColor(orderDetails?.status || 'Processing'),
                         }}
                       />
                       <span
@@ -624,7 +781,7 @@ export default function OrderDetailPage() {
                           color: '#000000',
                         }}
                       >
-                        {onHoldStatus ? tOrders('onHold') : tOrders(mockOrderDetails.status.toLowerCase())}
+                        {onHoldStatus ? tOrders('onHold') : tOrders((orderDetails?.status || 'Processing').toLowerCase())}
                       </span>
                     </div>
                   </div>
@@ -651,7 +808,7 @@ export default function OrderDetailPage() {
                     display: 'block',
                   }}
                 >
-                  {rawOrder?.orderNumber || rawOrder?.externalOrderId || mockOrderDetails.orderId}
+                  {orderDetails?.orderId}
                 </span>
               </div>
 
@@ -721,10 +878,10 @@ export default function OrderDetailPage() {
                     color: '#111827',
                   }}
                 >
-                  <div>{mockOrderDetails.deliveryMethod.name}</div>
-                  <div>{mockOrderDetails.deliveryMethod.street}</div>
-                  <div>{rawOrder?.shippingZip || ''} {rawOrder?.shippingCity || mockOrderDetails.deliveryMethod.city}</div>
-                  <div>{mockOrderDetails.deliveryMethod.country}</div>
+                  <div>{orderDetails?.deliveryMethod.name}</div>
+                  <div>{orderDetails?.deliveryMethod.street}</div>
+                  <div>{orderDetails?.deliveryMethod.zip} {orderDetails?.deliveryMethod.city}</div>
+                  <div>{orderDetails?.deliveryMethod.country}</div>
                 </div>
               </div>
 
@@ -905,7 +1062,7 @@ export default function OrderDetailPage() {
                         {selectedShippingMethod.name}
                       </span>
                     </div>
-                    {mockOrderDetails.trackingNumber && (
+                    {orderDetails?.trackingNumber && orderDetails.trackingNumber !== 'N/A' && (
                       <div
                         style={{
                           fontFamily: 'Inter, sans-serif',
@@ -916,9 +1073,9 @@ export default function OrderDetailPage() {
                           paddingLeft: '32px',
                         }}
                       >
-                        {mockOrderDetails.trackingUrl ? (
+                        {orderDetails.trackingUrl ? (
                           <a
-                            href={mockOrderDetails.trackingUrl}
+                            href={orderDetails.trackingUrl}
                             target="_blank"
                             rel="noopener noreferrer"
                             style={{
@@ -928,10 +1085,10 @@ export default function OrderDetailPage() {
                             onMouseOver={(e) => e.currentTarget.style.textDecoration = 'underline'}
                             onMouseOut={(e) => e.currentTarget.style.textDecoration = 'none'}
                           >
-                            {mockOrderDetails.trackingNumber}
+                            {orderDetails.trackingNumber}
                           </a>
                         ) : (
-                          <span>{mockOrderDetails.trackingNumber}</span>
+                          <span>{orderDetails.trackingNumber}</span>
                         )}
                       </div>
                     )}
@@ -965,7 +1122,11 @@ export default function OrderDetailPage() {
                     {tOrders('onHold')}
                   </span>
                   <button
-                    onClick={() => editOrderEnabled && setOnHoldStatus(!onHoldStatus)}
+                    onClick={() => {
+                      if (editOrderEnabled && rawOrder?.holdReason !== 'AWAITING_PAYMENT') {
+                        setOnHoldStatus(!onHoldStatus);
+                      }
+                    }}
                     style={{
                       width: '44px',
                       height: '24px',
@@ -973,10 +1134,10 @@ export default function OrderDetailPage() {
                       padding: '2px',
                       backgroundColor: onHoldStatus ? '#003450' : '#E5E7EB',
                       position: 'relative',
-                      cursor: editOrderEnabled ? 'pointer' : 'not-allowed',
+                      cursor: (editOrderEnabled && rawOrder?.holdReason !== 'AWAITING_PAYMENT') ? 'pointer' : 'not-allowed',
                       border: 'none',
                       transition: 'background-color 0.2s',
-                      opacity: editOrderEnabled ? 1 : 0.6,
+                      opacity: (editOrderEnabled && rawOrder?.holdReason !== 'AWAITING_PAYMENT') ? 1 : 0.6,
                     }}
                   >
                     <div
@@ -994,17 +1155,31 @@ export default function OrderDetailPage() {
                     />
                   </button>
                 </div>
-                <p
-                  style={{
-                    fontFamily: 'Inter, sans-serif',
-                    fontWeight: 400,
-                    fontSize: '14px',
-                    lineHeight: '20px',
-                    color: '#6B7280',
-                  }}
-                >
-                  {tOrders('onHoldDescription')}
-                </p>
+                {rawOrder?.holdReason === 'AWAITING_PAYMENT' ? (
+                  <p
+                    style={{
+                      fontFamily: 'Inter, sans-serif',
+                      fontWeight: 400,
+                      fontSize: '14px',
+                      lineHeight: '20px',
+                      color: '#D97706',
+                    }}
+                  >
+                    This order is awaiting payment. Hold will be automatically released when payment is confirmed.
+                  </p>
+                ) : (
+                  <p
+                    style={{
+                      fontFamily: 'Inter, sans-serif',
+                      fontWeight: 400,
+                      fontSize: '14px',
+                      lineHeight: '20px',
+                      color: '#6B7280',
+                    }}
+                  >
+                    {tOrders('onHoldDescription')}
+                  </p>
+                )}
               </div>
 
               {/* Shipment Weight Box */}
@@ -1041,7 +1216,7 @@ export default function OrderDetailPage() {
                     color: '#111827',
                   }}
                 >
-                  {mockOrderDetails.shipmentWeight}
+                  {orderDetails?.shipmentWeight}
                 </div>
                 <div
                   style={{
@@ -1769,6 +1944,44 @@ export default function OrderDetailPage() {
                   }}
                 />
               </div>
+
+              {/* Save Changes Button */}
+              {editOrderEnabled && (
+                <div>
+                  {saveError && (
+                    <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color: '#DC2626', marginBottom: '8px' }}>
+                      {saveError}
+                    </p>
+                  )}
+                  <button
+                    onClick={handleSaveOrder}
+                    disabled={isSaving}
+                    style={{
+                      width: '100%',
+                      height: '42px',
+                      borderRadius: '6px',
+                      backgroundColor: isSaving ? '#9CA3AF' : '#003450',
+                      border: 'none',
+                      cursor: isSaving ? 'not-allowed' : 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    <span
+                      style={{
+                        fontFamily: 'Inter, sans-serif',
+                        fontWeight: 500,
+                        fontSize: '14px',
+                        lineHeight: '20px',
+                        color: '#FFFFFF',
+                      }}
+                    >
+                      {isSaving ? tCommon('saving') : tCommon('saveChanges')}
+                    </span>
+                  </button>
+                </div>
+              )}
 
               {/* Sync to JTL FFN Box */}
               <div
