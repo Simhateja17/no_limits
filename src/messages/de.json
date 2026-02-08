@@ -146,6 +146,8 @@
     "cancelled": "Storniert",
     "sent": "Versendet",
     "partiallyFulfilled": "Teilgeliefert",
+    "inProgress": "In Bearbeitung",
+    "issues": "Probleme",
     "createOrder": "Auftrag erstellen",
     "sent": "Versendet",
     "orderId": "Auftrags-ID",

@@ -9,7 +9,7 @@ import fulfillmentApi from '@/lib/fulfillment-api';
 import { OrdersTableSkeleton, MobileCardSkeleton, TabsSkeleton, FilterBarSkeleton } from '@/components/ui';
 
 // Tab type for orders
-type OrderTabType = 'all' | 'inStock' | 'outOfStock' | 'errors' | 'partiallyFulfilled' | 'cancelled' | 'sent';
+type OrderTabType = 'all' | 'pending' | 'inProgress' | 'shipped' | 'delivered' | 'issues' | 'cancelled';
 
 // Order status type for color coding
 type OrderStatusColor = 'success' | 'error' | 'mildError' | 'partiallyFulfilled' | 'shipped' | 'picking' | 'packing';
@@ -32,6 +32,12 @@ interface Order {
   jtlSyncStatus?: string | null;
   jtlSyncError?: string | null;
 }
+
+// FulfillmentState grouping constants for tab filtering
+const IN_PROGRESS_STATES = ['PREPARATION', 'ACKNOWLEDGED', 'LOCKED', 'PICKPROCESS'];
+const SHIPPED_STATES = ['SHIPPED', 'PARTIALLY_SHIPPED', 'IN_TRANSIT'];
+const ISSUES_STATES = ['FAILED_DELIVERY', 'RETURNED_TO_SENDER'];
+const CANCELLED_STATES = ['CANCELED', 'PARTIALLY_CANCELED'];
 
 // Custom hook to detect screen size
 function useIsMobile() {
@@ -575,21 +581,27 @@ export function OrdersTable({ showClientColumn, basePath = '/admin/orders', clie
   const filteredOrders = useMemo(() => {
     let filteredList = [...orders];
 
-    // Filter by tab
-    if (activeTab === 'inStock') {
-      filteredList = filteredList.filter(o => o.status === 'success');
-    } else if (activeTab === 'outOfStock') {
-      filteredList = filteredList.filter(o => o.status === 'mildError');
-    } else if (activeTab === 'errors') {
-      filteredList = filteredList.filter(o => o.status === 'error');
-    } else if (activeTab === 'partiallyFulfilled') {
-      filteredList = filteredList.filter(o => o.status === 'partiallyFulfilled');
+    // Filter by fulfillmentState
+    if (activeTab === 'pending') {
+      filteredList = filteredList.filter(o => o.fulfillmentState === 'PENDING');
+    } else if (activeTab === 'inProgress') {
+      filteredList = filteredList.filter(o =>
+        o.fulfillmentState && IN_PROGRESS_STATES.includes(o.fulfillmentState)
+      );
+    } else if (activeTab === 'shipped') {
+      filteredList = filteredList.filter(o =>
+        o.fulfillmentState && SHIPPED_STATES.includes(o.fulfillmentState)
+      );
+    } else if (activeTab === 'delivered') {
+      filteredList = filteredList.filter(o => o.fulfillmentState === 'DELIVERED');
+    } else if (activeTab === 'issues') {
+      filteredList = filteredList.filter(o =>
+        o.fulfillmentState && ISSUES_STATES.includes(o.fulfillmentState)
+      );
     } else if (activeTab === 'cancelled') {
-      // For now, no cancelled orders in mock data
-      filteredList = [];
-    } else if (activeTab === 'sent') {
-      // For now, filter sent as success
-      filteredList = filteredList.filter(o => o.status === 'success');
+      filteredList = filteredList.filter(o =>
+        o.fulfillmentState && CANCELLED_STATES.includes(o.fulfillmentState)
+      );
     }
 
     // Filter by customer
@@ -622,11 +634,18 @@ export function OrdersTable({ showClientColumn, basePath = '/admin/orders', clie
 
   // Count for tabs
   const allCount = orders.length;
-  const inStockCount = orders.filter(o => o.status === 'success').length;
-  const outOfStockCount = orders.filter(o => o.status === 'mildError').length;
-  const errorsCount = orders.filter(o => o.status === 'error').length;
-  const partiallyFulfilledCount = orders.filter(o => o.status === 'partiallyFulfilled').length;
-  // cancelledCount and sentCount not shown in tabs currently
+  const pendingCount = useMemo(() =>
+    orders.filter(o => o.fulfillmentState === 'PENDING').length, [orders]);
+  const inProgressCount = useMemo(() =>
+    orders.filter(o => o.fulfillmentState && IN_PROGRESS_STATES.includes(o.fulfillmentState)).length, [orders]);
+  const shippedCount = useMemo(() =>
+    orders.filter(o => o.fulfillmentState && SHIPPED_STATES.includes(o.fulfillmentState)).length, [orders]);
+  const deliveredCount = useMemo(() =>
+    orders.filter(o => o.fulfillmentState === 'DELIVERED').length, [orders]);
+  const issuesCount = useMemo(() =>
+    orders.filter(o => o.fulfillmentState && ISSUES_STATES.includes(o.fulfillmentState)).length, [orders]);
+  const cancelledCount = useMemo(() =>
+    orders.filter(o => o.fulfillmentState && CANCELLED_STATES.includes(o.fulfillmentState)).length, [orders]);
 
   const handlePrevious = () => {
     if (currentPage > 1) {
@@ -700,12 +719,12 @@ export function OrdersTable({ showClientColumn, basePath = '/admin/orders', clie
             className="w-full h-10 px-3 rounded-lg border border-gray-300 bg-white text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#003450]/20"
           >
             <option value="all">{t('allOrders')} ({allCount})</option>
-            <option value="inStock">{t('inStock')} ({inStockCount})</option>
-            <option value="outOfStock">{t('outOfStock')} ({outOfStockCount})</option>
-            <option value="errors">{t('errors')} ({errorsCount})</option>
-            <option value="partiallyFulfilled">{t('partiallyFulfilled')} ({partiallyFulfilledCount})</option>
-            <option value="cancelled">{t('cancelled')}</option>
-            <option value="sent">{t('sent')}</option>
+            <option value="pending">{t('pending')} ({pendingCount})</option>
+            <option value="inProgress">{t('inProgress')} ({inProgressCount})</option>
+            <option value="shipped">{t('shipped')} ({shippedCount})</option>
+            <option value="delivered">{t('delivered')} ({deliveredCount})</option>
+            <option value="issues">{t('issues')} ({issuesCount})</option>
+            <option value="cancelled">{t('cancelled')} ({cancelledCount})</option>
           </select>
         </div>
 
@@ -754,14 +773,14 @@ export function OrdersTable({ showClientColumn, basePath = '/admin/orders', clie
             </span>
           </button>
 
-          {/* In Stock Tab */}
+          {/* Pending Tab */}
           <button
-            onClick={() => { setActiveTab('inStock'); setCurrentPage(1); }}
+            onClick={() => { setActiveTab('pending'); setCurrentPage(1); }}
             className="flex items-center"
             style={{
               gap: 'clamp(4px, 0.59vw, 8px)',
               paddingBottom: 'clamp(8px, 0.88vw, 12px)',
-              borderBottom: activeTab === 'inStock' ? '2px solid #003450' : '2px solid transparent',
+              borderBottom: activeTab === 'pending' ? '2px solid #003450' : '2px solid transparent',
               marginBottom: '-1px',
             }}
           >
@@ -771,10 +790,10 @@ export function OrdersTable({ showClientColumn, basePath = '/admin/orders', clie
                 fontWeight: 500,
                 fontSize: 'clamp(12px, 1.03vw, 14px)',
                 lineHeight: '20px',
-                color: activeTab === 'inStock' ? '#003450' : '#6B7280',
+                color: activeTab === 'pending' ? '#003450' : '#6B7280',
               }}
             >
-              {t('inStock')}
+              {t('pending')}
             </span>
             <span
               style={{
@@ -782,24 +801,24 @@ export function OrdersTable({ showClientColumn, basePath = '/admin/orders', clie
                 fontWeight: 500,
                 fontSize: 'clamp(10px, 0.88vw, 12px)',
                 lineHeight: '16px',
-                color: activeTab === 'inStock' ? '#003450' : '#6B7280',
-                backgroundColor: activeTab === 'inStock' ? '#E5E7EB' : 'transparent',
+                color: activeTab === 'pending' ? '#003450' : '#6B7280',
+                backgroundColor: activeTab === 'pending' ? '#E5E7EB' : 'transparent',
                 padding: '2px 8px',
                 borderRadius: '10px',
               }}
             >
-              {inStockCount}
+              {pendingCount}
             </span>
           </button>
 
-          {/* Out of Stock Tab */}
+          {/* In Progress Tab */}
           <button
-            onClick={() => { setActiveTab('outOfStock'); setCurrentPage(1); }}
+            onClick={() => { setActiveTab('inProgress'); setCurrentPage(1); }}
             className="flex items-center"
             style={{
               gap: 'clamp(4px, 0.59vw, 8px)',
               paddingBottom: 'clamp(8px, 0.88vw, 12px)',
-              borderBottom: activeTab === 'outOfStock' ? '2px solid #003450' : '2px solid transparent',
+              borderBottom: activeTab === 'inProgress' ? '2px solid #003450' : '2px solid transparent',
               marginBottom: '-1px',
             }}
           >
@@ -809,10 +828,10 @@ export function OrdersTable({ showClientColumn, basePath = '/admin/orders', clie
                 fontWeight: 500,
                 fontSize: 'clamp(12px, 1.03vw, 14px)',
                 lineHeight: '20px',
-                color: activeTab === 'outOfStock' ? '#003450' : '#6B7280',
+                color: activeTab === 'inProgress' ? '#003450' : '#6B7280',
               }}
             >
-              {t('outOfStock')}
+              {t('inProgress')}
             </span>
             <span
               style={{
@@ -820,24 +839,24 @@ export function OrdersTable({ showClientColumn, basePath = '/admin/orders', clie
                 fontWeight: 500,
                 fontSize: 'clamp(10px, 0.88vw, 12px)',
                 lineHeight: '16px',
-                color: activeTab === 'outOfStock' ? '#003450' : '#6B7280',
-                backgroundColor: activeTab === 'outOfStock' ? '#E5E7EB' : 'transparent',
+                color: activeTab === 'inProgress' ? '#003450' : '#6B7280',
+                backgroundColor: activeTab === 'inProgress' ? '#E5E7EB' : 'transparent',
                 padding: '2px 8px',
                 borderRadius: '10px',
               }}
             >
-              {outOfStockCount}
+              {inProgressCount}
             </span>
           </button>
 
-          {/* Errors Tab */}
+          {/* Shipped Tab */}
           <button
-            onClick={() => { setActiveTab('errors'); setCurrentPage(1); }}
+            onClick={() => { setActiveTab('shipped'); setCurrentPage(1); }}
             className="flex items-center"
             style={{
               gap: 'clamp(4px, 0.59vw, 8px)',
               paddingBottom: 'clamp(8px, 0.88vw, 12px)',
-              borderBottom: activeTab === 'errors' ? '2px solid #003450' : '2px solid transparent',
+              borderBottom: activeTab === 'shipped' ? '2px solid #003450' : '2px solid transparent',
               marginBottom: '-1px',
             }}
           >
@@ -847,10 +866,10 @@ export function OrdersTable({ showClientColumn, basePath = '/admin/orders', clie
                 fontWeight: 500,
                 fontSize: 'clamp(12px, 1.03vw, 14px)',
                 lineHeight: '20px',
-                color: activeTab === 'errors' ? '#003450' : '#6B7280',
+                color: activeTab === 'shipped' ? '#003450' : '#6B7280',
               }}
             >
-              {t('errors')}
+              {t('shipped')}
             </span>
             <span
               style={{
@@ -858,24 +877,24 @@ export function OrdersTable({ showClientColumn, basePath = '/admin/orders', clie
                 fontWeight: 500,
                 fontSize: 'clamp(10px, 0.88vw, 12px)',
                 lineHeight: '16px',
-                color: activeTab === 'errors' ? '#003450' : '#6B7280',
-                backgroundColor: activeTab === 'errors' ? '#E5E7EB' : 'transparent',
+                color: activeTab === 'shipped' ? '#003450' : '#6B7280',
+                backgroundColor: activeTab === 'shipped' ? '#E5E7EB' : 'transparent',
                 padding: '2px 8px',
                 borderRadius: '10px',
               }}
             >
-              {errorsCount}
+              {shippedCount}
             </span>
           </button>
 
-          {/* Partially Fulfilled Tab */}
+          {/* Delivered Tab */}
           <button
-            onClick={() => { setActiveTab('partiallyFulfilled'); setCurrentPage(1); }}
+            onClick={() => { setActiveTab('delivered'); setCurrentPage(1); }}
             className="flex items-center"
             style={{
               gap: 'clamp(4px, 0.59vw, 8px)',
               paddingBottom: 'clamp(8px, 0.88vw, 12px)',
-              borderBottom: activeTab === 'partiallyFulfilled' ? '2px solid #003450' : '2px solid transparent',
+              borderBottom: activeTab === 'delivered' ? '2px solid #003450' : '2px solid transparent',
               marginBottom: '-1px',
             }}
           >
@@ -885,10 +904,10 @@ export function OrdersTable({ showClientColumn, basePath = '/admin/orders', clie
                 fontWeight: 500,
                 fontSize: 'clamp(12px, 1.03vw, 14px)',
                 lineHeight: '20px',
-                color: activeTab === 'partiallyFulfilled' ? '#003450' : '#6B7280',
+                color: activeTab === 'delivered' ? '#003450' : '#6B7280',
               }}
             >
-              {t('partiallyFulfilled')}
+              {t('delivered')}
             </span>
             <span
               style={{
@@ -896,13 +915,51 @@ export function OrdersTable({ showClientColumn, basePath = '/admin/orders', clie
                 fontWeight: 500,
                 fontSize: 'clamp(10px, 0.88vw, 12px)',
                 lineHeight: '16px',
-                color: activeTab === 'partiallyFulfilled' ? '#003450' : '#6B7280',
-                backgroundColor: activeTab === 'partiallyFulfilled' ? '#E5E7EB' : 'transparent',
+                color: activeTab === 'delivered' ? '#003450' : '#6B7280',
+                backgroundColor: activeTab === 'delivered' ? '#E5E7EB' : 'transparent',
                 padding: '2px 8px',
                 borderRadius: '10px',
               }}
             >
-              {partiallyFulfilledCount}
+              {deliveredCount}
+            </span>
+          </button>
+
+          {/* Issues Tab */}
+          <button
+            onClick={() => { setActiveTab('issues'); setCurrentPage(1); }}
+            className="flex items-center"
+            style={{
+              gap: 'clamp(4px, 0.59vw, 8px)',
+              paddingBottom: 'clamp(8px, 0.88vw, 12px)',
+              borderBottom: activeTab === 'issues' ? '2px solid #003450' : '2px solid transparent',
+              marginBottom: '-1px',
+            }}
+          >
+            <span
+              style={{
+                fontFamily: 'Inter, sans-serif',
+                fontWeight: 500,
+                fontSize: 'clamp(12px, 1.03vw, 14px)',
+                lineHeight: '20px',
+                color: activeTab === 'issues' ? '#003450' : '#6B7280',
+              }}
+            >
+              {t('issues')}
+            </span>
+            <span
+              style={{
+                fontFamily: 'Inter, sans-serif',
+                fontWeight: 500,
+                fontSize: 'clamp(10px, 0.88vw, 12px)',
+                lineHeight: '16px',
+                color: activeTab === 'issues' ? '#003450' : '#6B7280',
+                backgroundColor: activeTab === 'issues' ? '#E5E7EB' : 'transparent',
+                padding: '2px 8px',
+                borderRadius: '10px',
+              }}
+            >
+              {issuesCount}
             </span>
           </button>
 
@@ -928,31 +985,22 @@ export function OrdersTable({ showClientColumn, basePath = '/admin/orders', clie
             >
               {t('cancelled')}
             </span>
-          </button>
-
-          {/* Sent Tab */}
-          <button
-            onClick={() => { setActiveTab('sent'); setCurrentPage(1); }}
-            className="flex items-center"
-            style={{
-              gap: 'clamp(4px, 0.59vw, 8px)',
-              paddingBottom: 'clamp(8px, 0.88vw, 12px)',
-              borderBottom: activeTab === 'sent' ? '2px solid #003450' : '2px solid transparent',
-              marginBottom: '-1px',
-            }}
-          >
             <span
               style={{
                 fontFamily: 'Inter, sans-serif',
                 fontWeight: 500,
-                fontSize: 'clamp(12px, 1.03vw, 14px)',
-                lineHeight: '20px',
-                color: activeTab === 'sent' ? '#003450' : '#6B7280',
+                fontSize: 'clamp(10px, 0.88vw, 12px)',
+                lineHeight: '16px',
+                color: activeTab === 'cancelled' ? '#003450' : '#6B7280',
+                backgroundColor: activeTab === 'cancelled' ? '#E5E7EB' : 'transparent',
+                padding: '2px 8px',
+                borderRadius: '10px',
               }}
             >
-              {t('sent')}
+              {cancelledCount}
             </span>
           </button>
+
         </div>
 
         {/* Action Buttons */}

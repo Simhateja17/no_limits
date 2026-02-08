@@ -146,6 +146,8 @@
     "cancelled": "Cancelled",
     "sent": "Sent",
     "partiallyFulfilled": "Partially Fulfilled",
+    "inProgress": "In Progress",
+    "issues": "Issues",
     "orderId": "Order ID",
     "createOrder": "Create Order",
     "orderDate": "Order Date",
