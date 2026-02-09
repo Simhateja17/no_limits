@@ -10,7 +10,7 @@ import { useTranslations, useLocale } from 'next-intl';
 import { dataApi, type Order as ApiOrder, type UpdateOrderInput } from '@/lib/data-api';
 import { Skeleton, GenericTableSkeleton } from '@/components/ui';
 import { StatusHistory } from '@/components/orders/StatusHistory';
-import { COUNTRIES } from '@/constants/countries';
+import { COUNTRIES, getCountryName } from '@/constants/countries';
 
 // Payment Status Badge Component
 const PaymentStatusBadge = ({
@@ -115,6 +115,10 @@ const transformApiOrderToDetails = (apiOrder: ApiOrder): OrderDetails => {
     if (fulfillmentState) {
       switch (fulfillmentState) {
         case 'PENDING': return 'Processing';
+        case 'PREPARATION': return 'Preparation';
+        case 'ACKNOWLEDGED': return 'Acknowledged';
+        case 'LOCKED': return 'Locked';
+        case 'PICKPROCESS': return 'Pick Process';
         case 'AWAITING_STOCK': return 'Awaiting Stock';
         case 'READY_FOR_PICKING': return 'Ready for Picking';
         case 'PICKING': return 'Picking';
@@ -123,11 +127,14 @@ const transformApiOrderToDetails = (apiOrder: ApiOrder): OrderDetails => {
         case 'PACKED': return 'Packed';
         case 'LABEL_CREATED': return 'Label Created';
         case 'SHIPPED': return 'Shipped';
+        case 'PARTIALLY_SHIPPED': return 'Partially Shipped';
         case 'IN_TRANSIT': return 'In Transit';
         case 'OUT_FOR_DELIVERY': return 'Out for Delivery';
         case 'DELIVERED': return 'Delivered';
         case 'FAILED_DELIVERY': return 'Delivery Failed';
         case 'RETURNED_TO_SENDER': return 'Returned to Sender';
+        case 'CANCELED': return 'Canceled';
+        case 'PARTIALLY_CANCELED': return 'Partially Canceled';
       }
     }
     switch (status) {
@@ -143,11 +150,13 @@ const transformApiOrderToDetails = (apiOrder: ApiOrder): OrderDetails => {
   const getStatusColorForOrder = (status: string, fulfillmentState: string | null): string => {
     if (fulfillmentState) {
       switch (fulfillmentState) {
-        case 'SHIPPED': case 'IN_TRANSIT': case 'OUT_FOR_DELIVERY': return '#8B5CF6';
+        case 'PREPARATION': case 'ACKNOWLEDGED': case 'LOCKED': case 'PICKPROCESS': return '#3B82F6';
+        case 'SHIPPED': case 'IN_TRANSIT': case 'OUT_FOR_DELIVERY': case 'PARTIALLY_SHIPPED': return '#8B5CF6';
         case 'DELIVERED': return '#10B981';
         case 'PICKING': case 'PICKED': return '#3B82F6';
         case 'PACKING': case 'PACKED': case 'LABEL_CREATED': return '#06B6D4';
         case 'FAILED_DELIVERY': case 'RETURNED_TO_SENDER': return '#EF4444';
+        case 'CANCELED': case 'PARTIALLY_CANCELED': return '#EF4444';
         case 'AWAITING_STOCK': return '#F59E0B';
       }
     }
@@ -165,14 +174,16 @@ const transformApiOrderToDetails = (apiOrder: ApiOrder): OrderDetails => {
     status: getDisplayStatus(apiOrder.status, apiOrder.fulfillmentState || null),
     statusColor: getStatusColorForOrder(apiOrder.status, apiOrder.fulfillmentState || null),
     deliveryMethod: {
-      name: apiOrder.customerName ||
-        `${apiOrder.shippingFirstName || ''} ${apiOrder.shippingLastName || ''}`.trim() ||
+      name: `${apiOrder.shippingFirstName || ''} ${apiOrder.shippingLastName || ''}`.trim() ||
+        apiOrder.customerName ||
         (apiOrder.client?.name || apiOrder.client?.companyName || '').trim() ||
         'N/A',
       street: apiOrder.shippingAddress1 || 'N/A',
       zip: apiOrder.shippingZip || '',
       city: apiOrder.shippingCity || 'N/A',
-      country: apiOrder.shippingCountry || 'N/A',
+      country: apiOrder.shippingCountryCode
+        ? getCountryName(apiOrder.shippingCountryCode)
+        : (apiOrder.shippingCountry || 'N/A'),
     },
     shippingMethod: apiOrder.shippingMethod || 'Standard',
     trackingNumber: apiOrder.trackingNumber || 'N/A',
@@ -189,6 +200,13 @@ const transformApiOrderToDetails = (apiOrder: ApiOrder): OrderDetails => {
       merchant: apiOrder.client?.companyName || apiOrder.client?.name || 'N/A',
     })),
   };
+};
+
+const getCountryCode = (countryCode?: string | null, countryName?: string | null): string => {
+  if (countryCode) return countryCode;
+  if (!countryName) return '';
+  const country = COUNTRIES.find((c) => c.en === countryName || c.de === countryName);
+  return country?.code || '';
 };
 
 // Mock available products to add
@@ -283,7 +301,7 @@ export default function EmployeeOrderDetailPage() {
     streetAddress: '',
     city: '',
     zipPostal: '',
-    country: 'United States',
+    country: 'US',
   });
 
   useEffect(() => {
@@ -317,7 +335,7 @@ export default function EmployeeOrderDetailPage() {
           streetAddress: (data as any).shippingAddress1 || '',
           city: (data as any).shippingCity || '',
           zipPostal: (data as any).shippingZip || '',
-          country: (data as any).shippingCountry || 'Deutschland',
+          country: getCountryCode((data as any).shippingCountryCode, (data as any).shippingCountry),
         });
         // Initialize order notes
         setOrderNotes((data as any).warehouseNotes || '');
@@ -411,10 +429,10 @@ export default function EmployeeOrderDetailPage() {
   };
 
   // Save all order changes to DB and sync to JTL
-  const handleSaveOrder = async () => {
+  const handleSaveOrder = async (): Promise<boolean> => {
     if (!rawOrder?.id) {
       setSaveError('Order data not loaded');
-      return;
+      return false;
     }
 
     setIsSaving(true);
@@ -433,6 +451,7 @@ export default function EmployeeOrderDetailPage() {
         shippingAddress2: formData.addressLine2 || undefined,
         shippingCity: formData.city || undefined,
         shippingZip: formData.zipPostal || undefined,
+        shippingCountryCode: formData.country || undefined,
         items: orderProducts.map(p => ({
           id: p.id,
           sku: p.sku,
@@ -461,18 +480,22 @@ export default function EmployeeOrderDetailPage() {
       setTimeout(() => {
         setShowSuccessModal(false);
       }, 2000);
+      return true;
     } catch (err: any) {
       console.error('Error updating order:', err);
       setSaveError(err.response?.data?.error || 'Failed to update order');
+      return false;
     } finally {
       setIsSaving(false);
     }
   };
 
-  // Save address from modal and close it
+  // Save address from modal
   const handleSaveAddress = async () => {
-    setShowEditModal(false);
-    // The actual save happens when the user clicks the main Save button
+    const saved = await handleSaveOrder();
+    if (saved) {
+      setShowEditModal(false);
+    }
   };
 
   const handleAddTag = () => {

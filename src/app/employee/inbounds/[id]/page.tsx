@@ -70,11 +70,41 @@ export default function EmployeeInboundDetailPage() {
   }
 
   const handleSave = async () => {
-    // TODO: Implement save functionality with API call
-    setShowSuccess(true);
-    setTimeout(() => {
-      setShowSuccess(false);
-    }, 2000);
+    try {
+      const token = localStorage.getItem('accessToken');
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
+
+      const response = await fetch(`${API_URL}/data/inbounds/${inboundId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          deliveryType: freightForwarder,
+          expectedDate: eta ? new Date(eta).toISOString() : null,
+          carrierName: freightForwarder,
+          trackingNumber: trackingNo,
+          externalInboundId: extInboundId,
+        }),
+      });
+
+      if (response.ok) {
+        setShowSuccess(true);
+        setTimeout(() => {
+          setShowSuccess(false);
+        }, 2000);
+        // Refresh the data
+        refetch();
+      } else {
+        const error = await response.json();
+        console.error('Failed to save inbound:', error);
+        alert('Failed to save changes: ' + (error.error || 'Unknown error'));
+      }
+    } catch (error) {
+      console.error('Error saving inbound:', error);
+      alert('An error occurred while saving changes');
+    }
   };
 
   // Map status to display format

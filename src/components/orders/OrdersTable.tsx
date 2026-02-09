@@ -9,7 +9,7 @@ import fulfillmentApi from '@/lib/fulfillment-api';
 import { OrdersTableSkeleton, MobileCardSkeleton, TabsSkeleton, FilterBarSkeleton } from '@/components/ui';
 
 // Tab type for orders
-type OrderTabType = 'all' | 'pending' | 'inProgress' | 'shipped' | 'delivered' | 'issues' | 'cancelled';
+type OrderTabType = 'all' | 'pending' | 'inProgress' | 'shipped' | 'issues' | 'cancelled';
 
 // Order status type for color coding
 type OrderStatusColor = 'success' | 'error' | 'mildError' | 'partiallyFulfilled' | 'shipped' | 'picking' | 'packing';
@@ -592,8 +592,6 @@ export function OrdersTable({ showClientColumn, basePath = '/admin/orders', clie
       filteredList = filteredList.filter(o =>
         o.fulfillmentState && SHIPPED_STATES.includes(o.fulfillmentState)
       );
-    } else if (activeTab === 'delivered') {
-      filteredList = filteredList.filter(o => o.fulfillmentState === 'DELIVERED');
     } else if (activeTab === 'issues') {
       filteredList = filteredList.filter(o =>
         o.fulfillmentState && ISSUES_STATES.includes(o.fulfillmentState)
@@ -640,8 +638,6 @@ export function OrdersTable({ showClientColumn, basePath = '/admin/orders', clie
     orders.filter(o => o.fulfillmentState && IN_PROGRESS_STATES.includes(o.fulfillmentState)).length, [orders]);
   const shippedCount = useMemo(() =>
     orders.filter(o => o.fulfillmentState && SHIPPED_STATES.includes(o.fulfillmentState)).length, [orders]);
-  const deliveredCount = useMemo(() =>
-    orders.filter(o => o.fulfillmentState === 'DELIVERED').length, [orders]);
   const issuesCount = useMemo(() =>
     orders.filter(o => o.fulfillmentState && ISSUES_STATES.includes(o.fulfillmentState)).length, [orders]);
   const cancelledCount = useMemo(() =>
@@ -722,7 +718,6 @@ export function OrdersTable({ showClientColumn, basePath = '/admin/orders', clie
             <option value="pending">{t('pending')} ({pendingCount})</option>
             <option value="inProgress">{t('inProgress')} ({inProgressCount})</option>
             <option value="shipped">{t('shipped')} ({shippedCount})</option>
-            <option value="delivered">{t('delivered')} ({deliveredCount})</option>
             <option value="issues">{t('issues')} ({issuesCount})</option>
             <option value="cancelled">{t('cancelled')} ({cancelledCount})</option>
           </select>
@@ -884,44 +879,6 @@ export function OrdersTable({ showClientColumn, basePath = '/admin/orders', clie
               }}
             >
               {shippedCount}
-            </span>
-          </button>
-
-          {/* Delivered Tab */}
-          <button
-            onClick={() => { setActiveTab('delivered'); setCurrentPage(1); }}
-            className="flex items-center"
-            style={{
-              gap: 'clamp(4px, 0.59vw, 8px)',
-              paddingBottom: 'clamp(8px, 0.88vw, 12px)',
-              borderBottom: activeTab === 'delivered' ? '2px solid #003450' : '2px solid transparent',
-              marginBottom: '-1px',
-            }}
-          >
-            <span
-              style={{
-                fontFamily: 'Inter, sans-serif',
-                fontWeight: 500,
-                fontSize: 'clamp(12px, 1.03vw, 14px)',
-                lineHeight: '20px',
-                color: activeTab === 'delivered' ? '#003450' : '#6B7280',
-              }}
-            >
-              {t('delivered')}
-            </span>
-            <span
-              style={{
-                fontFamily: 'Inter, sans-serif',
-                fontWeight: 500,
-                fontSize: 'clamp(10px, 0.88vw, 12px)',
-                lineHeight: '16px',
-                color: activeTab === 'delivered' ? '#003450' : '#6B7280',
-                backgroundColor: activeTab === 'delivered' ? '#E5E7EB' : 'transparent',
-                padding: '2px 8px',
-                borderRadius: '10px',
-              }}
-            >
-              {deliveredCount}
             </span>
           </button>
 

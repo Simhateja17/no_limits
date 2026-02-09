@@ -26,6 +26,32 @@ export interface Product {
   jtlProductId?: string | null;
   jtlSyncStatus?: string | null;
   lastJtlSync?: string | null;
+  isBundle?: boolean;
+  bundlePrice?: number | null;
+  bundleItems?: BundleItem[];
+}
+
+export interface BundleItem {
+  id: string;
+  quantity: number;
+  childProductId: string;
+  childProduct: {
+    id: string;
+    name: string;
+    sku: string;
+    gtin: string | null;
+    imageUrl: string | null;
+    available: number;
+  };
+}
+
+export interface BundleSearchResult {
+  id: string;
+  name: string;
+  sku: string;
+  gtin: string | null;
+  imageUrl: string | null;
+  available: number;
 }
 
 export interface OrderSyncLog {
@@ -418,6 +444,21 @@ export const dataApi = {
       changedFields: response.data.changedFields || [],
       jtlSync: response.data.jtlSync || null,
     };
+  },
+
+  // Bundles
+  async updateBundle(productId: string, input: {
+    isBundle: boolean;
+    bundlePrice?: number | null;
+    items: Array<{ childProductId: string; quantity: number }>;
+  }): Promise<Product> {
+    const response = await api.put(`/data/products/${productId}/bundle`, input);
+    return response.data.data;
+  },
+
+  async searchBundleComponents(productId: string, query: string): Promise<BundleSearchResult[]> {
+    const response = await api.get(`/data/products/${productId}/bundle/search`, { params: { q: query } });
+    return response.data.data;
   },
 
   // Orders

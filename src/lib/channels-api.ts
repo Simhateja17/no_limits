@@ -82,6 +82,28 @@ export const channelsApi = {
   },
 
   /**
+   * Get masked credentials for a channel
+   */
+  getChannelCredentials: async (
+    channelId: string
+  ): Promise<{
+    success: boolean;
+    data?: {
+      channelName: string;
+      channelType: 'SHOPIFY' | 'WOOCOMMERCE';
+      storeUrl: string;
+      clientId: string;
+      clientSecret: string;
+    };
+    error?: string;
+  }> => {
+    const response = await api.get(
+      `/integrations/channels/${channelId}/credentials`
+    );
+    return response.data;
+  },
+
+  /**
    * Get warehouse locations for a client
    */
   getWarehouseLocations: async (clientId: string): Promise<LocationsResponse> => {

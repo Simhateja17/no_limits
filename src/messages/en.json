@@ -318,7 +318,22 @@
     "uploadFileDescription": "PNG, JPG, GIF up to 10MB",
     "stockMovementsComingSoon": "Stock movements content coming soon...",
     "ordersComingSoon": "Orders content coming soon...",
-    "bundleComingSoon": "Bundle content coming soon..."
+    "markAsBundle": "Mark as Bundle",
+    "bundlePrice": "Bundle Price",
+    "bundleComponents": "Bundle Components",
+    "searchProducts": "Search products to add...",
+    "noComponentsYet": "No components added yet. Search for products to add to this bundle.",
+    "saveBundle": "Save Bundle",
+    "savingBundle": "Saving...",
+    "bundleSaved": "Bundle saved successfully",
+    "editBundle": "Edit Bundle",
+    "removeComponent": "Remove component",
+    "deleteBundle": "Delete Bundle",
+    "deleteBundleWarning": "Permanently remove this bundle configuration. The product will remain, but bundle pricing and components will be deleted.",
+    "deleteBundleConfirmTitle": "Delete Bundle?",
+    "deleteBundleConfirmMessage": "This will permanently remove the bundle configuration. The product itself will remain in your catalog, but all bundle settings (price, components) will be deleted. This action cannot be undone.",
+    "bundleDeleted": "Bundle deleted successfully",
+    "quantity": "Qty"
   },
   "inbounds": {
     "title": "Inbounds",

@@ -45,6 +45,7 @@ interface Product {
   jtlProductId?: string | null;
   jtlSyncStatus?: string | null;
   lastJtlSync?: string | null;
+  isBundle?: boolean;
 }
 
 // Helper to check if a SKU is generated (SHOP-xxx or WOO-xxx)
@@ -86,7 +87,7 @@ const ProductCard = ({
     >
       <div className="flex items-start justify-between mb-3">
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium text-gray-900 truncate">{product.productName || <span className="text-red-500 italic">Missing</span>}</p>
+          <p className="text-sm font-medium text-gray-900 truncate">{product.productName || <span className="text-red-500 italic">Missing</span>}{product.isBundle && <span className="ml-1.5 px-1.5 py-0.5 bg-blue-50 text-blue-700 rounded text-xs font-semibold">Bundle</span>}</p>
           <p className="text-xs text-gray-500 mt-0.5">ID: {product.productId}</p>
         </div>
       </div>
@@ -162,6 +163,7 @@ export function ProductsTable({ showClientColumn, baseUrl, showSyncButtons = tru
           jtlProductId: p.jtlProductId,
           jtlSyncStatus: p.jtlSyncStatus,
           lastJtlSync: p.lastJtlSync,
+          isBundle: p.isBundle,
         }));
         setProducts(transformedProducts);
         setError(null);
@@ -240,6 +242,7 @@ export function ProductsTable({ showClientColumn, baseUrl, showSyncButtons = tru
         jtlProductId: p.jtlProductId,
         jtlSyncStatus: p.jtlSyncStatus,
         lastJtlSync: p.lastJtlSync,
+        isBundle: p.isBundle,
       }));
       setProducts(transformedProducts);
       setSyncResult({
@@ -303,6 +306,7 @@ export function ProductsTable({ showClientColumn, baseUrl, showSyncButtons = tru
           jtlProductId: p.jtlProductId,
           jtlSyncStatus: p.jtlSyncStatus,
           lastJtlSync: p.lastJtlSync,
+          isBundle: p.isBundle,
         }));
         setProducts(transformedProducts);
       } else {
@@ -373,6 +377,7 @@ export function ProductsTable({ showClientColumn, baseUrl, showSyncButtons = tru
           jtlProductId: p.jtlProductId,
           jtlSyncStatus: p.jtlSyncStatus,
           lastJtlSync: p.lastJtlSync,
+          isBundle: p.isBundle,
         }));
         setProducts(transformedProducts);
       } else {
@@ -434,6 +439,7 @@ export function ProductsTable({ showClientColumn, baseUrl, showSyncButtons = tru
           jtlProductId: p.jtlProductId,
           jtlSyncStatus: p.jtlSyncStatus,
           lastJtlSync: p.lastJtlSync,
+          isBundle: p.isBundle,
         }));
         setProducts(transformedProducts);
       } else {
@@ -1206,6 +1212,20 @@ export function ProductsTable({ showClientColumn, baseUrl, showSyncButtons = tru
               }}
             >
               {product.productName || <span style={{ color: '#EF4444', fontStyle: 'italic' }}>Missing</span>}
+              {product.isBundle && (
+                <span style={{
+                  display: 'inline-block',
+                  marginLeft: '6px',
+                  padding: '1px 6px',
+                  backgroundColor: '#EFF6FF',
+                  color: '#1D4ED8',
+                  borderRadius: '4px',
+                  fontSize: '11px',
+                  fontWeight: 600,
+                  lineHeight: '16px',
+                  verticalAlign: 'middle',
+                }}>Bundle</span>
+              )}
             </span>
             <span
               style={{

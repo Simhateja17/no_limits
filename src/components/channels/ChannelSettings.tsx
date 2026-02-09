@@ -251,6 +251,9 @@ export function ChannelSettings({ channelId, baseUrl, initialChannelType = 'Wooc
   const [isSyncingOrderStatuses, setIsSyncingOrderStatuses] = useState(false);
   const [fetchAllResult, setFetchAllResult] = useState<{ type: 'products' | 'orders' | 'order-statuses' | null; message: string; success: boolean } | null>(null);
 
+  // Track if credentials have been fetched from backend (for masking)
+  const [isCredentialsFetched, setIsCredentialsFetched] = useState(false);
+
   // Suppress unused variable warning
   void baseUrl;
 
@@ -366,6 +369,33 @@ export function ChannelSettings({ channelId, baseUrl, initialChannelType = 'Wooc
 
     return () => clearInterval(interval);
   }, [channelId, isNewChannel, fetchPipelineStatus, pipelineStatus?.status]);
+
+  // Fetch channel credentials for existing channels (displays masked values)
+  useEffect(() => {
+    const fetchChannelData = async () => {
+      // Skip if this is a new channel
+      if (!channelId || channelId === 'new' || isNewChannel) {
+        return;
+      }
+
+      try {
+        const result = await channelsApi.getChannelCredentials(channelId);
+
+        if (result.success && result.data) {
+          setChannelName(result.data.channelName);
+          setSelectedChannel(result.data.channelType === 'SHOPIFY' ? 'Shopify' : 'Woocommerce');
+          setStoreUrl(result.data.storeUrl);
+          setClientId(result.data.clientId);  // Already masked from backend
+          setClientSecret(result.data.clientSecret);  // Already masked from backend
+          setIsCredentialsFetched(true);
+        }
+      } catch (err) {
+        console.error('[ChannelSettings] Error fetching channel data:', err);
+      }
+    };
+
+    fetchChannelData();
+  }, [channelId, isNewChannel]);
 
   // Handler to start sync pipeline
   const handleStartSyncPipeline = async () => {
@@ -623,6 +653,9 @@ export function ChannelSettings({ channelId, baseUrl, initialChannelType = 'Wooc
     router.back();
   };
 
+  // Helper function to detect if a credential value is masked
+  const isMasked = (value: string) => value.includes('*');
+
   const handleSave = async () => {
     if (!user?.clientId) {
       setSaveError('User client ID not found');
@@ -635,15 +668,60 @@ export function ChannelSettings({ channelId, baseUrl, initialChannelType = 'Wooc
       return;
     }
 
-    if (!clientId.trim() || !clientSecret.trim() || !storeUrl.trim()) {
-      setSaveError('Please fill in all API credentials');
-      return;
+    // For existing channels with fetched credentials, allow masked values
+    // For new channels, require all fields
+    const isExistingChannel = channelId && channelId !== 'new' && !isNewChannel && isCredentialsFetched;
+
+    if (!isExistingChannel) {
+      // New channel - require all credentials
+      if (!clientId.trim() || !clientSecret.trim() || !storeUrl.trim()) {
+        setSaveError('Please fill in all API credentials');
+        return;
+      }
+    } else {
+      // Existing channel - at least store URL is required
+      if (!storeUrl.trim()) {
+        setSaveError('Store URL is required');
+        return;
+      }
     }
 
     try {
       setIsSaving(true);
       setSaveError(null);
 
+      // Handle updating credentials for existing channels
+      if (isExistingChannel) {
+        const credentials: any = { storeUrl };
+
+        // Only include credentials if user entered new values (not masked)
+        if (clientId && !isMasked(clientId)) {
+          credentials.clientId = clientId;
+        }
+
+        if (clientSecret && !isMasked(clientSecret)) {
+          credentials.clientSecret = clientSecret;
+        }
+
+        const result = await channelsApi.saveApiCredentials(channelId, credentials);
+
+        if (result.success) {
+          setShowSuccessModal(true);
+          // Refresh the masked credentials
+          const refreshResult = await channelsApi.getChannelCredentials(channelId);
+          if (refreshResult.success && refreshResult.data) {
+            setClientId(refreshResult.data.clientId);
+            setClientSecret(refreshResult.data.clientSecret);
+          }
+        } else {
+          setSaveError(result.error || 'Failed to update credentials');
+        }
+
+        setIsSaving(false);
+        return;
+      }
+
+      // Handle creating new channels (existing flow)
       let result;
 
       if (selectedChannel === 'Shopify') {

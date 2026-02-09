@@ -10,7 +10,7 @@ import { useTranslations, useLocale } from 'next-intl';
 import { dataApi, type Order as ApiOrder, type UpdateOrderInput } from '@/lib/data-api';
 import { Skeleton, GenericTableSkeleton } from '@/components/ui';
 import { StatusHistory } from '@/components/orders/StatusHistory';
-import { COUNTRIES } from '@/constants/countries';
+import { COUNTRIES, getCountryName } from '@/constants/countries';
 
 // Payment Status Badge Component
 const PaymentStatusBadge = ({
@@ -115,6 +115,10 @@ const transformApiOrderToDetails = (apiOrder: ApiOrder): OrderDetails => {
     if (fulfillmentState) {
       switch (fulfillmentState) {
         case 'PENDING': return 'Processing';
+        case 'PREPARATION': return 'Preparation';
+        case 'ACKNOWLEDGED': return 'Acknowledged';
+        case 'LOCKED': return 'Locked';
+        case 'PICKPROCESS': return 'Pick Process';
         case 'AWAITING_STOCK': return 'Awaiting Stock';
         case 'READY_FOR_PICKING': return 'Ready for Picking';
         case 'PICKING': return 'Picking';
@@ -123,11 +127,14 @@ const transformApiOrderToDetails = (apiOrder: ApiOrder): OrderDetails => {
         case 'PACKED': return 'Packed';
         case 'LABEL_CREATED': return 'Label Created';
         case 'SHIPPED': return 'Shipped';
+        case 'PARTIALLY_SHIPPED': return 'Partially Shipped';
         case 'IN_TRANSIT': return 'In Transit';
         case 'OUT_FOR_DELIVERY': return 'Out for Delivery';
         case 'DELIVERED': return 'Delivered';
         case 'FAILED_DELIVERY': return 'Delivery Failed';
         case 'RETURNED_TO_SENDER': return 'Returned to Sender';
+        case 'CANCELED': return 'Canceled';
+        case 'PARTIALLY_CANCELED': return 'Partially Canceled';
       }
     }
     switch (status) {
@@ -143,11 +150,13 @@ const transformApiOrderToDetails = (apiOrder: ApiOrder): OrderDetails => {
   const getStatusColorForOrder = (status: string, fulfillmentState: string | null): string => {
     if (fulfillmentState) {
       switch (fulfillmentState) {
-        case 'SHIPPED': case 'IN_TRANSIT': case 'OUT_FOR_DELIVERY': return '#8B5CF6';
+        case 'PREPARATION': case 'ACKNOWLEDGED': case 'LOCKED': case 'PICKPROCESS': return '#3B82F6';
+        case 'SHIPPED': case 'IN_TRANSIT': case 'OUT_FOR_DELIVERY': case 'PARTIALLY_SHIPPED': return '#8B5CF6';
         case 'DELIVERED': return '#10B981';
         case 'PICKING': case 'PICKED': return '#3B82F6';
         case 'PACKING': case 'PACKED': case 'LABEL_CREATED': return '#06B6D4';
         case 'FAILED_DELIVERY': case 'RETURNED_TO_SENDER': return '#EF4444';
+        case 'CANCELED': case 'PARTIALLY_CANCELED': return '#EF4444';
         case 'AWAITING_STOCK': return '#F59E0B';
       }
     }
@@ -165,14 +174,16 @@ const transformApiOrderToDetails = (apiOrder: ApiOrder): OrderDetails => {
     status: getDisplayStatus(apiOrder.status, apiOrder.fulfillmentState || null),
     statusColor: getStatusColorForOrder(apiOrder.status, apiOrder.fulfillmentState || null),
     deliveryMethod: {
-      name: apiOrder.customerName ||
-        `${apiOrder.shippingFirstName || ''} ${apiOrder.shippingLastName || ''}`.trim() ||
+      name: `${apiOrder.shippingFirstName || ''} ${apiOrder.shippingLastName || ''}`.trim() ||
+        apiOrder.customerName ||
         (apiOrder.client?.name || apiOrder.client?.companyName || '').trim() ||
         'N/A',
       street: apiOrder.shippingAddress1 || 'N/A',
       zip: apiOrder.shippingZip || '',
       city: apiOrder.shippingCity || 'N/A',
-      country: apiOrder.shippingCountry || 'N/A',
+      country: apiOrder.shippingCountryCode
+        ? getCountryName(apiOrder.shippingCountryCode)
+        : (apiOrder.shippingCountry || 'N/A'),
     },
     shippingMethod: apiOrder.shippingMethod || 'Standard',
     trackingNumber: apiOrder.trackingNumber || 'N/A',
@@ -189,6 +200,13 @@ const transformApiOrderToDetails = (apiOrder: ApiOrder): OrderDetails => {
       merchant: apiOrder.client?.companyName || apiOrder.client?.name || 'N/A',
     })),
   };
+};
+
+const getCountryCode = (countryCode?: string | null, countryName?: string | null): string => {
+  if (countryCode) return countryCode;
+  if (!countryName) return '';
+  const country = COUNTRIES.find((c) => c.en === countryName || c.de === countryName);
+  return country?.code || '';
 };
 
 // Mock available products to add
@@ -266,9 +284,6 @@ export default function OrderDetailPage() {
   const [selectedShippingMethod, setSelectedShippingMethod] = useState(shippingMethods[0]);
   const [showShippingDropdown, setShowShippingDropdown] = useState(false);
   const [orderNotes, setOrderNotes] = useState('');
-  const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   // Form state for edit modal
   const [formData, setFormData] = useState({
@@ -279,7 +294,7 @@ export default function OrderDetailPage() {
     streetAddress: '',
     city: '',
     zipPostal: '',
-    country: 'United States',
+    country: 'US',
   });
 
   useEffect(() => {
@@ -313,7 +328,7 @@ export default function OrderDetailPage() {
           streetAddress: (data as any).shippingAddress1 || '',
           city: (data as any).shippingCity || '',
           zipPostal: (data as any).shippingZip || '',
-          country: (data as any).shippingCountry || 'Deutschland',
+          country: getCountryCode((data as any).shippingCountryCode, (data as any).shippingCountry),
         });
         // Initialize order notes
         setOrderNotes((data as any).warehouseNotes || '');
@@ -413,17 +428,17 @@ export default function OrderDetailPage() {
         streetAddress: rawOrder.shippingAddress1 || '',
         city: rawOrder.shippingCity || '',
         zipPostal: rawOrder.shippingZip || '',
-        country: rawOrder.shippingCountryCode || 'United States',
+        country: getCountryCode(rawOrder.shippingCountryCode, rawOrder.shippingCountry),
       });
     }
     setShowEditModal(true);
   };
 
   // Save all order changes to DB and sync to JTL
-  const handleSaveOrder = async () => {
+  const handleSaveOrder = async (): Promise<boolean> => {
     if (!rawOrder?.id) {
       setSaveError('Order data not loaded');
-      return;
+      return false;
     }
 
     setIsSaving(true);
@@ -442,6 +457,7 @@ export default function OrderDetailPage() {
         shippingAddress2: formData.addressLine2 || undefined,
         shippingCity: formData.city || undefined,
         shippingZip: formData.zipPostal || undefined,
+        shippingCountryCode: formData.country || undefined,
         items: orderProducts.map(p => ({
           id: p.id,
           sku: p.sku,
@@ -470,18 +486,22 @@ export default function OrderDetailPage() {
       setTimeout(() => {
         setShowSuccessModal(false);
       }, 2000);
+      return true;
     } catch (err: any) {
       console.error('Error updating order:', err);
       setSaveError(err.response?.data?.error || 'Failed to update order');
+      return false;
     } finally {
       setIsSaving(false);
     }
   };
 
-  // Save address from modal and close it
+  // Save address from modal
   const handleSaveAddress = async () => {
-    setShowEditModal(false);
-    // The actual save happens when the user clicks the main Save button
+    const saved = await handleSaveOrder();
+    if (saved) {
+      setShowEditModal(false);
+    }
   };
 
   const handleAddTag = () => {
@@ -581,28 +601,7 @@ export default function OrderDetailPage() {
     }
   };
 
-  // Handle delete order
-  const handleDeleteOrder = async () => {
-    if (!rawOrder?.id) {
-      setDeleteError('Cannot delete: Order data not loaded');
-      return;
-    }
 
-    setIsDeleting(true);
-    setDeleteError(null);
-
-    try {
-      await dataApi.deleteOrder(rawOrder.id);
-      // Navigate back to orders list after successful deletion
-      router.push('/admin/orders');
-    } catch (err: any) {
-      console.error('Error deleting order:', err);
-      setDeleteError(err.response?.data?.error || 'Failed to delete order');
-      setShowDeleteConfirmModal(false);
-    } finally {
-      setIsDeleting(false);
-    }
-  };
 
   // Handle sync to JTL FFN
   const handleSyncToJTL = async () => {
@@ -2080,84 +2079,6 @@ export default function OrderDetailPage() {
                 </button>
               </div>
 
-              {/* Delete Order Box */}
-              <div
-                style={{
-                  width: '100%',
-                  borderRadius: '8px',
-                  padding: 'clamp(16px, 1.8vw, 24px)',
-                  backgroundColor: '#FFFFFF',
-                  boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.06), 0px 1px 3px 0px rgba(0, 0, 0, 0.1)',
-                }}
-              >
-                <span
-                  style={{
-                    fontFamily: 'Inter, sans-serif',
-                    fontWeight: 500,
-                    fontSize: 'clamp(16px, 1.3vw, 18px)',
-                    lineHeight: '24px',
-                    color: '#111827',
-                    display: 'block',
-                    marginBottom: '8px',
-                  }}
-                >
-                  {tOrders('deleteOrder')}
-                </span>
-                <p
-                  style={{
-                    fontFamily: 'Inter, sans-serif',
-                    fontWeight: 400,
-                    fontSize: '14px',
-                    lineHeight: '20px',
-                    color: '#6B7280',
-                    marginBottom: '16px',
-                  }}
-                >
-                  {tOrders('deleteOrderWarning')}
-                </p>
-                {deleteError && (
-                  <p
-                    style={{
-                      fontFamily: 'Inter, sans-serif',
-                      fontSize: '12px',
-                      color: '#DC2626',
-                      marginBottom: '12px',
-                    }}
-                  >
-                    {deleteError}
-                  </p>
-                )}
-                <button
-                  onClick={() => setShowDeleteConfirmModal(true)}
-                  style={{
-                    minWidth: '120px',
-                    height: '38px',
-                    borderRadius: '6px',
-                    padding: '9px 17px',
-                    backgroundColor: '#FEE2E2',
-                    border: 'none',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
-                >
-                  <span
-                    style={{
-                      fontFamily: 'Inter, sans-serif',
-                      fontWeight: 500,
-                      fontSize: 'clamp(12px, 1.03vw, 14px)',
-                      lineHeight: '20px',
-                      color: '#DC2626',
-                    }}
-                  >
-                    {tOrders('deleteOrder')}
-                  </span>
-                </button>
-              </div>
-
-
-
               {/* Create Replacement Order Box */}
               <div
                 style={{
@@ -2815,133 +2736,7 @@ export default function OrderDetailPage() {
           </div>
         )}
 
-        {/* Delete Confirmation Modal */}
-        {showDeleteConfirmModal && (
-          <div
-            style={{
-              position: 'fixed',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              backgroundColor: 'rgba(0, 0, 0, 0.5)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              zIndex: 1000,
-            }}
-            onClick={() => !isDeleting && setShowDeleteConfirmModal(false)}
-          >
-            <div
-              style={{
-                width: '400px',
-                maxWidth: '90vw',
-                borderRadius: '8px',
-                padding: '24px',
-                backgroundColor: '#FFFFFF',
-                boxShadow: '0px 10px 10px -5px rgba(0, 0, 0, 0.04), 0px 20px 25px -5px rgba(0, 0, 0, 0.1)',
-              }}
-              onClick={(e) => e.stopPropagation()}
-            >
-              {/* Warning Icon */}
-              <div
-                style={{
-                  width: '48px',
-                  height: '48px',
-                  borderRadius: '24px',
-                  backgroundColor: '#FEE2E2',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  margin: '0 auto 16px',
-                }}
-              >
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M12 9V13M12 17H12.01M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="#DC2626" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              </div>
-              <h3
-                style={{
-                  fontFamily: 'Inter, sans-serif',
-                  fontWeight: 600,
-                  fontSize: '18px',
-                  lineHeight: '24px',
-                  textAlign: 'center',
-                  color: '#111827',
-                  marginBottom: '8px',
-                }}
-              >
-                {tOrders('deleteOrder')}
-              </h3>
-              <p
-                style={{
-                  fontFamily: 'Inter, sans-serif',
-                  fontWeight: 400,
-                  fontSize: '14px',
-                  lineHeight: '20px',
-                  textAlign: 'center',
-                  color: '#6B7280',
-                  marginBottom: '24px',
-                }}
-              >
-                {tMessages('confirmDeleteOrder')}
-              </p>
-              <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
-                <button
-                  onClick={() => setShowDeleteConfirmModal(false)}
-                  disabled={isDeleting}
-                  style={{
-                    minWidth: '100px',
-                    height: '38px',
-                    borderRadius: '6px',
-                    padding: '9px 17px',
-                    backgroundColor: '#FFFFFF',
-                    border: '1px solid #D1D5DB',
-                    cursor: isDeleting ? 'not-allowed' : 'pointer',
-                    opacity: isDeleting ? 0.5 : 1,
-                  }}
-                >
-                  <span
-                    style={{
-                      fontFamily: 'Inter, sans-serif',
-                      fontWeight: 500,
-                      fontSize: '14px',
-                      lineHeight: '20px',
-                      color: '#374151',
-                    }}
-                  >
-                    {tCommon('cancel')}
-                  </span>
-                </button>
-                <button
-                  onClick={handleDeleteOrder}
-                  disabled={isDeleting}
-                  style={{
-                    minWidth: '100px',
-                    height: '38px',
-                    borderRadius: '6px',
-                    padding: '9px 17px',
-                    backgroundColor: isDeleting ? '#9CA3AF' : '#DC2626',
-                    border: 'none',
-                    cursor: isDeleting ? 'not-allowed' : 'pointer',
-                  }}
-                >
-                  <span
-                    style={{
-                      fontFamily: 'Inter, sans-serif',
-                      fontWeight: 500,
-                      fontSize: '14px',
-                      lineHeight: '20px',
-                      color: '#FFFFFF',
-                    }}
-                  >
-                    {isDeleting ? tCommon('deleting') : tOrders('deleteOrder')}
-                  </span>
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
+
       </div>
     </DashboardLayout>
   );

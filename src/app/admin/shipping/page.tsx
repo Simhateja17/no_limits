@@ -55,6 +55,7 @@ import {
   Package,
 } from 'lucide-react';
 import { DashboardLayout } from '@/components/layout';
+import { useAuthStore } from '@/lib/store';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
 
@@ -115,6 +116,7 @@ interface Client {
 
 export default function ShippingSettingsPage() {
   const t = useTranslations();
+  const { user } = useAuthStore();
   
   // State
   const [shippingMethods, setShippingMethods] = useState<ShippingMethod[]>([]);
@@ -294,7 +296,7 @@ export default function ShippingSettingsPage() {
   const resolveMismatch = async (mismatchId: string, shippingMethodId?: string) => {
     try {
       const token = localStorage.getItem('auth_token');
-      const userId = 'admin'; // TODO: Get from auth context
+      const userId = user?.id || 'admin';
       
       const res = await fetch(`${API_URL}/shipping-methods/mismatches/${mismatchId}/resolve`, {
         method: 'POST',

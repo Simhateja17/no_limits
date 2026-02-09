@@ -319,7 +319,22 @@
     "uploadFileDescription": "PNG, JPG, GIF bis zu 10MB",
     "stockMovementsComingSoon": "Warenbewegungen in Kürze verfügbar...",
     "ordersComingSoon": "Auftragen in Kürze verfügbar...",
-    "bundleComingSoon": "Bundle-Inhalte in Kürze verfügbar..."
+    "markAsBundle": "Als Bundle markieren",
+    "bundlePrice": "Bundle-Preis",
+    "bundleComponents": "Bundle-Komponenten",
+    "searchProducts": "Produkte suchen zum Hinzufügen...",
+    "noComponentsYet": "Noch keine Komponenten hinzugefügt. Suchen Sie nach Produkten für dieses Bundle.",
+    "saveBundle": "Bundle speichern",
+    "savingBundle": "Speichert...",
+    "bundleSaved": "Bundle erfolgreich gespeichert",
+    "editBundle": "Bundle bearbeiten",
+    "removeComponent": "Komponente entfernen",
+    "deleteBundle": "Bundle löschen",
+    "deleteBundleWarning": "Diese Bundle-Konfiguration dauerhaft entfernen. Das Produkt bleibt erhalten, aber Bundle-Preis und -Komponenten werden gelöscht.",
+    "deleteBundleConfirmTitle": "Bundle löschen?",
+    "deleteBundleConfirmMessage": "Dies entfernt die Bundle-Konfiguration dauerhaft. Das Produkt selbst bleibt in Ihrem Katalog, aber alle Bundle-Einstellungen (Preis, Komponenten) werden gelöscht. Diese Aktion kann nicht rückgängig gemacht werden.",
+    "bundleDeleted": "Bundle erfolgreich gelöscht",
+    "quantity": "Anz."
   },
   "inbounds": {
     "title": "Wareneingänge",

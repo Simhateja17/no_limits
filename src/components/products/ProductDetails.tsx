@@ -3,7 +3,8 @@
 import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { dataApi, type Product as ApiProduct, type UpdateProductInput } from '@/lib/data-api';
+import { Package } from 'lucide-react';
+import { dataApi, type Product as ApiProduct, type UpdateProductInput, type BundleItem, type BundleSearchResult } from '@/lib/data-api';
 import { ProductDetailsSkeleton } from '@/components/ui';
 
 // Tab type for product details
@@ -163,6 +164,30 @@ export function ProductDetails({ productId, backUrl }: ProductDetailsProps) {
   const [jtlSyncStatus, setJtlSyncStatus] = useState<{ success: boolean; error?: string } | null>(null);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
 
+  // Raw API product (for bundle data)
+  const [rawProduct, setRawProduct] = useState<ApiProduct | null>(null);
+
+  // Bundle state
+  const [bundleEnabled, setBundleEnabled] = useState(false);
+  const [bundlePrice, setBundlePrice] = useState('');
+  const [bundleComponents, setBundleComponents] = useState<Array<{
+    childProductId: string;
+    name: string;
+    sku: string;
+    gtin: string | null;
+    imageUrl: string | null;
+    available: number;
+    quantity: number;
+  }>>([]);
+  const [isEditingBundle, setIsEditingBundle] = useState(false);
+  const [bundleSearchQuery, setBundleSearchQuery] = useState('');
+  const [bundleSearchResults, setBundleSearchResults] = useState<BundleSearchResult[]>([]);
+  const [bundleSaving, setBundleSaving] = useState(false);
+  const [bundleSaveMessage, setBundleSaveMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [showDeleteBundleConfirm, setShowDeleteBundleConfirm] = useState(false);
+  const [bundleDeleting, setBundleDeleting] = useState(false);
+  const bundleSearchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   // Fetch product details from API
   useEffect(() => {
     const fetchProduct = async () => {
@@ -172,6 +197,22 @@ export function ProductDetails({ productId, backUrl }: ProductDetailsProps) {
         const data = await dataApi.getProduct(productId);
         const transformed = transformApiProduct(data);
         setProductDetails(transformed);
+        setRawProduct(data);
+
+        // Initialize bundle state from API data
+        setBundleEnabled(data.isBundle || false);
+        setBundlePrice(data.bundlePrice != null ? String(data.bundlePrice) : '');
+        setBundleComponents(
+          (data.bundleItems || []).map((bi: BundleItem) => ({
+            childProductId: bi.childProduct.id,
+            name: bi.childProduct.name,
+            sku: bi.childProduct.sku,
+            gtin: bi.childProduct.gtin,
+            imageUrl: bi.childProduct.imageUrl,
+            available: bi.childProduct.available,
+            quantity: bi.quantity,
+          }))
+        );
       } catch (err) {
         console.error('Error fetching product:', err);
         setError(err instanceof Error ? err.message : 'Failed to load product details');
@@ -343,6 +384,119 @@ export function ProductDetails({ productId, backUrl }: ProductDetailsProps) {
       setSaveError(err.response?.data?.error || 'Failed to update product');
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  // Bundle search with debounce
+  const handleBundleSearch = (query: string) => {
+    setBundleSearchQuery(query);
+    if (bundleSearchTimeout.current) clearTimeout(bundleSearchTimeout.current);
+    if (!query.trim()) {
+      setBundleSearchResults([]);
+      return;
+    }
+    bundleSearchTimeout.current = setTimeout(async () => {
+      try {
+        const results = await dataApi.searchBundleComponents(productDetails!.id, query);
+        // Filter out already-added components
+        const existingIds = new Set(bundleComponents.map(c => c.childProductId));
+        setBundleSearchResults(results.filter(r => !existingIds.has(r.id)));
+      } catch (err) {
+        console.error('Bundle search error:', err);
+        setBundleSearchResults([]);
+      }
+    }, 300);
+  };
+
+  const addBundleComponent = (result: BundleSearchResult) => {
+    setBundleComponents(prev => [...prev, {
+      childProductId: result.id,
+      name: result.name,
+      sku: result.sku,
+      gtin: result.gtin,
+      imageUrl: result.imageUrl,
+      available: result.available,
+      quantity: 1,
+    }]);
+    setBundleSearchQuery('');
+    setBundleSearchResults([]);
+  };
+
+  const removeBundleComponent = (childProductId: string) => {
+    setBundleComponents(prev => prev.filter(c => c.childProductId !== childProductId));
+  };
+
+  const updateComponentQuantity = (childProductId: string, quantity: number) => {
+    if (quantity < 1) return;
+    setBundleComponents(prev => prev.map(c =>
+      c.childProductId === childProductId ? { ...c, quantity } : c
+    ));
+  };
+
+  const handleSaveBundle = async () => {
+    if (!productDetails?.id) return;
+    setBundleSaving(true);
+    setBundleSaveMessage(null);
+    try {
+      const result = await dataApi.updateBundle(productDetails.id, {
+        isBundle: bundleEnabled,
+        bundlePrice: bundleEnabled && bundlePrice ? parseFloat(bundlePrice) : null,
+        items: bundleEnabled ? bundleComponents.map(c => ({
+          childProductId: c.childProductId,
+          quantity: c.quantity,
+        })) : [],
+      });
+
+      // Update local state with response
+      setBundleComponents(
+        (result.bundleItems || []).map((bi: BundleItem) => ({
+          childProductId: bi.childProduct.id,
+          name: bi.childProduct.name,
+          sku: bi.childProduct.sku,
+          gtin: bi.childProduct.gtin,
+          imageUrl: bi.childProduct.imageUrl,
+          available: bi.childProduct.available,
+          quantity: bi.quantity,
+        }))
+      );
+      setIsEditingBundle(false); // Switch to view mode after save
+      setBundleSaveMessage({ type: 'success', text: tProducts('bundleSaved') });
+      setTimeout(() => setBundleSaveMessage(null), 3000);
+    } catch (err: any) {
+      setBundleSaveMessage({
+        type: 'error',
+        text: err.response?.data?.error || 'Failed to save bundle',
+      });
+    } finally {
+      setBundleSaving(false);
+    }
+  };
+
+  const handleDeleteBundle = async () => {
+    if (!productDetails?.id) return;
+    setBundleDeleting(true);
+    setBundleSaveMessage(null);
+    try {
+      await dataApi.updateBundle(productDetails.id, {
+        isBundle: false,
+        bundlePrice: null,
+        items: [],
+      });
+
+      // Reset local state
+      setBundleEnabled(false);
+      setBundlePrice('');
+      setBundleComponents([]);
+      setShowDeleteBundleConfirm(false);
+      setBundleSaveMessage({ type: 'success', text: tProducts('bundleDeleted') });
+      setTimeout(() => setBundleSaveMessage(null), 3000);
+    } catch (err: any) {
+      setBundleSaveMessage({
+        type: 'error',
+        text: err.response?.data?.error || 'Failed to delete bundle',
+      });
+    } finally {
+      setBundleDeleting(false);
     }
   };
 
@@ -1251,15 +1405,572 @@ export function ProductDetails({ productId, backUrl }: ProductDetailsProps) {
         <div
           style={{
             borderRadius: '8px',
-            padding: '48px',
+            padding: 'clamp(18px, 1.77vw, 24px)',
             backgroundColor: '#FFFFFF',
             boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.06), 0px 1px 3px 0px rgba(0, 0, 0, 0.1)',
-            textAlign: 'center',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '24px',
           }}
         >
-          <p style={{ color: '#6B7280', fontFamily: 'Inter, sans-serif' }}>
-            {tProducts('bundleComingSoon')}
-          </p>
+          {/* Bundle Toggle */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <span style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '16px', color: '#111827' }}>
+              {tProducts('markAsBundle')}
+            </span>
+            <button
+              onClick={() => {
+                const newEnabled = !bundleEnabled;
+                setBundleEnabled(newEnabled);
+                // When enabling bundle, enter edit mode
+                if (newEnabled) {
+                  setIsEditingBundle(true);
+                }
+              }}
+              style={{
+                width: '44px',
+                height: '24px',
+                borderRadius: '12px',
+                padding: '2px',
+                backgroundColor: bundleEnabled ? '#003450' : '#E5E7EB',
+                position: 'relative',
+                cursor: 'pointer',
+                border: 'none',
+                transition: 'background-color 0.2s',
+              }}
+            >
+              <div
+                style={{
+                  width: '20px',
+                  height: '20px',
+                  borderRadius: '50%',
+                  backgroundColor: '#FFFFFF',
+                  position: 'absolute',
+                  top: '2px',
+                  left: bundleEnabled ? '22px' : '2px',
+                  transition: 'left 0.2s',
+                  boxShadow: '0px 1px 2px rgba(0, 0, 0, 0.1)',
+                }}
+              />
+            </button>
+          </div>
+
+          {bundleEnabled && (
+            <>
+              {!isEditingBundle && bundleComponents.length > 0 ? (
+                /* VIEW MODE - Show completed bundle */
+                <>
+                  {/* Bundle Price Display */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', maxWidth: '300px' }}>
+                    <label style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '14px', color: '#374151' }}>
+                      {tProducts('bundlePrice')}
+                    </label>
+                    <div style={{
+                      padding: '8px 12px',
+                      backgroundColor: '#F9FAFB',
+                      borderRadius: '6px',
+                      border: '1px solid #E5E7EB',
+                      fontFamily: 'Inter, sans-serif',
+                      fontSize: '16px',
+                      fontWeight: 500,
+                      color: '#111827',
+                    }}>
+                      €{parseFloat(bundlePrice || '0').toFixed(2)}
+                    </div>
+                  </div>
+
+                  {/* Components Display - Read Only */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <span style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '14px', color: '#374151' }}>
+                        {tProducts('bundleComponents')} ({bundleComponents.length})
+                      </span>
+                    </div>
+
+                    <div style={{ border: '1px solid #E5E7EB', borderRadius: '8px', overflow: 'hidden' }}>
+                      {bundleComponents.map((comp, idx) => (
+                        <div
+                          key={comp.childProductId}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '12px',
+                            padding: '12px 16px',
+                            borderBottom: idx < bundleComponents.length - 1 ? '1px solid #E5E7EB' : 'none',
+                            backgroundColor: idx % 2 === 0 ? '#FFFFFF' : '#F9FAFB',
+                          }}
+                        >
+                          {/* Image */}
+                          <div style={{
+                            width: '56px',
+                            height: '56px',
+                            borderRadius: '6px',
+                            overflow: 'hidden',
+                            backgroundColor: '#F3F4F6',
+                            flexShrink: 0,
+                          }}>
+                            {comp.imageUrl ? (
+                              <img src={comp.imageUrl} alt={comp.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                            ) : (
+                              <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#9CA3AF' }}>
+                                <Package size={24} strokeWidth={1.5} />
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Name + SKU + Stock */}
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '14px', color: '#111827', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                              {comp.name}
+                            </div>
+                            <div style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color: '#6B7280' }}>
+                              {comp.sku}
+                            </div>
+                            {comp.available > 0 && (
+                              <div style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: '#6B7280', marginTop: '2px' }}>
+                                {comp.available} in stock
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Quantity Display */}
+                          <div style={{
+                            padding: '6px 12px',
+                            backgroundColor: '#F3F4F6',
+                            borderRadius: '4px',
+                            fontFamily: 'Inter, sans-serif',
+                            fontSize: '14px',
+                            fontWeight: 500,
+                            color: '#374151',
+                          }}>
+                            ×{comp.quantity}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Edit Bundle Button */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: '8px' }}>
+                    <button
+                      onClick={() => setIsEditingBundle(true)}
+                      style={{
+                        padding: '10px 24px',
+                        backgroundColor: '#FFFFFF',
+                        color: '#003450',
+                        borderRadius: '6px',
+                        border: '1px solid #003450',
+                        fontFamily: 'Inter, sans-serif',
+                        fontSize: '14px',
+                        fontWeight: 500,
+                        cursor: 'pointer',
+                      }}
+                    >
+                      {tProducts('editBundle')}
+                    </button>
+                    {bundleSaveMessage && (
+                      <span style={{
+                        fontFamily: 'Inter, sans-serif',
+                        fontSize: '14px',
+                        color: bundleSaveMessage.type === 'success' ? '#059669' : '#EF4444',
+                      }}>
+                        {bundleSaveMessage.text}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Delete Bundle Section */}
+                  <div
+                    style={{
+                      marginTop: '24px',
+                      borderRadius: '8px',
+                      padding: 'clamp(18px, 1.77vw, 24px)',
+                      backgroundColor: '#FEF2F2',
+                      border: '1px solid #FEE2E2',
+                    }}
+                  >
+                    <h3
+                      style={{
+                        fontFamily: 'Inter, sans-serif',
+                        fontWeight: 600,
+                        fontSize: '14px',
+                        lineHeight: '20px',
+                        color: '#991B1B',
+                        marginBottom: '8px',
+                      }}
+                    >
+                      {tProducts('deleteBundle')}
+                    </h3>
+                    <p
+                      style={{
+                        fontFamily: 'Inter, sans-serif',
+                        fontSize: '13px',
+                        lineHeight: '18px',
+                        color: '#7F1D1D',
+                        marginBottom: '16px',
+                      }}
+                    >
+                      {tProducts('deleteBundleWarning')}
+                    </p>
+                    <button
+                      onClick={() => setShowDeleteBundleConfirm(true)}
+                      disabled={bundleDeleting}
+                      style={{
+                        height: '38px',
+                        padding: '9px 17px',
+                        borderRadius: '6px',
+                        backgroundColor: bundleDeleting ? '#FCA5A5' : '#DC2626',
+                        border: 'none',
+                        cursor: bundleDeleting ? 'not-allowed' : 'pointer',
+                      }}
+                    >
+                      <span
+                        style={{
+                          fontFamily: 'Inter, sans-serif',
+                          fontWeight: 500,
+                          fontSize: '14px',
+                          lineHeight: '20px',
+                          color: '#FFFFFF',
+                        }}
+                      >
+                        {bundleDeleting ? tCommon('deleting') : tProducts('deleteBundle')}
+                      </span>
+                    </button>
+                  </div>
+                </>
+              ) : (
+                /* EDIT MODE - Show editing controls */
+                <>
+                  {/* Bundle Price */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', maxWidth: '300px' }}>
+                    <label style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '14px', color: '#374151' }}>
+                      {tProducts('bundlePrice')}
+                    </label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={bundlePrice}
+                      onChange={(e) => setBundlePrice(e.target.value)}
+                      placeholder="0.00"
+                      style={{
+                        padding: '8px 12px',
+                        backgroundColor: '#FFFFFF',
+                        borderRadius: '6px',
+                        border: '1px solid #D1D5DB',
+                        fontFamily: 'Inter, sans-serif',
+                        fontSize: '14px',
+                        color: '#374151',
+                        outline: 'none',
+                      }}
+                    />
+                  </div>
+
+                  {/* Components Table */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    <span style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '14px', color: '#374151' }}>
+                      {tProducts('bundleComponents')}
+                    </span>
+
+                    {bundleComponents.length === 0 ? (
+                      <p style={{ color: '#9CA3AF', fontFamily: 'Inter, sans-serif', fontSize: '14px', padding: '16px 0' }}>
+                        {tProducts('noComponentsYet')}
+                      </p>
+                    ) : (
+                  <div style={{ border: '1px solid #E5E7EB', borderRadius: '8px', overflow: 'hidden' }}>
+                    {bundleComponents.map((comp, idx) => (
+                      <div
+                        key={comp.childProductId}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '12px',
+                          padding: '12px 16px',
+                          borderBottom: idx < bundleComponents.length - 1 ? '1px solid #E5E7EB' : 'none',
+                          backgroundColor: idx % 2 === 0 ? '#FFFFFF' : '#F9FAFB',
+                        }}
+                      >
+                        {/* Image */}
+                        <div style={{
+                          width: '56px',
+                          height: '56px',
+                          borderRadius: '6px',
+                          overflow: 'hidden',
+                          backgroundColor: '#F3F4F6',
+                          flexShrink: 0,
+                        }}>
+                          {comp.imageUrl ? (
+                            <img src={comp.imageUrl} alt={comp.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                          ) : (
+                            <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#9CA3AF' }}>
+                              <Package size={24} strokeWidth={1.5} />
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Name + SKU */}
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '14px', color: '#111827', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            {comp.name}
+                          </div>
+                          <div style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color: '#6B7280' }}>
+                            {comp.sku}
+                          </div>
+                          {comp.available > 0 && (
+                            <div style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', color: '#6B7280', marginTop: '2px' }}>
+                              {comp.available} in stock
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Quantity */}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          <label style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color: '#6B7280', marginRight: '4px' }}>
+                            {tProducts('quantity')}:
+                          </label>
+                          <input
+                            type="number"
+                            min="1"
+                            value={comp.quantity}
+                            onChange={(e) => updateComponentQuantity(comp.childProductId, parseInt(e.target.value) || 1)}
+                            style={{
+                              width: '60px',
+                              padding: '4px 8px',
+                              borderRadius: '4px',
+                              border: '1px solid #D1D5DB',
+                              fontFamily: 'Inter, sans-serif',
+                              fontSize: '14px',
+                              textAlign: 'center',
+                            }}
+                          />
+                        </div>
+
+                        {/* Remove */}
+                        <button
+                          onClick={() => removeBundleComponent(comp.childProductId)}
+                          title={tProducts('removeComponent')}
+                          style={{
+                            padding: '4px 8px',
+                            backgroundColor: 'transparent',
+                            border: '1px solid #FCA5A5',
+                            borderRadius: '4px',
+                            color: '#EF4444',
+                            cursor: 'pointer',
+                            fontFamily: 'Inter, sans-serif',
+                            fontSize: '13px',
+                            fontWeight: 500,
+                          }}
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Product Search */}
+                <div style={{ position: 'relative', maxWidth: '400px' }}>
+                  <input
+                    type="text"
+                    value={bundleSearchQuery}
+                    onChange={(e) => handleBundleSearch(e.target.value)}
+                    placeholder={tProducts('searchProducts')}
+                    style={{
+                      width: '100%',
+                      padding: '8px 12px',
+                      borderRadius: '6px',
+                      border: '1px solid #D1D5DB',
+                      fontFamily: 'Inter, sans-serif',
+                      fontSize: '14px',
+                      color: '#374151',
+                      outline: 'none',
+                    }}
+                  />
+                  {/* Search Results Dropdown */}
+                  {bundleSearchResults.length > 0 && (
+                    <div style={{
+                      position: 'absolute',
+                      top: '100%',
+                      left: 0,
+                      right: 0,
+                      backgroundColor: '#FFFFFF',
+                      border: '1px solid #D1D5DB',
+                      borderRadius: '6px',
+                      marginTop: '4px',
+                      maxHeight: '240px',
+                      overflowY: 'auto',
+                      zIndex: 10,
+                      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+                    }}>
+                      {bundleSearchResults.map((result) => (
+                        <button
+                          key={result.id}
+                          onClick={() => addBundleComponent(result)}
+                          style={{
+                            width: '100%',
+                            padding: '10px 12px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '10px',
+                            border: 'none',
+                            backgroundColor: 'transparent',
+                            cursor: 'pointer',
+                            textAlign: 'left',
+                            borderBottom: '1px solid #F3F4F6',
+                          }}
+                          onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#F9FAFB'; }}
+                          onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; }}
+                        >
+                          <div style={{
+                            width: '48px', height: '48px', borderRadius: '4px',
+                            overflow: 'hidden', backgroundColor: '#F3F4F6', flexShrink: 0,
+                          }}>
+                            {result.imageUrl ? (
+                              <img src={result.imageUrl} alt={result.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                            ) : (
+                              <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#9CA3AF' }}>
+                                <Package size={20} strokeWidth={1.5} />
+                              </div>
+                            )}
+                          </div>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ fontFamily: 'Inter, sans-serif', fontSize: '14px', fontWeight: 500, color: '#111827', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                              {result.name}
+                            </div>
+                            <div style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color: '#6B7280' }}>
+                              {result.sku} · {result.available} {tProducts('stock').toLowerCase()}
+                            </div>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Save Button + Feedback */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: '8px' }}>
+                <button
+                  onClick={handleSaveBundle}
+                  disabled={bundleSaving}
+                  style={{
+                    padding: '10px 24px',
+                    backgroundColor: bundleSaving ? '#9CA3AF' : '#003450',
+                    color: '#FFFFFF',
+                    borderRadius: '6px',
+                    border: 'none',
+                    fontFamily: 'Inter, sans-serif',
+                    fontSize: '14px',
+                    fontWeight: 500,
+                    cursor: bundleSaving ? 'not-allowed' : 'pointer',
+                  }}
+                >
+                  {bundleSaving ? tProducts('savingBundle') : tProducts('saveBundle')}
+                </button>
+                {bundleSaveMessage && (
+                  <span style={{
+                    fontFamily: 'Inter, sans-serif',
+                    fontSize: '14px',
+                    color: bundleSaveMessage.type === 'success' ? '#059669' : '#EF4444',
+                  }}>
+                    {bundleSaveMessage.text}
+                  </span>
+                )}
+              </div>
+                </>
+              )}
+            </>
+          )}
+        </div>
+      )}
+
+      {/* Delete Bundle Confirmation Modal */}
+      {showDeleteBundleConfirm && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+          }}
+          onClick={() => setShowDeleteBundleConfirm(false)}
+        >
+          <div
+            style={{
+              backgroundColor: '#FFFFFF',
+              borderRadius: '8px',
+              padding: '24px',
+              maxWidth: '480px',
+              width: '90%',
+              boxShadow: '0px 20px 25px -5px rgba(0, 0, 0, 0.1), 0px 10px 10px -5px rgba(0, 0, 0, 0.04)',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3
+              style={{
+                fontFamily: 'Inter, sans-serif',
+                fontWeight: 600,
+                fontSize: '18px',
+                color: '#111827',
+                marginBottom: '12px',
+              }}
+            >
+              {tProducts('deleteBundleConfirmTitle')}
+            </h3>
+            <p
+              style={{
+                fontFamily: 'Inter, sans-serif',
+                fontSize: '14px',
+                lineHeight: '20px',
+                color: '#6B7280',
+                marginBottom: '24px',
+              }}
+            >
+              {tProducts('deleteBundleConfirmMessage')}
+            </p>
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+              <button
+                onClick={() => setShowDeleteBundleConfirm(false)}
+                disabled={bundleDeleting}
+                style={{
+                  padding: '8px 16px',
+                  backgroundColor: '#FFFFFF',
+                  border: '1px solid #D1D5DB',
+                  borderRadius: '6px',
+                  fontFamily: 'Inter, sans-serif',
+                  fontSize: '14px',
+                  fontWeight: 500,
+                  color: '#374151',
+                  cursor: bundleDeleting ? 'not-allowed' : 'pointer',
+                }}
+              >
+                {tCommon('cancel')}
+              </button>
+              <button
+                onClick={handleDeleteBundle}
+                disabled={bundleDeleting}
+                style={{
+                  padding: '8px 16px',
+                  backgroundColor: bundleDeleting ? '#FCA5A5' : '#DC2626',
+                  border: 'none',
+                  borderRadius: '6px',
+                  fontFamily: 'Inter, sans-serif',
+                  fontSize: '14px',
+                  fontWeight: 500,
+                  color: '#FFFFFF',
+                  cursor: bundleDeleting ? 'not-allowed' : 'pointer',
+                }}
+              >
+                {bundleDeleting ? tCommon('deleting') : tProducts('deleteBundle')}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

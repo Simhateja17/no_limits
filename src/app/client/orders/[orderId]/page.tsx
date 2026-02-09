@@ -9,8 +9,9 @@ import { useAuthStore } from '@/lib/store';
 import { useEffect } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { dataApi, type Order as ApiOrder, type UpdateOrderInput } from '@/lib/data-api';
+import { fulfillmentApi } from '@/lib/fulfillment-api';
 import { Skeleton, GenericTableSkeleton } from '@/components/ui';
-import { COUNTRIES } from '@/constants/countries';
+import { COUNTRIES, getCountryName } from '@/constants/countries';
 import { StatusHistory } from '@/components/orders/StatusHistory';
 
 // Payment Status Badge Component
@@ -118,6 +119,14 @@ const transformApiOrderToDetails = (apiOrder: ApiOrder): OrderDetails => {
       switch (fulfillmentState) {
         case 'PENDING':
           return 'Processing';
+        case 'PREPARATION':
+          return 'Preparation';
+        case 'ACKNOWLEDGED':
+          return 'Acknowledged';
+        case 'LOCKED':
+          return 'Locked';
+        case 'PICKPROCESS':
+          return 'Pick Process';
         case 'AWAITING_STOCK':
           return 'Awaiting Stock';
         case 'READY_FOR_PICKING':
@@ -134,6 +143,8 @@ const transformApiOrderToDetails = (apiOrder: ApiOrder): OrderDetails => {
           return 'Label Created';
         case 'SHIPPED':
           return 'Shipped';
+        case 'PARTIALLY_SHIPPED':
+          return 'Partially Shipped';
         case 'IN_TRANSIT':
           return 'In Transit';
         case 'OUT_FOR_DELIVERY':
@@ -144,9 +155,13 @@ const transformApiOrderToDetails = (apiOrder: ApiOrder): OrderDetails => {
           return 'Delivery Failed';
         case 'RETURNED_TO_SENDER':
           return 'Returned to Sender';
+        case 'CANCELED':
+          return 'Canceled';
+        case 'PARTIALLY_CANCELED':
+          return 'Partially Canceled';
       }
     }
-    
+
     // Fall back to order status
     switch (status) {
       case 'SHIPPED':
@@ -168,9 +183,15 @@ const transformApiOrderToDetails = (apiOrder: ApiOrder): OrderDetails => {
   const getStatusColor = (status: string, fulfillmentState: string | null): string => {
     if (fulfillmentState) {
       switch (fulfillmentState) {
+        case 'PREPARATION':
+        case 'ACKNOWLEDGED':
+        case 'LOCKED':
+        case 'PICKPROCESS':
+          return '#3B82F6'; // Blue for processing
         case 'SHIPPED':
         case 'IN_TRANSIT':
         case 'OUT_FOR_DELIVERY':
+        case 'PARTIALLY_SHIPPED':
           return '#8B5CF6'; // Purple for shipped
         case 'DELIVERED':
           return '#10B981'; // Green for delivered
@@ -184,6 +205,9 @@ const transformApiOrderToDetails = (apiOrder: ApiOrder): OrderDetails => {
         case 'FAILED_DELIVERY':
         case 'RETURNED_TO_SENDER':
           return '#EF4444'; // Red for failed
+        case 'CANCELED':
+        case 'PARTIALLY_CANCELED':
+          return '#EF4444'; // Red for canceled
         case 'AWAITING_STOCK':
           return '#F59E0B'; // Amber for awaiting
       }
@@ -210,14 +234,16 @@ const transformApiOrderToDetails = (apiOrder: ApiOrder): OrderDetails => {
     statusColor: getStatusColor(apiOrder.status, apiOrder.fulfillmentState || null),
     // Use actual shipping address from order
     deliveryMethod: {
-      name: apiOrder.customerName ||
-        `${apiOrder.shippingFirstName || ''} ${apiOrder.shippingLastName || ''}`.trim() ||
+      name: `${apiOrder.shippingFirstName || ''} ${apiOrder.shippingLastName || ''}`.trim() ||
+        apiOrder.customerName ||
         (apiOrder.client?.name || apiOrder.client?.companyName || '').trim() ||
         'N/A',
       street: apiOrder.shippingAddress1 || 'N/A',
       zip: apiOrder.shippingZip || '',
       city: apiOrder.shippingCity || 'N/A',
-      country: apiOrder.shippingCountry || 'N/A',
+      country: apiOrder.shippingCountryCode
+        ? getCountryName(apiOrder.shippingCountryCode)
+        : (apiOrder.shippingCountry || 'N/A'),
     },
     shippingMethod: apiOrder.shippingMethod || 'Standard',
     trackingNumber: apiOrder.trackingNumber || 'N/A',
@@ -234,6 +260,13 @@ const transformApiOrderToDetails = (apiOrder: ApiOrder): OrderDetails => {
       merchant: apiOrder.client?.companyName || apiOrder.client?.name || 'N/A',
     })),
   };
+};
+
+const getCountryCode = (countryCode?: string | null, countryName?: string | null): string => {
+  if (countryCode) return countryCode;
+  if (!countryName) return '';
+  const country = COUNTRIES.find((c) => c.en === countryName || c.de === countryName);
+  return country?.code || '';
 };
 
 // Mock available products to add
@@ -336,6 +369,10 @@ export default function ClientOrderDetailPage() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
+  // Hold release state
+  const [showReleaseConfirmation, setShowReleaseConfirmation] = useState(false);
+  const [isReleasingHold, setIsReleasingHold] = useState(false);
+
   // Form state for edit modal
   const [formData, setFormData] = useState({
     firstName: '',
@@ -345,7 +382,7 @@ export default function ClientOrderDetailPage() {
     streetAddress: '',
     city: '',
     zipPostal: '',
-    country: 'United States',
+    country: 'US',
   });
 
   useEffect(() => {
@@ -379,7 +416,7 @@ export default function ClientOrderDetailPage() {
           streetAddress: (data as any).shippingAddress1 || '',
           city: (data as any).shippingCity || '',
           zipPostal: (data as any).shippingZip || '',
-          country: (data as any).shippingCountry || 'Deutschland',
+          country: getCountryCode((data as any).shippingCountryCode, (data as any).shippingCountry),
         });
         // Initialize order notes
         setOrderNotes((data as any).warehouseNotes || '');
@@ -480,10 +517,10 @@ export default function ClientOrderDetailPage() {
   };
 
   // Save all order changes to DB and sync to JTL
-  const handleSaveOrder = async () => {
+  const handleSaveOrder = async (): Promise<boolean> => {
     if (!rawOrder?.id) {
       setSaveError('Order data not loaded');
-      return;
+      return false;
     }
 
     setIsSaving(true);
@@ -503,6 +540,7 @@ export default function ClientOrderDetailPage() {
         shippingAddress2: formData.addressLine2 || undefined,
         shippingCity: formData.city || undefined,
         shippingZip: formData.zipPostal || undefined,
+        shippingCountryCode: formData.country || undefined,
         items: orderProducts.map(p => ({
           id: p.id,
           sku: p.sku,
@@ -535,19 +573,22 @@ export default function ClientOrderDetailPage() {
       setTimeout(() => {
         setShowSuccessModal(false);
       }, 2000);
+      return true;
     } catch (err: any) {
       console.error('Error updating order:', err);
       setSaveError(err.response?.data?.error || 'Failed to update order');
+      return false;
     } finally {
       setIsSaving(false);
     }
   };
 
-  // Save address from modal and close it
+  // Save address from modal
   const handleSaveAddress = async () => {
-    setShowEditModal(false);
-    // The actual save happens when the user clicks the main Save button
-    // This just closes the address edit modal
+    const saved = await handleSaveOrder();
+    if (saved) {
+      setShowEditModal(false);
+    }
   };
 
   // Handle delete order
@@ -669,6 +710,32 @@ export default function ClientOrderDetailPage() {
     }
   };
 
+  // Handle release payment hold
+  const handleReleaseHold = async () => {
+    if (!rawOrder?.id) return;
+
+    setIsReleasingHold(true);
+    try {
+      const result = await fulfillmentApi.releaseHold(rawOrder.id);
+      if (result.success) {
+        // Refresh order data
+        const updatedOrder = await dataApi.getOrder(rawOrder.id);
+        setRawOrder(updatedOrder as any);
+        const transformed = transformApiOrderToDetails(updatedOrder as any);
+        setOrderDetails(transformed);
+        setOnHoldStatus(transformed.onHoldStatus);
+      } else {
+        setError(result.message || 'Failed to release hold');
+      }
+    } catch (err: any) {
+      console.error('Error releasing hold:', err);
+      setError(err.response?.data?.error || 'An error occurred while releasing the hold');
+    } finally {
+      setIsReleasingHold(false);
+      setShowReleaseConfirmation(false);
+    }
+  };
+
   // Handle sync to JTL FFN
   const handleSyncToJTL = async () => {
     if (!rawOrder?.id) {
@@ -732,6 +799,67 @@ export default function ClientOrderDetailPage() {
               {tCommon('back')}
             </span>
           </button>
+
+          {/* Payment Hold Banner */}
+          {rawOrder?.isOnHold && rawOrder?.holdReason === 'AWAITING_PAYMENT' && (
+            <div
+              style={{
+                marginTop: '16px',
+                padding: '16px 20px',
+                borderRadius: '8px',
+                backgroundColor: '#FFFBEB',
+                border: '1px solid #FCD34D',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                gap: '16px',
+              }}
+            >
+              <div style={{ flex: 1 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <svg width="20" height="20" viewBox="0 0 20 20" fill="#D97706">
+                    <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd"/>
+                  </svg>
+                  <span style={{
+                    fontFamily: 'Inter, sans-serif',
+                    fontWeight: 600,
+                    fontSize: '14px',
+                    color: '#92400E',
+                  }}>
+                    Order On Hold: Awaiting Payment
+                  </span>
+                </div>
+                <p style={{
+                  fontFamily: 'Inter, sans-serif',
+                  fontWeight: 400,
+                  fontSize: '13px',
+                  color: '#B45309',
+                  marginTop: '6px',
+                  marginLeft: '28px',
+                }}>
+                  Payment not yet confirmed. You can release this hold to proceed with fulfillment.
+                </p>
+              </div>
+              <button
+                onClick={() => setShowReleaseConfirmation(true)}
+                style={{
+                  padding: '8px 16px',
+                  backgroundColor: '#D97706',
+                  color: '#FFFFFF',
+                  fontSize: '14px',
+                  fontFamily: 'Inter, sans-serif',
+                  fontWeight: 500,
+                  borderRadius: '6px',
+                  border: 'none',
+                  cursor: 'pointer',
+                  whiteSpace: 'nowrap',
+                  flexShrink: 0,
+                }}
+              >
+                Release Hold
+              </button>
+            </div>
+          )}
 
           {/* Main Content */}
           <div className="mt-8 flex flex-col lg:flex-row gap-[clamp(20px,2.5vw,34px)]">
@@ -1240,7 +1368,7 @@ export default function ClientOrderDetailPage() {
                       color: '#D97706',
                     }}
                   >
-                    This order is awaiting payment. Hold will be automatically released when payment is confirmed.
+                    This order is awaiting payment. Use the banner above to release the hold manually, or it will be released automatically when payment is confirmed.
                   </p>
                 ) : (
                   <p
@@ -3007,6 +3135,97 @@ export default function ClientOrderDetailPage() {
           </div>
         )}
       </div>
+
+      {/* Payment Hold Release Confirmation Dialog */}
+      {showReleaseConfirmation && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 50,
+          }}
+          onClick={() => !isReleasingHold && setShowReleaseConfirmation(false)}
+        >
+          <div
+            style={{
+              backgroundColor: '#FFFFFF',
+              borderRadius: '12px',
+              padding: '24px',
+              maxWidth: '440px',
+              width: '90%',
+              boxShadow: '0px 20px 25px -5px rgba(0, 0, 0, 0.1), 0px 10px 10px -5px rgba(0, 0, 0, 0.04)',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
+              <svg width="24" height="24" viewBox="0 0 20 20" fill="#D97706">
+                <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd"/>
+              </svg>
+              <h3 style={{
+                fontFamily: 'Inter, sans-serif',
+                fontWeight: 600,
+                fontSize: '18px',
+                color: '#111827',
+                margin: 0,
+              }}>
+                Release Payment Hold?
+              </h3>
+            </div>
+            <p style={{
+              fontFamily: 'Inter, sans-serif',
+              fontWeight: 400,
+              fontSize: '14px',
+              lineHeight: '22px',
+              color: '#6B7280',
+              marginBottom: '20px',
+            }}>
+              This order has not been paid yet. Releasing the hold will queue it for fulfillment.
+              You accept the risk of fulfilling an unpaid order. Are you sure you want to continue?
+            </p>
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+              <button
+                onClick={() => setShowReleaseConfirmation(false)}
+                disabled={isReleasingHold}
+                style={{
+                  padding: '8px 16px',
+                  fontSize: '14px',
+                  fontFamily: 'Inter, sans-serif',
+                  fontWeight: 500,
+                  color: '#374151',
+                  backgroundColor: '#F3F4F6',
+                  borderRadius: '6px',
+                  border: 'none',
+                  cursor: isReleasingHold ? 'not-allowed' : 'pointer',
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleReleaseHold}
+                disabled={isReleasingHold}
+                style={{
+                  padding: '8px 16px',
+                  fontSize: '14px',
+                  fontFamily: 'Inter, sans-serif',
+                  fontWeight: 500,
+                  color: '#FFFFFF',
+                  backgroundColor: isReleasingHold ? '#F59E0B' : '#D97706',
+                  borderRadius: '6px',
+                  border: 'none',
+                  cursor: isReleasingHold ? 'not-allowed' : 'pointer',
+                  opacity: isReleasingHold ? 0.7 : 1,
+                }}
+              >
+                {isReleasingHold ? 'Releasing...' : 'Yes, Release Hold'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </DashboardLayout>
   );
 }
