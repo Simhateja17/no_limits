@@ -114,36 +114,36 @@ const transformApiOrderToDetails = (apiOrder: ApiOrder): OrderDetails => {
   const getDisplayStatus = (status: string, fulfillmentState: string | null): string => {
     if (fulfillmentState) {
       switch (fulfillmentState) {
-        case 'PENDING': return 'Processing';
-        case 'PREPARATION': return 'Preparation';
-        case 'ACKNOWLEDGED': return 'Acknowledged';
-        case 'LOCKED': return 'Locked';
-        case 'PICKPROCESS': return 'Pick Process';
-        case 'AWAITING_STOCK': return 'Awaiting Stock';
-        case 'READY_FOR_PICKING': return 'Ready for Picking';
-        case 'PICKING': return 'Picking';
-        case 'PICKED': return 'Picked';
-        case 'PACKING': return 'Packing';
-        case 'PACKED': return 'Packed';
-        case 'LABEL_CREATED': return 'Label Created';
-        case 'SHIPPED': return 'Shipped';
-        case 'PARTIALLY_SHIPPED': return 'Partially Shipped';
-        case 'IN_TRANSIT': return 'In Transit';
-        case 'OUT_FOR_DELIVERY': return 'Out for Delivery';
-        case 'DELIVERED': return 'Delivered';
-        case 'FAILED_DELIVERY': return 'Delivery Failed';
-        case 'RETURNED_TO_SENDER': return 'Returned to Sender';
-        case 'CANCELED': return 'Canceled';
-        case 'PARTIALLY_CANCELED': return 'Partially Canceled';
+        case 'PENDING': return 'processing';
+        case 'PREPARATION': return 'preparation';
+        case 'ACKNOWLEDGED': return 'acknowledged';
+        case 'LOCKED': return 'locked';
+        case 'PICKPROCESS': return 'pickprocess';
+        case 'AWAITING_STOCK': return 'awaiting_stock';
+        case 'READY_FOR_PICKING': return 'ready_for_picking';
+        case 'PICKING': return 'picking';
+        case 'PICKED': return 'picked';
+        case 'PACKING': return 'packing';
+        case 'PACKED': return 'packed';
+        case 'LABEL_CREATED': return 'label_created';
+        case 'SHIPPED': return 'shipped';
+        case 'PARTIALLY_SHIPPED': return 'partially_shipped';
+        case 'IN_TRANSIT': return 'in_transit';
+        case 'OUT_FOR_DELIVERY': return 'out_for_delivery';
+        case 'DELIVERED': return 'delivered';
+        case 'FAILED_DELIVERY': return 'failed_delivery';
+        case 'RETURNED_TO_SENDER': return 'returned_to_sender';
+        case 'CANCELED': return 'canceled';
+        case 'PARTIALLY_CANCELED': return 'partially_canceled';
       }
     }
     switch (status) {
-      case 'SHIPPED': return 'Shipped';
-      case 'DELIVERED': return 'Delivered';
-      case 'ON_HOLD': return 'On Hold';
-      case 'CANCELLED': return 'Cancelled';
-      case 'ERROR': return 'Error';
-      default: return 'Processing';
+      case 'SHIPPED': return 'shipped';
+      case 'DELIVERED': return 'delivered';
+      case 'ON_HOLD': return 'on_hold';
+      case 'CANCELLED': return 'cancelled';
+      case 'ERROR': return 'error';
+      default: return 'processing';
     }
   };
 
@@ -230,16 +230,17 @@ const shippingMethods = [
   { id: 'hermes', name: 'Hermes Paket', logo: '/hermes.png' },
 ];
 
-// Status color mapping (legacy - kept for compatibility but statusColor from transform is preferred)
+// Status color mapping - uses translation keys
 const getStatusColor = (status: string) => {
   switch (status) {
-    case 'Processing': return '#6BAC4D';
-    case 'On Hold': case 'Awaiting Stock': return '#F59E0B';
-    case 'Shipped': case 'In Transit': case 'Out for Delivery': return '#8B5CF6';
-    case 'Delivered': return '#10B981';
-    case 'Picking': case 'Picked': case 'Ready for Picking': return '#3B82F6';
-    case 'Packing': case 'Packed': case 'Label Created': return '#06B6D4';
-    case 'Cancelled': case 'Error': case 'Delivery Failed': case 'Returned to Sender': return '#EF4444';
+    case 'processing': return '#6BAC4D';
+    case 'on_hold': case 'awaiting_stock': return '#F59E0B';
+    case 'shipped': case 'in_transit': case 'out_for_delivery': case 'partially_shipped': return '#8B5CF6';
+    case 'delivered': return '#10B981';
+    case 'picking': case 'picked': case 'ready_for_picking': return '#3B82F6';
+    case 'preparation': case 'acknowledged': case 'locked': case 'pickprocess': return '#3B82F6';
+    case 'packing': case 'packed': case 'label_created': return '#06B6D4';
+    case 'cancelled': case 'canceled': case 'error': case 'failed_delivery': case 'returned_to_sender': case 'partially_canceled': return '#EF4444';
     default: return '#6BAC4D';
   }
 };
@@ -706,7 +707,7 @@ export default function OrderDetailPage() {
                           width: '6px',
                           height: '6px',
                           borderRadius: '50%',
-                          backgroundColor: onHoldStatus ? '#F59E0B' : getStatusColor(orderDetails?.status || 'Processing'),
+                          backgroundColor: onHoldStatus ? '#F59E0B' : getStatusColor(orderDetails?.status || 'processing'),
                         }}
                       />
                       <span
@@ -718,7 +719,7 @@ export default function OrderDetailPage() {
                           color: '#000000',
                         }}
                       >
-                        {onHoldStatus ? tOrders('onHold') : tOrders((orderDetails?.status || 'Processing').toLowerCase())}
+                        {onHoldStatus ? tOrders('onHold') : tOrders(orderDetails?.status || 'processing')}
                       </span>
                     </div>
 
@@ -768,7 +769,7 @@ export default function OrderDetailPage() {
                           width: '6px',
                           height: '6px',
                           borderRadius: '50%',
-                          backgroundColor: onHoldStatus ? '#F59E0B' : getStatusColor(orderDetails?.status || 'Processing'),
+                          backgroundColor: onHoldStatus ? '#F59E0B' : getStatusColor(orderDetails?.status || 'processing'),
                         }}
                       />
                       <span
@@ -780,7 +781,7 @@ export default function OrderDetailPage() {
                           color: '#000000',
                         }}
                       >
-                        {onHoldStatus ? tOrders('onHold') : tOrders((orderDetails?.status || 'Processing').toLowerCase())}
+                        {onHoldStatus ? tOrders('onHold') : tOrders(orderDetails?.status || 'processing')}
                       </span>
                     </div>
                   </div>
@@ -1896,7 +1897,7 @@ export default function OrderDetailPage() {
                     color: '#6B7280',
                     margin: 0,
                   }}>
-                    This order has been synced to JTL FFN and can no longer be edited.
+                    {tOrders('editLockedJtl')}
                   </p>
                 )}
               </div>

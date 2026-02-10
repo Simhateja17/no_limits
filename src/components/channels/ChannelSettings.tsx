@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { useAuthStore } from '@/lib/store';
-import { channelsApi, Location, ShippingMethod, fetchAllProducts, fetchAllOrders, syncOrderStatuses } from '@/lib/channels-api';
+import { channelsApi, Location, ShippingMethod, syncOrderStatuses } from '@/lib/channels-api';
 import { onboardingApi } from '@/lib/onboarding-api';
 import { SyncStatusBar } from './SyncStatusBar';
 import {
@@ -245,11 +245,9 @@ export function ChannelSettings({ channelId, baseUrl, initialChannelType = 'Wooc
     return date.toISOString().split('T')[0];
   });
 
-  // Fetch All State (for fetching all products/orders without date filter)
-  const [isFetchingAllProducts, setIsFetchingAllProducts] = useState(false);
-  const [isFetchingAllOrders, setIsFetchingAllOrders] = useState(false);
+  // Sync Order Statuses State
   const [isSyncingOrderStatuses, setIsSyncingOrderStatuses] = useState(false);
-  const [fetchAllResult, setFetchAllResult] = useState<{ type: 'products' | 'orders' | 'order-statuses' | null; message: string; success: boolean } | null>(null);
+  const [fetchAllResult, setFetchAllResult] = useState<{ type: 'order-statuses' | null; message: string; success: boolean } | null>(null);
 
   // Track if credentials have been fetched from backend (for masking)
   const [isCredentialsFetched, setIsCredentialsFetched] = useState(false);
@@ -550,70 +548,6 @@ export function ChannelSettings({ channelId, baseUrl, initialChannelType = 'Wooc
       setPipelineError(err instanceof Error ? err.message : 'Failed to restart sync');
     } finally {
       setIsStartingPipeline(false);
-    }
-  };
-
-  // Handler to fetch ALL products without date filter
-  const handleFetchAllProducts = async () => {
-    if (!channelId || channelId === 'new') return;
-
-    try {
-      setIsFetchingAllProducts(true);
-      setFetchAllResult(null);
-
-      const result = await fetchAllProducts(channelId);
-
-      setFetchAllResult({
-        type: 'products',
-        message: result.message,
-        success: result.success,
-      });
-
-      // Auto-hide success message after 5 seconds
-      if (result.success) {
-        setTimeout(() => setFetchAllResult(null), 5000);
-      }
-    } catch (err) {
-      console.error('Error fetching all products:', err);
-      setFetchAllResult({
-        type: 'products',
-        message: err instanceof Error ? err.message : 'Failed to fetch products',
-        success: false,
-      });
-    } finally {
-      setIsFetchingAllProducts(false);
-    }
-  };
-
-  // Handler to fetch ALL orders without date filter
-  const handleFetchAllOrders = async () => {
-    if (!channelId || channelId === 'new') return;
-
-    try {
-      setIsFetchingAllOrders(true);
-      setFetchAllResult(null);
-
-      const result = await fetchAllOrders(channelId);
-
-      setFetchAllResult({
-        type: 'orders',
-        message: result.message,
-        success: result.success,
-      });
-
-      // Auto-hide success message after 5 seconds
-      if (result.success) {
-        setTimeout(() => setFetchAllResult(null), 5000);
-      }
-    } catch (err) {
-      console.error('Error fetching all orders:', err);
-      setFetchAllResult({
-        type: 'orders',
-        message: err instanceof Error ? err.message : 'Failed to fetch orders',
-        success: false,
-      });
-    } finally {
-      setIsFetchingAllOrders(false);
     }
   };
 
@@ -3173,7 +3107,7 @@ export function ChannelSettings({ channelId, baseUrl, initialChannelType = 'Wooc
                 margin: 0,
               }}
             >
-              Fetch All Data
+              Sync Order Statuses
             </h2>
             <p
               style={{
@@ -3185,7 +3119,7 @@ export function ChannelSettings({ channelId, baseUrl, initialChannelType = 'Wooc
                 margin: 0,
               }}
             >
-              Import all products or orders from your sales channel without date restrictions. Useful for migration or recovering missed data.
+              Synchronize order statuses from JTL FFN and push updates to your sales channel. Keeps all order statuses up to date.
             </p>
           </div>
 
@@ -3262,7 +3196,7 @@ export function ChannelSettings({ channelId, baseUrl, initialChannelType = 'Wooc
                     margin: 0,
                   }}
                 >
-                  These operations fetch <strong>all data</strong> from your sales channel, ignoring any date filters. This is useful for migration clients or when the normal sync misses some data. The process may take longer for stores with many products or orders.
+                  This operation fetches the latest order statuses from JTL FFN and updates your sales channel. Use this to ensure all order statuses are synchronized.
                 </p>
               </div>
 
@@ -3274,121 +3208,17 @@ export function ChannelSettings({ channelId, baseUrl, initialChannelType = 'Wooc
                   flexWrap: 'wrap',
                 }}
               >
-                {/* Fetch All Products Button */}
-                <button
-                  onClick={handleFetchAllProducts}
-                  disabled={isFetchingAllProducts || isFetchingAllOrders}
-                  style={{
-                    height: 'clamp(36px, 3.53vw, 44px)',
-                    borderRadius: '6px',
-                    border: '1px solid #D1D5DB',
-                    padding: 'clamp(8px, 0.78vw, 10px) clamp(16px, 1.57vw, 20px)',
-                    backgroundColor: isFetchingAllProducts || isFetchingAllOrders ? '#F3F4F6' : '#FFFFFF',
-                    cursor: isFetchingAllProducts || isFetchingAllOrders ? 'not-allowed' : 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 'clamp(8px, 0.78vw, 10px)',
-                    transition: 'background-color 0.2s',
-                  }}
-                >
-                  {isFetchingAllProducts && (
-                    <svg
-                      width="16"
-                      height="16"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      style={{ animation: 'spin 1s linear infinite' }}
-                    >
-                      <circle
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                        fill="none"
-                        opacity="0.25"
-                      />
-                      <path
-                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                        fill="currentColor"
-                      />
-                    </svg>
-                  )}
-                  <span
-                    style={{
-                      fontFamily: 'Inter, sans-serif',
-                      fontWeight: 500,
-                      fontSize: 'clamp(12px, 1.18vw, 14px)',
-                      color: isFetchingAllProducts || isFetchingAllOrders ? '#9CA3AF' : '#374151',
-                    }}
-                  >
-                    {isFetchingAllProducts ? 'Fetching Products...' : 'Fetch All Products'}
-                  </span>
-                </button>
-
-                {/* Fetch All Orders Button */}
-                <button
-                  onClick={handleFetchAllOrders}
-                  disabled={isFetchingAllProducts || isFetchingAllOrders}
-                  style={{
-                    height: 'clamp(36px, 3.53vw, 44px)',
-                    borderRadius: '6px',
-                    border: '1px solid #D1D5DB',
-                    padding: 'clamp(8px, 0.78vw, 10px) clamp(16px, 1.57vw, 20px)',
-                    backgroundColor: isFetchingAllProducts || isFetchingAllOrders ? '#F3F4F6' : '#FFFFFF',
-                    cursor: isFetchingAllProducts || isFetchingAllOrders ? 'not-allowed' : 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 'clamp(8px, 0.78vw, 10px)',
-                    transition: 'background-color 0.2s',
-                  }}
-                >
-                  {isFetchingAllOrders && (
-                    <svg
-                      width="16"
-                      height="16"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      style={{ animation: 'spin 1s linear infinite' }}
-                    >
-                      <circle
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                        fill="none"
-                        opacity="0.25"
-                      />
-                      <path
-                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                        fill="currentColor"
-                      />
-                    </svg>
-                  )}
-                  <span
-                    style={{
-                      fontFamily: 'Inter, sans-serif',
-                      fontWeight: 500,
-                      fontSize: 'clamp(12px, 1.18vw, 14px)',
-                      color: isFetchingAllProducts || isFetchingAllOrders ? '#9CA3AF' : '#374151',
-                    }}
-                  >
-                    {isFetchingAllOrders ? 'Fetching Orders...' : 'Fetch All Orders'}
-                  </span>
-                </button>
-
                 {/* Sync Order Statuses Button */}
                 <button
                   onClick={handleSyncOrderStatuses}
-                  disabled={isFetchingAllProducts || isFetchingAllOrders || isSyncingOrderStatuses}
+                  disabled={isSyncingOrderStatuses}
                   style={{
                     height: 'clamp(36px, 3.53vw, 44px)',
                     borderRadius: '6px',
                     border: 'none',
                     padding: 'clamp(8px, 0.78vw, 10px) clamp(16px, 1.57vw, 20px)',
-                    backgroundColor: isFetchingAllProducts || isFetchingAllOrders || isSyncingOrderStatuses ? '#9CA3AF' : '#2563EB',
-                    cursor: isFetchingAllProducts || isFetchingAllOrders || isSyncingOrderStatuses ? 'not-allowed' : 'pointer',
+                    backgroundColor: isSyncingOrderStatuses ? '#9CA3AF' : '#2563EB',
+                    cursor: isSyncingOrderStatuses ? 'not-allowed' : 'pointer',
                     display: 'flex',
                     alignItems: 'center',
                     gap: 'clamp(8px, 0.78vw, 10px)',

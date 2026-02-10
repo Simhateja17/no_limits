@@ -125,7 +125,7 @@ const getDisplayStatus = (backendStatus: string, fulfillmentState: string | null
   if (fulfillmentState) {
     switch (fulfillmentState) {
       case 'PENDING':
-        return 'pending';
+        return 'processing';
       case 'PREPARATION':
         return 'preparation';
       case 'ACKNOWLEDGED':
@@ -449,10 +449,6 @@ export function OrdersTable({ showClientColumn, basePath = '/admin/orders', clie
   const [syncing, setSyncing] = useState(false);
   const [syncMessage, setSyncMessage] = useState<{ type: 'success' | 'error' | 'info'; text: string } | null>(null);
 
-  // State for fetching orders from channel
-  const [fetchingOrders, setFetchingOrders] = useState(false);
-  const [fetchMessage, setFetchMessage] = useState<{ type: 'success' | 'error' | 'info'; text: string } | null>(null);
-
   // Fetch real clients for admin/employee filter
   // Skip fetching if showClientColumn is false (CLIENT user view)
   // CLIENT users don't have permission to fetch all clients and don't need this data
@@ -498,56 +494,6 @@ export function OrdersTable({ showClientColumn, basePath = '/admin/orders', clie
       setTimeout(() => setSyncMessage(null), 5000);
     } finally {
       setSyncing(false);
-    }
-  };
-
-  // Handler for fetching orders from commerce channel
-  const handleFetchOrders = async () => {
-    if (!clientId) {
-      setFetchMessage({
-        type: 'error',
-        text: t('fetchOrdersNoClient') || 'Client ID required to fetch orders'
-      });
-      setTimeout(() => setFetchMessage(null), 5000);
-      return;
-    }
-
-    try {
-      setFetchingOrders(true);
-      setFetchMessage(null);
-
-      const result = await fulfillmentApi.fetchOrdersFromChannel(clientId);
-
-      if (result.success) {
-        const stats = result.stats;
-        setFetchMessage({
-          type: stats.newOrdersCreated > 0 ? 'success' : 'info',
-          text: stats.newOrdersCreated > 0
-            ? `✅ ${t('fetchOrdersSuccess') || 'Orders recovered!'} ${stats.newOrdersCreated} ${t('newOrders') || 'new'}, ${stats.ordersLinkedToFFN} ${t('linkedToFFN') || 'linked'}, ${stats.ordersPushedToFFN} ${t('pushedToFFN') || 'pushed to FFN'}.`
-            : `ℹ️ ${t('noNewOrders') || 'No new orders found'}. ${stats.ordersAlreadyExisted} ${t('ordersAlreadyExist') || 'already in system'}.`
-        });
-        // Refresh orders list if new orders were created
-        if (stats.newOrdersCreated > 0) {
-          await refetch();
-        }
-      } else {
-        setFetchMessage({
-          type: 'error',
-          text: result.error || t('fetchOrdersFailed') || 'Failed to fetch orders'
-        });
-      }
-
-      // Clear message after 8 seconds
-      setTimeout(() => setFetchMessage(null), 8000);
-    } catch (err) {
-      console.error('Error fetching orders:', err);
-      setFetchMessage({
-        type: 'error',
-        text: err instanceof Error ? err.message : t('fetchOrdersFailed') || 'Failed to fetch orders'
-      });
-      setTimeout(() => setFetchMessage(null), 5000);
-    } finally {
-      setFetchingOrders(false);
     }
   };
 
@@ -962,58 +908,6 @@ export function OrdersTable({ showClientColumn, basePath = '/admin/orders', clie
 
         {/* Action Buttons */}
         <div className="flex flex-col md:flex-row gap-2 w-full md:w-auto">
-          {/* Fetch Orders Button - Only show for CLIENT users with a clientId */}
-          {clientId && (
-            <button
-              onClick={handleFetchOrders}
-              disabled={fetchingOrders}
-              className="w-full md:w-auto"
-              style={{
-                height: 'clamp(38px, 2.8vw, 38px)',
-                borderRadius: '6px',
-                paddingTop: 'clamp(7px, 0.66vw, 9px)',
-                paddingRight: 'clamp(13px, 1.25vw, 17px)',
-                paddingBottom: 'clamp(7px, 0.66vw, 9px)',
-                paddingLeft: 'clamp(13px, 1.25vw, 17px)',
-                backgroundColor: '#FFFFFF',
-                border: '1px solid #D1D5DB',
-                boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.05)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '8px',
-                cursor: fetchingOrders ? 'not-allowed' : 'pointer',
-                opacity: fetchingOrders ? 0.7 : 1,
-                whiteSpace: 'nowrap',
-                marginBottom: 'clamp(8px, 0.88vw, 12px)',
-              }}
-            >
-              {fetchingOrders ? (
-                <svg className="animate-spin h-4 w-4 text-gray-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-              ) : (
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M12 4V20M12 4L8 8M12 4L16 8" stroke="#374151" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  <path d="M4 14V18C4 19.1046 4.89543 20 6 20H18C19.1046 20 20 19.1046 20 18V14" stroke="#374151" strokeWidth="2" strokeLinecap="round"/>
-                </svg>
-              )}
-              <span
-                style={{
-                  fontFamily: 'Inter, sans-serif',
-                  fontWeight: 500,
-                  fontSize: 'clamp(12px, 1.03vw, 14px)',
-                  lineHeight: '20px',
-                  color: '#374151',
-                  whiteSpace: 'nowrap',
-                }}
-              >
-                {fetchingOrders ? (t('fetchingOrders') || 'Fetching...') : (t('fetchOrders') || 'Fetch Orders')}
-              </span>
-            </button>
-          )}
-
           {/* Sync Order Status Button */}
           <button
             onClick={handleSyncOrderStatuses}
@@ -1138,46 +1032,6 @@ export function OrdersTable({ showClientColumn, basePath = '/admin/orders', clie
             }}
           >
             {syncMessage.text}
-          </span>
-        </div>
-      )}
-
-      {/* Fetch Orders Message */}
-      {fetchMessage && (
-        <div
-          style={{
-            marginTop: '20px',
-            marginBottom: '20px',
-            padding: '10px 16px',
-            borderRadius: '6px',
-            backgroundColor: fetchMessage.type === 'success' ? '#ECFDF5' : fetchMessage.type === 'info' ? '#EFF6FF' : '#FEF2F2',
-            border: `1px solid ${fetchMessage.type === 'success' ? '#A7F3D0' : fetchMessage.type === 'info' ? '#BFDBFE' : '#FECACA'}`,
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-          }}
-        >
-          {fetchMessage.type === 'success' ? (
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M9 12L11 14L15 10M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="#059669" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-          ) : fetchMessage.type === 'info' ? (
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M12 8V12M12 16H12.01M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="#2563EB" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-          ) : (
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M12 8V12M12 16H12.01M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="#DC2626" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-          )}
-          <span
-            style={{
-              fontFamily: 'Inter, sans-serif',
-              fontSize: '14px',
-              color: fetchMessage.type === 'success' ? '#059669' : fetchMessage.type === 'info' ? '#2563EB' : '#DC2626',
-            }}
-          >
-            {fetchMessage.text}
           </span>
         </div>
       )}

@@ -295,91 +295,95 @@ export function ChannelApiSetup({ channelId, channelType, baseUrl }: ChannelApiS
             gap: 'clamp(18px, 1.77vw, 24px)',
           }}
         >
-          {/* Client ID Field */}
-          <div
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 'clamp(6px, 0.59vw, 8px)',
-            }}
-          >
-            <label
+          {/* Client ID Field - Hidden for Shopify */}
+          {channelType !== 'Shopify' && (
+            <div
               style={{
-                fontFamily: 'Inter, sans-serif',
-                fontWeight: 500,
-                fontSize: 'clamp(11px, 1.03vw, 14px)',
-                lineHeight: 'clamp(15px, 1.47vw, 20px)',
-                color: '#374151',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 'clamp(6px, 0.59vw, 8px)',
               }}
             >
-              {tChannels('clientId')}
-            </label>
-            <input
-              type="text"
-              value={clientId}
-              onChange={(e) => setClientId(e.target.value)}
-              placeholder=""
-              style={{
-                width: '100%',
-                maxWidth: 'clamp(371px, 36.45vw, 495px)',
-                height: 'clamp(29px, 2.80vw, 38px)',
-                borderRadius: '6px',
-                border: '1px solid #D1D5DB',
-                padding: 'clamp(7px, 0.66vw, 9px) clamp(10px, 0.96vw, 13px)',
-                backgroundColor: '#FFFFFF',
-                boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.05)',
-                fontFamily: 'Inter, sans-serif',
-                fontWeight: 400,
-                fontSize: 'clamp(11px, 1.03vw, 14px)',
-                lineHeight: 'clamp(15px, 1.47vw, 20px)',
-                color: '#111827',
-                outline: 'none',
-              }}
-            />
-          </div>
+              <label
+                style={{
+                  fontFamily: 'Inter, sans-serif',
+                  fontWeight: 500,
+                  fontSize: 'clamp(11px, 1.03vw, 14px)',
+                  lineHeight: 'clamp(15px, 1.47vw, 20px)',
+                  color: '#374151',
+                }}
+              >
+                {tChannels('clientId')}
+              </label>
+              <input
+                type="text"
+                value={clientId}
+                onChange={(e) => setClientId(e.target.value)}
+                placeholder=""
+                style={{
+                  width: '100%',
+                  maxWidth: 'clamp(371px, 36.45vw, 495px)',
+                  height: 'clamp(29px, 2.80vw, 38px)',
+                  borderRadius: '6px',
+                  border: '1px solid #D1D5DB',
+                  padding: 'clamp(7px, 0.66vw, 9px) clamp(10px, 0.96vw, 13px)',
+                  backgroundColor: '#FFFFFF',
+                  boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.05)',
+                  fontFamily: 'Inter, sans-serif',
+                  fontWeight: 400,
+                  fontSize: 'clamp(11px, 1.03vw, 14px)',
+                  lineHeight: 'clamp(15px, 1.47vw, 20px)',
+                  color: '#111827',
+                  outline: 'none',
+                }}
+              />
+            </div>
+          )}
 
-          {/* Client Secret Field */}
-          <div
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 'clamp(6px, 0.59vw, 8px)',
-            }}
-          >
-            <label
+          {/* Client Secret Field - Hidden for Shopify */}
+          {channelType !== 'Shopify' && (
+            <div
               style={{
-                fontFamily: 'Inter, sans-serif',
-                fontWeight: 500,
-                fontSize: 'clamp(11px, 1.03vw, 14px)',
-                lineHeight: 'clamp(15px, 1.47vw, 20px)',
-                color: '#374151',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 'clamp(6px, 0.59vw, 8px)',
               }}
             >
-              {tChannels('clientSecret')}
-            </label>
-            <input
-              type="password"
-              value={clientSecret}
-              onChange={(e) => setClientSecret(e.target.value)}
-              placeholder=""
-              style={{
-                width: '100%',
-                maxWidth: 'clamp(371px, 36.45vw, 495px)',
-                height: 'clamp(29px, 2.80vw, 38px)',
-                borderRadius: '6px',
-                border: '1px solid #D1D5DB',
-                padding: 'clamp(7px, 0.66vw, 9px) clamp(10px, 0.96vw, 13px)',
-                backgroundColor: '#FFFFFF',
-                boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.05)',
-                fontFamily: 'Inter, sans-serif',
-                fontWeight: 400,
-                fontSize: 'clamp(11px, 1.03vw, 14px)',
-                lineHeight: 'clamp(15px, 1.47vw, 20px)',
-                color: '#111827',
-                outline: 'none',
-              }}
-            />
-          </div>
+              <label
+                style={{
+                  fontFamily: 'Inter, sans-serif',
+                  fontWeight: 500,
+                  fontSize: 'clamp(11px, 1.03vw, 14px)',
+                  lineHeight: 'clamp(15px, 1.47vw, 20px)',
+                  color: '#374151',
+                }}
+              >
+                {tChannels('clientSecret')}
+              </label>
+              <input
+                type="password"
+                value={clientSecret}
+                onChange={(e) => setClientSecret(e.target.value)}
+                placeholder=""
+                style={{
+                  width: '100%',
+                  maxWidth: 'clamp(371px, 36.45vw, 495px)',
+                  height: 'clamp(29px, 2.80vw, 38px)',
+                  borderRadius: '6px',
+                  border: '1px solid #D1D5DB',
+                  padding: 'clamp(7px, 0.66vw, 9px) clamp(10px, 0.96vw, 13px)',
+                  backgroundColor: '#FFFFFF',
+                  boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.05)',
+                  fontFamily: 'Inter, sans-serif',
+                  fontWeight: 400,
+                  fontSize: 'clamp(11px, 1.03vw, 14px)',
+                  lineHeight: 'clamp(15px, 1.47vw, 20px)',
+                  color: '#111827',
+                  outline: 'none',
+                }}
+              />
+            </div>
+          )}
 
           {/* Store URL Field */}
           <div
