@@ -46,6 +46,7 @@ interface Product {
   jtlSyncStatus?: string | null;
   lastJtlSync?: string | null;
   isBundle?: boolean;
+  possibleQuantity?: number | null;
 }
 
 // Helper to check if a SKU is generated (SHOP-xxx or WOO-xxx)
@@ -106,6 +107,13 @@ const ProductCard = ({
           <p className="text-gray-700">{product.announced}</p>
         </div>
       </div>
+
+      {product.isBundle && (
+        <div className="mt-3 pt-3 border-t border-gray-100">
+          <span className="text-gray-500 text-xs">{t('possibleQty')}</span>
+          <p className="font-medium text-blue-700">{product.possibleQuantity ?? 0}</p>
+        </div>
+      )}
       
       {showClientColumn && (
         <div className="mt-3 pt-3 border-t border-gray-100">
@@ -148,7 +156,7 @@ export function ProductsTable({ showClientColumn, baseUrl, showSyncButtons = tru
     const fetchProducts = async () => {
       try {
         setLoading(true);
-        const data = await dataApi.getProducts();
+        const data = await dataApi.getProducts({ includeBundleDetails: true });
         // Transform API data to component format
         const transformedProducts: Product[] = data.map(p => ({
           id: p.id,
@@ -164,6 +172,7 @@ export function ProductsTable({ showClientColumn, baseUrl, showSyncButtons = tru
           jtlSyncStatus: p.jtlSyncStatus,
           lastJtlSync: p.lastJtlSync,
           isBundle: p.isBundle,
+          possibleQuantity: p.possibleQuantity,
         }));
         setProducts(transformedProducts);
         setError(null);
@@ -1066,8 +1075,8 @@ export function ProductsTable({ showClientColumn, baseUrl, showSyncButtons = tru
           className="grid"
           style={{
             gridTemplateColumns: showClientColumn
-              ? 'minmax(80px, 1fr) minmax(120px, 2fr) minmax(80px, 1fr) minmax(80px, 1fr) minmax(80px, 1fr) minmax(100px, 1fr) minmax(100px, 1.5fr)'
-              : 'minmax(80px, 1fr) minmax(120px, 2fr) minmax(80px, 1fr) minmax(80px, 1fr) minmax(80px, 1fr) minmax(100px, 1fr)',
+              ? 'minmax(80px, 1fr) minmax(120px, 2fr) minmax(80px, 1fr) minmax(80px, 1fr) minmax(80px, 1fr) minmax(80px, 1fr) minmax(100px, 1fr) minmax(100px, 1.5fr)'
+              : 'minmax(80px, 1fr) minmax(120px, 2fr) minmax(80px, 1fr) minmax(80px, 1fr) minmax(80px, 1fr) minmax(80px, 1fr) minmax(100px, 1fr)',
             padding: '12px 24px',
             borderBottom: '1px solid #E5E7EB',
             backgroundColor: '#F9FAFB',
@@ -1149,6 +1158,19 @@ export function ProductsTable({ showClientColumn, baseUrl, showSyncButtons = tru
               color: '#6B7280',
             }}
           >
+            {t('possibleQty')}
+          </span>
+          <span
+            style={{
+              fontFamily: 'Inter, sans-serif',
+              fontWeight: 500,
+              fontSize: '12px',
+              lineHeight: '16px',
+              letterSpacing: '0.05em',
+              textTransform: 'uppercase',
+              color: '#6B7280',
+            }}
+          >
             JTL SYNC
           </span>
           {showClientColumn && (
@@ -1176,8 +1198,8 @@ export function ProductsTable({ showClientColumn, baseUrl, showSyncButtons = tru
             onClick={() => handleProductClick(product.productId)}
             style={{
               gridTemplateColumns: showClientColumn
-                ? 'minmax(80px, 1fr) minmax(120px, 2fr) minmax(80px, 1fr) minmax(80px, 1fr) minmax(80px, 1fr) minmax(100px, 1fr) minmax(100px, 1.5fr)'
-                : 'minmax(80px, 1fr) minmax(120px, 2fr) minmax(80px, 1fr) minmax(80px, 1fr) minmax(80px, 1fr) minmax(100px, 1fr)',
+                ? 'minmax(80px, 1fr) minmax(120px, 2fr) minmax(80px, 1fr) minmax(80px, 1fr) minmax(80px, 1fr) minmax(80px, 1fr) minmax(100px, 1fr) minmax(100px, 1.5fr)'
+                : 'minmax(80px, 1fr) minmax(120px, 2fr) minmax(80px, 1fr) minmax(80px, 1fr) minmax(80px, 1fr) minmax(80px, 1fr) minmax(100px, 1fr)',
               padding: '16px 24px',
               borderBottom: index < paginatedProducts.length - 1 ? '1px solid #E5E7EB' : 'none',
               backgroundColor: '#FFFFFF',
@@ -1259,6 +1281,21 @@ export function ProductsTable({ showClientColumn, baseUrl, showSyncButtons = tru
               }}
             >
               {product.announced}
+            </span>
+            {/* Possible Quantity */}
+            <span
+              style={{
+                fontFamily: 'Inter, sans-serif',
+                fontWeight: 400,
+                fontSize: '14px',
+                lineHeight: '20px',
+                color: product.isBundle ? '#1D4ED8' : '#6B7280',
+              }}
+            >
+              {product.isBundle
+                ? (product.possibleQuantity ?? '-')
+                : '-'
+              }
             </span>
             {/* JTL Sync Status */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>

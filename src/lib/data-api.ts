@@ -29,6 +29,7 @@ export interface Product {
   isBundle?: boolean;
   bundlePrice?: number | null;
   bundleItems?: BundleItem[];
+  possibleQuantity?: number | null;
 }
 
 export interface BundleItem {
@@ -422,8 +423,9 @@ export interface QuickChatMessage {
 
 export const dataApi = {
   // Products
-  async getProducts(): Promise<Product[]> {
-    const response = await api.get('/data/products');
+  async getProducts(options?: { includeBundleDetails?: boolean }): Promise<Product[]> {
+    const params = options?.includeBundleDetails ? { includeBundleDetails: 'true' } : {};
+    const response = await api.get('/data/products', { params });
     return response.data.data;
   },
 

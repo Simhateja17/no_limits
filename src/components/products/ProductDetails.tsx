@@ -1550,6 +1550,43 @@ export function ProductDetails({ productId, backUrl }: ProductDetailsProps) {
                     </div>
                   </div>
 
+                  {/* Possible Quantity Display - View Mode */}
+                  {bundleComponents.length > 0 && (
+                    <div style={{
+                      padding: '16px',
+                      backgroundColor: '#F0F9FF',
+                      border: '1px solid #BFDBFE',
+                      borderRadius: '8px',
+                      marginTop: '12px',
+                    }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <span style={{
+                          fontFamily: 'Inter, sans-serif',
+                          fontSize: '14px',
+                          fontWeight: 500,
+                          color: '#1E40AF'
+                        }}>
+                          {tProducts('possibleQuantity')}:
+                        </span>
+                        <span style={{
+                          fontFamily: 'Inter, sans-serif',
+                          fontSize: '24px',
+                          fontWeight: 600,
+                          color: '#1E40AF'
+                        }}>
+                          {rawProduct?.possibleQuantity ?? 0}
+                        </span>
+                        <span style={{
+                          fontFamily: 'Inter, sans-serif',
+                          fontSize: '14px',
+                          color: '#6B7280'
+                        }}>
+                          {tProducts('bundlesCanBeAssembled')}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+
                   {/* Edit Bundle Button */}
                   <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: '8px' }}>
                     <button
