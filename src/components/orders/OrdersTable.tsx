@@ -176,7 +176,7 @@ const transformApiOrder = (apiOrder: ApiOrder): Order => ({
   orderId: apiOrder.orderNumber || apiOrder.externalOrderId || apiOrder.orderId,
   orderDate: new Date(apiOrder.orderDate),
   client: apiOrder.client.companyName || apiOrder.client.name,
-  weight: '0 kg', // Placeholder - can be calculated from items if needed
+  weight: apiOrder.totalWeight != null ? `${Number(apiOrder.totalWeight).toFixed(2)} kg` : '0 kg',
   quantity: apiOrder.items.reduce((sum, item) => sum + item.quantity, 0),
   method: apiOrder.shippingMethod || 'Standard',
   paymentStatus: apiOrder.paymentStatus || null,
