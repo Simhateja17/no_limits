@@ -1119,36 +1119,149 @@ export function ProductDetails({ productId, backUrl }: ProductDetailsProps) {
                 >
                   {tProducts('editProduct')}
                 </span>
-                {/* Toggle Button */}
-                <button
-                  onClick={() => setEditMode(!editMode)}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  {/* Save Button - Only visible in edit mode */}
+                  {editMode && (
+                    <button
+                      onClick={handleSave}
+                      disabled={isSaving}
+                      style={{
+                        padding: '8px 16px',
+                        borderRadius: '6px',
+                        backgroundColor: isSaving ? '#9CA3AF' : '#003450',
+                        color: '#FFFFFF',
+                        border: 'none',
+                        fontFamily: 'Inter, sans-serif',
+                        fontWeight: 500,
+                        fontSize: '14px',
+                        lineHeight: '20px',
+                        cursor: isSaving ? 'not-allowed' : 'pointer',
+                        transition: 'background-color 0.2s',
+                        boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.05)',
+                      }}
+                      onMouseEnter={(e) => {
+                        if (!isSaving) {
+                          e.currentTarget.style.backgroundColor = '#002338';
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (!isSaving) {
+                          e.currentTarget.style.backgroundColor = '#003450';
+                        }
+                      }}
+                    >
+                      {isSaving ? 'Saving...' : 'Save Changes'}
+                    </button>
+                  )}
+                  {/* Toggle Button */}
+                  <button
+                    onClick={() => setEditMode(!editMode)}
+                    style={{
+                      width: '44px',
+                      height: '24px',
+                      borderRadius: '12px',
+                      padding: '2px',
+                      backgroundColor: editMode ? '#003450' : '#E5E7EB',
+                      position: 'relative',
+                      cursor: 'pointer',
+                      border: 'none',
+                      transition: 'background-color 0.2s',
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: '20px',
+                        height: '20px',
+                        borderRadius: '50%',
+                        backgroundColor: '#FFFFFF',
+                        position: 'absolute',
+                        top: '2px',
+                        left: editMode ? '22px' : '2px',
+                        transition: 'left 0.2s',
+                        boxShadow: '0px 1px 2px rgba(0, 0, 0, 0.1)',
+                      }}
+                    />
+                  </button>
+                </div>
+              </div>
+
+              {/* Error Message Display */}
+              {saveError && (
+                <div
                   style={{
-                    width: '44px',
-                    height: '24px',
-                    borderRadius: '12px',
-                    padding: '2px',
-                    backgroundColor: editMode ? '#003450' : '#E5E7EB',
-                    position: 'relative',
-                    cursor: 'pointer',
-                    border: 'none',
-                    transition: 'background-color 0.2s',
+                    width: 'clamp(800px, 72.5vw, 985px)',
+                    padding: '12px 16px',
+                    backgroundColor: '#FEE2E2',
+                    border: '1px solid #FCA5A5',
+                    borderRadius: '6px',
+                    marginLeft: 'clamp(184px, 16vw, 216px)',
+                    marginBottom: '16px',
                   }}
                 >
-                  <div
-                    style={{
-                      width: '20px',
-                      height: '20px',
-                      borderRadius: '50%',
-                      backgroundColor: '#FFFFFF',
-                      position: 'absolute',
-                      top: '2px',
-                      left: editMode ? '22px' : '2px',
-                      transition: 'left 0.2s',
-                      boxShadow: '0px 1px 2px rgba(0, 0, 0, 0.1)',
-                    }}
-                  />
-                </button>
-              </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{ color: '#DC2626', fontSize: '18px' }}>⚠️</span>
+                    <p
+                      style={{
+                        fontFamily: 'Inter, sans-serif',
+                        fontWeight: 500,
+                        fontSize: '14px',
+                        lineHeight: '20px',
+                        color: '#991B1B',
+                        margin: 0,
+                      }}
+                    >
+                      {saveError}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* JTL Sync Status Display */}
+              {jtlSyncStatus && !jtlSyncStatus.success && (
+                <div
+                  style={{
+                    width: 'clamp(800px, 72.5vw, 985px)',
+                    padding: '12px 16px',
+                    backgroundColor: '#FEF3C7',
+                    border: '1px solid #FCD34D',
+                    borderRadius: '6px',
+                    marginLeft: 'clamp(184px, 16vw, 216px)',
+                    marginBottom: '16px',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{ color: '#D97706', fontSize: '18px' }}>ℹ️</span>
+                    <div>
+                      <p
+                        style={{
+                          fontFamily: 'Inter, sans-serif',
+                          fontWeight: 500,
+                          fontSize: '14px',
+                          lineHeight: '20px',
+                          color: '#92400E',
+                          margin: 0,
+                        }}
+                      >
+                        Product saved, but JTL FFN sync failed
+                      </p>
+                      {jtlSyncStatus.error && (
+                        <p
+                          style={{
+                            fontFamily: 'Inter, sans-serif',
+                            fontWeight: 400,
+                            fontSize: '13px',
+                            lineHeight: '18px',
+                            color: '#92400E',
+                            margin: '4px 0 0 0',
+                          }}
+                        >
+                          {jtlSyncStatus.error}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* Generate Barcode Label Box */}
               <div

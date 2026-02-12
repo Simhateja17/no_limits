@@ -83,6 +83,7 @@ export interface Order {
   paymentStatus: string | null; // "paid", "pending", "refunded", or null
   paymentMethod: string | null;
   shippingMethod: string | null;
+  shippingMethodCode: string | null;
   trackingNumber: string | null;
   trackingUrl: string | null;
   totalWeight: number | null;

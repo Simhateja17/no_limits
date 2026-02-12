@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import Image from 'next/image';
 import Link from 'next/link';
 import { DashboardLayout } from '@/components/layout';
 import { useAuthStore } from '@/lib/store';
@@ -185,7 +184,7 @@ const transformApiOrderToDetails = (apiOrder: ApiOrder): OrderDetails => {
         ? getCountryName(apiOrder.shippingCountryCode)
         : (apiOrder.shippingCountry || 'N/A'),
     },
-    shippingMethod: apiOrder.shippingMethod || 'Standard',
+    shippingMethod: apiOrder.shippingMethod?.trim() || apiOrder.shippingMethodCode?.trim() || 'N/A',
     trackingNumber: apiOrder.trackingNumber || 'N/A',
     trackingUrl: apiOrder.trackingUrl || null,
     shipmentWeight: apiOrder.totalWeight ? `${apiOrder.totalWeight} kg` : '0 kg',
@@ -216,18 +215,6 @@ const mockAvailableProducts = [
   { id: '5', name: 'Testproduct 5', sku: '#24237', gtin: '342345235327', qty: 1, merchant: 'Merchant 3' },
   { id: '6', name: 'Testproduct 6', sku: '#24238', gtin: '342345235328', qty: 1, merchant: 'Merchant 4' },
   { id: '7', name: 'Testproduct 7', sku: '#24234', gtin: '342345235324', qty: 1, merchant: 'Merchant 5' },
-];
-
-// Available shipping methods
-const shippingMethods = [
-  { id: 'dhl', name: 'DHL Paket National', logo: '/dhl.png' },
-  { id: 'dhl-express', name: 'DHL Express', logo: '/dhl.png' },
-  { id: 'ups', name: 'UPS Standard', logo: '/ups.png' },
-  { id: 'ups-express', name: 'UPS Express', logo: '/ups.png' },
-  { id: 'fedex', name: 'FedEx Ground', logo: '/fedex.png' },
-  { id: 'fedex-express', name: 'FedEx Express', logo: '/fedex.png' },
-  { id: 'dpd', name: 'DPD Classic', logo: '/DPD_logo(red)2015.png' },
-  { id: 'hermes', name: 'Hermes Paket', logo: '/hermes.png' },
 ];
 
 // Status color mapping - uses translation keys
@@ -282,8 +269,6 @@ export default function OrderDetailPage() {
   const [productSearchQuery, setProductSearchQuery] = useState('');
   const [productQuantities, setProductQuantities] = useState<Record<string, number>>({});
   const [showProductList, setShowProductList] = useState(false);
-  const [selectedShippingMethod, setSelectedShippingMethod] = useState(shippingMethods[0]);
-  const [showShippingDropdown, setShowShippingDropdown] = useState(false);
   const [orderNotes, setOrderNotes] = useState('');
 
   // Form state for edit modal
@@ -909,191 +894,48 @@ export default function OrderDetailPage() {
                 >
                   {tOrders('shippingMethod')}
                 </span>
-                {editOrderEnabled ? (
-                  <div style={{ position: 'relative', marginTop: '12px' }}>
-                    <button
-                      onClick={() => setShowShippingDropdown(!showShippingDropdown)}
+                <div style={{ marginTop: '12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <span
+                    style={{
+                      fontFamily: 'Inter, sans-serif',
+                      fontWeight: 400,
+                      fontSize: '14px',
+                      lineHeight: '20px',
+                      color: '#111827',
+                    }}
+                  >
+                    {orderDetails?.shippingMethod || 'N/A'}
+                  </span>
+                  {orderDetails?.trackingNumber && orderDetails.trackingNumber !== 'N/A' && (
+                    <div
                       style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        width: '100%',
-                        padding: '8px 12px',
-                        backgroundColor: '#F9FAFB',
-                        border: '1px solid #E5E7EB',
-                        borderRadius: '8px',
-                        cursor: 'pointer',
                         fontFamily: 'Inter, sans-serif',
+                        fontWeight: 400,
+                        fontSize: '14px',
+                        lineHeight: '20px',
+                        color: '#6B7280',
                       }}
                     >
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <div style={{ width: '24px', height: '24px', borderRadius: '50%', overflow: 'hidden', flexShrink: 0, position: 'relative' }}>
-                          <Image
-                            src={selectedShippingMethod.logo}
-                            alt={selectedShippingMethod.name}
-                            fill
-                            sizes="24px"
-                            style={{ objectFit: 'cover' }}
-                          />
-                        </div>
-                        <span
+                      {orderDetails.trackingUrl ? (
+                        <a
+                          href={orderDetails.trackingUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
                           style={{
-                            fontWeight: 400,
-                            fontSize: '14px',
-                            lineHeight: '20px',
-                            color: '#111827',
+                            color: '#2563EB',
+                            textDecoration: 'none',
                           }}
+                          onMouseOver={(e) => e.currentTarget.style.textDecoration = 'underline'}
+                          onMouseOut={(e) => e.currentTarget.style.textDecoration = 'none'}
                         >
-                          {selectedShippingMethod.name}
-                        </span>
-                      </div>
-                      <svg
-                        width="16"
-                        height="16"
-                        viewBox="0 0 16 16"
-                        fill="none"
-                        xmlns="http://www.w3.org/2000/svg"
-                        style={{
-                          transform: showShippingDropdown ? 'rotate(180deg)' : 'rotate(0deg)',
-                          transition: 'transform 0.2s ease',
-                        }}
-                      >
-                        <path
-                          d="M4 6L8 10L12 6"
-                          stroke="#6B7280"
-                          strokeWidth="1.5"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                      </svg>
-                    </button>
-                    {showShippingDropdown && (
-                      <div
-                        style={{
-                          position: 'absolute',
-                          top: '100%',
-                          left: 0,
-                          right: 0,
-                          marginTop: '4px',
-                          backgroundColor: '#FFFFFF',
-                          border: '1px solid #E5E7EB',
-                          borderRadius: '8px',
-                          boxShadow: '0px 4px 6px -1px rgba(0, 0, 0, 0.1), 0px 2px 4px -1px rgba(0, 0, 0, 0.06)',
-                          zIndex: 50,
-                          maxHeight: '200px',
-                          overflowY: 'auto',
-                        }}
-                      >
-                        {shippingMethods.map((method) => (
-                          <button
-                            key={method.id}
-                            onClick={() => {
-                              setSelectedShippingMethod(method);
-                              setShowShippingDropdown(false);
-                            }}
-                            style={{
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: '8px',
-                              width: '100%',
-                              padding: '10px 12px',
-                              backgroundColor: selectedShippingMethod.id === method.id ? '#F3F4F6' : 'transparent',
-                              border: 'none',
-                              cursor: 'pointer',
-                              fontFamily: 'Inter, sans-serif',
-                              textAlign: 'left',
-                            }}
-                            onMouseEnter={(e) => {
-                              if (selectedShippingMethod.id !== method.id) {
-                                e.currentTarget.style.backgroundColor = '#F9FAFB';
-                              }
-                            }}
-                            onMouseLeave={(e) => {
-                              if (selectedShippingMethod.id !== method.id) {
-                                e.currentTarget.style.backgroundColor = 'transparent';
-                              }
-                            }}
-                          >
-                            <div style={{ width: '24px', height: '24px', borderRadius: '50%', overflow: 'hidden', flexShrink: 0, position: 'relative' }}>
-                              <Image
-                                src={method.logo}
-                                alt={method.name}
-                                fill
-                                sizes="24px"
-                                style={{ objectFit: 'cover' }}
-                              />
-                            </div>
-                            <span
-                              style={{
-                                fontWeight: 400,
-                                fontSize: '14px',
-                                lineHeight: '20px',
-                                color: '#111827',
-                              }}
-                            >
-                              {method.name}
-                            </span>
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  <div style={{ marginTop: '12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                    <div className="flex items-center gap-2">
-                      <div style={{ width: '24px', height: '24px', borderRadius: '50%', overflow: 'hidden', flexShrink: 0, position: 'relative' }}>
-                        <Image
-                          src={selectedShippingMethod.logo}
-                          alt={selectedShippingMethod.name}
-                          fill
-                          sizes="24px"
-                          style={{ objectFit: 'cover' }}
-                        />
-                      </div>
-                      <span
-                        style={{
-                          fontFamily: 'Inter, sans-serif',
-                          fontWeight: 400,
-                          fontSize: '14px',
-                          lineHeight: '20px',
-                          color: '#111827',
-                        }}
-                      >
-                        {selectedShippingMethod.name}
-                      </span>
+                          {orderDetails.trackingNumber}
+                        </a>
+                      ) : (
+                        <span>{orderDetails.trackingNumber}</span>
+                      )}
                     </div>
-                    {orderDetails?.trackingNumber && orderDetails.trackingNumber !== 'N/A' && (
-                      <div
-                        style={{
-                          fontFamily: 'Inter, sans-serif',
-                          fontWeight: 400,
-                          fontSize: '14px',
-                          lineHeight: '20px',
-                          color: '#6B7280',
-                          paddingLeft: '32px',
-                        }}
-                      >
-                        {orderDetails.trackingUrl ? (
-                          <a
-                            href={orderDetails.trackingUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            style={{
-                              color: '#2563EB',
-                              textDecoration: 'none',
-                            }}
-                            onMouseOver={(e) => e.currentTarget.style.textDecoration = 'underline'}
-                            onMouseOut={(e) => e.currentTarget.style.textDecoration = 'none'}
-                          >
-                            {orderDetails.trackingNumber}
-                          </a>
-                        ) : (
-                          <span>{orderDetails.trackingNumber}</span>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
 
               {/* On Hold Toggle */}
