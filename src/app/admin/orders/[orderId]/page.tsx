@@ -184,7 +184,7 @@ const transformApiOrderToDetails = (apiOrder: ApiOrder): OrderDetails => {
         ? getCountryName(apiOrder.shippingCountryCode)
         : (apiOrder.shippingCountry || 'N/A'),
     },
-    shippingMethod: apiOrder.shippingMethod?.trim() || apiOrder.shippingMethodCode?.trim() || 'N/A',
+    shippingMethod: apiOrder.shippingMethod?.trim() || 'Standard',
     trackingNumber: apiOrder.trackingNumber || 'N/A',
     trackingUrl: apiOrder.trackingUrl || null,
     shipmentWeight: apiOrder.totalWeight ? `${apiOrder.totalWeight} kg` : '0 kg',
@@ -904,7 +904,7 @@ export default function OrderDetailPage() {
                       color: '#111827',
                     }}
                   >
-                    {orderDetails?.shippingMethod || 'N/A'}
+                    {orderDetails?.shippingMethod || 'Standard'}
                   </span>
                   {orderDetails?.trackingNumber && orderDetails.trackingNumber !== 'N/A' && (
                     <div

@@ -30,6 +30,18 @@ export interface Product {
   bundlePrice?: number | null;
   bundleItems?: BundleItem[];
   possibleQuantity?: number | null;
+  // Additional editable fields from database
+  manufacturer?: string | null;
+  heightInCm?: number | null;  // Decimal in DB
+  lengthInCm?: number | null;  // Decimal in DB
+  widthInCm?: number | null;   // Decimal in DB
+  amazonAsin?: string | null;
+  amazonSku?: string | null;
+  isbn?: string | null;
+  han?: string | null;
+  customsCode?: string | null;
+  countryOfOrigin?: string | null;
+  netSalesPrice?: number | null;  // Decimal in DB
 }
 
 export interface BundleItem {

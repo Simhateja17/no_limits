@@ -40,7 +40,6 @@ interface ProductDetailsData {
   ursprung: string;
   nettoVerkaufspreis: string;
   manufacture: string;
-  qtyMastercarton: string;
   // Orders count
   ordersCount: number;
 }
@@ -50,29 +49,33 @@ const transformApiProduct = (apiProduct: ApiProduct): ProductDetailsData => ({
   id: apiProduct.id,
   productId: apiProduct.productId,
   productName: apiProduct.name,
-  manufacturer: '-',
+  manufacturer: apiProduct.manufacturer || '-',  // FIX: Read from API
   imageUrl: apiProduct.imageUrl || '',
   totalStock: apiProduct.available + apiProduct.reserved + apiProduct.announced,
   available: apiProduct.available,
   reserved: apiProduct.reserved,
   announced: apiProduct.announced,
-  heightInCm: '-',
-  widthInCm: '-',
-  lengthInCm: '-',
+  // FIX: Read actual dimension values from API
+  heightInCm: apiProduct.heightInCm ? String(apiProduct.heightInCm) : '-',
+  widthInCm: apiProduct.widthInCm ? String(apiProduct.widthInCm) : '-',
+  lengthInCm: apiProduct.lengthInCm ? String(apiProduct.lengthInCm) : '-',
   weightInKg: apiProduct.weightInKg ? String(apiProduct.weightInKg) : '-',
   sku: apiProduct.sku,
   gtin: apiProduct.gtin || '-',
-  amazonAsin: '-',
-  amazonSku: '-',
-  isbn: '-',
-  han: '-',
-  mhd: '-',
-  charge: '-',
-  zolltarifnummer: '-',
-  ursprung: '-',
-  nettoVerkaufspreis: '-',
-  manufacture: '-',
-  qtyMastercarton: '-',
+  // FIX: Read actual identifier values from API
+  amazonAsin: apiProduct.amazonAsin || '-',
+  amazonSku: apiProduct.amazonSku || '-',
+  isbn: apiProduct.isbn || '-',
+  han: apiProduct.han || '-',
+  // TODO: These fields don't exist in the database - need clarification
+  mhd: '-',  // Should this be mapped from a date field?
+  charge: '-',  // Should this be mapped from chargeNumber?
+  // FIX: Read actual property values from API
+  zolltarifnummer: apiProduct.customsCode || '-',
+  ursprung: apiProduct.countryOfOrigin || '-',
+  nettoVerkaufspreis: apiProduct.netSalesPrice ? String(apiProduct.netSalesPrice) : '-',
+  // Phase 4: Map manufacture to manufacturer (likely a duplicate field)
+  manufacture: apiProduct.manufacturer || '-',
   ordersCount: 0,
 });
 
@@ -247,7 +250,6 @@ export function ProductDetails({ productId, backUrl }: ProductDetailsProps) {
     ursprung: productDetails?.ursprung || '',
     nettoVerkaufspreis: productDetails?.nettoVerkaufspreis || '',
     manufacture: productDetails?.manufacture || '',
-    qtyMastercarton: productDetails?.qtyMastercarton || '',
   });
 
   // Update formData when productDetails loads
@@ -272,7 +274,6 @@ export function ProductDetails({ productId, backUrl }: ProductDetailsProps) {
         ursprung: productDetails.ursprung,
         nettoVerkaufspreis: productDetails.nettoVerkaufspreis,
         manufacture: productDetails.manufacture,
-        qtyMastercarton: productDetails.qtyMastercarton,
       });
     }
   }, [productDetails]);
@@ -1088,7 +1089,6 @@ export function ProductDetails({ productId, backUrl }: ProductDetailsProps) {
                     <Field label={tProducts('ursprung')} value={formData.ursprung} editMode={editMode} onChange={updateField('ursprung')} />
                     <Field label={tProducts('nettoVerkaufspreis')} value={formData.nettoVerkaufspreis} editMode={editMode} onChange={updateField('nettoVerkaufspreis')} />
                     <Field label={tProducts('manufacture')} value={formData.manufacture} editMode={editMode} onChange={updateField('manufacture')} />
-                    <Field label={tProducts('qtyMastercarton')} value={formData.qtyMastercarton} editMode={editMode} onChange={updateField('qtyMastercarton')} />
                   </div>
                 </div>
               </div>
