@@ -6,3 +6,4 @@ export { useTasks, getTaskClientNames, type DisplayTask } from './useTasks';
 export { useProducts, type Product } from './useProducts';
 export { useRealTimeData, type UseRealTimeDataOptions } from './useRealTimeData';
 export { useRealTimeOrders, useRealTimeOrdersWithCancellation } from './useRealTimeOrders';
+export { useHealthStatus } from './useHealthStatus';

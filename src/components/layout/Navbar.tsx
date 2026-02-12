@@ -54,6 +54,7 @@ const navItemsByRole: Record<UserRole, { key: string; href: string }[]> = {
     { key: 'returns', href: '/client/returns' },
     { key: 'chat', href: '/client/chat' },
     { key: 'channels', href: '/client/channels' },
+    { key: 'health', href: '/client/health' },
   ],
   EMPLOYEE: [
     { key: 'dashboard', href: '/employee/dashboard' },

@@ -374,6 +374,87 @@ export interface CreateReturnInput {
   }>;
 }
 
+// Health Status types
+export interface ChannelHealthStatus {
+  id: string;
+  name: string;
+  type: string;
+  isActive: boolean;
+  syncEnabled: boolean;
+  lastSyncAt: string | null;
+  lastOrderPollAt: string | null;
+  lastProductPollAt: string | null;
+  hasWebhook: boolean;
+  status: 'healthy' | 'warning' | 'error' | 'inactive';
+}
+
+export interface SyncHealthCounts {
+  total: number;
+  synced: number;
+  pending: number;
+  error: number;
+  conflict?: number;
+}
+
+export interface FFNHealthStatus {
+  connected: boolean;
+  lastSyncAt: string | null;
+  pendingOrders: number;
+  errorOrders: number;
+  heldOrders: number;
+}
+
+export interface CommerceSyncHealthStatus {
+  syncedOrders: number;
+  pendingOrders: number;
+  failedOrders: number;
+  failedOrdersList: Array<{
+    id: string;
+    orderNumber: string;
+    error: string | null;
+    lastAttempt: string;
+  }>;
+}
+
+export interface FFNToPlatformStatus {
+  lastStockSync: string | null;
+  recentStockUpdates: number;
+  orderStatusUpdates: number;
+}
+
+export interface HealthError {
+  id: string;
+  type: 'product' | 'order' | 'return';
+  action: string;
+  targetPlatform: string;
+  errorMessage: string | null;
+  entityId: string;
+  entityName: string;
+  createdAt: string;
+}
+
+export interface LastSyncJob {
+  status: string;
+  type: string;
+  startedAt: string;
+  completedAt: string | null;
+}
+
+export interface HealthStatus {
+  channels: ChannelHealthStatus[];
+  sync: {
+    products: SyncHealthCounts;
+    orders: SyncHealthCounts;
+    returns: SyncHealthCounts;
+  };
+  ffn: FFNHealthStatus;
+  ffnToPlatform: FFNToPlatformStatus;
+  commerceSync: CommerceSyncHealthStatus;
+  recentErrors: HealthError[];
+  lastSyncJob: LastSyncJob | null;
+  generatedAt: string;
+}
+
 export interface UpdateResponse<T> {
   data: T;
   changedFields: string[];
@@ -736,5 +817,11 @@ export const dataApi = {
   }> {
     const response = await api.post(`/integrations/products/${productId}/link-jtl`, { jtlProductId });
     return response.data;
+  },
+
+  // Health Status
+  async getHealthStatus(): Promise<HealthStatus> {
+    const response = await api.get('/data/health-status');
+    return response.data.data;
   },
 };

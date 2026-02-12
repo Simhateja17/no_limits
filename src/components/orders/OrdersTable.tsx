@@ -448,6 +448,7 @@ export function OrdersTable({ showClientColumn, basePath = '/admin/orders', clie
   // State for syncing order statuses
   const [syncing, setSyncing] = useState(false);
   const [syncMessage, setSyncMessage] = useState<{ type: 'success' | 'error' | 'info'; text: string } | null>(null);
+  const [showReAuthModal, setShowReAuthModal] = useState(false);
 
   // Fetch real clients for admin/employee filter
   // Skip fetching if showClientColumn is false (CLIENT user view)
@@ -477,21 +478,34 @@ export function OrdersTable({ showClientColumn, basePath = '/admin/orders', clie
           await refetch();
         }
       } else {
+        if (result.error === 'JTL_TOKEN_REVOKED') {
+          setShowReAuthModal(true);
+        } else {
+          setSyncMessage({
+            type: 'error',
+            text: result.error || t('syncFailed') || 'Sync failed'
+          });
+          setTimeout(() => setSyncMessage(null), 5000);
+        }
+      }
+
+      // Clear message after 5 seconds (only for success/info)
+      if (syncMessage?.type !== 'error') {
+        setTimeout(() => setSyncMessage(null), 5000);
+      }
+    } catch (err: any) {
+      console.error('Error syncing order statuses:', err);
+      const errData = err?.response?.data;
+      if (errData?.error === 'JTL_TOKEN_REVOKED') {
+        setShowReAuthModal(true);
+      } else {
+        const errorMsg = errData?.error || errData?.message || (err instanceof Error ? err.message : t('syncFailed') || 'Sync failed');
         setSyncMessage({
           type: 'error',
-          text: result.error || t('syncFailed') || 'Sync failed'
+          text: errorMsg
         });
+        setTimeout(() => setSyncMessage(null), 5000);
       }
-      
-      // Clear message after 5 seconds
-      setTimeout(() => setSyncMessage(null), 5000);
-    } catch (err) {
-      console.error('Error syncing order statuses:', err);
-      setSyncMessage({
-        type: 'error',
-        text: err instanceof Error ? err.message : t('syncFailed') || 'Sync failed'
-      });
-      setTimeout(() => setSyncMessage(null), 5000);
     } finally {
       setSyncing(false);
     }
@@ -1033,6 +1047,45 @@ export function OrdersTable({ showClientColumn, basePath = '/admin/orders', clie
           >
             {syncMessage.text}
           </span>
+        </div>
+      )}
+
+      {/* JTL Re-Auth Modal */}
+      {showReAuthModal && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setShowReAuthModal(false)} />
+          <div className="relative z-10 bg-white rounded-lg shadow-2xl p-6 max-w-md w-full mx-4">
+            <div className="flex items-start justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <div className="flex-shrink-0 w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center">
+                  <svg className="w-5 h-5 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4.5c-.77-.833-2.694-.833-3.464 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                  </svg>
+                </div>
+                <h2 className="text-lg font-semibold text-gray-900">{t('jtlReAuthTitle')}</h2>
+              </div>
+              <button onClick={() => setShowReAuthModal(false)} className="text-gray-400 hover:text-gray-600">
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <p className="text-sm text-gray-600 mb-6">{t('jtlReAuthMessage')}</p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowReAuthModal(false)}
+                className="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50"
+              >
+                {tCommon('cancel')}
+              </button>
+              <button
+                onClick={() => { setShowReAuthModal(false); window.open('/client/channels?tab=ffn', '_blank'); }}
+                className="flex-1 px-4 py-2.5 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-sm font-medium"
+              >
+                {t('jtlReAuthAction')}
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
