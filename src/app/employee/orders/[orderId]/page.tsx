@@ -923,6 +923,49 @@ export default function EmployeeOrderDetailPage() {
                       )}
                     </div>
                   )}
+
+                  {/* Multi-package shipments */}
+                  {(rawOrder as any)?.shipments && (rawOrder as any).shipments.length > 0 && (
+                    <div style={{ marginTop: '8px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                      <span style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '13px', color: '#374151' }}>
+                        Shipments ({(rawOrder as any).shipments.length})
+                      </span>
+                      {(rawOrder as any).shipments.map((shipment: any) => (
+                        <div
+                          key={shipment.id}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px',
+                            padding: '6px 10px',
+                            backgroundColor: '#F9FAFB',
+                            borderRadius: '6px',
+                            fontSize: '13px',
+                            fontFamily: 'Inter, sans-serif',
+                          }}
+                        >
+                          <span style={{ color: '#6B7280' }}>📦</span>
+                          {shipment.trackingUrl ? (
+                            <a
+                              href={shipment.trackingUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              style={{ color: '#2563EB', textDecoration: 'none' }}
+                              onMouseOver={(e) => e.currentTarget.style.textDecoration = 'underline'}
+                              onMouseOut={(e) => e.currentTarget.style.textDecoration = 'none'}
+                            >
+                              {shipment.trackingNumber}
+                            </a>
+                          ) : (
+                            <span style={{ color: '#111827' }}>{shipment.trackingNumber}</span>
+                          )}
+                          {shipment.carrier && (
+                            <span style={{ color: '#9CA3AF', fontSize: '12px' }}>({shipment.carrier})</span>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
 

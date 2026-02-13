@@ -9,12 +9,23 @@ export interface Product {
   id: string;
   productId: string;
   name: string;
+  manufacturer?: string | null;
   sku: string;
   gtin: string | null;
+  han?: string | null;
   available: number;
   reserved: number;
   announced: number;
+  heightInCm?: number | null;
+  widthInCm?: number | null;
+  lengthInCm?: number | null;
   weightInKg: number | null;
+  amazonAsin?: string | null;
+  amazonSku?: string | null;
+  isbn?: string | null;
+  customsCode?: string | null;
+  countryOfOrigin?: string | null;
+  netSalesPrice?: number | null;
   imageUrl: string | null;
   clientId: string;
   client: {
@@ -127,6 +138,14 @@ export interface Order {
       sku: string;
       gtin: string | null;
     } | null;
+  }>;
+  shipments?: Array<{
+    id: string;
+    trackingNumber: string;
+    carrier: string | null;
+    trackingUrl: string | null;
+    shippedAt: string;
+    status: string;
   }>;
   syncLogs?: OrderSyncLog[];
 }
