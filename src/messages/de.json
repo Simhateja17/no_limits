@@ -932,6 +932,8 @@
     "section3Desc": "Lagerbestands- und Statusaktualisierungen kommen VOM Fulfillment",
     "section4Title": "Plattform → Channels (Ausgehend)",
     "section4Desc": "Tracking und Fulfillment-Status werden ZURÜCK zu E-Commerce-Plattformen synchronisiert",
+    "section5Title": "Hintergrund-Jobs",
+    "section5Desc": "Geplante Cron-Jobs und ihr letzter Ausführungsstatus",
     "syncSummary": "Synchronisierungsübersicht",
     "webhookStatus": "Webhooks",
     "lastStockSync": "Letzte Lagersynchronisierung",

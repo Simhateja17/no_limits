@@ -1,6 +1,7 @@
 'use client';
 
 import { useHealthStatus } from '@/lib/hooks';
+import { CronJobStatus } from '@/lib/data-api';
 import { useTranslations } from 'next-intl';
 import { useEffect, useState } from 'react';
 
@@ -55,6 +56,16 @@ function getTypeIcon(type: string) {
   }
   return null;
 }
+
+// Human-readable labels for cron job names
+const JOB_LABELS: Record<string, string> = {
+  paidOrderFFNSync: 'Paid Order → FFN Sweep',
+  tokenRefresh: 'JTL Token Refresh',
+  stockSync: 'Stock Sync (Safety Net)',
+  commerceReconcile: 'Commerce Reconcile',
+  stuckFulfillmentReconcile: 'Stuck Fulfillment Reconcile',
+  inboundPoll: 'Inbound Poll (Stock)',
+};
 
 export function HealthStatusDashboard() {
   const { data, loading, error, refetch } = useHealthStatus();
@@ -352,6 +363,66 @@ export function HealthStatusDashboard() {
               </div>
             </div>
           )}
+        </div>
+      )}
+
+      {/* SECTION 5: BACKGROUND JOBS */}
+      {data.cronJobs && data.cronJobs.length > 0 && (
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="flex items-center justify-center w-10 h-10 bg-amber-100 rounded-lg">
+              <svg className="w-6 h-6 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <div>
+              <h2 className="text-lg font-semibold text-gray-900">{t('section5Title')}</h2>
+              <p className="text-sm text-gray-600">{t('section5Desc')}</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {data.cronJobs.map((job: CronJobStatus) => {
+              const label = JOB_LABELS[job.jobName] || job.jobName;
+              const durationStr = job.duration < 1000
+                ? `${job.duration}ms`
+                : `${(job.duration / 1000).toFixed(1)}s`;
+
+              return (
+                <div key={job.jobName} className={`border rounded-lg p-4 ${job.success ? 'border-gray-200' : 'border-red-200 bg-red-50'}`}>
+                  <div className="flex items-start justify-between mb-2">
+                    <h3 className="font-medium text-gray-900 text-sm">{label}</h3>
+                    <div className={`w-3 h-3 rounded-full flex-shrink-0 mt-0.5 ${job.success ? 'bg-green-500' : 'bg-red-500'}`} />
+                  </div>
+                  <div className="space-y-1 text-xs">
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-500">Last run:</span>
+                      <span className="text-gray-700">{formatRelativeTime(job.lastRunAt, t)}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-500">Duration:</span>
+                      <span className="text-gray-700">{durationStr}</span>
+                    </div>
+                    {job.details && (
+                      <div className="pt-1 border-t border-gray-100 mt-1">
+                        <span className="text-gray-500">
+                          {Object.entries(job.details as Record<string, unknown>)
+                            .filter(([, v]) => typeof v === 'number')
+                            .map(([k, v]) => `${k}: ${v}`)
+                            .join(', ')}
+                        </span>
+                      </div>
+                    )}
+                    {job.error && (
+                      <div className="pt-1 border-t border-red-100 mt-1">
+                        <p className="text-red-600 line-clamp-2">{job.error}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </div>
       )}
 

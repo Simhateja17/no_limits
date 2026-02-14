@@ -441,6 +441,15 @@ export interface FFNToPlatformStatus {
   orderStatusUpdates: number;
 }
 
+export interface CronJobStatus {
+  jobName: string;
+  lastRunAt: string;
+  success: boolean;
+  duration: number;
+  details: Record<string, unknown> | null;
+  error: string | null;
+}
+
 export interface HealthError {
   id: string;
   type: 'product' | 'order' | 'return';
@@ -469,6 +478,7 @@ export interface HealthStatus {
   ffn: FFNHealthStatus;
   ffnToPlatform: FFNToPlatformStatus;
   commerceSync: CommerceSyncHealthStatus;
+  cronJobs: CronJobStatus[];
   recentErrors: HealthError[];
   lastSyncJob: LastSyncJob | null;
   generatedAt: string;

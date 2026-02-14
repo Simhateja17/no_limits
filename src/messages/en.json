@@ -930,6 +930,8 @@
     "section3Desc": "Stock and status updates coming IN from fulfillment",
     "section4Title": "Platform → Channels (Outbound)",
     "section4Desc": "Tracking and fulfillment status syncing BACK to commerce platforms",
+    "section5Title": "Background Jobs",
+    "section5Desc": "Scheduled cron jobs and their last execution status",
     "syncSummary": "Sync Summary",
     "webhookStatus": "Webhooks",
     "lastStockSync": "Last Stock Sync",
