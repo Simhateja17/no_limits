@@ -1052,6 +1052,66 @@ export default function OrderDetailPage() {
                   >
                     This order is awaiting payment. Hold will be automatically released when payment is confirmed.
                   </p>
+                ) : rawOrder?.holdReason === 'SHIPPING_METHOD_MISMATCH' ? (
+                  <p
+                    style={{
+                      fontFamily: 'Inter, sans-serif',
+                      fontWeight: 400,
+                      fontSize: '14px',
+                      lineHeight: '20px',
+                      color: '#D97706',
+                    }}
+                  >
+                    {tOrders('holdReasonShippingMismatch')}
+                  </p>
+                ) : rawOrder?.holdReason === 'HIGH_RISK_OF_FRAUD' ? (
+                  <p
+                    style={{
+                      fontFamily: 'Inter, sans-serif',
+                      fontWeight: 400,
+                      fontSize: '14px',
+                      lineHeight: '20px',
+                      color: '#D97706',
+                    }}
+                  >
+                    {tOrders('holdReasonHighRisk')}
+                  </p>
+                ) : rawOrder?.holdReason === 'INCORRECT_ADDRESS' ? (
+                  <p
+                    style={{
+                      fontFamily: 'Inter, sans-serif',
+                      fontWeight: 400,
+                      fontSize: '14px',
+                      lineHeight: '20px',
+                      color: '#D97706',
+                    }}
+                  >
+                    {tOrders('holdReasonIncorrectAddress')}
+                  </p>
+                ) : rawOrder?.holdReason === 'INVENTORY_OUT_OF_STOCK' ? (
+                  <p
+                    style={{
+                      fontFamily: 'Inter, sans-serif',
+                      fontWeight: 400,
+                      fontSize: '14px',
+                      lineHeight: '20px',
+                      color: '#D97706',
+                    }}
+                  >
+                    {tOrders('holdReasonInventory')}
+                  </p>
+                ) : rawOrder?.isOnHold ? (
+                  <p
+                    style={{
+                      fontFamily: 'Inter, sans-serif',
+                      fontWeight: 400,
+                      fontSize: '14px',
+                      lineHeight: '20px',
+                      color: '#D97706',
+                    }}
+                  >
+                    {tOrders('holdReasonOther')}
+                  </p>
                 ) : (
                   <p
                     style={{

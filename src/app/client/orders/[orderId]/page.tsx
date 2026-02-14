@@ -1210,7 +1210,7 @@ export default function ClientOrderDetailPage() {
                     />
                   </button>
                 </div>
-                {/* Show payment hold message when order is held for payment */}
+                {/* Show hold reason message based on holdReason */}
                 {rawOrder?.holdReason === 'AWAITING_PAYMENT' ? (
                   <p
                     style={{
@@ -1222,6 +1222,66 @@ export default function ClientOrderDetailPage() {
                     }}
                   >
                     This order is awaiting payment. Use the banner above to release the hold manually, or it will be released automatically when payment is confirmed.
+                  </p>
+                ) : rawOrder?.holdReason === 'SHIPPING_METHOD_MISMATCH' ? (
+                  <p
+                    style={{
+                      fontFamily: 'Inter, sans-serif',
+                      fontWeight: 400,
+                      fontSize: '14px',
+                      lineHeight: '20px',
+                      color: '#D97706',
+                    }}
+                  >
+                    {tOrders('holdReasonShippingMismatch')}
+                  </p>
+                ) : rawOrder?.holdReason === 'HIGH_RISK_OF_FRAUD' ? (
+                  <p
+                    style={{
+                      fontFamily: 'Inter, sans-serif',
+                      fontWeight: 400,
+                      fontSize: '14px',
+                      lineHeight: '20px',
+                      color: '#D97706',
+                    }}
+                  >
+                    {tOrders('holdReasonHighRisk')}
+                  </p>
+                ) : rawOrder?.holdReason === 'INCORRECT_ADDRESS' ? (
+                  <p
+                    style={{
+                      fontFamily: 'Inter, sans-serif',
+                      fontWeight: 400,
+                      fontSize: '14px',
+                      lineHeight: '20px',
+                      color: '#D97706',
+                    }}
+                  >
+                    {tOrders('holdReasonIncorrectAddress')}
+                  </p>
+                ) : rawOrder?.holdReason === 'INVENTORY_OUT_OF_STOCK' ? (
+                  <p
+                    style={{
+                      fontFamily: 'Inter, sans-serif',
+                      fontWeight: 400,
+                      fontSize: '14px',
+                      lineHeight: '20px',
+                      color: '#D97706',
+                    }}
+                  >
+                    {tOrders('holdReasonInventory')}
+                  </p>
+                ) : rawOrder?.isOnHold ? (
+                  <p
+                    style={{
+                      fontFamily: 'Inter, sans-serif',
+                      fontWeight: 400,
+                      fontSize: '14px',
+                      lineHeight: '20px',
+                      color: '#D97706',
+                    }}
+                  >
+                    {tOrders('holdReasonOther')}
                   </p>
                 ) : (
                   <p
