@@ -41,6 +41,20 @@ export interface Product {
   bundlePrice?: number | null;
   bundleItems?: BundleItem[];
   possibleQuantity?: number | null;
+  channels?: Array<{
+    id: string;
+    channelId: string;
+    externalProductId: string | null;
+    syncStatus: string;
+    lastSyncAt: string | null;
+    lastError: string | null;
+    syncEnabled: boolean;
+    isActive: boolean;
+    channel: {
+      name: string;
+      type: string;
+    };
+  }>;
 }
 
 export interface BundleItem {
@@ -845,6 +859,22 @@ export const dataApi = {
     };
   }> {
     const response = await api.post(`/integrations/products/${productId}/link-jtl`, { jtlProductId });
+    return response.data;
+  },
+
+  // Sync product stock to channel(s)
+  async syncProductStock(productId: string, channelId?: string): Promise<{
+    success: boolean;
+    results: Array<{
+      channelId: string;
+      channelName: string;
+      channelType: string;
+      success: boolean;
+      error?: string;
+    }>;
+    message?: string;
+  }> {
+    const response = await api.post(`/data/products/${productId}/sync-stock`, channelId ? { channelId } : {});
     return response.data;
   },
 

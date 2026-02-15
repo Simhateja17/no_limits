@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { Package } from 'lucide-react';
+import { Package, RefreshCw, Store, ShoppingCart, CheckCircle, XCircle } from 'lucide-react';
 import { dataApi, type Product as ApiProduct, type UpdateProductInput, type BundleItem, type BundleSearchResult } from '@/lib/data-api';
 import { ProductDetailsSkeleton } from '@/components/ui';
 
@@ -167,8 +167,13 @@ export function ProductDetails({ productId, backUrl }: ProductDetailsProps) {
   const [jtlSyncStatus, setJtlSyncStatus] = useState<{ success: boolean; error?: string } | null>(null);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
 
-  // Raw API product (for bundle data)
+  // Raw API product (for bundle data + channels)
   const [rawProduct, setRawProduct] = useState<ApiProduct | null>(null);
+
+  // Channel stock sync state
+  const [syncingChannels, setSyncingChannels] = useState<Record<string, boolean>>({});
+  const [syncResults, setSyncResults] = useState<Record<string, { success: boolean; error?: string }>>({});
+  const [syncingAll, setSyncingAll] = useState(false);
 
   // Bundle state
   const [bundleEnabled, setBundleEnabled] = useState(false);
@@ -498,6 +503,61 @@ export function ProductDetails({ productId, backUrl }: ProductDetailsProps) {
       });
     } finally {
       setBundleDeleting(false);
+    }
+  };
+
+  // Channel stock sync handlers
+  const handleSyncStock = async (channelId: string) => {
+    if (!productDetails?.id) return;
+    setSyncingChannels(prev => ({ ...prev, [channelId]: true }));
+    setSyncResults(prev => { const next = { ...prev }; delete next[channelId]; return next; });
+    try {
+      const result = await dataApi.syncProductStock(productDetails.id, channelId);
+      const channelResult = result.results.find(r => r.channelId === channelId);
+      if (channelResult) {
+        setSyncResults(prev => ({
+          ...prev,
+          [channelId]: { success: channelResult.success, error: channelResult.error },
+        }));
+      }
+      // Refresh product data to get updated sync timestamps
+      const data = await dataApi.getProduct(productId);
+      setRawProduct(data);
+    } catch (err: any) {
+      setSyncResults(prev => ({
+        ...prev,
+        [channelId]: { success: false, error: err.response?.data?.error || 'Sync failed' },
+      }));
+    } finally {
+      setSyncingChannels(prev => ({ ...prev, [channelId]: false }));
+    }
+  };
+
+  const handleSyncAllStock = async () => {
+    if (!productDetails?.id || !rawProduct?.channels?.length) return;
+    setSyncingAll(true);
+    setSyncResults({});
+    try {
+      const result = await dataApi.syncProductStock(productDetails.id);
+      for (const r of result.results) {
+        setSyncResults(prev => ({
+          ...prev,
+          [r.channelId]: { success: r.success, error: r.error },
+        }));
+      }
+      // Refresh product data
+      const data = await dataApi.getProduct(productId);
+      setRawProduct(data);
+    } catch (err: any) {
+      // Set error for all channels
+      for (const ch of rawProduct.channels || []) {
+        setSyncResults(prev => ({
+          ...prev,
+          [ch.channelId]: { success: false, error: err.response?.data?.error || 'Sync failed' },
+        }));
+      }
+    } finally {
+      setSyncingAll(false);
     }
   };
 
@@ -1011,6 +1071,203 @@ export function ProductDetails({ productId, backUrl }: ProductDetailsProps) {
               </div>
             </div>
           </div>
+
+              {/* Channel Stock Sync */}
+              {rawProduct?.channels && rawProduct.channels.length > 0 && (
+                <div
+                  style={{
+                    width: 'clamp(800px, 72.5vw, 985px)',
+                    maxWidth: 'clamp(800px, 72.5vw, 985px)',
+                    borderRadius: '8px',
+                    padding: 'clamp(18px, 1.77vw, 24px)',
+                    backgroundColor: '#FFFFFF',
+                    boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.06), 0px 1px 3px 0px rgba(0, 0, 0, 0.1)',
+                    marginLeft: 'clamp(184px, 16vw, 216px)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '16px',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <h3 style={{
+                      fontFamily: 'Inter, sans-serif',
+                      fontWeight: 600,
+                      fontSize: '16px',
+                      lineHeight: '24px',
+                      color: '#111827',
+                      margin: 0,
+                    }}>
+                      Channel Stock Sync
+                    </h3>
+                    {rawProduct.channels.length > 1 && (
+                      <button
+                        onClick={handleSyncAllStock}
+                        disabled={syncingAll}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                          padding: '6px 14px',
+                          backgroundColor: syncingAll ? '#9CA3AF' : '#003450',
+                          color: '#FFFFFF',
+                          borderRadius: '6px',
+                          fontSize: '13px',
+                          fontFamily: 'Inter, sans-serif',
+                          fontWeight: 500,
+                          cursor: syncingAll ? 'not-allowed' : 'pointer',
+                          border: 'none',
+                        }}
+                      >
+                        <RefreshCw size={14} className={syncingAll ? 'animate-spin' : ''} />
+                        Sync All Channels
+                      </button>
+                    )}
+                  </div>
+
+                  {rawProduct.channels.map((pc) => {
+                    const isSyncing = syncingChannels[pc.channelId] || syncingAll;
+                    const result = syncResults[pc.channelId];
+                    const isLinked = !!pc.externalProductId;
+                    const ChannelIcon = pc.channel.type === 'SHOPIFY' ? Store : ShoppingCart;
+
+                    return (
+                      <div
+                        key={pc.id}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          padding: '12px 16px',
+                          borderRadius: '8px',
+                          border: '1px solid #E5E7EB',
+                          backgroundColor: '#F9FAFB',
+                          gap: '12px',
+                        }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1, minWidth: 0 }}>
+                          <ChannelIcon size={20} style={{ color: pc.channel.type === 'SHOPIFY' ? '#96BF48' : '#7F54B3', flexShrink: 0 }} />
+                          <div style={{ minWidth: 0 }}>
+                            <div style={{
+                              fontFamily: 'Inter, sans-serif',
+                              fontWeight: 500,
+                              fontSize: '14px',
+                              color: '#111827',
+                              whiteSpace: 'nowrap',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                            }}>
+                              {pc.channel.name}
+                            </div>
+                            <div style={{
+                              fontFamily: 'Inter, sans-serif',
+                              fontSize: '12px',
+                              color: '#6B7280',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '8px',
+                              flexWrap: 'wrap',
+                            }}>
+                              <span style={{
+                                padding: '1px 6px',
+                                borderRadius: '4px',
+                                backgroundColor: pc.channel.type === 'SHOPIFY' ? '#F0FFF0' : '#F5F0FF',
+                                color: pc.channel.type === 'SHOPIFY' ? '#3D7317' : '#5B21B6',
+                                fontSize: '11px',
+                                fontWeight: 500,
+                              }}>
+                                {pc.channel.type}
+                              </span>
+                              {isLinked ? (
+                                <>
+                                  <span style={{
+                                    padding: '1px 6px',
+                                    borderRadius: '4px',
+                                    fontSize: '11px',
+                                    fontWeight: 500,
+                                    backgroundColor:
+                                      pc.syncStatus === 'SYNCED' ? '#ECFDF5' :
+                                      pc.syncStatus === 'ERROR' ? '#FEF2F2' :
+                                      pc.syncStatus === 'PENDING' ? '#FEF9C3' : '#F3F4F6',
+                                    color:
+                                      pc.syncStatus === 'SYNCED' ? '#065F46' :
+                                      pc.syncStatus === 'ERROR' ? '#991B1B' :
+                                      pc.syncStatus === 'PENDING' ? '#854D0E' : '#374151',
+                                  }}>
+                                    {pc.syncStatus}
+                                  </span>
+                                  {pc.lastSyncAt && (
+                                    <span>Last sync: {new Date(pc.lastSyncAt).toLocaleString()}</span>
+                                  )}
+                                </>
+                              ) : (
+                                <span style={{
+                                  padding: '1px 6px',
+                                  borderRadius: '4px',
+                                  fontSize: '11px',
+                                  fontWeight: 500,
+                                  backgroundColor: '#FFFBEB',
+                                  color: '#92400E',
+                                }}>
+                                  NOT LINKED
+                                </span>
+                              )}
+                            </div>
+                            {pc.lastError && (
+                              <div style={{
+                                fontFamily: 'Inter, sans-serif',
+                                fontSize: '12px',
+                                color: '#DC2626',
+                                marginTop: '2px',
+                              }}>
+                                Error: {pc.lastError}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+                          {result && !isSyncing && (
+                            result.success ? (
+                              <CheckCircle size={18} style={{ color: '#10B981' }} />
+                            ) : (
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                <XCircle size={18} style={{ color: '#EF4444' }} />
+                                {result.error && (
+                                  <span style={{ fontSize: '11px', color: '#EF4444', maxWidth: '150px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                    {result.error}
+                                  </span>
+                                )}
+                              </div>
+                            )
+                          )}
+                          <button
+                            onClick={() => handleSyncStock(pc.channelId)}
+                            disabled={isSyncing || !isLinked}
+                            title={!isLinked ? 'Product not linked to this channel' : 'Sync stock to channel'}
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '6px',
+                              padding: '6px 12px',
+                              backgroundColor: !isLinked ? '#E5E7EB' : isSyncing ? '#9CA3AF' : '#003450',
+                              color: !isLinked ? '#9CA3AF' : '#FFFFFF',
+                              borderRadius: '6px',
+                              fontSize: '13px',
+                              fontFamily: 'Inter, sans-serif',
+                              fontWeight: 500,
+                              cursor: !isLinked || isSyncing ? 'not-allowed' : 'pointer',
+                              border: 'none',
+                            }}
+                          >
+                            <RefreshCw size={14} className={isSyncing ? 'animate-spin' : ''} />
+                            Sync Stock
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
 
               {/* Information Box - width: 985px, height: 640px at 1358px screen */}
               <div
