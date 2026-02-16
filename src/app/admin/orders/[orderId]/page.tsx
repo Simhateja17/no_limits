@@ -782,6 +782,98 @@ export default function OrderDetailPage() {
                   </div>
                 )}
 
+                {/* Fulfilled Badge */}
+                {rawOrder?.shopifyFulfillmentGid && (
+                  <div style={{ marginTop: 8 }}>
+                    <div style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 6,
+                      backgroundColor: '#ECFDF5',
+                      border: '1px solid #A7F3D0',
+                      borderRadius: 13,
+                      fontFamily: 'Inter, sans-serif',
+                      fontWeight: 400,
+                      fontSize: 13,
+                      padding: '2px 10px 2px 8px',
+                      color: '#059669',
+                    }}>
+                      <span style={{
+                        width: 7,
+                        height: 7,
+                        borderRadius: '50%',
+                        backgroundColor: '#22C55E',
+                        display: 'inline-block',
+                        flexShrink: 0,
+                      }} />
+                      {tOrders('fulfilled')}
+                    </div>
+                  </div>
+                )}
+
+                {/* Tracking Number Badge */}
+                {rawOrder?.trackingNumber && (
+                  <div style={{ marginTop: 8 }}>
+                    {rawOrder.trackingUrl ? (
+                      <a
+                        href={rawOrder.trackingUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{ textDecoration: 'none' }}
+                      >
+                        <div style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: 6,
+                          backgroundColor: '#EFF6FF',
+                          border: '1px solid #BFDBFE',
+                          borderRadius: 13,
+                          fontFamily: 'Inter, sans-serif',
+                          fontWeight: 400,
+                          fontSize: 13,
+                          padding: '2px 10px 2px 8px',
+                          color: '#2563EB',
+                          cursor: 'pointer',
+                        }}>
+                          <span style={{
+                            width: 7,
+                            height: 7,
+                            borderRadius: '50%',
+                            backgroundColor: '#3B82F6',
+                            display: 'inline-block',
+                            flexShrink: 0,
+                          }} />
+                          {rawOrder.trackingNumber}
+                        </div>
+                      </a>
+                    ) : (
+                      <div style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: 6,
+                        backgroundColor: '#EFF6FF',
+                        border: '1px solid #BFDBFE',
+                        borderRadius: 13,
+                        fontFamily: 'Inter, sans-serif',
+                        fontWeight: 400,
+                        fontSize: 13,
+                        padding: '2px 10px 2px 8px',
+                        color: '#2563EB',
+                      }}>
+                        <span style={{
+                          width: 7,
+                          height: 7,
+                          borderRadius: '50%',
+                          backgroundColor: '#3B82F6',
+                          display: 'inline-block',
+                          flexShrink: 0,
+                        }} />
+                        {rawOrder.trackingNumber}
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 <span
                   style={{
                     fontFamily: 'Inter, sans-serif',

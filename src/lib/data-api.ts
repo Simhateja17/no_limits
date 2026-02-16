@@ -111,6 +111,7 @@ export interface Order {
   trackingNumber: string | null;
   trackingUrl: string | null;
   totalWeight: number | null;
+  shopifyFulfillmentGid?: string | null;
   tags: string[];
 
   // Hold status
